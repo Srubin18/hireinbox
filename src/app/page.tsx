@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react';
 
+/* ===========================================
+   HIREINBOX - PRODUCTION BUILD
+   Landing Page + Dashboard
+   =========================================== */
+
 interface Reference {
   name: string | null;
   title: string | null;
@@ -23,8 +28,11 @@ interface Candidate {
   missing: string[] | null;
   cv_text: string | null;
   created_at: string;
-  candidate_references: Reference[] | null;
-  has_references: boolean;
+  current_role: string | null;
+  experience_years: number | null;
+  location: string | null;
+  education: string | null;
+  references: Reference[] | null;
 }
 
 interface Role {
@@ -36,767 +44,606 @@ interface Role {
     required_skills: string[];
     preferred_skills: string[];
     locations: string[];
-    education?: string;
-    dealbreakers?: string[];
   };
 }
 
-export default function Dashboard() {
+const Logo = ({ size = 36, showText = true, onClick }: { size?: number; showText?: boolean; onClick?: () => void }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <rect width="48" height="48" rx="12" fill="#4F46E5"/>
+      <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
+      <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
+      <circle cx="36" cy="12" r="9" fill="#10B981"/>
+      <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+    {showText && (
+      <span style={{ fontSize: size > 30 ? '1.25rem' : '1rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <span style={{ color: '#0f172a' }}>Hire</span>
+        <span style={{ color: '#4F46E5' }}>Inbox</span>
+      </span>
+    )}
+  </div>
+);
+
+export default function Home() {
+  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+
+  return view === 'dashboard' 
+    ? <Dashboard onLogout={() => setView('landing')} />
+    : <LandingPage onLogin={() => setView('dashboard')} />;
+}
+
+/* ===========================================
+   LANDING PAGE
+   =========================================== */
+function LandingPage({ onLogin }: { onLogin: () => void }) {
+  return (
+    <div style={{ 
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", 
+      background: '#ffffff', 
+      color: '#0f172a', 
+      lineHeight: 1.6,
+      minHeight: '100vh'
+    }}>
+      {/* NAV */}
+      <nav style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        zIndex: 100, 
+        background: 'rgba(255,255,255,0.97)', 
+        backdropFilter: 'blur(12px)', 
+        borderBottom: '1px solid #f1f5f9' 
+      }}>
+        <div style={{ 
+          maxWidth: 1120, 
+          margin: '0 auto', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          height: 64, 
+          padding: '0 20px' 
+        }}>
+          <div>
+            <Logo size={28} />
+            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 500, marginTop: 2, marginLeft: 38 }}>Less noise. Better hires.</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={onLogin} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer', padding: '8px 16px' }}>Log in</button>
+            <button onClick={onLogin} style={{ background: '#0f172a', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Start free</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section style={{ padding: '120px 20px 60px', maxWidth: 1120, margin: '0 auto' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
+          <h1 style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 16, color: '#0f172a' }}>
+            You got 47 CVs.<br />3 are worth calling.
+          </h1>
+          <p style={{ fontSize: '1.25rem', color: '#64748b', maxWidth: 560, margin: '0 auto 32px', lineHeight: 1.6 }}>
+            AI screens every CV and explains who&apos;s qualified.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+            <button onClick={onLogin} style={{ background: '#0f172a', color: 'white', border: 'none', padding: '16px 32px', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>Try it free</button>
+            <button onClick={onLogin} style={{ background: 'white', color: '#0f172a', border: '2px solid #e2e8f0', padding: '16px 32px', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>See it in action</button>
+          </div>
+          <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Free for your first role · POPIA compliant</p>
+        </div>
+
+        {/* Hero Visual */}
+        <div style={{ marginTop: 64, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24, maxWidth: 800, marginLeft: 'auto', marginRight: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ef4444' }}></div>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b' }}></div>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#22c55e' }}></div>
+            <span style={{ marginLeft: 12, fontSize: '0.85rem', color: '#64748b' }}>yourcompany@hireinbox.co.za</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'white', borderRadius: 12, border: '2px solid #dcfce7' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: '#dcfce7', color: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem' }}>TM</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: 2 }}>Thabo Molefe</div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Senior Developer · 4 years · Johannesburg</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#166534' }}>92/100</div>
+                <div style={{ fontSize: '0.8rem', color: '#166534', fontWeight: 600 }}>Meets all criteria</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: '#eef2ff', color: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem' }}>LN</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: 2 }}>Lerato Nkosi</div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Product Manager · 5 years · Cape Town</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#4F46E5' }}>78/100</div>
+                <div style={{ fontSize: '0.8rem', color: '#4F46E5', fontWeight: 600 }}>Strong, wrong role</div>
+              </div>
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#94a3b8', textAlign: 'center', padding: '12px 0' }}>+ 44 more screened automatically</div>
+          </div>
+        </div>
+      </section>
+
+      {/* SOCIAL PROOF */}
+      <section style={{ padding: '40px 20px', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', background: '#fafafa' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 64, flexWrap: 'wrap' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>~90%</div>
+            <div style={{ fontSize: '0.9rem', color: '#64748b' }}>CVs filtered out</div>
+          </div>
+          <div style={{ width: 1, height: 40, background: '#e2e8f0' }}></div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>Minutes</div>
+            <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Not hours to review</div>
+          </div>
+          <div style={{ width: 1, height: 40, background: '#e2e8f0' }}></div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>Auto</div>
+            <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Acknowledgment sent</div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section style={{ padding: '80px 20px', maxWidth: 1120, margin: '0 auto' }}>
+        <h2 style={{ fontSize: '2rem', fontWeight: 800, textAlign: 'center', marginBottom: 48 }}>Set up in 5 minutes</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32 }}>
+          {[
+            { num: '1', title: 'Forward your job inbox', desc: 'Works with Gmail, Outlook, any email.' },
+            { num: '2', title: 'Tell us what you need', desc: 'Experience, skills, location. Plain English.' },
+            { num: '3', title: 'Call your shortlist', desc: 'Every CV scored. Every decision explained.' }
+          ].map(step => (
+            <div key={step.num} style={{ textAlign: 'center', padding: 24 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: '#eef2ff', color: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 700, margin: '0 auto 16px' }}>{step.num}</div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>{step.title}</h3>
+              <p style={{ fontSize: '1rem', color: '#64748b' }}>{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section style={{ padding: '80px 20px', background: '#0f172a' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'white', textAlign: 'center', marginBottom: 12 }}>Built for how SMEs actually hire</h2>
+          <p style={{ fontSize: '1.1rem', color: '#94a3b8', textAlign: 'center', marginBottom: 48 }}>No new software to learn. Just clarity.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+            {[
+              { icon: '📋', title: 'Plain-English reasoning', desc: '"4 years React, based in JHB, missing AWS" — not just a number.' },
+              { icon: '🎯', title: 'Wrong-role detection', desc: 'We save mismatched candidates for future roles.' },
+              { icon: '🧠', title: 'Talent memory', desc: 'Every CV indexed. Find them when you need them.' }
+            ].map(f => (
+              <div key={f.title} style={{ background: '#1e293b', borderRadius: 16, padding: 28 }}>
+                <div style={{ fontSize: '2rem', marginBottom: 16 }}>{f.icon}</div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'white', marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ fontSize: '0.95rem', color: '#94a3b8', lineHeight: 1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section style={{ padding: '80px 20px', maxWidth: 1120, margin: '0 auto' }}>
+        <h2 style={{ fontSize: '2rem', fontWeight: 800, textAlign: 'center', marginBottom: 12 }}>Costs less than one bad interview</h2>
+        <p style={{ fontSize: '1.1rem', color: '#64748b', textAlign: 'center', marginBottom: 48 }}>Free to try. Cancel anytime.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 960, margin: '0 auto' }}>
+          {[
+            { name: 'Starter', desc: 'Hiring 1-2x a year', price: 'R399', features: ['20 CVs/month', '1 active role'], popular: false },
+            { name: 'Growth', desc: 'Regular hiring', price: 'R799', features: ['50 CVs/month', '3 roles + Pool'], popular: true },
+            { name: 'Business', desc: 'Always hiring', price: 'R1,499', features: ['100 CVs/month', 'Unlimited + Team'], popular: false }
+          ].map(plan => (
+            <div key={plan.name} style={{ background: plan.popular ? '#0f172a' : 'white', border: plan.popular ? 'none' : '2px solid #e2e8f0', borderRadius: 16, padding: 28, position: 'relative' }}>
+              {plan.popular && <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#4F46E5', color: 'white', padding: '4px 12px', borderRadius: 100, fontSize: '0.75rem', fontWeight: 700 }}>POPULAR</div>}
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: plan.popular ? 'white' : '#0f172a', marginBottom: 4 }}>{plan.name}</h3>
+              <p style={{ fontSize: '0.9rem', color: plan.popular ? '#94a3b8' : '#64748b', marginBottom: 16 }}>{plan.desc}</p>
+              <div style={{ marginBottom: 20 }}>
+                <span style={{ fontSize: '2rem', fontWeight: 800, color: plan.popular ? 'white' : '#0f172a' }}>{plan.price}</span>
+                <span style={{ fontSize: '1rem', color: plan.popular ? '#94a3b8' : '#64748b' }}>/mo</span>
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: 24 }}>
+                {plan.features.map(f => (
+                  <li key={f} style={{ fontSize: '1rem', color: plan.popular ? '#e2e8f0' : '#475569', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: '#22c55e' }}>✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={onLogin} style={{ width: '100%', padding: '14px', background: plan.popular ? 'white' : '#0f172a', color: plan.popular ? '#0f172a' : 'white', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>Try free</button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section style={{ padding: '80px 20px', background: '#f8fafc' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 16 }}>Your next hire is already in your inbox.</h2>
+          <p style={{ fontSize: '1.1rem', color: '#64748b', marginBottom: 32 }}>Let&apos;s find them together.</p>
+          <button onClick={onLogin} style={{ background: '#0f172a', color: 'white', border: 'none', padding: '16px 48px', borderRadius: 10, fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer' }}>Try HireInbox free</button>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ padding: '40px 20px', borderTop: '1px solid #e2e8f0' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
+          <div>
+            <Logo size={24} />
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 4, marginLeft: 34 }}>Less noise. Better hires.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 24 }}>
+            <a href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem' }}>Privacy</a>
+            <a href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem' }}>Terms</a>
+            <a href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem' }}>POPIA</a>
+          </div>
+          <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>© 2025 HireInbox 🇿🇦</div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ===========================================
+   DASHBOARD
+   =========================================== */
+function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [cvText, setCvText] = useState('');
-  const [isScreening, setIsScreening] = useState(false);
-  const [activeTab, setActiveTab] = useState('new');
-  const [showNewRoleModal, setShowNewRoleModal] = useState(false);
-  const [criteriaExpanded, setCriteriaExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
   const [isFetchingEmails, setIsFetchingEmails] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
-  
-  const [newRole, setNewRole] = useState({
-    title: '',
-    min_experience_years: 3,
-    required_skills: [''],
-    preferred_skills: [''],
-    locations: [] as string[],
-    education: 'degree_preferred',
-    dealbreakers: [] as string[],
-  });
+  const [showNewRoleModal, setShowNewRoleModal] = useState(false);
+  const [cvText, setCvText] = useState('');
+  const [isScreening, setIsScreening] = useState(false);
 
-  useEffect(() => {
-    fetchRoles();
-    fetchCandidates();
-  }, []);
+  useEffect(() => { fetchRoles(); fetchCandidates(); }, []);
 
   const fetchRoles = async () => {
-    const res = await fetch('/api/roles');
-    if (res.ok) {
-      const data = await res.json();
-      setRoles(data.roles || []);
-      if (data.roles?.length > 0) {
-        setSelectedRole(data.roles[0].id);
+    try {
+      const res = await fetch('/api/roles');
+      if (res.ok) { 
+        const d = await res.json(); 
+        setRoles(d.roles || []); 
+        if (d.roles?.length > 0 && !selectedRole) setSelectedRole(d.roles[0].id); 
       }
-    }
+    } catch (e) { console.error(e); }
   };
 
   const fetchCandidates = async () => {
-    const res = await fetch('/api/candidates');
-    if (res.ok) {
-      const data = await res.json();
-      setCandidates(data.candidates || []);
-    }
+    try {
+      const res = await fetch('/api/candidates');
+      if (res.ok) { const d = await res.json(); setCandidates(d.candidates || []); }
+    } catch (e) { console.error(e); }
   };
 
   const handleFetchEmails = async () => {
     setIsFetchingEmails(true);
     try {
       const res = await fetch('/api/fetch-emails', { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.processed > 0) {
-          fetchCandidates();
-        }
-        alert(`Processed ${data.processed} new emails`);
+      const d = await res.json();
+      if (res.ok) { 
+        fetchCandidates(); 
+        alert(`✓ Processed ${d.processed || 0} CV(s)`);
       } else {
-        alert('Failed to fetch emails');
+        alert(`Error: ${d.error || 'Failed'}`);
       }
-    } catch (error) {
-      console.error('Email fetch failed:', error);
-      alert('Failed to fetch emails');
+    } catch (e) { 
+      console.error(e); 
+      alert('Connection failed'); 
     }
     setIsFetchingEmails(false);
   };
 
   const handleScreenCV = async () => {
     if (!cvText.trim() || !selectedRole) return;
-    
     setIsScreening(true);
     try {
-      const res = await fetch('/api/screen', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cvText, roleId: selectedRole }),
+      const res = await fetch('/api/screen', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ cvText, roleId: selectedRole }) 
       });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setCandidates(prev => [data.candidate, ...prev]);
-        setCvText('');
-      }
-    } catch (error) {
-      console.error('Screening failed:', error);
-    }
+      if (res.ok) { fetchCandidates(); setCvText(''); alert('✓ CV screened'); }
+    } catch (e) { console.error(e); alert('Screening failed'); }
     setIsScreening(false);
   };
 
-  const filteredCandidates = candidates.filter(c => {
-    if (activeTab === 'new') return true;
-    if (activeTab === 'shortlist') return c.status === 'shortlist';
-    if (activeTab === 'talent_pool') return c.status === 'talent_pool';
-    if (activeTab === 'reject') return c.status === 'reject';
-    return true;
-  });
-
-  const getInitials = (name: string | null) => {
-    if (!name) return '??';
-    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const filteredCandidates = candidates.filter(c => activeTab === 'all' || c.status === activeTab);
+  const getInitials = (n: string | null) => n ? n.split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase() : '??';
+  const getTimeAgo = (d: string) => { 
+    const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000); 
+    if (s < 60) return 'Just now'; 
+    if (s < 3600) return `${Math.floor(s/60)}m ago`; 
+    if (s < 86400) return `${Math.floor(s/3600)}h ago`; 
+    return `${Math.floor(s/86400)}d ago`; 
   };
-
-  const getTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    if (seconds < 60) return 'Just now';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
-
-  const formatPhoneForWhatsApp = (phone: string) => {
-    return phone.replace(/[^0-9]/g, '').replace(/^0/, '27');
-  };
+  const formatWhatsApp = (p: string) => p.replace(/[^0-9]/g, '').replace(/^0/, '27');
 
   const currentRole = roles.find(r => r.id === selectedRole);
+  const shortlistCount = candidates.filter(c => c.status === 'shortlist').length;
+  const poolCount = candidates.filter(c => c.status === 'talent_pool').length;
+  const rejectCount = candidates.filter(c => c.status === 'reject').length;
 
-  const shortlistedCandidates = candidates.filter(c => c.status === 'shortlist');
-  const avgScore = shortlistedCandidates.length > 0 
-    ? Math.round(shortlistedCandidates.reduce((sum, c) => sum + (c.score || 0), 0) / shortlistedCandidates.length)
-    : 0;
+  const statusColors: Record<string, { bg: string; text: string }> = {
+    shortlist: { bg: '#dcfce7', text: '#166534' },
+    talent_pool: { bg: '#eef2ff', text: '#4F46E5' },
+    reject: { bg: '#fee2e2', text: '#991b1b' }
+  };
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc]">
-      {/* Sidebar */}
-      <aside className="w-[260px] bg-white border-r border-[#e2e8f0] flex flex-col fixed top-0 left-0 bottom-0 z-50">
-        <div className="p-5 border-b border-[#e2e8f0]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-[#4f46e5] rounded-[10px] flex items-center justify-center relative">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-              </svg>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#10B981] rounded-full border-2 border-white"></div>
-            </div>
-            <span className="text-[1.2rem] font-extrabold tracking-tight text-[#0f172a]">HireInbox</span>
-          </div>
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", background: '#f8fafc', minHeight: '100vh', display: 'flex' }}>
+      
+      {/* SIDEBAR */}
+      <aside style={{ width: 260, background: 'white', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
+        <div style={{ padding: 20, borderBottom: '1px solid #e2e8f0' }}>
+          <Logo size={32} onClick={onLogout} />
         </div>
-
-        <nav className="flex-1 p-3 overflow-y-auto">
-          <div className="mb-6">
-            <div className="text-[0.7rem] font-semibold text-[#64748b] uppercase tracking-wider px-3 mb-2">Overview</div>
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#eef2ff] text-[#4f46e5] font-medium text-sm">
-              <span>📊</span> Dashboard
-            </a>
-            <button 
-              onClick={handleFetchEmails}
-              disabled={isFetchingEmails}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#475569] hover:bg-[#f8fafc] font-medium text-sm mt-0.5 w-full text-left"
-            >
-              <span>📧</span> {isFetchingEmails ? 'Checking...' : 'Check Inbox'}
-              <span className="ml-auto bg-[#f97316] text-white text-[0.7rem] font-bold px-2 py-0.5 rounded-full">
-                {candidates.filter(c => c.status === 'new').length || '0'}
-              </span>
-            </button>
+        
+        <nav style={{ flex: 1, padding: 16, overflowY: 'auto' }}>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Overview</div>
+            <SidebarItem icon="📊" label="Dashboard" active onClick={() => setActiveTab('all')} />
+            <SidebarItem icon="📧" label="Check Inbox" onClick={handleFetchEmails} />
           </div>
 
-          <div className="mb-6">
-            <div className="text-[0.7rem] font-semibold text-[#64748b] uppercase tracking-wider px-3 mb-2">Candidates</div>
-            <a href="#" onClick={() => setActiveTab('shortlist')} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#475569] hover:bg-[#f8fafc] font-medium text-sm">
-              <span>✓</span> Shortlisted
-              <span className="ml-auto bg-[#4f46e5] text-white text-[0.7rem] font-bold px-2 py-0.5 rounded-full">
-                {candidates.filter(c => c.status === 'shortlist').length}
-              </span>
-            </a>
-            <a href="#" onClick={() => setActiveTab('talent_pool')} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#475569] hover:bg-[#f8fafc] font-medium text-sm mt-0.5">
-              <span>🧠</span> Talent Pool
-              <span className="ml-auto bg-[#4f46e5] text-white text-[0.7rem] font-bold px-2 py-0.5 rounded-full">
-                {candidates.filter(c => c.status === 'talent_pool').length}
-              </span>
-            </a>
-            <a href="#" onClick={() => setActiveTab('reject')} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#475569] hover:bg-[#f8fafc] font-medium text-sm mt-0.5">
-              <span>✗</span> Rejected
-            </a>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Candidates</div>
+            <SidebarItem icon="✓" label="Shortlisted" badge={shortlistCount} active={activeTab === 'shortlist'} onClick={() => setActiveTab('shortlist')} />
+            <SidebarItem icon="🧠" label="Talent Pool" badge={poolCount} active={activeTab === 'talent_pool'} onClick={() => setActiveTab('talent_pool')} />
+            <SidebarItem icon="✗" label="Rejected" active={activeTab === 'reject'} onClick={() => setActiveTab('reject')} />
           </div>
 
-          <div className="mb-6">
-            <div className="text-[0.7rem] font-semibold text-[#64748b] uppercase tracking-wider px-3 mb-2">Roles</div>
-            {roles.map(role => (
-              <a 
-                key={role.id} 
-                href="#" 
-                onClick={(e) => { e.preventDefault(); setSelectedRole(role.id); }}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm mt-0.5 ${
-                  selectedRole === role.id ? 'bg-[#f8fafc] text-[#0f172a]' : 'text-[#475569] hover:bg-[#f8fafc]'
-                }`}
-              >
-                <span>💼</span> {role.title}
-              </a>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Roles</div>
+            {roles.map(r => (
+              <SidebarItem key={r.id} icon="💼" label={r.title} active={selectedRole === r.id} onClick={() => setSelectedRole(r.id)} />
             ))}
-            <button 
-              onClick={() => setShowNewRoleModal(true)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#4f46e5] hover:bg-[#f8fafc] font-medium text-sm mt-0.5 w-full"
-            >
-              <span>+</span> Add New Role
-            </button>
+            <SidebarItem icon="+" label="Add New Role" color="#4F46E5" onClick={() => setShowNewRoleModal(true)} />
           </div>
 
-          <div>
-            <div className="text-[0.7rem] font-semibold text-[#64748b] uppercase tracking-wider px-3 mb-2">Settings</div>
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#475569] hover:bg-[#f8fafc] font-medium text-sm">
-              <span>⚙️</span> Company Settings
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#475569] hover:bg-[#f8fafc] font-medium text-sm mt-0.5">
-              <span>👥</span> Team
-            </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#475569] hover:bg-[#f8fafc] font-medium text-sm mt-0.5">
-              <span>💳</span> Billing
-            </a>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Settings</div>
+            <SidebarItem icon="⚙️" label="Company Settings" onClick={() => alert('Coming soon')} />
+            <SidebarItem icon="👥" label="Team" onClick={() => alert('Coming soon')} />
+            <SidebarItem icon="💳" label="Billing" onClick={() => alert('Coming soon')} />
           </div>
         </nav>
 
-        <div className="p-4 border-t border-[#e2e8f0]">
-          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#f8fafc]">
-            <div className="w-9 h-9 rounded-full bg-[#4f46e5] text-white flex items-center justify-center font-bold text-sm">SM</div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm text-[#0f172a]">Simon M.</div>
-              <div className="text-xs text-[#64748b] truncate">simon@acme.co.za</div>
+        <div style={{ padding: 16, borderTop: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 10, background: '#f8fafc' }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#4F46E5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>SM</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>Simon M.</div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>simon@acme.co.za</div>
             </div>
           </div>
+          <button onClick={onLogout} style={{ width: '100%', marginTop: 12, padding: 10, background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.9rem', color: '#64748b', cursor: 'pointer' }}>← Back to Home</button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 ml-[260px]">
-        <header className="bg-white border-b border-[#e2e8f0] px-8 py-4 flex items-center justify-between sticky top-0 z-40">
-          <h1 className="text-[1.25rem] font-bold text-[#0f172a]">Dashboard</h1>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleFetchEmails}
-              disabled={isFetchingEmails}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-lg text-sm font-semibold text-[#0f172a] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors disabled:opacity-50"
-            >
-              <span>📧</span> {isFetchingEmails ? 'Checking...' : 'Check Emails'}
+      {/* MAIN CONTENT */}
+      <main style={{ flex: 1, marginLeft: 260 }}>
+        {/* Header */}
+        <header style={{ background: 'white', borderBottom: '1px solid #e2e8f0', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Dashboard</h1>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button onClick={handleFetchEmails} disabled={isFetchingEmails} style={{ padding: '10px 20px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer' }}>
+              {isFetchingEmails ? '⏳ Checking...' : '📧 Check Emails'}
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-lg text-sm font-semibold text-[#0f172a] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors">
-              <span>📄</span> Upload CV
-            </button>
-            <button 
-              onClick={() => setShowNewRoleModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#4f46e5] rounded-lg text-sm font-semibold text-white hover:bg-[#4338ca] transition-colors shadow-sm"
-            >
-              <span>+</span> New Role
+            <button onClick={() => setShowNewRoleModal(true)} style={{ padding: '10px 20px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer' }}>
+              + New Role
             </button>
           </div>
         </header>
 
-        <div className="p-8">
+        {/* Content */}
+        <div style={{ padding: 32 }}>
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-5 mb-8">
-            <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-[10px] bg-[#eef2ff] flex items-center justify-center text-lg">📧</div>
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#ecfdf5] text-[#059669]">↑ 12%</span>
-              </div>
-              <div className="text-[2rem] font-extrabold text-[#0f172a] tracking-tight">{candidates.length}</div>
-              <div className="text-sm text-[#64748b]">CVs this month</div>
-            </div>
-            <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-[10px] bg-[#ecfdf5] flex items-center justify-center text-lg">✓</div>
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#ecfdf5] text-[#059669]">↑ 8%</span>
-              </div>
-              <div className="text-[2rem] font-extrabold text-[#0f172a] tracking-tight">
-                {candidates.filter(c => c.status === 'shortlist').length}
-              </div>
-              <div className="text-sm text-[#64748b]">Shortlisted</div>
-            </div>
-            <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-[10px] bg-[#fffbeb] flex items-center justify-center text-lg">🧠</div>
-              </div>
-              <div className="text-[2rem] font-extrabold text-[#0f172a] tracking-tight">
-                {candidates.filter(c => c.status === 'talent_pool').length}
-              </div>
-              <div className="text-sm text-[#64748b]">In Talent Pool</div>
-            </div>
-            <div className="bg-gradient-to-br from-[#eef2ff] to-[#fff7ed] border border-[rgba(79,70,229,0.2)] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-[10px] bg-[#fff7ed] flex items-center justify-center text-lg">⏱️</div>
-              </div>
-              <div className="text-[2rem] font-extrabold text-[#4f46e5] tracking-tight">
-                {(candidates.length * 4.5).toFixed(1)}h
-              </div>
-              <div className="text-sm text-[#64748b]">Time saved</div>
-              <div className="text-xs font-semibold text-[#4f46e5] mt-1">≈ R{(candidates.length * 200).toLocaleString()} in admin costs</div>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 32 }}>
+            <StatCard icon="📧" value={candidates.length.toString()} label="CVs this month" />
+            <StatCard icon="✓" value={shortlistCount.toString()} label="Shortlisted" />
+            <StatCard icon="🧠" value={poolCount.toString()} label="In Talent Pool" />
+            <StatCard icon="⏱️" value={`${(candidates.length * 4.5 / 60).toFixed(1)}h`} label="Time saved" extra={`≈ R${(candidates.length * 200).toLocaleString()} in admin costs`} />
           </div>
 
-          {/* Shortlist Summary */}
-          {shortlistedCandidates.length > 0 && (
-            <div className="bg-gradient-to-r from-[#ecfdf5] to-[#f0fdf4] border border-[#bbf7d0] rounded-xl p-5 mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-[#166534] text-lg">📋 Shortlist Summary</h3>
-                  <p className="text-[#15803d] text-sm mt-1">
-                    {shortlistedCandidates.length} candidate{shortlistedCandidates.length > 1 ? 's' : ''} ready for interview • Average score: {avgScore}/100
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setActiveTab('shortlist')}
-                  className="px-4 py-2 bg-[#166534] text-white rounded-lg text-sm font-semibold hover:bg-[#15803d] transition-colors"
-                >
-                  View All →
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Main Grid */}
-          <div className="grid grid-cols-[1fr_380px] gap-6">
-            {/* Candidate List Panel */}
-            <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden">
-              <div className="flex gap-1 px-4 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24 }}>
+            {/* Candidate List */}
+            <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
+              {/* Tabs */}
+              <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
                 {[
-                  { id: 'new', label: 'All', count: candidates.length },
-                  { id: 'shortlist', label: 'Shortlisted', count: candidates.filter(c => c.status === 'shortlist').length },
-                  { id: 'talent_pool', label: 'Talent Pool', count: candidates.filter(c => c.status === 'talent_pool').length },
-                  { id: 'reject', label: 'Rejected', count: candidates.filter(c => c.status === 'reject').length },
+                  { id: 'all', label: 'All', count: candidates.length },
+                  { id: 'shortlist', label: 'Shortlisted', count: shortlistCount },
+                  { id: 'talent_pool', label: 'Talent Pool', count: poolCount },
+                  { id: 'reject', label: 'Rejected', count: rejectCount },
                 ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-3 text-[0.85rem] font-semibold transition-colors border-b-2 -mb-[1px] ${
-                      activeTab === tab.id
-                        ? 'text-[#4f46e5] border-[#4f46e5] bg-white'
-                        : 'text-[#64748b] border-transparent hover:text-[#475569]'
-                    }`}
-                  >
-                    {tab.label}
-                    <span className={`ml-1.5 px-2 py-0.5 rounded-full text-xs ${
-                      activeTab === tab.id ? 'bg-[#eef2ff] text-[#4f46e5]' : 'bg-[#f1f5f9]'
-                    }`}>
-                      {tab.count}
-                    </span>
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ 
+                    padding: '14px 20px', 
+                    fontSize: '0.95rem', 
+                    fontWeight: 600, 
+                    color: activeTab === tab.id ? '#4F46E5' : '#64748b', 
+                    background: activeTab === tab.id ? 'white' : 'transparent', 
+                    border: 'none', 
+                    borderBottom: `2px solid ${activeTab === tab.id ? '#4F46E5' : 'transparent'}`, 
+                    cursor: 'pointer' 
+                  }}>
+                    {tab.label} <span style={{ marginLeft: 6, padding: '2px 8px', background: activeTab === tab.id ? '#eef2ff' : '#f1f5f9', borderRadius: 100, fontSize: '0.8rem' }}>{tab.count}</span>
                   </button>
                 ))}
               </div>
 
-              <div className="p-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#ecfdf5] border border-[rgba(5,150,105,0.2)] rounded-full text-xs font-semibold text-[#059669] mb-4">
-                  <span className="w-1.5 h-1.5 bg-[#059669] rounded-full animate-pulse"></span>
+              <div style={{ padding: 20 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: '#ecfdf5', borderRadius: 100, fontSize: '0.85rem', fontWeight: 600, color: '#059669', marginBottom: 20 }}>
+                  <span style={{ width: 8, height: 8, background: '#059669', borderRadius: '50%' }}></span>
                   Live — updates as CVs arrive
                 </div>
 
-                <div className="space-y-2.5">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {filteredCandidates.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-[#f8fafc] rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">📧</div>
-                      <div className="font-semibold text-[#0f172a] mb-2">No candidates yet</div>
-                      <div className="text-sm text-[#64748b]">Paste a CV on the right or click Check Emails</div>
+                    <div style={{ textAlign: 'center', padding: 60 }}>
+                      <div style={{ fontSize: '3rem', marginBottom: 16 }}>📭</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 8 }}>No candidates yet</div>
+                      <div style={{ color: '#64748b' }}>Click &quot;Check Emails&quot; to fetch new CVs</div>
                     </div>
-                  ) : (
-                    filteredCandidates.map(candidate => (
-                      <div
-                        key={candidate.id}
-                        onClick={() => setSelectedCandidate(candidate)}
-                        className={`flex items-center gap-3.5 p-3.5 rounded-[10px] border transition-all cursor-pointer hover:border-[#4f46e5] hover:shadow-[0_0_0_3px_#eef2ff] ${
-                          candidate.status === 'shortlist' ? 'bg-[#f0fdf4] border-[#bbf7d0]' :
-                          candidate.status === 'talent_pool' ? 'bg-[#eef2ff] border-[#c7d2fe]' :
-                          candidate.status === 'reject' ? 'bg-[#fef2f2] border-[#fecaca]' :
-                          'bg-[#fff7ed] border-[#fed7aa]'
-                        }`}
-                      >
-                        <div className={`w-11 h-11 rounded-[10px] flex items-center justify-center font-bold text-sm ${
-                          candidate.status === 'shortlist' ? 'bg-[#dcfce7] text-[#166534]' :
-                          candidate.status === 'talent_pool' ? 'bg-[#e0e7ff] text-[#4f46e5]' :
-                          candidate.status === 'reject' ? 'bg-[#fee2e2] text-[#991b1b]' :
-                          'bg-[#ffedd5] text-[#c2410c]'
-                        }`}>
-                          {getInitials(candidate.name)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-[0.9rem] text-[#0f172a]">{candidate.name || 'Unknown'}</div>
-                          <div className="text-xs text-[#64748b] truncate">{candidate.ai_reasoning}</div>
-                          <div className="text-xs text-[#94a3b8]">{getTimeAgo(candidate.created_at)}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className={`text-xl font-bold ${
-                            candidate.status === 'shortlist' ? 'text-[#166534]' :
-                            candidate.status === 'talent_pool' ? 'text-[#4f46e5]' :
-                            'text-[#991b1b]'
-                          }`}>
-                            {candidate.score || '--'}
-                          </div>
-                          <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
-                            candidate.status === 'shortlist' ? 'bg-[#dcfce7] text-[#166534]' :
-                            candidate.status === 'talent_pool' ? 'bg-[#e0e7ff] text-[#4f46e5]' :
-                            'bg-[#fee2e2] text-[#991b1b]'
-                          }`}>
-                            {candidate.status === 'shortlist' && '✓ Shortlisted'}
-                            {candidate.status === 'talent_pool' && '→ Talent Pool'}
-                            {candidate.status === 'reject' && '✗ Rejected'}
+                  ) : filteredCandidates.map(c => {
+                    const colors = statusColors[c.status] || statusColors.reject;
+                    return (
+                      <div key={c.id} onClick={() => setSelectedCandidate(c)} style={{ 
+                        background: 'white', 
+                        borderRadius: 12, 
+                        border: '1px solid #e2e8f0', 
+                        padding: 16, 
+                        cursor: 'pointer',
+                        opacity: c.status === 'reject' ? 0.7 : 1
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                          <div style={{ width: 48, height: 48, borderRadius: 12, background: colors.bg, color: colors.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>{getInitials(c.name)}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                              <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{c.name || 'Unknown'}</span>
+                              {c.score && <span style={{ fontSize: '0.85rem', fontWeight: 700, color: colors.text, background: colors.bg, padding: '2px 8px', borderRadius: 6 }}>{c.score}/100</span>}
+                            </div>
+                            <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.ai_reasoning || 'Processing...'}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, background: colors.bg, color: colors.text }}>
+                                {c.status === 'shortlist' ? '✓ Shortlisted' : c.status === 'talent_pool' ? '→ Pool' : '✗ Rejected'}
+                              </span>
+                              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{getTimeAgo(c.created_at)}</span>
+                            </div>
                           </div>
                         </div>
+                        {c.status === 'shortlist' && c.phone && (
+                          <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
+                            <a href={`https://wa.me/${formatWhatsApp(c.phone)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ flex: 1, padding: 10, background: '#25D366', color: 'white', borderRadius: 8, textAlign: 'center', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>💬 WhatsApp</a>
+                            <a href={`tel:${c.phone}`} onClick={e => e.stopPropagation()} style={{ flex: 1, padding: 10, background: '#4F46E5', color: 'white', borderRadius: 8, textAlign: 'center', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' }}>📞 Call</a>
+                          </div>
+                        )}
                       </div>
-                    ))
-                  )}
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
             {/* Right Panel */}
-            <div className="space-y-6">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Active Role */}
               {currentRole && (
-                <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden">
-                  <div className="p-5 border-b border-[#e2e8f0]">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="font-bold text-[#0f172a]">{currentRole.title}</h3>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.7rem] font-semibold uppercase bg-[#ecfdf5] text-[#059669] mt-1">
-                          <span className="w-1.5 h-1.5 bg-[#059669] rounded-full animate-pulse"></span>
-                          Active
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="text-center p-3 bg-[#f8fafc] rounded-lg">
-                        <div className="text-xl font-bold text-[#059669]">{candidates.filter(c => c.status === 'shortlist').length}</div>
-                        <div className="text-[0.7rem] text-[#64748b] uppercase">Shortlisted</div>
-                      </div>
-                      <div className="text-center p-3 bg-[#f8fafc] rounded-lg">
-                        <div className="text-xl font-bold text-[#4f46e5]">{candidates.filter(c => c.status === 'talent_pool').length}</div>
-                        <div className="text-[0.7rem] text-[#64748b] uppercase">Pooled</div>
-                      </div>
-                      <div className="text-center p-3 bg-[#f8fafc] rounded-lg">
-                        <div className="text-xl font-bold text-[#64748b]">{candidates.filter(c => c.status === 'reject').length}</div>
-                        <div className="text-[0.7rem] text-[#64748b] uppercase">Rejected</div>
-                      </div>
-                    </div>
-
-                    <button 
-                      onClick={() => setCriteriaExpanded(!criteriaExpanded)}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-[#4f46e5] hover:underline"
-                    >
-                      <span>{criteriaExpanded ? '▼' : '▶'}</span>
-                      {criteriaExpanded ? 'Hide criteria' : 'View criteria'}
-                    </button>
-
-                    {criteriaExpanded && (
-                      <div className="mt-3 space-y-3">
-                        <div>
-                          <div className="text-[0.7rem] font-semibold text-[#64748b] uppercase tracking-wider mb-2">Must Have</div>
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className="px-2.5 py-1 bg-[#eef2ff] border border-[rgba(79,70,229,0.2)] rounded-md text-xs font-medium text-[#4f46e5]">
-                              {currentRole.criteria.min_experience_years}+ years
-                            </span>
-                            {currentRole.criteria.required_skills?.map(skill => (
-                              <span key={skill} className="px-2.5 py-1 bg-[#eef2ff] border border-[rgba(79,70,229,0.2)] rounded-md text-xs font-medium text-[#4f46e5]">
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24 }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 12 }}>{currentRole.title}</h3>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: '#ecfdf5', color: '#059669', borderRadius: 100, fontSize: '0.8rem', fontWeight: 600, marginBottom: 16 }}>
+                    <span style={{ width: 6, height: 6, background: '#059669', borderRadius: '50%' }}></span>
+                    ACTIVE
                   </div>
-                  <div className="p-4 flex gap-2">
-                    <button className="flex-1 px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-lg text-sm font-semibold text-[#0f172a] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors">
-                      Edit Criteria
-                    </button>
-                    <button className="flex-1 px-4 py-2.5 bg-white border border-[#e2e8f0] rounded-lg text-sm font-semibold text-[#0f172a] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors">
-                      Pause
-                    </button>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+                    <div style={{ textAlign: 'center', padding: 12, background: '#f8fafc', borderRadius: 10 }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#166534' }}>{shortlistCount}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>SHORTLISTED</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: 12, background: '#f8fafc', borderRadius: 10 }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#4F46E5' }}>{poolCount}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>POOLED</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: 12, background: '#f8fafc', borderRadius: 10 }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#64748b' }}>{rejectCount}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>REJECTED</div>
+                    </div>
+                  </div>
+                  {currentRole.criteria && (
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 8 }}>REQUIREMENTS</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        <span style={{ padding: '6px 12px', background: '#eef2ff', color: '#4F46E5', borderRadius: 8, fontSize: '0.85rem', fontWeight: 500 }}>{currentRole.criteria.min_experience_years}+ years</span>
+                        {currentRole.criteria.required_skills?.map((s, i) => (
+                          <span key={i} style={{ padding: '6px 12px', background: '#eef2ff', color: '#4F46E5', borderRadius: 8, fontSize: '0.85rem', fontWeight: 500 }}>{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button style={{ flex: 1, padding: 12, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Edit Criteria</button>
+                    <button style={{ flex: 1, padding: 12, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Pause</button>
                   </div>
                 </div>
               )}
 
-              <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
-                <h3 className="font-bold text-[#0f172a] mb-3">Screen a CV</h3>
+              {/* Screen a CV */}
+              <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24 }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>Screen a CV</h3>
                 <textarea
                   value={cvText}
-                  onChange={(e) => setCvText(e.target.value)}
+                  onChange={e => setCvText(e.target.value)}
                   placeholder="Paste CV text here..."
-                  className="w-full h-48 px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent placeholder:text-[#94a3b8]"
+                  style={{ width: '100%', height: 120, padding: 14, border: '1px solid #e2e8f0', borderRadius: 10, fontSize: '0.95rem', resize: 'none', fontFamily: 'inherit', marginBottom: 12 }}
                 />
-                <button
-                  onClick={handleScreenCV}
-                  disabled={isScreening || !cvText.trim() || !selectedRole}
-                  className="w-full mt-3 px-4 py-2.5 bg-[#4f46e5] text-white rounded-lg font-semibold hover:bg-[#4338ca] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isScreening ? 'Screening...' : 'Screen CV'}
+                <button onClick={handleScreenCV} disabled={isScreening || !cvText.trim()} style={{ width: '100%', padding: 14, background: '#4F46E5', color: 'white', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer', opacity: isScreening || !cvText.trim() ? 0.5 : 1 }}>
+                  {isScreening ? '⏳ Screening...' : 'Screen CV'}
                 </button>
-              </div>
-
-              <div className="bg-gradient-to-br from-[#eef2ff] to-[#fff7ed] border border-[rgba(79,70,229,0.2)] rounded-xl p-4">
-                <div className="font-bold text-[0.9rem] text-[#0f172a] mb-1">📧 Your Application Email</div>
-                <div className="text-sm text-[#475569] mb-2">Applicants send CVs to:</div>
-                <code className="block bg-white px-3 py-2 rounded-lg text-sm font-mono text-[#4f46e5] border border-[#e2e8f0]">
-                  ssrubin18+hireinbox@gmail.com
-                </code>
-                <div className="text-xs text-[#64748b] mt-2">CVs will appear here automatically</div>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Candidate Detail Modal */}
+      {/* Candidate Modal */}
       {selectedCandidate && (
-        <div className="fixed inset-0 bg-[rgba(15,23,42,0.6)] backdrop-blur-sm flex items-center justify-center z-[200]">
-          <div className="bg-white rounded-2xl w-full max-w-[700px] max-h-[90vh] overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-5 border-b border-[#e2e8f0]">
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-bold text-lg ${
-                  selectedCandidate.status === 'shortlist' ? 'bg-[#dcfce7] text-[#166534]' :
-                  selectedCandidate.status === 'talent_pool' ? 'bg-[#e0e7ff] text-[#4f46e5]' :
-                  'bg-[#fee2e2] text-[#991b1b]'
-                }`}>
-                  {getInitials(selectedCandidate.name)}
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-[#0f172a]">{selectedCandidate.name || 'Unknown'}</h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
-                      selectedCandidate.status === 'shortlist' ? 'bg-[#dcfce7] text-[#166534]' :
-                      selectedCandidate.status === 'talent_pool' ? 'bg-[#e0e7ff] text-[#4f46e5]' :
-                      'bg-[#fee2e2] text-[#991b1b]'
-                    }`}>
-                      {selectedCandidate.status === 'shortlist' && '✓ Shortlisted'}
-                      {selectedCandidate.status === 'talent_pool' && '→ Talent Pool'}
-                      {selectedCandidate.status === 'reject' && '✗ Rejected'}
-                    </span>
-                    <span className="text-sm text-[#64748b]">{getTimeAgo(selectedCandidate.created_at)}</span>
+        <div onClick={() => setSelectedCandidate(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 600, maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ padding: 24, borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 14, background: (statusColors[selectedCandidate.status] || statusColors.reject).bg, color: (statusColors[selectedCandidate.status] || statusColors.reject).text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1.25rem' }}>{getInitials(selectedCandidate.name)}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>{selectedCandidate.name}</div>
+                    <div style={{ color: '#64748b' }}>{selectedCandidate.email}</div>
                   </div>
                 </div>
+                <button onClick={() => setSelectedCandidate(null)} style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: '#f1f5f9', cursor: 'pointer', fontSize: '1.25rem' }}>×</button>
               </div>
-              <button 
-                onClick={() => setSelectedCandidate(null)}
-                className="w-10 h-10 rounded-lg bg-[#f8fafc] text-[#64748b] flex items-center justify-center hover:bg-[#fee2e2] hover:text-[#dc2626] transition-colors text-xl"
-              >
-                ×
-              </button>
             </div>
-            
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-              {/* Score */}
-              <div className="flex items-center gap-6 mb-6">
-                <div className={`text-6xl font-extrabold ${
-                  selectedCandidate.status === 'shortlist' ? 'text-[#166534]' :
-                  selectedCandidate.status === 'talent_pool' ? 'text-[#4f46e5]' :
-                  'text-[#991b1b]'
-                }`}>
-                  {selectedCandidate.score || '--'}
+            <div style={{ padding: 24 }}>
+              <div style={{ display: 'flex', gap: 20, marginBottom: 24, padding: 20, background: '#f8fafc', borderRadius: 14 }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '3rem', fontWeight: 800, color: (statusColors[selectedCandidate.status] || statusColors.reject).text }}>{selectedCandidate.score || '--'}</div>
+                  <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Score</div>
                 </div>
-                <div>
-                  <div className="text-sm font-semibold text-[#64748b] uppercase">AI Score</div>
-                  <div className="text-[#0f172a] mt-1">{selectedCandidate.ai_reasoning}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'inline-block', padding: '6px 14px', borderRadius: 8, background: (statusColors[selectedCandidate.status] || statusColors.reject).bg, color: (statusColors[selectedCandidate.status] || statusColors.reject).text, fontWeight: 700, marginBottom: 8 }}>
+                    {selectedCandidate.status === 'shortlist' ? '✓ Shortlisted' : selectedCandidate.status === 'talent_pool' ? '→ Talent Pool' : '✗ Rejected'}
+                  </div>
+                  <div style={{ color: '#475569', lineHeight: 1.6 }}>{selectedCandidate.ai_reasoning}</div>
                 </div>
               </div>
-
-              {/* Contact Info */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-4 bg-[#f8fafc] rounded-xl">
-                  <div className="text-xs font-semibold text-[#64748b] uppercase mb-1">Email</div>
-                  <div className="text-[#0f172a] font-medium">{selectedCandidate.email || 'Not provided'}</div>
-                </div>
-                <div className="p-4 bg-[#f8fafc] rounded-xl">
-                  <div className="text-xs font-semibold text-[#64748b] uppercase mb-1">Phone</div>
-                  <div className="text-[#0f172a] font-medium">{selectedCandidate.phone || 'Not provided'}</div>
-                </div>
-              </div>
-
-              {/* Strengths */}
-              {selectedCandidate.strengths && selectedCandidate.strengths.length > 0 && (
-                <div className="mb-6">
-                  <div className="text-sm font-semibold text-[#166534] uppercase mb-2">✓ Strengths</div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCandidate.strengths.map((s, i) => (
-                      <span key={i} className="px-3 py-1.5 bg-[#dcfce7] text-[#166534] rounded-lg text-sm font-medium">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Missing */}
-              {selectedCandidate.missing && selectedCandidate.missing.length > 0 && (
-                <div className="mb-6">
-                  <div className="text-sm font-semibold text-[#991b1b] uppercase mb-2">✗ Missing / Gaps</div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCandidate.missing.map((m, i) => (
-                      <span key={i} className="px-3 py-1.5 bg-[#fee2e2] text-[#991b1b] rounded-lg text-sm font-medium">
-                        {m}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Actions - WhatsApp & Call */}
+              
               {selectedCandidate.phone && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-[#dcfce7] to-[#d1fae5] rounded-xl border border-[#bbf7d0]">
-                  <div className="text-sm font-semibold text-[#166534] uppercase mb-3">⚡ Quick Contact</div>
-                  <div className="flex gap-3">
-                    <a
-                      href={`https://wa.me/${formatPhoneForWhatsApp(selectedCandidate.phone)}?text=${encodeURIComponent(`Hi ${selectedCandidate.name || 'there'}, I'm reaching out regarding your application. Are you available for a quick chat?`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#25D366] text-white rounded-lg font-semibold hover:bg-[#128C7E] transition-colors"
-                    >
-                      💬 WhatsApp
-                    </a>
-                    <a
-                      href={`tel:${selectedCandidate.phone}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#4f46e5] text-white rounded-lg font-semibold hover:bg-[#4338ca] transition-colors"
-                    >
-                      📞 Call Now
-                    </a>
-                  </div>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+                  <a href={`https://wa.me/${formatWhatsApp(selectedCandidate.phone)}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: 14, background: '#25D366', color: 'white', borderRadius: 10, textAlign: 'center', textDecoration: 'none', fontWeight: 700 }}>💬 WhatsApp</a>
+                  <a href={`tel:${selectedCandidate.phone}`} style={{ flex: 1, padding: 14, background: '#4F46E5', color: 'white', borderRadius: 10, textAlign: 'center', textDecoration: 'none', fontWeight: 700 }}>📞 Call</a>
+                  <a href={`mailto:${selectedCandidate.email}`} style={{ flex: 1, padding: 14, background: '#f97316', color: 'white', borderRadius: 10, textAlign: 'center', textDecoration: 'none', fontWeight: 700 }}>📧 Email</a>
                 </div>
               )}
 
-              {/* References */}
-              {selectedCandidate.candidate_references && selectedCandidate.candidate_references.length > 0 && (
-                <div className="mb-6">
-                  <div className="text-sm font-semibold text-[#4f46e5] uppercase mb-3">📋 References</div>
-                  <div className="space-y-3">
-                    {selectedCandidate.candidate_references.map((ref, i) => (
-                      <div key={i} className="p-4 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="font-semibold text-[#0f172a]">{ref.name || 'Unknown'}</div>
-                            <div className="text-sm text-[#64748b]">
-                              {ref.title}{ref.title && ref.company && ' at '}{ref.company}
-                            </div>
-                            {ref.relationship && (
-                              <div className="text-xs text-[#94a3b8] mt-1">{ref.relationship}</div>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            {ref.phone && (
-                              <a
-                                href={`https://wa.me/${formatPhoneForWhatsApp(ref.phone)}?text=${encodeURIComponent(`Hi ${ref.name}, I'm conducting a reference check for ${selectedCandidate.name}. Would you have a few minutes?`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-3 py-1.5 bg-[#25D366] text-white rounded-lg text-xs font-semibold hover:bg-[#128C7E] transition-colors"
-                              >
-                                💬 WhatsApp
-                              </a>
-                            )}
-                            {ref.email && (
-                              <a
-                                href={`mailto:${ref.email}?subject=Reference Check: ${selectedCandidate.name}`}
-                                className="px-3 py-1.5 bg-[#4f46e5] text-white rounded-lg text-xs font-semibold hover:bg-[#4338ca] transition-colors"
-                              >
-                                ✉️ Email
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {selectedCandidate.strengths && selectedCandidate.strengths.length > 0 && (
+                <div style={{ background: '#ecfdf5', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+                  <div style={{ fontWeight: 700, color: '#166534', marginBottom: 10 }}>✓ Strengths</div>
+                  <ul style={{ paddingLeft: 20, margin: 0, color: '#166534' }}>
+                    {selectedCandidate.strengths.map((s, i) => <li key={i} style={{ marginBottom: 4 }}>{s}</li>)}
+                  </ul>
                 </div>
               )}
 
-              {/* No References Warning */}
-              {(!selectedCandidate.candidate_references || selectedCandidate.candidate_references.length === 0) && (
-                <div className="mb-6 p-4 bg-[#fffbeb] border border-[#fcd34d] rounded-xl">
-                  <div className="flex items-center gap-2 text-[#b45309] font-semibold text-sm">
-                    ⚠️ No references provided
-                  </div>
-                  <div className="text-xs text-[#92400e] mt-1">
-                    Consider requesting references before proceeding with this candidate.
-                  </div>
+              {selectedCandidate.missing && selectedCandidate.missing.length > 0 && (
+                <div style={{ background: '#fffbeb', borderRadius: 14, padding: 20 }}>
+                  <div style={{ fontWeight: 700, color: '#d97706', marginBottom: 10 }}>⚠ Gaps</div>
+                  <ul style={{ paddingLeft: 20, margin: 0, color: '#d97706' }}>
+                    {selectedCandidate.missing.map((m, i) => <li key={i} style={{ marginBottom: 4 }}>{m}</li>)}
+                  </ul>
                 </div>
-              )}
-
-              {/* CV Text Preview */}
-              {selectedCandidate.cv_text && (
-                <div>
-                  <div className="text-sm font-semibold text-[#64748b] uppercase mb-2">CV Content</div>
-                  <div className="p-4 bg-[#f8fafc] rounded-xl max-h-[200px] overflow-y-auto">
-                    <pre className="text-xs text-[#475569] whitespace-pre-wrap font-mono">
-                      {selectedCandidate.cv_text.slice(0, 2000)}
-                      {selectedCandidate.cv_text.length > 2000 && '...'}
-                    </pre>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 p-5 border-t border-[#e2e8f0] bg-[#f8fafc]">
-              {selectedCandidate.status !== 'shortlist' && (
-                <button 
-                  onClick={async () => {
-                    if (confirm(`Send shortlist email to ${selectedCandidate.email}?`)) {
-                      const res = await fetch('/api/send-outcome', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ candidateId: selectedCandidate.id, status: 'shortlist' }),
-                      });
-                      if (res.ok) {
-                        alert('Shortlist email sent!');
-                        fetchCandidates();
-                        setSelectedCandidate(null);
-                      } else {
-                        alert('Failed to send email');
-                      }
-                    }
-                  }}
-                  className="px-5 py-2.5 bg-[#166534] rounded-lg text-sm font-semibold text-white hover:bg-[#15803d] transition-colors"
-                >
-                  ✓ Send Shortlist Email
-                </button>
-              )}
-              {selectedCandidate.status !== 'talent_pool' && (
-                <button 
-                  onClick={async () => {
-                    if (confirm(`Send talent pool email to ${selectedCandidate.email}?`)) {
-                      const res = await fetch('/api/send-outcome', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ candidateId: selectedCandidate.id, status: 'talent_pool' }),
-                      });
-                      if (res.ok) {
-                        alert('Talent pool email sent!');
-                        fetchCandidates();
-                        setSelectedCandidate(null);
-                      } else {
-                        alert('Failed to send email');
-                      }
-                    }
-                  }}
-                  className="px-5 py-2.5 bg-[#4f46e5] rounded-lg text-sm font-semibold text-white hover:bg-[#4338ca] transition-colors"
-                >
-                  → Send Talent Pool Email
-                </button>
-              )}
-              {selectedCandidate.status !== 'reject' && (
-                <button 
-                  onClick={async () => {
-                    if (confirm(`Send rejection email to ${selectedCandidate.email}?`)) {
-                      const res = await fetch('/api/send-outcome', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ candidateId: selectedCandidate.id, status: 'reject' }),
-                      });
-                      if (res.ok) {
-                        alert('Rejection email sent!');
-                        fetchCandidates();
-                        setSelectedCandidate(null);
-                      } else {
-                        alert('Failed to send email');
-                      }
-                    }
-                  }}
-                  className="px-5 py-2.5 bg-white border border-[#e2e8f0] rounded-lg text-sm font-semibold text-[#64748b] hover:border-[#dc2626] hover:text-[#dc2626] transition-colors"
-                >
-                  ✗ Send Rejection Email
-                </button>
               )}
             </div>
           </div>
@@ -805,77 +652,117 @@ export default function Dashboard() {
 
       {/* New Role Modal */}
       {showNewRoleModal && (
-        <div className="fixed inset-0 bg-[rgba(15,23,42,0.6)] backdrop-blur-sm flex items-center justify-center z-[200]">
-          <div className="bg-white rounded-2xl w-full max-w-[560px] max-h-[90vh] overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-5 border-b border-[#e2e8f0]">
-              <h2 className="text-lg font-bold text-[#0f172a]">Create New Role</h2>
-              <button 
-                onClick={() => setShowNewRoleModal(false)}
-                className="w-8 h-8 rounded-lg bg-[#f8fafc] text-[#64748b] flex items-center justify-center hover:bg-[#fee2e2] hover:text-[#dc2626] transition-colors text-xl"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div className="mb-5">
-                <label className="block text-sm font-semibold text-[#0f172a] mb-2">Role Title</label>
-                <input
-                  type="text"
-                  value={newRole.title}
-                  onChange={(e) => setNewRole({...newRole, title: e.target.value})}
-                  placeholder="e.g. Senior Backend Developer"
-                  className="w-full px-3 py-3 border border-[#e2e8f0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
-                />
-              </div>
+        <NewRoleModal onClose={() => setShowNewRoleModal(false)} onCreated={() => { fetchRoles(); setShowNewRoleModal(false); }} />
+      )}
+    </div>
+  );
+}
 
-              <div className="p-4 bg-[#f8fafc] rounded-xl mb-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold text-[#0f172a]">Must Have</span>
-                  <span className="text-[0.65rem] px-2 py-0.5 bg-[#4f46e5] text-white rounded-full font-semibold">Required</span>
-                </div>
-                <p className="text-xs text-[#64748b] mb-4">Candidates will be rejected without these</p>
+function SidebarItem({ icon, label, badge, active, color, onClick }: { icon: string; label: string; badge?: number; active?: boolean; color?: string; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: 12, 
+      padding: '12px 14px', 
+      borderRadius: 10, 
+      color: color || (active ? '#4F46E5' : '#475569'), 
+      background: active ? '#eef2ff' : 'transparent', 
+      border: 'none', 
+      width: '100%', 
+      textAlign: 'left', 
+      fontSize: '0.95rem', 
+      fontWeight: 500, 
+      cursor: 'pointer',
+      marginBottom: 4
+    }}>
+      <span style={{ fontSize: '1.1rem' }}>{icon}</span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {badge !== undefined && badge > 0 && <span style={{ background: '#4F46E5', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: 100 }}>{badge}</span>}
+    </button>
+  );
+}
 
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#0f172a] mb-2">Minimum Experience</label>
-                  <select 
-                    value={newRole.min_experience_years}
-                    onChange={(e) => setNewRole({...newRole, min_experience_years: parseInt(e.target.value)})}
-                    className="w-full px-3 py-3 border border-[#e2e8f0] rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
-                  >
-                    <option value={1}>1+ years</option>
-                    <option value={2}>2+ years</option>
-                    <option value={3}>3+ years</option>
-                    <option value={5}>5+ years</option>
-                    <option value={7}>7+ years</option>
-                  </select>
-                </div>
+function StatCard({ icon, value, label, extra }: { icon: string; value: string; label: string; extra?: string }) {
+  return (
+    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: 24 }}>
+      <div style={{ fontSize: '1.5rem', marginBottom: 12 }}>{icon}</div>
+      <div style={{ fontSize: '2.25rem', fontWeight: 800, marginBottom: 4 }}>{value}</div>
+      <div style={{ fontSize: '0.95rem', color: '#64748b' }}>{label}</div>
+      {extra && <div style={{ fontSize: '0.85rem', color: '#4F46E5', fontWeight: 600, marginTop: 4 }}>{extra}</div>}
+    </div>
+  );
+}
 
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-[#0f172a] mb-2">Required Skills</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Python, Django, PostgreSQL"
-                    className="w-full px-3 py-3 border border-[#e2e8f0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
-                  />
-                </div>
-              </div>
-            </div>
+function NewRoleModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [title, setTitle] = useState('');
+  const [minExp, setMinExp] = useState(2);
+  const [skills, setSkills] = useState('');
+  const [locations, setLocations] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
-            <div className="flex justify-end gap-3 p-5 border-t border-[#e2e8f0] bg-[#f8fafc]">
-              <button 
-                onClick={() => setShowNewRoleModal(false)}
-                className="px-5 py-2.5 bg-white border border-[#e2e8f0] rounded-lg text-sm font-semibold text-[#0f172a] hover:border-[#4f46e5] transition-colors"
-              >
-                Cancel
-              </button>
-              <button className="px-5 py-2.5 bg-[#4f46e5] rounded-lg text-sm font-semibold text-white hover:bg-[#4338ca] transition-colors">
-                Create Role
-              </button>
-            </div>
+  const handleCreate = async () => {
+    if (!title) return;
+    setIsCreating(true);
+    try {
+      const res = await fetch('/api/roles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          criteria: {
+            min_experience_years: minExp,
+            required_skills: skills.split(',').map(s => s.trim()).filter(Boolean),
+            preferred_skills: [],
+            locations: locations.split(',').map(s => s.trim()).filter(Boolean),
+          }
+        })
+      });
+      if (res.ok) onCreated();
+      else alert('Failed to create role');
+    } catch (e) { console.error(e); alert('Failed to create role'); }
+    setIsCreating(false);
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 500, overflow: 'hidden' }}>
+        <div style={{ padding: 28, background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', marginBottom: 4 }}>Create New Role</h2>
+          <p style={{ color: 'rgba(255,255,255,0.8)' }}>Define your ideal candidate</p>
+        </div>
+        <div style={{ padding: 28 }}>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>Role Title *</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Senior Frontend Developer" style={{ width: '100%', padding: 14, border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem' }} />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>Min. Experience</label>
+            <select value={minExp} onChange={e => setMinExp(parseInt(e.target.value))} style={{ width: '100%', padding: 14, border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem', background: 'white' }}>
+              <option value={0}>No minimum</option>
+              <option value={1}>1+ years</option>
+              <option value={2}>2+ years</option>
+              <option value={3}>3+ years</option>
+              <option value={5}>5+ years</option>
+            </select>
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>Required Skills</label>
+            <input type="text" value={skills} onChange={e => setSkills(e.target.value)} placeholder="e.g. React, TypeScript, Node.js" style={{ width: '100%', padding: 14, border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem' }} />
+            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: 4 }}>Separate with commas</div>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>Locations</label>
+            <input type="text" value={locations} onChange={e => setLocations(e.target.value)} placeholder="e.g. Johannesburg, Remote" style={{ width: '100%', padding: 14, border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: 14, background: 'white', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleCreate} disabled={isCreating || !title} style={{ flex: 1, padding: 14, background: '#059669', color: 'white', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer', opacity: isCreating || !title ? 0.5 : 1 }}>
+              {isCreating ? 'Creating...' : 'Create Role'}
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

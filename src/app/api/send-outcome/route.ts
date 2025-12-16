@@ -1,21 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
+// app/api/send-outcome/route.ts
+// API route for sending outcome emails (shortlist/reject/talent pool)
+// These are MANUAL - triggered by user from dashboard
+
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sendOutcomeEmail } from '@/lib/email';
+import { 
+  sendShortlistEmail, 
+  sendRejectionEmail, 
+  sendTalentPoolEmail 
+} from '@/lib/email';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { candidateId, status } = await request.json();
+    const body = await request.json();
+    const { candidateId, action, nextSteps } = body;
 
-    if (!candidateId || !status) {
-      return NextResponse.json({ error: 'Missing candidateId or status' }, { status: 400 });
+    if (!candidateId || !action) {
+      return NextResponse.json(
+        { error: 'Missing candidateId or action' },
+        { status: 400 }
+      );
     }
 
-    // Get candidate details
+    // Fetch candidate details
     const { data: candidate, error: candidateError } = await supabase
       .from('candidates')
       .select('*, roles(*)')
@@ -23,38 +35,100 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (candidateError || !candidate) {
-      return NextResponse.json({ error: 'Candidate not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Candidate not found' },
+        { status: 404 }
+      );
     }
 
     if (!candidate.email) {
-      return NextResponse.json({ error: 'Candidate has no email address' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Candidate has no email address' },
+        { status: 400 }
+      );
     }
 
-    // Send outcome email
-    const sent = await sendOutcomeEmail(
-      candidate.email,
-      candidate.name || 'Applicant',
-      candidate.roles?.title || 'Position',
-      status,
-      'HireInbox'
-    );
+    const roleTitle = candidate.roles?.title || 'the position';
+    const companyName = '';
 
-    if (!sent) {
-      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
+    let result;
+    let newStatus;
+
+    switch (action) {
+      case 'shortlist':
+        result = await sendShortlistEmail(
+          candidate.email,
+          candidate.name || 'Applicant',
+          roleTitle,
+          companyName,
+          nextSteps
+        );
+        newStatus = 'shortlist';
+        break;
+
+      case 'reject':
+        result = await sendRejectionEmail(
+          candidate.email,
+          candidate.name || 'Applicant',
+          roleTitle,
+          companyName
+        );
+        newStatus = 'reject';
+        break;
+
+      case 'talent_pool':
+        result = await sendTalentPoolEmail(
+          candidate.email,
+          candidate.name || 'Applicant',
+          roleTitle,
+          companyName
+        );
+        newStatus = 'talent_pool';
+        break;
+
+      default:
+        return NextResponse.json(
+          { error: 'Invalid action. Use: shortlist, reject, or talent_pool' },
+          { status: 400 }
+        );
     }
 
-    // Update candidate status if different
-    if (candidate.status !== status) {
-      await supabase
-        .from('candidates')
-        .update({ status })
-        .eq('id', candidateId);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Failed to send email', details: result.error },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ success: true, message: `Email sent to ${candidate.email}` });
+    // Update candidate status and mark as notified
+    await supabase
+      .from('candidates')
+      .update({ 
+        status: newStatus,
+        outcome_sent_at: new Date().toISOString(),
+        outcome_type: action
+      })
+      .eq('id', candidateId);
+
+    return NextResponse.json({
+      success: true,
+      message: `${action} email sent to ${candidate.email}`,
+      candidate: {
+        id: candidate.id,
+        name: candidate.name,
+        email: candidate.email,
+        newStatus
+      }
+    });
 
   } catch (error) {
     console.error('Send outcome error:', error);
-    return NextResponse.json({ error: 'Failed to send outcome email' }, { status: 500 });
+    return NextResponse.json(
+      { 
+        error: 'Failed to send outcome email',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
 }
