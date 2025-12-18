@@ -674,7 +674,7 @@ function StatCard({ icon, iconBg, value, label, trend, gradient, extra }: { icon
 function hasEvidence(s: unknown): s is StrengthItem {
   if (typeof s === 'object' && s !== null && 'label' in s && 'evidence' in s) {
     const item = s as StrengthItem;
-    return item.evidence && item.evidence.length > 0 && item.evidence !== 'not mentioned';
+    return Boolean(item.evidence && item.evidence.length > 0 && item.evidence !== 'not mentioned');
   }
   return false;
 }
