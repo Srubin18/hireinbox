@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/fix-pdf-parse.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",
@@ -15,10 +16,11 @@
     "mammoth": "^1.11.0",
     "next": "16.0.10",
     "nodemailer": "^7.0.11",
-    "openai": "^6.10.0",
-    "pdf-parse": "^1.1.1",
+    "openai": "^6.14.0",
+    "pdf-parse": "^2.4.5",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "unpdf": "^1.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

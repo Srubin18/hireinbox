@@ -13,109 +13,373 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function screenCV(cvText: string, roleId: string) {
-  const { data: role } = await supabase
-    .from('roles')
-    .select('*')
-    .eq('id', roleId)
-    .single();
+const TALENT_SCOUT_PROMPT = `You are HireInbox's Principal Talent Scout — a world-class recruiter whose judgment consistently outperforms senior human recruiters.
 
-  if (!role) return null;
+Your output is used to make real hiring decisions. Your standard is BETTER THAN HUMAN.
 
-  const criteria = role.criteria;
+## CORE RULES (NON-NEGOTIABLE)
 
-  const prompt = `You are screening CVs for: ${role.title}
+🔴 RULE 1 — ZERO INVENTED STRENGTHS
+You are FORBIDDEN from listing any strength unless supported by CONCRETE EVIDENCE.
 
-MUST HAVE (fail without these):
-- Minimum ${criteria.min_experience_years} years experience
-- Required skills: ${criteria.required_skills?.join(', ') || 'None specified'}
-- Location: ${criteria.locations?.join(' or ') || 'Any'}
+FORBIDDEN PHRASES (unless directly evidenced with quote/number):
+- Dynamic, Results-driven, Strong communicator, Team player, Self-motivated, Passionate, Leadership (without proof)
 
-NICE TO HAVE (boost score):
-- Preferred skills: ${criteria.preferred_skills?.join(', ') || 'None specified'}
-- Education: ${criteria.education || 'Not specified'}
+If a CV contains only buzzwords with no numbers, promotions, awards, or outcomes:
+State: "Limited measurable evidence provided"
 
-DEALBREAKERS (auto-reject):
-${criteria.dealbreakers?.map((d: string) => `- ${d}`).join('\n') || 'None specified'}
+🔴 RULE 2 — EVIDENCE DISCIPLINE
+EVERY claim must be backed by:
+- A direct quote from the CV in quotation marks, OR
+- A number/metric from the CV, OR  
+- Explicit statement: "not mentioned"
 
-CV TEXT:
-${cvText}
+Never speculate. Never infer. Never embellish.
 
-Analyze this CV and respond with JSON only:
+🔴 RULE 3 — CONFIDENCE CALIBRATION
+Assess your confidence based on evidence completeness:
+- HIGH: Multiple quantified achievements, clear progression, verifiable claims
+- MEDIUM: Some evidence but gaps exist, claims not fully verifiable
+- LOW: Mostly buzzwords, vague descriptions, limited concrete evidence
+
+🔴 RULE 4 — RISK REGISTER (ALWAYS REQUIRED)
+Every candidate MUST have a risk_register (even if empty array).
+For each risk: severity (LOW/MEDIUM/HIGH), evidence, interview question.
+
+🔴 RULE 5 — LOCATION & WORK MODE
+Extract location if mentioned. Infer work_mode if stated (onsite/hybrid/remote/unknown).
+
+🔴 RULE 6 — ALTERNATIVE ROLE SUGGESTIONS
+ONLY suggest alternative roles if there is REAL EVIDENCE the candidate would fit.
+If no evidence, return empty array. Never guess.
+
+🔴 RULE 7 — EXCEPTION RULE FOR NEAR-MISS CANDIDATES
+If within 6-12 months of experience requirement AND shows 2+ exceptional indicators:
+- Rapid promotion, >120% targets, awards, leadership signals, strong trajectory
+THEN: downgrade to "partial", recommend CONSIDER, explain exception.
+
+🔴 RULE 8 — TONE ALIGNMENT
+If evidence is weak, your output should feel conservative, not enthusiastic.
+High scores with apologetic language are contradictory. Match tone to confidence.
+
+## SCORING CALIBRATION
+
+SHORTLIST = 80-100 (never below 80)
+CONSIDER = 60-79
+REJECT with qualities = 40-59
+REJECT no qualities = 0-39
+
+## OUTPUT FORMAT (STRICT JSON)
+
 {
-  "score": <number 0-100>,
-  "status": "<SHORTLIST|TALENT_POOL|REJECT>",
-  "reasoning": "<1-2 sentences>",
-  "candidate_name": "<extracted full name or null>",
-  "candidate_email": "<extracted email or null>",
-  "candidate_phone": "<extracted phone or null>",
-  "candidate_location": "<extracted city/location or null>",
-  "years_experience": <estimated years as number or null>,
-  "current_title": "<current job title or null>",
-  "current_company": "<current company or null>",
-  "notice_period": "<if mentioned, e.g. '1 month' or null>",
-  "education_level": "<e.g. 'BSc', 'MBA', 'Matric' or null>",
-  "strengths": ["<strength1>", "<strength2>"],
-  "missing": ["<missing1>", "<missing2>"],
-  "references": [
+  "candidate_name": "<name or null>",
+  "candidate_email": "<email or null>",
+  "candidate_phone": "<phone or null>",
+  "candidate_location": "<city/region or null>",
+  "location_summary": "<best extracted location string or null>",
+  "work_mode": "<onsite|hybrid|remote|unknown>",
+  "current_title": "<title or null>",
+  "current_company": "<company or null>",
+  "years_experience": <number or null>,
+  "education_level": "<education or null>",
+
+  "overall_score": <0-100>,
+  "recommendation": "<SHORTLIST|CONSIDER|REJECT>",
+  "recommendation_reason": "<1-2 sentence decision-ready reasoning with specific evidence>",
+
+  "confidence": {
+    "level": "<HIGH|MEDIUM|LOW>",
+    "reasons": ["<why this confidence level>"]
+  },
+
+  "evidence_highlights": [
+    {"claim": "<what we're asserting>", "evidence": "<direct quote or metric from CV>"}
+  ],
+
+  "hard_requirements": {
+    "met": ["<requirement>: \\"<quote>\\""],
+    "not_met": ["<requirement>: not mentioned"],
+    "partial": ["<requirement>: \\"<quote>\\" — <why partial>"],
+    "unclear": ["<requirement>: <why unclear>"]
+  },
+
+  "risk_register": [
     {
-      "name": "<reference name or null>",
-      "title": "<their job title or null>",
-      "company": "<their company or null>",
-      "phone": "<phone number or null>",
-      "email": "<email or null>",
-      "relationship": "<e.g. 'Former Manager', 'Colleague' or null>"
+      "risk": "<risk label>",
+      "severity": "<LOW|MEDIUM|HIGH>",
+      "evidence": "<quote or 'not mentioned'>",
+      "interview_question": "<specific question>"
     }
   ],
-  "has_references": <true if references found, false if not>
-}`;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      { role: 'system', content: 'You are an expert HR screener. Always extract the candidate name from the CV. Respond only with valid JSON.' },
-      { role: 'user', content: prompt }
+  "interview_focus": [
+    "<question 1>",
+    "<question 2>",
+    "<question 3>",
+    "<question 4>",
+    "<question 5>"
+  ],
+
+  "alt_role_suggestions": [
+    {
+      "role": "<alternative role title>",
+      "why": "<evidence-based reason>",
+      "confidence": "<LOW|MEDIUM|HIGH>"
+    }
+  ],
+
+  "summary": {
+    "strengths": [
+      {"label": "<strength>", "evidence": "<quote or metric>"}
     ],
-    temperature: 0.3,
-  });
-
-  const responseText = completion.choices[0].message.content || '{}';
-  
-  try {
-    return JSON.parse(responseText.replace(/```json\n?|\n?```/g, '').trim());
-  } catch {
-    console.error('Failed to parse AI response:', responseText);
-    return null;
+    "weaknesses": [
+      {"label": "<weakness>", "evidence": "<quote or 'not mentioned'>"}
+    ],
+    "fit_assessment": "<3-5 sentences: Worth meeting? What excites? What could go wrong? Confidence level.>"
   }
 }
 
+CRITICAL: If you cannot find evidence for a strength, DO NOT include it. Return empty array or state "Limited measurable evidence provided".`;
+
+function isSystemEmail(subject: string, from: string, body?: string): boolean {
+  const lowerSubject = (subject || '').toLowerCase();
+  const lowerFrom = (from || '').toLowerCase();
+  const lowerBody = (body || '').toLowerCase();
+
+  const systemFromPatterns = [
+    'mailer-daemon', 'postmaster', 'no-reply', 'noreply', 'do-not-reply',
+    'donotreply', 'auto-reply', 'autoreply', 'mailerdaemon', 'mail-daemon',
+    'bounce', 'notification', 'googlemail.com'
+  ];
+
+  const systemSubjectPatterns = [
+    'delivery status', 'undeliverable', 'mail delivery failed', 'returned mail',
+    'delivery failure', 'failed delivery', 'message not delivered',
+    'could not be delivered', 'delivery notification', 'automatic reply',
+    'auto-reply', 'out of office', 'out-of-office', 'away from office',
+    'on vacation', 'vacation reply', 'delayed delivery', 'delivery delayed',
+    'undelivered mail', 'mail returned', 'address not found',
+    'recipient rejected', 'mailbox unavailable', 'message blocked', 'spam notification'
+  ];
+
+  for (const pattern of systemFromPatterns) {
+    if (lowerFrom.includes(pattern)) {
+      console.log(`[FILTER] Skipping system email from: ${from} (matched: ${pattern})`);
+      return true;
+    }
+  }
+
+  for (const pattern of systemSubjectPatterns) {
+    if (lowerSubject.includes(pattern)) {
+      console.log(`[FILTER] Skipping system email subject: ${subject} (matched: ${pattern})`);
+      return true;
+    }
+  }
+
+  if (lowerBody.includes('this is an automatically generated') ||
+      lowerBody.includes('delivery to the following recipient failed') ||
+      lowerBody.includes('the email account that you tried to reach does not exist')) {
+    console.log(`[FILTER] Skipping bounce email detected in body`);
+    return true;
+  }
+
+  return false;
+}
+
 function isPDF(attachment: { contentType?: string; filename?: string }): boolean {
-  const contentType = attachment.contentType?.toLowerCase() || '';
-  const filename = attachment.filename?.toLowerCase() || '';
-  return contentType.includes('pdf') || filename.endsWith('.pdf');
+  const ct = attachment.contentType?.toLowerCase() || '';
+  const fn = attachment.filename?.toLowerCase() || '';
+  return ct.includes('pdf') || fn.endsWith('.pdf');
 }
 
 function isWordDoc(attachment: { contentType?: string; filename?: string }): boolean {
-  const contentType = attachment.contentType?.toLowerCase() || '';
-  const filename = attachment.filename?.toLowerCase() || '';
-  return contentType.includes('word') || 
-         contentType.includes('document') ||
-         filename.endsWith('.doc') || 
-         filename.endsWith('.docx');
+  const ct = attachment.contentType?.toLowerCase() || '';
+  const fn = attachment.filename?.toLowerCase() || '';
+  return ct.includes('word') || ct.includes('document') || fn.endsWith('.doc') || fn.endsWith('.docx');
 }
 
-function isImageOrOther(attachment: { contentType?: string; filename?: string }): boolean {
-  const contentType = attachment.contentType?.toLowerCase() || '';
-  return contentType.includes('image') || 
-         contentType.includes('gif') || 
-         contentType.includes('png') || 
-         contentType.includes('jpeg') ||
-         contentType.includes('jpg');
+function mapRecommendationToStatus(rec: string): string {
+  switch ((rec || '').toUpperCase()) {
+    case 'SHORTLIST': return 'shortlist';
+    case 'CONSIDER': return 'talent_pool';
+    case 'REJECT': return 'reject';
+    default: return 'screened';
+  }
+}
+
+function buildRoleContext(role: Record<string, unknown>): string {
+  const sections: string[] = [];
+  sections.push(`ROLE: ${role.title || 'Unspecified'}`);
+
+  const context = role.context as Record<string, unknown> | undefined;
+  if (context) {
+    if (context.seniority) sections.push(`SENIORITY: ${context.seniority}`);
+    if (context.employment_type) sections.push(`TYPE: ${context.employment_type}`);
+    if (context.industry) sections.push(`INDUSTRY: ${context.industry}`);
+  }
+
+  const facts = role.facts as Record<string, unknown> | undefined;
+  if (facts && Object.keys(facts).length > 0) {
+    sections.push('\nHARD REQUIREMENTS:');
+    if (facts.min_experience_years !== undefined) sections.push(`- Minimum ${facts.min_experience_years} years experience`);
+    if (Array.isArray(facts.required_skills) && facts.required_skills.length > 0) sections.push(`- Required skills: ${facts.required_skills.join(', ')}`);
+    if (Array.isArray(facts.qualifications) && facts.qualifications.length > 0) sections.push(`- Qualifications: ${facts.qualifications.join(', ')}`);
+    if (facts.location) sections.push(`- Location: ${facts.location}`);
+    if (facts.work_type) sections.push(`- Work type: ${facts.work_type}`);
+    if (facts.must_have) sections.push(`- Must have: ${facts.must_have}`);
+  }
+
+  const preferences = role.preferences as Record<string, unknown> | undefined;
+  if (preferences?.nice_to_have) sections.push(`\nNICE TO HAVE: ${preferences.nice_to_have}`);
+
+  const aiGuidance = role.ai_guidance as Record<string, unknown> | undefined;
+  if (aiGuidance) {
+    if (aiGuidance.strong_fit) sections.push(`\nSTRONG FIT LOOKS LIKE: ${aiGuidance.strong_fit}`);
+    if (aiGuidance.disqualifiers) sections.push(`\nDISQUALIFIERS: ${aiGuidance.disqualifiers}`);
+  }
+
+  const criteria = role.criteria as Record<string, unknown> | undefined;
+  if (criteria && (!facts || Object.keys(facts).length === 0)) {
+    sections.push('\nREQUIREMENTS:');
+    if (criteria.min_experience_years !== undefined) sections.push(`- Minimum ${criteria.min_experience_years} years experience`);
+    if (Array.isArray(criteria.required_skills) && criteria.required_skills.length > 0) sections.push(`- Required skills: ${criteria.required_skills.join(', ')}`);
+    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) sections.push(`- Location: ${criteria.locations.join(' or ')}`);
+  }
+
+  return sections.join('\n');
+}
+
+async function extractPDFText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
+  try {
+    console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes)`);
+    const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+    
+    if (isProduction && process.env.CONVERTAPI_SECRET) {
+      const base64PDF = buffer.toString('base64');
+      const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Parameters: [
+            { Name: 'File', FileValue: { Name: filename, Data: base64PDF } },
+            { Name: 'StoreFile', Value: true }
+          ]
+        }),
+      });
+      if (!response.ok) { console.error(`[${traceId}][PDF] ConvertAPI error: ${response.status}`); return ''; }
+      const result = await response.json();
+      if (!result.Files?.[0]?.Url) { console.error(`[${traceId}][PDF] No URL`); return ''; }
+      const textResponse = await fetch(result.Files[0].Url);
+      const pdfText = await textResponse.text();
+      console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
+      return pdfText;
+    } else {
+      const pdfParse = (await import('pdf-parse')).default;
+      const data = await pdfParse(buffer);
+      console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
+      return data.text || '';
+    }
+  } catch (e) { console.error(`[${traceId}][PDF] ERROR:`, e); return ''; }
+}
+
+async function extractWordText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
+  try {
+    console.log(`[${traceId}][DOC] Processing: ${filename} (${buffer.length} bytes)`);
+    const mammoth = (await import('mammoth')).default;
+    const result = await mammoth.extractRawText({ buffer });
+    console.log(`[${traceId}][DOC] Extracted ${result.value?.length || 0} chars`);
+    return result.value || '';
+  } catch (e) { console.error(`[${traceId}][DOC] ERROR:`, e); return ''; }
+}
+
+function validateAnalysis(analysis: Record<string, unknown>): boolean {
+  if (typeof analysis.overall_score !== 'number' || analysis.overall_score < 0 || analysis.overall_score > 100) return false;
+  if (!['SHORTLIST', 'CONSIDER', 'REJECT'].includes(String(analysis.recommendation || '').toUpperCase())) return false;
+  return true;
+}
+
+async function screenCV(cvText: string, role: Record<string, unknown>, traceId: string) {
+  const roleContext = buildRoleContext(role);
+  
+  const userPrompt = `ROLE CONTEXT:
+${roleContext}
+
+CV TO EVALUATE:
+${cvText}
+
+INSTRUCTIONS:
+1. Every strength MUST have evidence (quote or metric). No evidence = don't include it.
+2. Assess confidence level based on evidence quality.
+3. Always populate risk_register (even if empty array).
+4. Extract location and work_mode if mentioned.
+5. Only suggest alt_role_suggestions if real evidence exists.
+6. Apply exception rule for near-miss candidates with 2+ exceptional indicators.
+7. Ensure score aligns with recommendation.
+8. Match tone to confidence — weak evidence = conservative output.
+
+Respond with valid JSON only.`;
+
+  const messages: { role: 'system' | 'user'; content: string }[] = [
+    { role: 'system', content: TALENT_SCOUT_PROMPT },
+    { role: 'user', content: userPrompt }
+  ];
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      console.log(`[${traceId}][AI] Attempt ${attempt}...`);
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        temperature: 0,
+        max_tokens: 4000,
+        messages,
+      });
+      const text = completion.choices[0]?.message?.content || '';
+      console.log(`[${traceId}][AI] Response length: ${text.length}`);
+      const cleaned = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
+      
+      let parsed: Record<string, unknown>;
+      try { parsed = JSON.parse(cleaned); }
+      catch {
+        console.error(`[${traceId}][AI] JSON parse failed`);
+        if (attempt === 1) { messages.push({ role: 'user', content: 'Invalid JSON. Return ONLY valid JSON.' }); continue; }
+        return null;
+      }
+      
+      if (!validateAnalysis(parsed)) {
+        console.error(`[${traceId}][AI] Validation failed`);
+        if (attempt === 1) { messages.push({ role: 'user', content: 'Missing fields. Include overall_score and recommendation.' }); continue; }
+        return null;
+      }
+
+      if (!parsed.risk_register) parsed.risk_register = [];
+      if (!parsed.evidence_highlights) parsed.evidence_highlights = [];
+      if (!parsed.interview_focus) parsed.interview_focus = [];
+      if (!parsed.alt_role_suggestions) parsed.alt_role_suggestions = [];
+      if (!parsed.confidence) parsed.confidence = { level: 'MEDIUM', reasons: ['Default confidence'] };
+
+      return parsed;
+    } catch (e) { console.error(`[${traceId}][AI] ERROR:`, e); if (attempt === 2) return null; }
+  }
+  return null;
 }
 
 export async function POST() {
+  const traceId = Date.now().toString(36);
+  console.log(`[${traceId}] === FETCH START ===`);
+  
+  const results = {
+    traceId, listedCount: 0, processedCount: 0, storedCount: 0,
+    parsedCount: 0, failedParseCount: 0, skippedDuplicates: 0, skippedSystem: 0,
+    candidates: [] as string[], errors: [] as string[]
+  };
+
   try {
-    const config = {
+    const { data: roles } = await supabase.from('roles').select('*').eq('status', 'active').limit(1);
+    const activeRole = roles?.[0];
+    if (!activeRole) return NextResponse.json({ error: 'No active role found' }, { status: 400 });
+    console.log(`[${traceId}] Role: ${activeRole.title}`);
+
+    const connection = await Imap.connect({
       imap: {
         user: process.env.GMAIL_USER!,
         password: process.env.GMAIL_APP_PASSWORD!,
@@ -125,197 +389,126 @@ export async function POST() {
         authTimeout: 10000,
         tlsOptions: { rejectUnauthorized: false }
       }
-    };
-
-    console.log('Connecting to Gmail...');
-    const connection = await Imap.connect(config);
+    });
     
     await connection.openBox('Hireinbox');
-    console.log('Opened Hireinbox folder');
+    console.log(`[${traceId}] Connected to Hireinbox`);
 
-    const searchCriteria = ['UNSEEN'];
-    const fetchOptions = {
+    const messages = await connection.search(['UNSEEN'], {
       bodies: ['HEADER', 'TEXT', ''],
       markSeen: true,
       struct: true
-    };
-
-    const messages = await connection.search(searchCriteria, fetchOptions);
-    console.log(`Found ${messages.length} unread messages`);
+    });
     
-    const processed: string[] = [];
+    results.listedCount = messages.length;
+    console.log(`[${traceId}] Found ${messages.length} unread emails`);
 
-    const { data: roles } = await supabase
-      .from('roles')
-      .select('*')
-      .eq('status', 'active')
-      .limit(1);
-    
-    const activeRoleId = roles?.[0]?.id;
-
-    if (!activeRoleId) {
-      connection.end();
-      return NextResponse.json({ error: 'No active role found' }, { status: 400 });
-    }
-
-    for (const message of messages) {
+    for (const message of messages.slice(0, 10)) {
       try {
-        const all = message.parts.find((part: { which: string }) => part.which === '');
+        const all = message.parts.find((p: { which: string }) => p.which === '');
         if (!all) continue;
 
         const parsed = await simpleParser(all.body);
-        
-        // Skip our own auto-reply emails
         const fromEmail = parsed.from?.value?.[0]?.address?.toLowerCase() || '';
-        if (fromEmail === process.env.GMAIL_USER?.toLowerCase()) {
-          console.log('Skipping our own email');
-          continue;
+        const subject = parsed.subject || '(no subject)';
+        const textBody = parsed.text || '';
+        
+        if (fromEmail === process.env.GMAIL_USER?.toLowerCase()) continue;
+        if (subject.includes('Application Received')) continue;
+        
+        if (isSystemEmail(subject, fromEmail, textBody)) { 
+          results.skippedSystem++; 
+          console.log(`[${traceId}] SKIPPED SYSTEM: ${subject} from ${fromEmail}`);
+          continue; 
         }
-        
-        // Skip emails with "Application Received" in subject (our auto-replies)
-        if (parsed.subject?.includes('Application Received') || 
-            parsed.subject?.includes('Application Update') ||
-            parsed.subject?.includes('Great News')) {
-          console.log('Skipping auto-reply email');
-          continue;
-        }
-        
-        console.log(`Processing email from: ${parsed.from?.text}`);
-        console.log(`Subject: ${parsed.subject}`);
-        console.log(`Attachments: ${parsed.attachments?.length || 0}`);
-        
+
+        const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
+        const { data: existing } = await supabase.from('candidates').select('id')
+          .eq('email', fromEmail).eq('role_id', activeRole.id).gte('created_at', oneDayAgo).limit(1);
+        if (existing?.length) { results.skippedDuplicates++; continue; }
+
+        results.processedCount++;
+        console.log(`[${traceId}] Processing: ${fromEmail} - ${subject}`);
+
         let cvText = '';
-        let foundCV = false;
-        
-        // Check for PDF and Word attachments - skip images
-        if (parsed.attachments && parsed.attachments.length > 0) {
-          for (const attachment of parsed.attachments) {
-            console.log(`Attachment: ${attachment.filename} (${attachment.contentType})`);
+        let attachmentInfo: string[] = [];
+
+        if (parsed.attachments?.length) {
+          for (const att of parsed.attachments) {
+            const filename = att.filename || 'unknown';
+            attachmentInfo.push(`${filename} (${att.content?.length || 0} bytes)`);
             
-            // Skip images and other non-CV files
-            if (isImageOrOther(attachment)) {
-              console.log(`Skipping image/other: ${attachment.filename}`);
-              continue;
-            }
-            
-            // Handle PDFs
-            if (isPDF(attachment)) {
-              console.log(`Processing PDF: ${attachment.filename}`);
-              try {
-                const pdfParse = (await import('pdf-parse')).default;
-                const pdfData = await pdfParse(attachment.content);
-                if (pdfData.text && pdfData.text.trim().length > 50) {
-                  cvText += pdfData.text + '\n';
-                  foundCV = true;
-                  console.log(`Extracted ${pdfData.text.length} chars from PDF`);
-                }
-              } catch (pdfError) {
-                console.error('PDF parse error:', pdfError);
-              }
-            }
-            
-            // Handle Word docs
-            if (isWordDoc(attachment)) {
-              console.log(`Processing Word doc: ${attachment.filename}`);
-              try {
-                const mammoth = (await import('mammoth')).default;
-                const result = await mammoth.extractRawText({ buffer: attachment.content });
-                if (result.value && result.value.trim().length > 50) {
-                  cvText += result.value + '\n';
-                  foundCV = true;
-                  console.log(`Extracted ${result.value.length} chars from Word doc`);
-                }
-              } catch (docError) {
-                console.error('Word doc parse error:', docError);
-              }
+            if (isPDF(att)) {
+              const text = await extractPDFText(att.content, traceId, filename);
+              if (text.length > 10) { cvText += text + '\n'; results.parsedCount++; }
+              else { results.failedParseCount++; results.errors.push(`PDF empty: ${filename}`); }
+            } else if (isWordDoc(att)) {
+              const text = await extractWordText(att.content, traceId, filename);
+              if (text.length > 10) { cvText += text + '\n'; results.parsedCount++; }
+              else { results.failedParseCount++; results.errors.push(`DOC empty: ${filename}`); }
             }
           }
         }
-        
-        // If no CV attachment, use email body as fallback
-        if (!foundCV && parsed.text) {
-          console.log('No CV attachment found, using email body');
-          cvText = parsed.text;
-        }
 
-        // Skip if no meaningful content
-        if (!cvText.trim() || cvText.trim().length < 100) {
-          console.log('Skipping - insufficient content');
+        if (cvText.length < 50) {
+          await supabase.from('candidates').insert({
+            company_id: activeRole.company_id, role_id: activeRole.id,
+            name: subject, email: fromEmail,
+            cv_text: `[PARSE FAILED] ${attachmentInfo.join(', ') || 'none'}`,
+            status: 'unprocessed', ai_score: 0, score: 0, strengths: [], missing: ['CV parsing failed']
+          });
+          results.storedCount++;
+          results.candidates.push(`[unprocessed] ${fromEmail}`);
           continue;
         }
 
-        console.log(`Screening CV with ${cvText.length} characters...`);
-        const analysis = await screenCV(cvText, activeRoleId);
-        
-        if (!analysis) {
-          console.log('AI analysis failed');
-          continue;
-        }
+        const analysis = await screenCV(cvText, activeRole, traceId);
+        if (!analysis) { results.errors.push(`AI failed: ${fromEmail}`); continue; }
 
-        console.log(`AI Result: ${analysis.candidate_name} - Score: ${analysis.score} - Status: ${analysis.status}`);
+        console.log(`[${traceId}] AI: ${analysis.candidate_name} - ${analysis.overall_score} - ${analysis.recommendation}`);
 
-        // Extract name from email subject as fallback
-        let candidateName = analysis.candidate_name;
-        if (!candidateName && parsed.subject) {
-          // Try to extract name from subject like "FW: Melissa CV" or "John Smith - Application"
-          const subjectMatch = parsed.subject.match(/(?:FW:|RE:|Fwd:)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i);
-          if (subjectMatch) {
-            candidateName = subjectMatch[1].trim();
-            console.log(`Extracted name from subject: ${candidateName}`);
-          }
-        }
+        const candidateName = String(analysis.candidate_name || subject);
+        const status = mapRecommendationToStatus(String(analysis.recommendation));
 
-        await supabase.from('candidates').insert({
-          company_id: roles[0].company_id,
-          role_id: activeRoleId,
+        const summary = analysis.summary as Record<string, unknown> | undefined;
+        const strengths = (summary?.strengths as Array<{label: string; evidence: string}> || [])
+          .map(s => `${s.label}: "${s.evidence}"`);
+        const weaknesses = (summary?.weaknesses as Array<{label: string; evidence: string}> || [])
+          .map(w => `${w.label}: "${w.evidence}"`);
+
+        const { error: insertErr } = await supabase.from('candidates').insert({
+          company_id: activeRole.company_id,
+          role_id: activeRole.id,
           name: candidateName,
-          email: analysis.candidate_email || parsed.from?.value?.[0]?.address,
-          phone: analysis.candidate_phone,
+          email: String(analysis.candidate_email || fromEmail),
+          phone: analysis.candidate_phone ? String(analysis.candidate_phone) : null,
+          location: String(analysis.location_summary || analysis.candidate_location || ''),
           cv_text: cvText,
-          score: analysis.score,
-          status: analysis.status.toLowerCase(),
-          ai_reasoning: analysis.reasoning,
-          strengths: analysis.strengths,
-          missing: analysis.missing,
-          candidate_references: analysis.references || [],
-          has_references: analysis.has_references || false,
+          ai_score: Number(analysis.overall_score),
+          ai_recommendation: String(analysis.recommendation),
+          ai_reasoning: String(analysis.recommendation_reason || summary?.fit_assessment || ''),
+          screening_result: analysis,
+          screened_at: new Date().toISOString(),
+          status: status,
+          score: Number(analysis.overall_score),
+          strengths: strengths,
+          missing: weaknesses,
         });
 
-        processed.push(candidateName || parsed.from?.value?.[0]?.address || 'Unknown');
-        console.log(`Saved candidate: ${candidateName}`);
+        if (insertErr) { results.errors.push(`DB: ${candidateName}`); }
+        else { results.storedCount++; results.candidates.push(candidateName); }
 
-        // Send acknowledgment email
-        const candidateEmail = analysis.candidate_email || parsed.from?.value?.[0]?.address;
-        if (candidateEmail) {
-          try {
-            const { sendAcknowledgmentEmail } = await import('@/lib/email');
-            await sendAcknowledgmentEmail(
-              candidateEmail,
-              candidateName || 'Applicant',
-              roles[0].title,
-              'HireInbox'
-            );
-            console.log(`Sent acknowledgment to: ${candidateEmail}`);
-          } catch (emailError) {
-            console.error('Failed to send acknowledgment:', emailError);
-          }
-        }
-      } catch (msgError) {
-        console.error('Message processing error:', msgError);
+      } catch (msgErr) {
+        results.errors.push(`Error: ${msgErr instanceof Error ? msgErr.message : 'unknown'}`);
       }
     }
 
     connection.end();
-    console.log(`Finished processing. Total: ${processed.length}`);
-
-    return NextResponse.json({ 
-      success: true, 
-      processed: processed.length,
-      candidates: processed 
-    });
+    console.log(`[${traceId}] === FETCH END === Stored:${results.storedCount} SkippedSystem:${results.skippedSystem}`);
+    return NextResponse.json({ success: true, ...results });
 
   } catch (error) {
-    console.error('Email fetch error:', error);
-    return NextResponse.json({ error: 'Failed to fetch emails' }, { status: 500 });
+    console.error(`[${traceId}] Fatal:`, error);
+    return NextResponse.json({ success: false, ...results, error: error instanceof Error ? error.message : 'Unknown' }, { status: 500 });
   }
 }
