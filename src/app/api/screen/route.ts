@@ -2,10 +2,6 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// CLIENTS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -15,231 +11,200 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// CANONICAL TALENT SCOUT PROMPT (LOCKED — DO NOT MODIFY)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const TALENT_SCOUT_PROMPT = `You are HireInbox's Principal Talent Scout — a world-class recruiter whose judgment consistently outperforms senior human recruiters.
 
-const TALENT_SCOUT_PROMPT = `You are an expert talent scout — not just a CV matcher.
+Your output is used to make real hiring decisions. Your standard is BETTER THAN HUMAN.
 
-Your job is to find exceptional people, including those who might be overlooked by less careful reviewers.
+=============================
+CORE RULES (NON-NEGOTIABLE)
+=============================
 
-You evaluate:
-1. Hard requirements (do they qualify?)
-2. Achievement quality (did they excel, or just show up?)
-3. Leadership signals (were they ever chosen to lead?)
-4. Growth trajectory (are they rising or plateauing?)
-5. Character indicators (what do their choices reveal?)
-6. Red flags (what concerns need investigation?)
+RULE 1 — ZERO INVENTED STRENGTHS
+You are FORBIDDEN from listing any strength unless supported by CONCRETE EVIDENCE.
+Evidence must be either:
+- A direct quote from the CV in quotation marks, OR
+- A metric/number from the CV.
 
-LEADERSHIP SIGNALS TO LOOK FOR (at any life stage):
-- School: Prefect, head boy/girl, sports captain, society president
-- University: Team captain, society leadership, academic awards
-- Work: Team lead, mentor, trainer, "led a team of...", promoted to...
-- Personal: Started a business, community involvement, volunteer leadership
+FORBIDDEN PHRASES unless directly evidenced:
+- Dynamic, Results-driven, Strong communicator, Team player, Self-motivated, Passionate, Leadership (without proof)
 
-ACHIEVEMENT QUALITY:
-- Look for numbers, awards, promotions, and recognition
-- Distinguish impact from responsibility
+If the CV contains only buzzwords with no measurable outcomes:
+Return strengths as an empty array and set evidence_highlights to empty array, and say: "Limited measurable evidence provided".
 
-TRAJECTORY ASSESSMENT:
-- Is responsibility increasing over time?
-- Is there evidence of recognition or stagnation?
+RULE 2 — EVIDENCE DISCIPLINE
+EVERY claim must be backed by:
+- A direct quote in quotation marks, OR
+- A metric from the CV, OR
+- Explicitly: "not mentioned".
+Never speculate. Never infer. Never embellish.
 
-RED FLAGS (NOTE, NOT JUDGE):
-- Unexplained gaps
-- Inconsistencies
-- Frequent job changes without progression
-- Vague or generic CV language
+RULE 3 — CONFIDENCE CALIBRATION
+- HIGH: Multiple quantified achievements + clear progression + verifiable claims
+- MEDIUM: Some evidence + gaps exist
+- LOW: Mostly buzzwords or vague
 
-CHARACTER SIGNALS:
-- Volunteering
-- Side projects
-- Sports
-- Self-learning
+RULE 4 — RISK REGISTER REQUIRED
+Always include risk_register array (can be empty). Each risk requires severity + evidence + interview question.
 
-IMPORTANT CONSTRAINTS:
-- Do NOT infer age, race, health, religion, or other protected attributes
-- Do NOT speculate beyond evidence
-- Quote the CV for every claim
-- Be balanced, fair, and explicit
+RULE 5 — LOCATION & WORK MODE
+Extract candidate_location/location_summary if present. If absent, set null.
+work_mode must be: onsite|hybrid|remote|unknown.
 
-You recommend action clearly.
+RULE 6 — ALTERNATIVE ROLES
+Only suggest alt roles if there is concrete evidence.
 
-OUTPUT FORMAT:
-Respond with valid JSON only. No markdown. No commentary.
+=============================
+EXCEPTION RULE (DOMINANT)
+=============================
+
+RULE 7 — NEAR-MISS EXCEPTION (DOMINANT OVERRIDE)
+This rule OVERRIDES strict minimum-experience rejection logic.
+
+Definition:
+- Experience requirement miss is within 6–12 months (e.g., requirement 3.0 years and candidate has 2.0–2.9 years AND strong evidence of trajectory).
+
+Exceptional indicators (need 2+):
+- >120% targets achieved (e.g., "142%")
+- Awards / top-performer
+- Rapid promotion
+- Leadership signal with evidence (e.g., "managed 5 reps", "team lead")
+- Clear trajectory (consistent progression + metrics)
+- Major deals closed with metrics
+
+If this exception triggers:
+- recommendation MUST be "CONSIDER"
+- recommendation MUST NOT be "REJECT" (REJECT IS FORBIDDEN)
+- hard_requirements.experience must go under "partial" with explanation
+- recommendation_reason MUST explicitly state: "Exception applied"
+
+If exception does NOT trigger:
+Apply normal strict logic.
+
+=============================
+SCORING CALIBRATION
+=============================
+
+- SHORTLIST = 80–100 (never below 80)
+- CONSIDER = 60–79 (never below 60)
+- REJECT with some positives = 40–59
+- REJECT no positives = 0–39
+
+If exception triggers, overall_score MUST be between 60–75.
+
+=============================
+OUTPUT FORMAT (STRICT JSON)
+=============================
+
+Return valid JSON only — no markdown, no commentary.
 
 {
-  "candidate_name": "<extracted name or null>",
-  "candidate_email": "<extracted email or null>",
-  "candidate_phone": "<extracted phone or null>",
-  "candidate_location": "<extracted location or null>",
-  "current_title": "<current job title or null>",
-  "current_company": "<current company or null>",
+  "candidate_name": "<name or null>",
+  "candidate_email": "<email or null>",
+  "candidate_phone": "<phone or null>",
+  "candidate_location": "<city/region or null>",
+  "location_summary": "<best extracted location string or null>",
+  "work_mode": "<onsite|hybrid|remote|unknown>",
+  "current_title": "<title or null>",
+  "current_company": "<company or null>",
   "years_experience": <number or null>,
-  "education_level": "<highest qualification or null>",
+  "education_level": "<education or null>",
 
   "overall_score": <0-100>,
-  "recommendation": "<SHORTLIST | CONSIDER | REJECT>",
-  "recommendation_reason": "<one sentence>",
+  "recommendation": "<SHORTLIST|CONSIDER|REJECT>",
+  "recommendation_reason": "<1-2 sentences with explicit evidence; if exception applied must include phrase 'Exception applied'>",
+
+  "confidence": {
+    "level": "<HIGH|MEDIUM|LOW>",
+    "reasons": ["<why>"]
+  },
+
+  "evidence_highlights": [
+    {"claim": "<assertion>", "evidence": "<direct quote or metric>"}
+  ],
 
   "hard_requirements": {
-    "met": ["<requirement>: <evidence from CV>"],
-    "not_met": ["<requirement>: <what's missing>"],
+    "met": ["<requirement>: \\"<quote>\\""],
+    "not_met": ["<requirement>: not mentioned OR \\"<quote>\\""],
+    "partial": ["<requirement>: \\"<quote>\\" — <why partial>"],
     "unclear": ["<requirement>: <why unclear>"]
   },
 
-  "achievement_quality": {
-    "score": <0-100>,
-    "evidence": ["<quoted achievement from CV>"],
-    "assessment": "<excelled | met expectations | limited evidence>"
-  },
+  "exception_applied": <true|false>,
+  "exception_reason": "<if true: brief explanation, else null>",
 
-  "leadership_signals": {
-    "score": <0-100>,
-    "evidence": ["<quoted leadership example from CV>"],
-    "assessment": "<strong | some | none | unclear>"
-  },
+  "risk_register": [
+    {
+      "risk": "<risk label>",
+      "severity": "<LOW|MEDIUM|HIGH>",
+      "evidence": "<quote or 'not mentioned'>",
+      "interview_question": "<question>"
+    }
+  ],
 
-  "growth_trajectory": {
-    "score": <0-100>,
-    "direction": "<rising | stable | declining | unclear>",
-    "evidence": "<quoted progression from CV>"
-  },
+  "interview_focus": ["<q1>","<q2>","<q3>","<q4>","<q5>"],
 
-  "character_indicators": {
-    "positive": ["<signal>: <evidence from CV>"],
-    "notes": "<contextual observation>"
-  },
-
-  "red_flags": {
-    "concerns": ["<concern>: <evidence or absence>"],
-    "severity": "<none | minor | moderate | serious>",
-    "investigation_questions": ["<question to ask in interview>"]
-  },
+  "alt_role_suggestions": [
+    {"role":"<title>","why":"<evidence-based>","confidence":"<LOW|MEDIUM|HIGH>"}
+  ],
 
   "summary": {
-    "strengths": ["<strength with CV evidence>"],
-    "weaknesses": ["<weakness with CV evidence>"],
-    "fit_assessment": "<2-3 sentence assessment>",
-    "interview_focus": ["<area to probe>"]
+    "strengths": [{"label":"<strength>","evidence":"<quote or metric>"}],
+    "weaknesses": [{"label":"<weakness>","evidence":"<quote or not mentioned>"}],
+    "fit_assessment": "<3-5 sentences: worth meeting? what excites? what could go wrong? confidence.>"
   }
 }
 
-EXCEPTION HANDLING — IMPORTANT:
+CRITICAL: If a strength lacks evidence, DO NOT include it.`;
 
-You are allowed to exercise judgment when a candidate narrowly misses a hard requirement.
-
-Specifically:
-
-If a candidate is within 6–12 months of the stated minimum experience requirement,
-AND they demonstrate exceptional indicators in at least TWO of the following:
-- Rapid promotion or accelerated responsibility
-- Quantified overperformance (e.g. >120% of targets)
-- Recognized awards or elite programs
-- Clear leadership signals at any life stage
-- Strong growth trajectory relative to peers
-
-THEN:
-- You MUST NOT automatically reject them
-- Downgrade the requirement from "not_met" to "partial"
-- Prefer a recommendation of "CONSIDER" over "REJECT"
-
-In such cases:
-- Explicitly explain WHY an exception is justified
-- Quote concrete evidence from the CV
-- Flag the experience gap clearly but frame it as manageable risk
-
-This exception must be used sparingly and only when evidence is compelling.`;
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// HELPER: Build role context for the prompt
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function validateAnalysis(analysis: Record<string, unknown>): boolean {
+  const score = analysis.overall_score;
+  const rec = String(analysis.recommendation || "").toUpperCase();
+  const exceptionApplied = analysis.exception_applied === true;
+  if (typeof score !== "number" || score < 0 || score > 100) return false;
+  if (!["SHORTLIST", "CONSIDER", "REJECT"].includes(rec)) return false;
+  if (rec === "SHORTLIST" && score < 80) return false;
+  if (rec === "CONSIDER" && score < 60) return false;
+  if (exceptionApplied && rec === "REJECT") return false;
+  if (!Array.isArray(analysis.risk_register)) return false;
+  if (!analysis.confidence || !(analysis.confidence as Record<string, unknown>).level) return false;
+  return true;
+}
 
 function buildRoleContext(role: Record<string, unknown>): string {
   const sections: string[] = [];
-  
-  sections.push(`ROLE: ${role.title || 'Unspecified'}`);
-
-  // Handle new schema fields
+  sections.push(\`ROLE: \${role.title || 'Unspecified'}\`);
   const context = role.context as Record<string, unknown> | undefined;
   if (context) {
-    if (context.seniority) sections.push(`SENIORITY: ${context.seniority}`);
-    if (context.employment_type) sections.push(`TYPE: ${context.employment_type}`);
-    if (context.industry) sections.push(`INDUSTRY: ${context.industry}`);
+    if (context.seniority) sections.push(\`SENIORITY: \${context.seniority}\`);
+    if (context.employment_type) sections.push(\`TYPE: \${context.employment_type}\`);
+    if (context.industry) sections.push(\`INDUSTRY: \${context.industry}\`);
   }
-
-  // Handle facts (hard requirements)
   const facts = role.facts as Record<string, unknown> | undefined;
   if (facts && Object.keys(facts).length > 0) {
-    sections.push('\nHARD REQUIREMENTS:');
-    if (facts.min_experience_years !== undefined) {
-      sections.push(`- Minimum ${facts.min_experience_years} years experience`);
-    }
-    if (Array.isArray(facts.required_skills) && facts.required_skills.length > 0) {
-      sections.push(`- Required skills: ${facts.required_skills.join(', ')}`);
-    }
-    if (Array.isArray(facts.qualifications) && facts.qualifications.length > 0) {
-      sections.push(`- Qualifications: ${facts.qualifications.join(', ')}`);
-    }
-    if (facts.location) sections.push(`- Location: ${facts.location}`);
-    if (facts.work_type) sections.push(`- Work type: ${facts.work_type}`);
-    if (facts.must_have) sections.push(`- Must have: ${facts.must_have}`);
+    sections.push('\\nHARD REQUIREMENTS:');
+    if (facts.min_experience_years !== undefined) sections.push(\`- Minimum \${facts.min_experience_years} years experience\`);
+    if (Array.isArray(facts.required_skills) && facts.required_skills.length > 0) sections.push(\`- Required skills: \${facts.required_skills.join(', ')}\`);
+    if (Array.isArray(facts.qualifications) && facts.qualifications.length > 0) sections.push(\`- Qualifications: \${facts.qualifications.join(', ')}\`);
+    if (facts.location) sections.push(\`- Location: \${facts.location}\`);
+    if (facts.work_type) sections.push(\`- Work type: \${facts.work_type}\`);
+    if (facts.must_have) sections.push(\`- Must have: \${facts.must_have}\`);
   }
-
-  // Handle preferences
   const preferences = role.preferences as Record<string, unknown> | undefined;
-  if (preferences?.nice_to_have) {
-    sections.push(`\nNICE TO HAVE: ${preferences.nice_to_have}`);
-  }
-
-  // Handle AI guidance
+  if (preferences?.nice_to_have) sections.push(\`\\nNICE TO HAVE: \${preferences.nice_to_have}\`);
   const aiGuidance = role.ai_guidance as Record<string, unknown> | undefined;
   if (aiGuidance) {
-    if (aiGuidance.strong_fit) {
-      sections.push(`\nSTRONG FIT LOOKS LIKE: ${aiGuidance.strong_fit}`);
-    }
-    if (aiGuidance.disqualifiers) {
-      sections.push(`\nDISQUALIFIERS: ${aiGuidance.disqualifiers}`);
-    }
+    if (aiGuidance.strong_fit) sections.push(\`\\nSTRONG FIT LOOKS LIKE: \${aiGuidance.strong_fit}\`);
+    if (aiGuidance.disqualifiers) sections.push(\`\\nDISQUALIFIERS: \${aiGuidance.disqualifiers}\`);
   }
-
-  // Handle screening questions
-  const screeningQuestions = role.screening_questions as string[] | undefined;
-  if (Array.isArray(screeningQuestions) && screeningQuestions.length > 0) {
-    sections.push('\nSCREENING QUESTIONS:');
-    screeningQuestions.forEach((q: string) => sections.push(`- ${q}`));
-  }
-
-  // Fallback to legacy criteria
   const criteria = role.criteria as Record<string, unknown> | undefined;
   if (criteria && (!facts || Object.keys(facts).length === 0)) {
-    sections.push('\nREQUIREMENTS:');
-    if (criteria.min_experience_years !== undefined) {
-      sections.push(`- Minimum ${criteria.min_experience_years} years experience`);
-    }
-    if (Array.isArray(criteria.required_skills) && criteria.required_skills.length > 0) {
-      sections.push(`- Required skills: ${criteria.required_skills.join(', ')}`);
-    }
-    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) {
-      sections.push(`- Location: ${criteria.locations.join(' or ')}`);
-    }
-    if (Array.isArray(criteria.preferred_skills) && criteria.preferred_skills.length > 0) {
-      sections.push(`- Preferred: ${criteria.preferred_skills.join(', ')}`);
-    }
-    if (criteria.education) {
-      sections.push(`- Education: ${criteria.education}`);
-    }
-    if (Array.isArray(criteria.dealbreakers) && criteria.dealbreakers.length > 0) {
-      sections.push(`- Dealbreakers: ${criteria.dealbreakers.join(', ')}`);
-    }
+    sections.push('\\nREQUIREMENTS:');
+    if (criteria.min_experience_years !== undefined) sections.push(\`- Minimum \${criteria.min_experience_years} years experience\`);
+    if (Array.isArray(criteria.required_skills) && criteria.required_skills.length > 0) sections.push(\`- Required skills: \${criteria.required_skills.join(', ')}\`);
+    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) sections.push(\`- Location: \${criteria.locations.join(' or ')}\`);
   }
-
-  return sections.join('\n');
+  return sections.join('\\n');
 }
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// HELPER: Map recommendation to status
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function mapRecommendationToStatus(recommendation: string): string {
   switch ((recommendation || '').toUpperCase()) {
@@ -250,207 +215,83 @@ function mapRecommendationToStatus(recommendation: string): string {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// HELPER: Parse and validate AI response
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 function parseAIResponse(text: string): Record<string, unknown> | null {
   try {
-    const cleaned = text
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim();
+    const cleaned = text.replace(/^\`\`\`json\\s*/i, '').replace(/^\`\`\`\\s*/i, '').replace(/\\s*\`\`\`$/i, '').trim();
     return JSON.parse(cleaned);
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// API ROUTE HANDLER
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { candidateId, roleId, cvText } = body;
+    if (!roleId) return NextResponse.json({ error: 'Missing roleId' }, { status: 400 });
 
-    // Validate roleId
-    if (!roleId) {
-      return NextResponse.json(
-        { error: 'Missing roleId', code: 'MISSING_ROLE_ID' },
-        { status: 400 }
-      );
-    }
+    const { data: role, error: roleError } = await supabase.from('roles').select('*').eq('id', roleId).single();
+    if (roleError || !role) return NextResponse.json({ error: 'Role not found' }, { status: 404 });
 
-    // Fetch role
-    const { data: role, error: roleError } = await supabase
-      .from('roles')
-      .select('*')
-      .eq('id', roleId)
-      .single();
-
-    if (roleError || !role) {
-      return NextResponse.json(
-        { error: 'Role not found', code: 'ROLE_NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
-    // Get CV content
     let cvContent = cvText;
     let candidate: Record<string, unknown> | null = null;
 
     if (candidateId) {
-      const { data: candidateData, error: candidateError } = await supabase
-        .from('candidates')
-        .select('*')
-        .eq('id', candidateId)
-        .single();
-
-      if (candidateError || !candidateData) {
-        return NextResponse.json(
-          { error: 'Candidate not found', code: 'CANDIDATE_NOT_FOUND' },
-          { status: 404 }
-        );
-      }
-
+      const { data: candidateData, error: candidateError } = await supabase.from('candidates').select('*').eq('id', candidateId).single();
+      if (candidateError || !candidateData) return NextResponse.json({ error: 'Candidate not found' }, { status: 404 });
       candidate = candidateData;
       cvContent = candidateData.cv_text || cvText;
     }
 
-    // Validate CV content
-    if (!cvContent || typeof cvContent !== 'string' || cvContent.trim().length < 50) {
-      return NextResponse.json(
-        { error: 'Invalid or missing CV content', code: 'INVALID_CV' },
-        { status: 400 }
-      );
-    }
+    if (!cvContent || cvContent.trim().length < 50) return NextResponse.json({ error: 'Invalid CV' }, { status: 400 });
 
-    // Build role context
     const roleContext = buildRoleContext(role);
+    const userPrompt = \`ROLE CONTEXT:\\n\${roleContext}\\n\\nCV TO EVALUATE:\\n\${cvContent}\\n\\nINSTRUCTIONS:\\n1. Every strength MUST have evidence. No evidence = don't include it.\\n2. Apply RULE 7 exception for near-miss candidates with 2+ exceptional indicators.\\n3. If exception applies: recommendation MUST be CONSIDER, score 60-75, exception_applied=true.\\n\\nRespond with valid JSON only.\`;
 
-    // Build user prompt
-    const userPrompt = `ROLE CONTEXT:
-${roleContext}
-
-CV TO EVALUATE:
-${cvContent}
-
-Evaluate this candidate against the role requirements. Respond with valid JSON only.`;
-
-    // Call OpenAI
-    let completion;
-    try {
-      completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        temperature: 0,
-        max_tokens: 4000,
-        messages: [
-          { role: 'system', content: TALENT_SCOUT_PROMPT },
-          { role: 'user', content: userPrompt }
-        ]
-      });
-    } catch (openaiError) {
-      console.error('OpenAI error:', openaiError);
-      return NextResponse.json(
-        { error: 'AI service unavailable', code: 'OPENAI_ERROR' },
-        { status: 503 }
-      );
-    }
-
-    const responseText = completion.choices[0]?.message?.content || '';
-
-    if (!responseText) {
-      return NextResponse.json(
-        { error: 'Empty AI response', code: 'EMPTY_RESPONSE' },
-        { status: 500 }
-      );
-    }
-
-    // Parse response
-    let assessment = parseAIResponse(responseText);
-
-    // Retry once if parse fails
-    if (!assessment) {
-      try {
-        const retryCompletion = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          temperature: 0,
-          max_tokens: 4000,
-          messages: [
-            { role: 'system', content: TALENT_SCOUT_PROMPT },
-            { role: 'user', content: userPrompt },
-            { role: 'assistant', content: responseText },
-            { role: 'user', content: 'Your response was not valid JSON. Respond again with ONLY valid JSON, no markdown.' }
-          ]
-        });
-        const retryText = retryCompletion.choices[0]?.message?.content || '';
-        assessment = parseAIResponse(retryText);
-      } catch {
-        // Ignore retry error
-      }
-    }
-
-    if (!assessment) {
-      return NextResponse.json(
-        { error: 'Failed to parse AI response', code: 'PARSE_ERROR', raw: responseText },
-        { status: 500 }
-      );
-    }
-
-    // Update candidate if provided
-    if (candidateId && candidate) {
-      const status = mapRecommendationToStatus(assessment.recommendation as string);
-
-      const { error: updateError } = await supabase
-        .from('candidates')
-        .update({
-          ai_score: assessment.overall_score,
-          ai_recommendation: assessment.recommendation,
-          ai_reasoning: (assessment.summary as Record<string, unknown>)?.fit_assessment || assessment.recommendation_reason,
-          screening_result: assessment,
-          screened_at: new Date().toISOString(),
-          status: status,
-          // Legacy fields
-          score: assessment.overall_score,
-          strengths: (assessment.summary as Record<string, unknown>)?.strengths || [],
-          missing: (assessment.summary as Record<string, unknown>)?.weaknesses || []
-        })
-        .eq('id', candidateId);
-
-      if (updateError) {
-        console.error('Failed to update candidate:', updateError);
-        return NextResponse.json({
-          success: true,
-          warning: 'Screening completed but database update failed',
-          assessment,
-          role: { id: role.id, title: role.title }
-        });
-      }
-    }
-
-    // Return success
-    return NextResponse.json({
-      success: true,
-      assessment,
-      candidate: candidate ? {
-        id: candidate.id,
-        name: candidate.name,
-        email: candidate.email
-      } : null,
-      role: {
-        id: role.id,
-        title: role.title
-      }
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      temperature: 0,
+      max_tokens: 4000,
+      messages: [{ role: 'system', content: TALENT_SCOUT_PROMPT }, { role: 'user', content: userPrompt }]
     });
 
+    const responseText = completion.choices[0]?.message?.content || '';
+    let assessment = parseAIResponse(responseText);
+
+    if (!assessment || !validateAnalysis(assessment)) {
+      const retry = await openai.chat.completions.create({
+        model: 'gpt-4o', temperature: 0, max_tokens: 4000,
+        messages: [
+          { role: 'system', content: TALENT_SCOUT_PROMPT },
+          { role: 'user', content: userPrompt },
+          { role: 'assistant', content: responseText },
+          { role: 'user', content: 'Invalid. Rules: 1) Valid JSON. 2) If exception_applied=true, recommendation MUST be CONSIDER. 3) SHORTLIST>=80, CONSIDER>=60. Try again.' }
+        ]
+      });
+      assessment = parseAIResponse(retry.choices[0]?.message?.content || '');
+    }
+
+    if (!assessment || !validateAnalysis(assessment)) return NextResponse.json({ error: 'Parse error' }, { status: 500 });
+
+    if (!assessment.risk_register) assessment.risk_register = [];
+    if (!assessment.evidence_highlights) assessment.evidence_highlights = [];
+
+    if (candidateId && candidate) {
+      const status = mapRecommendationToStatus(assessment.recommendation as string);
+      await supabase.from('candidates').update({
+        ai_score: assessment.overall_score,
+        ai_recommendation: assessment.recommendation,
+        ai_reasoning: (assessment.summary as Record<string, unknown>)?.fit_assessment || assessment.recommendation_reason,
+        screening_result: assessment,
+        screened_at: new Date().toISOString(),
+        status,
+        score: assessment.overall_score,
+        strengths: (assessment.summary as Record<string, unknown>)?.strengths || [],
+        missing: (assessment.summary as Record<string, unknown>)?.weaknesses || []
+      }).eq('id', candidateId);
+    }
+
+    return NextResponse.json({ success: true, assessment, role: { id: role.id, title: role.title } });
   } catch (error) {
     console.error('Screening error:', error);
-    return NextResponse.json(
-      { error: 'Screening failed', code: 'INTERNAL_ERROR' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Screening failed' }, { status: 500 });
   }
 }
