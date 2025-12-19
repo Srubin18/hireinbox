@@ -526,9 +526,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Settings</div>
-            <NavItem icon="⚙️" label="Company Settings" />
-            <NavItem icon="👥" label="Team" />
-            <NavItem icon="💳" label="Billing" />
+            <NavItem icon="⚙️" label="Company Settings" onClick={() => alert('Company Settings — Coming soon')} />
+            <NavItem icon="👥" label="Team" onClick={() => alert('Team Management — Coming soon')} />
+            <NavItem icon="💳" label="Billing" onClick={() => alert('Billing — Coming soon')} />
           </div>
         </nav>
 
