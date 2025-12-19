@@ -49,7 +49,13 @@ export async function POST(request: Request) {
     }
 
     const roleTitle = candidate.roles?.title || 'the position';
-    const companyName = '';
+    const screeningResult = candidate.screening_result;
+
+    // Extract strengths for talent pool email
+    const strengths = screeningResult?.summary?.strengths?.map((s: { label: string }) => s.label) || [];
+
+    // Generate rejection reason from screening
+    const rejectionReason = screeningResult?.hard_requirements?.not_met?.[0]?.split(':')[0] || undefined;
 
     let result;
     let newStatus;
@@ -60,7 +66,6 @@ export async function POST(request: Request) {
           candidate.email,
           candidate.name || 'Applicant',
           roleTitle,
-          companyName,
           nextSteps
         );
         newStatus = 'shortlist';
@@ -71,7 +76,7 @@ export async function POST(request: Request) {
           candidate.email,
           candidate.name || 'Applicant',
           roleTitle,
-          companyName
+          rejectionReason ? `candidates with stronger ${rejectionReason.toLowerCase()} backgrounds` : undefined
         );
         newStatus = 'reject';
         break;
@@ -81,7 +86,7 @@ export async function POST(request: Request) {
           candidate.email,
           candidate.name || 'Applicant',
           roleTitle,
-          companyName
+          strengths.length > 0 ? strengths : undefined
         );
         newStatus = 'talent_pool';
         break;
