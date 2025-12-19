@@ -204,7 +204,7 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
           <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
             <a href="#how" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>How it works</a>
             <a href="#pricing" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>Pricing</a>
-            <a href="#candidates" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>For candidates</a>
+            <a href="/upload" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>For candidates</a>
           </div>
           <div className="nav-cta-desktop" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button onClick={onLogin} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', padding: '8px 14px' }}>Log in</button>
@@ -350,7 +350,7 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
           <p style={{ fontSize: 'clamp(0.85rem, 3vw, 1rem)', color: '#64748b', marginBottom: 24, lineHeight: 1.6, padding: '0 8px' }}>
             Candidates receive acknowledgement within minutes and outcome emails within days — not silence.
           </p>
-          <div className="candidates-checks" style={{ display: 'flex', justifyContent: 'center', gap: 24 }}>
+          <div className="candidates-checks" style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ color: '#059669', fontSize: '1rem' }}>✓</span>
               <span style={{ fontSize: '0.85rem', color: '#475569' }}>Instant acknowledgement</span>
@@ -364,6 +364,9 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
               <span style={{ fontSize: '0.85rem', color: '#475569' }}>Data protected</span>
             </div>
           </div>
+          <a href="/upload" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#4F46E5', color: 'white', padding: '12px 24px', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none' }}>
+            Get free CV feedback <span>→</span>
+          </a>
         </div>
       </section>
 

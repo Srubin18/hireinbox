@@ -267,61 +267,84 @@ export default function UploadPage() {
         {/* Hero Section */}
         <div style={{
           backgroundColor: '#FAFAFA',
-          padding: '64px 24px 80px',
+          padding: '80px 24px 96px',
           textAlign: 'center'
         }}>
-          {/* Badge */}
+          {/* Social Proof */}
           <div style={{
-            display: 'inline-block',
-            backgroundColor: '#F3E8FF',
-            color: '#7C3AED',
-            fontSize: '0.8125rem',
-            fontWeight: 600,
-            padding: '6px 14px',
-            borderRadius: 20,
-            marginBottom: 24
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            marginBottom: 32
           }}>
-            For Candidates
+            <div style={{ display: 'flex' }}>
+              {['#4F46E5', '#10B981', '#F59E0B', '#EC4899'].map((color, i) => (
+                <div key={i} style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  border: '2px solid white',
+                  marginLeft: i > 0 ? -8 : 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.7rem',
+                  color: 'white',
+                  fontWeight: 600
+                }}>
+                  {['JM', 'TN', 'KD', 'LM'][i]}
+                </div>
+              ))}
+            </div>
+            <span style={{ fontSize: '0.875rem', color: '#64748B', fontWeight: 500 }}>
+              <strong style={{ color: '#0F172A' }}>2,847</strong> CVs analyzed this month
+            </span>
           </div>
 
-          {/* Headline */}
+          {/* Headline - Bigger, Bolder */}
           <h1 style={{
-            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-            fontWeight: 700,
+            fontSize: 'clamp(2.25rem, 5vw, 3.5rem)',
+            fontWeight: 800,
             color: '#0F172A',
-            marginBottom: 16,
-            letterSpacing: '-0.03em',
-            lineHeight: 1.2,
-            maxWidth: 600,
-            margin: '0 auto 16px'
+            letterSpacing: '-0.04em',
+            lineHeight: 1.1,
+            maxWidth: 700,
+            margin: '0 auto 20px'
           }}>
-            See your CV the way employers actually see it
+            Your CV gets <span style={{ color: '#4F46E5' }}>6 seconds</span>.<br />Make them count.
           </h1>
 
-          {/* Subheadline */}
+          {/* Subheadline - Tighter, Sharper */}
           <p style={{
-            fontSize: '1.125rem',
-            color: '#64748B',
-            marginBottom: 8,
-            maxWidth: 500,
-            margin: '0 auto 8px'
+            fontSize: '1.25rem',
+            color: '#475569',
+            maxWidth: 480,
+            margin: '0 auto 12px',
+            lineHeight: 1.5
           }}>
-            Know why your CV gets ignored — and how to fix it
+            AI-powered analysis that shows exactly what recruiters see — and how to fix it.
           </p>
 
+          {/* Differentiator line */}
           <p style={{
-            fontSize: '0.9375rem',
-            color: '#94A3B8',
-            maxWidth: 500,
-            margin: '0 auto 48px'
+            fontSize: '0.875rem',
+            color: '#4F46E5',
+            fontWeight: 600,
+            margin: '0 auto 40px'
           }}>
-            You'll get a clear score, prioritized improvements, and a stronger version of your CV.
+            Not generic tips. Real, specific fixes for YOUR CV.
           </p>
 
-          {/* Upload Box */}
+          {/* Upload Box - With depth and polish */}
           <div style={{
-            maxWidth: 560,
-            margin: '0 auto'
+            maxWidth: 520,
+            margin: '0 auto',
+            backgroundColor: '#ffffff',
+            borderRadius: 20,
+            padding: 8,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 20px 25px -5px rgba(0, 0, 0, 0.05)',
           }}>
             {!pasteMode ? (
               <div
@@ -330,10 +353,10 @@ export default function UploadPage() {
                 onDrop={handleDrop}
                 onClick={() => !file && document.getElementById('file-input')?.click()}
                 style={{
-                  backgroundColor: '#ffffff',
-                  border: `2px dashed ${isDragging ? '#4F46E5' : file ? '#10B981' : '#D1D5DB'}`,
-                  borderRadius: 16,
-                  padding: file ? '24px' : '48px 24px',
+                  backgroundColor: isDragging ? '#F5F3FF' : '#FAFAFA',
+                  border: `2px dashed ${isDragging ? '#4F46E5' : file ? '#10B981' : '#E2E8F0'}`,
+                  borderRadius: 14,
+                  padding: file ? '24px' : '40px 24px',
                   textAlign: 'center',
                   cursor: file ? 'default' : 'pointer',
                   transition: 'all 0.2s ease',
@@ -547,32 +570,43 @@ export default function UploadPage() {
               </button>
             </div>
 
-            {/* Trust Indicators */}
+            {/* What happens next - Benefit driven */}
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#64748B',
+              marginTop: 20,
+              marginBottom: 0
+            }}>
+              Score, rewrite suggestions, and export — <strong style={{ color: '#0F172A' }}>in under 2 minutes</strong>
+            </p>
+
+            {/* Trust Indicators - With icons */}
             <div style={{
               display: 'flex',
               justifyContent: 'center',
-              gap: 32,
-              marginTop: 32,
+              gap: 24,
+              marginTop: 24,
               color: '#6B7280',
               fontSize: '0.8125rem'
             }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Free to use
+                100% free
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                100% private
+                Your data stays private
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
-                  <polyline points="20 6 9 17 4 12"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
-                Takes ~2 minutes
+                POPIA compliant
               </span>
             </div>
           </div>
