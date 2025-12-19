@@ -455,6 +455,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [isFetchingEmails, setIsFetchingEmails] = useState(false);
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(true);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [showNewRoleModal, setShowNewRoleModal] = useState(false);
 
@@ -472,6 +473,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       const res = await fetch('/api/candidates');
       if (res.ok) { const d = await res.json(); setCandidates(d.candidates || []); }
     } catch (e) { console.error(e); }
+    finally { setIsLoadingCandidates(false); }
   };
 
   const handleFetchEmails = async () => {
@@ -494,7 +496,22 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", background: '#f8fafc', minHeight: '100vh', display: 'flex' }}>
-      <style>{'@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"); * { margin: 0; padding: 0; box-sizing: border-box; } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } @media (max-width: 767px) { .dashboard-sidebar { display: none !important; } .dashboard-main { margin-left: 0 !important; } }'}</style>
+      <style>{`
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 900px) {
+          .dashboard-sidebar { width: 200px !important; }
+        }
+        @media (max-width: 767px) {
+          .dashboard-sidebar { display: none !important; }
+          .dashboard-main { margin-left: 0 !important; padding: 16px !important; }
+          .dashboard-header { flex-direction: column !important; gap: 12px !important; }
+          .dashboard-stats { flex-wrap: wrap !important; }
+          .candidate-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
       {/* SIDEBAR */}
       <aside className="dashboard-sidebar" style={{ width: 260, background: 'white', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
@@ -611,11 +628,61 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {filteredCandidates.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-                      <div style={{ width: 64, height: 64, background: '#f8fafc', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', margin: '0 auto 16px' }}>📭</div>
-                      <div style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>No candidates yet</div>
-                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Click "Check Emails" to fetch new CVs</div>
+                  {isLoadingCandidates ? (
+                    /* LOADING STATE */
+                    <div style={{ textAlign: 'center', padding: '64px 24px' }}>
+                      <div style={{ width: 48, height: 48, margin: '0 auto 20px', position: 'relative' }}>
+                        <svg width="48" height="48" viewBox="0 0 48 48" style={{ animation: 'spin 1s linear infinite' }}>
+                          <circle cx="24" cy="24" r="20" fill="none" stroke="#e2e8f0" strokeWidth="4" />
+                          <circle cx="24" cy="24" r="20" fill="none" stroke="#4F46E5" strokeWidth="4" strokeDasharray="80" strokeDashoffset="60" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>Loading candidates...</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Fetching from database</div>
+                    </div>
+                  ) : filteredCandidates.length === 0 ? (
+                    /* EMPTY STATE */
+                    <div style={{ textAlign: 'center', padding: '64px 24px' }}>
+                      <div style={{ width: 80, height: 80, background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', margin: '0 auto 20px', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.1)' }}>
+                        {activeTab === 'all' ? '📬' : activeTab === 'shortlist' ? '⭐' : activeTab === 'talent_pool' ? '💎' : '📭'}
+                      </div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+                        {activeTab === 'all' ? 'No candidates yet' : `No ${activeTab.replace('_', ' ')} candidates`}
+                      </div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: 24, maxWidth: 300, margin: '0 auto 24px' }}>
+                        {activeTab === 'all'
+                          ? 'CVs sent to your inbox will appear here automatically after AI screening.'
+                          : 'Candidates will appear here as they are screened and categorized.'}
+                      </div>
+                      <button
+                        onClick={handleFetchEmails}
+                        disabled={isFetchingEmails}
+                        style={{
+                          background: '#4F46E5',
+                          color: 'white',
+                          padding: '12px 24px',
+                          borderRadius: 10,
+                          border: 'none',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          cursor: isFetchingEmails ? 'wait' : 'pointer',
+                          opacity: isFetchingEmails ? 0.7 : 1,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8
+                        }}
+                      >
+                        {isFetchingEmails ? (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}>
+                              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="50" strokeLinecap="round" />
+                            </svg>
+                            Checking inbox...
+                          </>
+                        ) : (
+                          <>📧 Check for new CVs</>
+                        )}
+                      </button>
                     </div>
                   ) : filteredCandidates.map(c => (
                     <CandidateCard key={c.id} candidate={c} onClick={() => setSelectedCandidate(c)} getInitials={getInitials} getTimeAgo={getTimeAgo} formatWhatsApp={formatWhatsApp} />
