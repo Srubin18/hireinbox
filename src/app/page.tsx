@@ -778,7 +778,7 @@ function CandidateModal({ candidate, onClose, getInitials, formatWhatsApp }: { c
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 1100, maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, width: '100%', maxWidth: 1000, maxHeight: '85vh', overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
         
         {/* HEADER */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 }}>
