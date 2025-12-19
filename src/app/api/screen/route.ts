@@ -172,7 +172,7 @@ function validateAnalysis(analysis: Record<string, unknown>): boolean {
 
 function buildRoleContext(role: Record<string, unknown>): string {
   const sections: string[] = [];
-  sections.push(\`ROLE: \${role.title || 'Unspecified'}\`);
+  sections.push(`ROLE: \${role.title || 'Unspecified'}\`);
   const context = role.context as Record<string, unknown> | undefined;
   if (context) {
     if (context.seniority) sections.push(\`SENIORITY: \${context.seniority}\`);
