@@ -164,11 +164,13 @@ function isSystemEmail(subject: string, from: string, body?: string): boolean {
   const lowerFrom = (from || '').toLowerCase();
   const lowerBody = (body || '').toLowerCase();
 
+  // Only block definite system senders - be conservative to avoid blocking real applicants
   const systemFromPatterns = [
-    'mailer-daemon', 'postmaster', 'no-reply', 'noreply', 'do-not-reply',
-    'donotreply', 'auto-reply', 'autoreply', 'mailerdaemon', 'mail-daemon',
-    'bounce', 'notification', 'googlemail.com'
+    'mailer-daemon', 'postmaster', 'no-reply@', 'noreply@', 'do-not-reply@',
+    'donotreply@', 'auto-reply@', 'autoreply@', 'mailerdaemon', 'mail-daemon',
+    'bounce@', 'notifications@google.com', 'notifications@github.com'
   ];
+  // NOTE: Removed 'notification' (too broad) and 'googlemail.com' (legitimate Gmail users)
 
   const systemSubjectPatterns = [
     'delivery status', 'undeliverable', 'mail delivery failed', 'returned mail',

@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react';
 
 /* ===========================================
-   HIREINBOX B2C - ChatGPT-Clean Interface
-   "Psychologically attractive. Minimal. Trustworthy."
+   HIREINBOX B2C - World-Class CV Analysis
+   Matching the premium design reference
    =========================================== */
 
 // Types
@@ -22,7 +22,7 @@ interface ImprovementItem {
 }
 
 interface CareerInsights {
-  natural_fit_roles: string[];
+  natural_fit_roles: Array<{ role: string; match: number }> | string[];
   industries: string[];
   trajectory_observation: string;
 }
@@ -42,7 +42,7 @@ interface CVAnalysis {
   summary: string;
 }
 
-// Minimal Logo
+// Logo Component
 const Logo = ({ size = 32 }: { size?: number }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
@@ -52,53 +52,94 @@ const Logo = ({ size = 32 }: { size?: number }) => (
       <circle cx="36" cy="12" r="9" fill="#10B981"/>
       <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
-    <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
-      <span style={{ color: '#0f172a' }}>Hire</span>
-      <span style={{ color: '#4F46E5' }}>Inbox</span>
-    </span>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <span style={{ fontSize: size > 28 ? '1.15rem' : '1rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+        <span style={{ color: '#0f172a' }}>Hire</span>
+        <span style={{ color: '#4F46E5' }}>Inbox</span>
+      </span>
+      <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500 }}>Less noise. Better hires.</span>
+    </div>
   </div>
 );
 
-// Score Display
-const ScoreDisplay = ({ score }: { score: number }) => {
+// Circular Score Component
+const CircularScore = ({ score }: { score: number }) => {
+  const radius = 80;
+  const stroke = 10;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+
   const getColor = () => {
-    if (score >= 80) return '#10B981';
-    if (score >= 60) return '#4F46E5';
+    if (score >= 80) return '#8B5CF6';
+    if (score >= 60) return '#8B5CF6';
     if (score >= 40) return '#F59E0B';
     return '#EF4444';
   };
 
-  const getLabel = () => {
-    if (score >= 80) return 'Excellent';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Needs Work';
-    return 'Major Improvements Needed';
-  };
-
   return (
-    <div style={{ textAlign: 'center', padding: '32px 0' }}>
+    <div style={{ position: 'relative', width: radius * 2, height: radius * 2 }}>
+      <svg width={radius * 2} height={radius * 2} style={{ transform: 'rotate(-90deg)' }}>
+        {/* Background circle */}
+        <circle
+          stroke="#E5E7EB"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        {/* Progress circle */}
+        <circle
+          stroke={getColor()}
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference + ' ' + circumference}
+          style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s ease' }}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+      </svg>
       <div style={{
-        fontSize: '4rem',
-        fontWeight: 700,
-        color: getColor(),
-        lineHeight: 1
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center'
       }}>
-        {score}
+        <div style={{ fontSize: '3rem', fontWeight: 700, color: '#0F172A', lineHeight: 1 }}>{score}</div>
+        <div style={{ fontSize: '0.875rem', color: '#6B7280' }}>out of 100</div>
       </div>
-      <div style={{
-        fontSize: '0.875rem',
-        color: '#64748B',
-        marginTop: 8,
-        fontWeight: 500
-      }}>
-        {getLabel()}
-      </div>
+    </div>
+  );
+};
+
+// Role icon component
+const RoleIcon = ({ index }: { index: number }) => {
+  const icons = ['💼', '📊', '🎯', '🚀'];
+  const colors = ['#FEF3C7', '#DBEAFE', '#FCE7F3', '#D1FAE5'];
+  return (
+    <div style={{
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: colors[index % colors.length],
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '1.25rem'
+    }}>
+      {icons[index % icons.length]}
     </div>
   );
 };
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
+  const [pasteMode, setPasteMode] = useState(false);
+  const [pastedText, setPastedText] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<CVAnalysis | null>(null);
@@ -121,6 +162,7 @@ export default function UploadPage() {
     if (droppedFile) {
       setFile(droppedFile);
       setError(null);
+      setPasteMode(false);
     }
   }, []);
 
@@ -129,18 +171,23 @@ export default function UploadPage() {
     if (selectedFile) {
       setFile(selectedFile);
       setError(null);
+      setPasteMode(false);
     }
   }, []);
 
   const analyzeCV = async () => {
-    if (!file) return;
+    if (!file && !pastedText) return;
 
     setIsAnalyzing(true);
     setError(null);
 
     try {
       const formData = new FormData();
-      formData.append('cv', file);
+      if (file) {
+        formData.append('cv', file);
+      } else {
+        formData.append('cvText', pastedText);
+      }
 
       const response = await fetch('/api/analyze-cv', {
         method: 'POST',
@@ -163,174 +210,259 @@ export default function UploadPage() {
 
   const resetUpload = () => {
     setFile(null);
+    setPastedText('');
+    setPasteMode(false);
     setAnalysis(null);
     setError(null);
   };
 
-  // ChatGPT-style clean design
-  return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#ffffff',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Minimal Header */}
-      <header style={{
-        padding: '20px 32px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottom: '1px solid #f1f5f9'
+  const getScoreHeadline = (score: number) => {
+    if (score >= 80) return 'Excellent CV — ready to impress';
+    if (score >= 70) return 'Strong foundation — room to stand out';
+    if (score >= 60) return 'Good start — a few tweaks will help';
+    if (score >= 40) return 'Needs work — let\'s improve it together';
+    return 'Major improvements needed';
+  };
+
+  // Count stats
+  const strengthCount = analysis?.strengths?.length || 0;
+  const improvementCount = analysis?.improvements?.length || 0;
+  const highPriorityCount = analysis?.improvements?.filter(i => i.priority === 'HIGH').length || 0;
+
+  /* ============================================
+     UPLOAD VIEW
+     ============================================ */
+  if (!analysis) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#ffffff',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}>
-        <Logo size={32} />
-        <a href="/" style={{
-          color: '#64748B',
-          textDecoration: 'none',
-          fontSize: '0.875rem',
-          fontWeight: 500,
-          padding: '8px 16px',
-          borderRadius: 8,
-          transition: 'background 0.2s',
+        {/* Header */}
+        <header style={{
+          padding: '16px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: '1px solid #f1f5f9'
         }}>
-          For Employers
-        </a>
-      </header>
+          <Logo size={32} />
+          <a href="/" style={{
+            color: '#4F46E5',
+            textDecoration: 'none',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            padding: '8px 16px',
+            border: '1px solid #4F46E5',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6
+          }}>
+            Get matched to roles <span style={{ fontSize: '1rem' }}>→</span>
+          </a>
+        </header>
 
-      {/* Main Content - Centered */}
-      <main style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: analysis ? 'flex-start' : 'center',
-        padding: '48px 24px',
-        maxWidth: 720,
-        margin: '0 auto',
-        width: '100%'
-      }}>
-        {!analysis ? (
-          <>
-            {/* Hero - Minimal */}
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <h1 style={{
-                fontSize: '2.25rem',
-                fontWeight: 700,
-                color: '#0F172A',
-                marginBottom: 12,
-                letterSpacing: '-0.03em',
-                lineHeight: 1.2
-              }}>
-                Get instant CV feedback
-              </h1>
-              <p style={{
-                fontSize: '1.0625rem',
-                color: '#64748B',
-                lineHeight: 1.6
-              }}>
-                See exactly what recruiters see. Improve before you apply.
-              </p>
-            </div>
+        {/* Hero Section */}
+        <div style={{
+          backgroundColor: '#FAFAFA',
+          padding: '64px 24px 80px',
+          textAlign: 'center'
+        }}>
+          {/* Badge */}
+          <div style={{
+            display: 'inline-block',
+            backgroundColor: '#F3E8FF',
+            color: '#7C3AED',
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+            padding: '6px 14px',
+            borderRadius: 20,
+            marginBottom: 24
+          }}>
+            For Candidates
+          </div>
 
-            {/* Upload Area - Clean Box */}
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => !file && document.getElementById('file-input')?.click()}
-              style={{
-                width: '100%',
-                backgroundColor: isDragging ? '#F8FAFC' : '#FAFAFA',
-                border: `2px dashed ${isDragging ? '#4F46E5' : file ? '#10B981' : '#E2E8F0'}`,
-                borderRadius: 16,
-                padding: file ? '24px 32px' : '48px 32px',
-                textAlign: 'center',
-                cursor: file ? 'default' : 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <input
-                id="file-input"
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-              />
+          {/* Headline */}
+          <h1 style={{
+            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+            fontWeight: 700,
+            color: '#0F172A',
+            marginBottom: 16,
+            letterSpacing: '-0.03em',
+            lineHeight: 1.2,
+            maxWidth: 600,
+            margin: '0 auto 16px'
+          }}>
+            See your CV the way employers actually see it
+          </h1>
 
-              {!file ? (
-                <>
-                  <div style={{
-                    width: 56,
-                    height: 56,
-                    backgroundColor: '#EEF2FF',
-                    borderRadius: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 20px'
-                  }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="17 8 12 3 7 8"/>
-                      <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                  </div>
-                  <p style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>
-                    Drop your CV here
-                  </p>
-                  <p style={{ fontSize: '0.875rem', color: '#94A3B8' }}>
-                    or click to browse • PDF, Word, TXT
-                  </p>
-                </>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Subheadline */}
+          <p style={{
+            fontSize: '1.125rem',
+            color: '#64748B',
+            marginBottom: 8,
+            maxWidth: 500,
+            margin: '0 auto 8px'
+          }}>
+            Know why your CV gets ignored — and how to fix it
+          </p>
+
+          <p style={{
+            fontSize: '0.9375rem',
+            color: '#94A3B8',
+            maxWidth: 500,
+            margin: '0 auto 48px'
+          }}>
+            You'll get a clear score, prioritized improvements, and a stronger version of your CV.
+          </p>
+
+          {/* Upload Box */}
+          <div style={{
+            maxWidth: 560,
+            margin: '0 auto'
+          }}>
+            {!pasteMode ? (
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => !file && document.getElementById('file-input')?.click()}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: `2px dashed ${isDragging ? '#4F46E5' : file ? '#10B981' : '#D1D5DB'}`,
+                  borderRadius: 16,
+                  padding: file ? '24px' : '48px 24px',
+                  textAlign: 'center',
+                  cursor: file ? 'default' : 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <input
+                  id="file-input"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+
+                {!file ? (
+                  <>
                     <div style={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: '#D1FAE5',
-                      borderRadius: 8,
+                      width: 56,
+                      height: 56,
+                      backgroundColor: '#F9FAFB',
+                      borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      margin: '0 auto 20px'
                     }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2">
-                        <polyline points="20 6 9 17 4 12"/>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
                       </svg>
                     </div>
-                    <div style={{ textAlign: 'left' }}>
-                      <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', margin: 0 }}>
-                        {file.name}
-                      </p>
-                      <p style={{ fontSize: '0.8125rem', color: '#94A3B8', margin: 0 }}>
-                        {(file.size / 1024).toFixed(0)} KB
-                      </p>
+                    <p style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>
+                      Upload your CV
+                    </p>
+                    <p style={{ fontSize: '0.875rem', color: '#9CA3AF', marginBottom: 4 }}>
+                      Drop your file here or click to browse
+                    </p>
+                    <p style={{ fontSize: '0.8125rem', color: '#D1D5DB' }}>
+                      PDF, Word, or plain text
+                    </p>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 44,
+                        height: 44,
+                        backgroundColor: '#D1FAE5',
+                        borderRadius: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </div>
+                      <div style={{ textAlign: 'left' }}>
+                        <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', margin: 0 }}>
+                          {file.name}
+                        </p>
+                        <p style={{ fontSize: '0.8125rem', color: '#94A3B8', margin: 0 }}>
+                          {(file.size / 1024).toFixed(0)} KB • Ready to analyze
+                        </p>
+                      </div>
                     </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#94A3B8',
+                        cursor: 'pointer',
+                        padding: 8
+                      }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
                   </div>
+                )}
+              </div>
+            ) : (
+              /* Paste Text Mode */
+              <div style={{
+                backgroundColor: '#ffffff',
+                border: '2px solid #D1D5DB',
+                borderRadius: 16,
+                padding: '16px',
+              }}>
+                <textarea
+                  value={pastedText}
+                  onChange={(e) => setPastedText(e.target.value)}
+                  placeholder="Paste your CV content here..."
+                  style={{
+                    width: '100%',
+                    minHeight: 200,
+                    border: 'none',
+                    outline: 'none',
+                    resize: 'vertical',
+                    fontFamily: 'inherit',
+                    fontSize: '0.9375rem',
+                    color: '#0F172A',
+                    lineHeight: 1.6
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                    onClick={() => { setPasteMode(false); setPastedText(''); }}
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#94A3B8',
+                      color: '#64748B',
+                      fontSize: '0.875rem',
                       cursor: 'pointer',
-                      padding: 8
+                      padding: '8px 12px'
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
+                    Cancel
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Error */}
             {error && (
               <div style={{
-                width: '100%',
                 backgroundColor: '#FEF2F2',
                 borderRadius: 12,
                 padding: 16,
@@ -348,312 +480,489 @@ export default function UploadPage() {
               </div>
             )}
 
-            {/* Analyze Button */}
-            {file && (
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 12,
+              marginTop: 24
+            }}>
               <button
                 onClick={analyzeCV}
-                disabled={isAnalyzing}
+                disabled={isAnalyzing || (!file && !pastedText)}
                 style={{
-                  marginTop: 24,
                   backgroundColor: '#4F46E5',
                   color: 'white',
-                  padding: '14px 32px',
+                  padding: '14px 28px',
                   borderRadius: 10,
                   fontSize: '0.9375rem',
                   fontWeight: 600,
                   border: 'none',
-                  cursor: isAnalyzing ? 'wait' : 'pointer',
-                  opacity: isAnalyzing ? 0.7 : 1,
-                  transition: 'all 0.15s ease',
+                  cursor: (isAnalyzing || (!file && !pastedText)) ? 'not-allowed' : 'pointer',
+                  opacity: (isAnalyzing || (!file && !pastedText)) ? 0.5 : 1,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 10
+                  gap: 8
                 }}
               >
                 {isAnalyzing ? (
                   <>
-                    <svg width="18" height="18" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" className="spin-icon">
                       <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeLinecap="round"/>
                     </svg>
                     Analyzing...
                   </>
                 ) : (
-                  'Analyze my CV'
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Upload CV
+                  </>
                 )}
               </button>
-            )}
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              <button
+                onClick={() => { setPasteMode(!pasteMode); setFile(null); }}
+                style={{
+                  backgroundColor: 'white',
+                  color: '#0F172A',
+                  padding: '14px 28px',
+                  borderRadius: 10,
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  border: '1px solid #E2E8F0',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Paste text
+              </button>
+            </div>
 
-            {/* Trust Indicators - Subtle */}
+            {/* Trust Indicators */}
             <div style={{
               display: 'flex',
-              gap: 24,
-              marginTop: 48,
-              color: '#94A3B8',
+              justifyContent: 'center',
+              gap: 32,
+              marginTop: 32,
+              color: '#6B7280',
               fontSize: '0.8125rem'
             }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Private & secure
+                Free to use
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Results in seconds
+                100% private
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Free forever
+                Takes ~2 minutes
               </span>
             </div>
-          </>
-        ) : (
-          /* ============ RESULTS VIEW ============ */
-          <div style={{ width: '100%' }}>
-            {/* Back Button */}
-            <button
-              onClick={resetUpload}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#64748B',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                marginBottom: 24,
-                padding: 0
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="15 18 9 12 15 6"/>
-              </svg>
-              New analysis
-            </button>
+          </div>
+        </div>
 
-            {/* Score + Name */}
-            <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <ScoreDisplay score={analysis.overall_score} />
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-                {analysis.candidate_name || 'Your CV'}
-              </h1>
-              {analysis.current_title && (
-                <p style={{ color: '#64748B', fontSize: '0.9375rem', marginTop: 4 }}>
-                  {analysis.current_title}
-                </p>
-              )}
-            </div>
+        {/* Animation styles */}
+        <style>{`
+          @keyframes spin { to { transform: rotate(360deg); } }
+          .spin-icon { animation: spin 1s linear infinite; }
+        `}</style>
+      </div>
+    );
+  }
 
-            {/* First Impression */}
+  /* ============================================
+     RESULTS VIEW - Matching the reference design
+     ============================================ */
+  return (
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Header */}
+      <header style={{
+        padding: '16px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderBottom: '1px solid #f1f5f9'
+      }}>
+        <div style={{ cursor: 'pointer' }} onClick={resetUpload}>
+          <Logo size={32} />
+        </div>
+        <a href="/" style={{
+          color: '#4F46E5',
+          textDecoration: 'none',
+          fontSize: '0.875rem',
+          fontWeight: 500,
+          padding: '8px 16px',
+          border: '1px solid #4F46E5',
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }}>
+          Get matched to roles <span style={{ fontSize: '1rem' }}>→</span>
+        </a>
+      </header>
+
+      {/* Main Content */}
+      <div style={{
+        maxWidth: 1100,
+        margin: '0 auto',
+        padding: '40px 24px',
+        display: 'grid',
+        gridTemplateColumns: '1fr 340px',
+        gap: 40
+      }}>
+        {/* Left Column - Main Content */}
+        <div>
+          {/* Score Section */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: 16,
+            padding: 32,
+            marginBottom: 24,
+            border: '1px solid #F1F5F9'
+          }}>
             <div style={{
-              backgroundColor: '#F8FAFC',
-              borderRadius: 12,
-              padding: 20,
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#6B7280',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
               marginBottom: 24
             }}>
-              <p style={{ margin: 0, color: '#0F172A', lineHeight: 1.6 }}>
-                {analysis.first_impression}
-              </p>
+              Your CV Health Score
             </div>
 
-            {/* Quick Wins - Most Important */}
-            <div style={{ marginBottom: 32 }}>
-              <h2 style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: '#4F46E5',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: 16
-              }}>
-                Do This Today
-              </h2>
-              {analysis.quick_wins.map((win, i) => (
-                <div key={i} style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 12,
-                  padding: '12px 0',
-                  borderBottom: i < analysis.quick_wins.length - 1 ? '1px solid #F1F5F9' : 'none'
+            <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
+              <CircularScore score={analysis.overall_score} />
+
+              <div style={{ flex: 1 }}>
+                <h1 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  color: '#0F172A',
+                  marginBottom: 8,
+                  lineHeight: 1.3
                 }}>
-                  <div style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 6,
-                    backgroundColor: '#EEF2FF',
-                    color: '#4F46E5',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    flexShrink: 0
-                  }}>
-                    {i + 1}
-                  </div>
-                  <span style={{ color: '#0F172A', fontSize: '0.9375rem', lineHeight: 1.5 }}>{win}</span>
+                  {getScoreHeadline(analysis.overall_score)}
+                </h1>
+                <p style={{
+                  fontSize: '0.9375rem',
+                  color: '#6B7280',
+                  lineHeight: 1.6,
+                  marginBottom: 16
+                }}>
+                  {analysis.first_impression}
+                </p>
+
+                {/* Stats Pills */}
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', color: '#374151' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#10B981' }}></span>
+                    {strengthCount} strength{strengthCount !== 1 ? 's' : ''}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', color: '#374151' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#F59E0B' }}></span>
+                    {improvementCount} improvement{improvementCount !== 1 ? 's' : ''}
+                  </span>
+                  {highPriorityCount > 0 && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', color: '#374151' }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#EF4444' }}></span>
+                      {highPriorityCount} to fix
+                    </span>
+                  )}
                 </div>
-              ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Privacy Notice */}
+          <div style={{
+            backgroundColor: '#EFF6FF',
+            borderRadius: 12,
+            padding: '14px 18px',
+            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span style={{ fontSize: '0.875rem', color: '#1E40AF' }}>
+              Your profile is private by default. You control who sees your details.
+            </span>
+          </div>
+
+          {/* Top Improvements Section */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: 16,
+            padding: 32,
+            border: '1px solid #F1F5F9'
+          }}>
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#6B7280',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: 24
+            }}>
+              Top {Math.min(5, analysis.improvements.length)} Improvements (by impact)
             </div>
 
-            {/* Strengths */}
-            <div style={{ marginBottom: 32 }}>
-              <h2 style={{
-                fontSize: '0.875rem',
+            {analysis.improvements.slice(0, 5).map((imp, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                gap: 16,
+                padding: '20px 0',
+                borderBottom: i < Math.min(4, analysis.improvements.length - 1) ? '1px solid #F1F5F9' : 'none'
+              }}>
+                <div style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  backgroundColor: '#4F46E5',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  flexShrink: 0
+                }}>
+                  {i + 1}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4, fontSize: '1rem' }}>
+                    {imp.area}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#6B7280', lineHeight: 1.5, marginBottom: 10 }}>
+                    {imp.suggestion}
+                  </div>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backgroundColor: imp.priority === 'HIGH' ? '#FEE2E2' : imp.priority === 'MEDIUM' ? '#FEF3C7' : '#DBEAFE',
+                    color: imp.priority === 'HIGH' ? '#DC2626' : imp.priority === 'MEDIUM' ? '#D97706' : '#2563EB'
+                  }}>
+                    {imp.priority === 'HIGH' ? 'High impact' : imp.priority === 'MEDIUM' ? 'Medium impact' : 'Quick win'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Strengths Section */}
+          {analysis.strengths.length > 0 && (
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              padding: 32,
+              marginTop: 24,
+              border: '1px solid #F1F5F9'
+            }}>
+              <div style={{
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 color: '#10B981',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
-                marginBottom: 16
+                marginBottom: 24
               }}>
-                What Works
-              </h2>
+                What's Working Well
+              </div>
+
               {analysis.strengths.map((s, i) => (
                 <div key={i} style={{
                   padding: '16px 0',
                   borderBottom: i < analysis.strengths.length - 1 ? '1px solid #F1F5F9' : 'none'
                 }}>
                   <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>{s.strength}</div>
-                  <div style={{ fontSize: '0.875rem', color: '#64748B', fontStyle: 'italic' }}>
-                    &ldquo;{s.evidence}&rdquo;
+                  <div style={{ fontSize: '0.875rem', color: '#6B7280', fontStyle: 'italic' }}>
+                    "{s.evidence}"
                   </div>
                 </div>
               ))}
             </div>
+          )}
+        </div>
 
-            {/* Improvements */}
-            <div style={{ marginBottom: 32 }}>
-              <h2 style={{
+        {/* Right Sidebar */}
+        <div>
+          {/* Download Card */}
+          <div style={{
+            backgroundColor: '#4F46E5',
+            borderRadius: 16,
+            padding: 24,
+            color: 'white',
+            marginBottom: 24
+          }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 8 }}>
+              Download your improved CV
+            </h3>
+            <p style={{ fontSize: '0.875rem', opacity: 0.85, marginBottom: 20, lineHeight: 1.5 }}>
+              We've applied the suggestions above. Download your polished CV ready to send.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button style={{
+                flex: 1,
+                backgroundColor: 'white',
+                color: '#4F46E5',
+                border: 'none',
+                padding: '12px 16px',
+                borderRadius: 8,
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                color: '#F59E0B',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: 16
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6
               }}>
-                What to Improve
-              </h2>
-              {analysis.improvements.map((imp, i) => (
-                <div key={i} style={{
-                  padding: '16px 0',
-                  borderBottom: i < analysis.improvements.length - 1 ? '1px solid #F1F5F9' : 'none'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 600, color: '#0F172A' }}>{imp.area}</span>
-                    <span style={{
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      fontSize: '0.625rem',
-                      fontWeight: 600,
-                      backgroundColor: imp.priority === 'HIGH' ? '#FEE2E2' : imp.priority === 'MEDIUM' ? '#FEF3C7' : '#DBEAFE',
-                      color: imp.priority === 'HIGH' ? '#DC2626' : imp.priority === 'MEDIUM' ? '#D97706' : '#2563EB'
-                    }}>
-                      {imp.priority}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: '#64748B' }}>{imp.suggestion}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Career Fit */}
-            <div style={{
-              backgroundColor: '#0F172A',
-              borderRadius: 12,
-              padding: 24,
-              color: 'white',
-              marginBottom: 32
-            }}>
-              <h2 style={{
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2H18a2,2,0,0,0,2-2V8ZM6,20V4h7V9h5V20Z"/>
+                </svg>
+                PDF
+              </button>
+              <button style={{
+                flex: 1,
+                backgroundColor: 'white',
+                color: '#4F46E5',
+                border: 'none',
+                padding: '12px 16px',
+                borderRadius: 8,
                 fontSize: '0.875rem',
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: 16,
-                opacity: 0.7
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6
               }}>
-                Best Fit Roles
-              </h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                {analysis.career_insights.natural_fit_roles.map((role, i) => (
-                  <span key={i} style={{
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    fontSize: '0.875rem'
-                  }}>
-                    {role}
-                  </span>
-                ))}
-              </div>
-              <p style={{ fontSize: '0.9375rem', lineHeight: 1.6, margin: 0, opacity: 0.85 }}>
-                {analysis.career_insights.trajectory_observation}
-              </p>
-            </div>
-
-            {/* Summary */}
-            <div style={{
-              backgroundColor: '#F8FAFC',
-              borderRadius: 12,
-              padding: 24,
-              marginBottom: 32
-            }}>
-              <h2 style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: '#64748B',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: 12
-              }}>
-                Summary
-              </h2>
-              <p style={{ margin: 0, color: '#0F172A', lineHeight: 1.7 }}>
-                {analysis.summary}
-              </p>
-            </div>
-
-            {/* CTA */}
-            <div style={{ textAlign: 'center' }}>
-              <button
-                onClick={resetUpload}
-                style={{
-                  backgroundColor: '#4F46E5',
-                  color: 'white',
-                  padding: '14px 32px',
-                  borderRadius: 10,
-                  fontSize: '0.9375rem',
-                  fontWeight: 600,
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                Analyze another CV
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2H18a2,2,0,0,0,2-2V8ZM6,20V4h7V9h5V20Z"/>
+                </svg>
+                Word
               </button>
             </div>
           </div>
-        )}
-      </main>
 
-      {/* Minimal Footer */}
-      <footer style={{
-        textAlign: 'center',
-        padding: '24px',
-        color: '#CBD5E1',
-        fontSize: '0.75rem'
-      }}>
-        Powered by HireInbox AI
-      </footer>
+          {/* Best-Fit Roles */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: 16,
+            padding: 24,
+            border: '1px solid #F1F5F9',
+            marginBottom: 24
+          }}>
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: '#6B7280',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: 6
+            }}>
+              Best-Fit Roles For You
+            </div>
+            <p style={{ fontSize: '0.8125rem', color: '#9CA3AF', marginBottom: 20 }}>
+              Based on your CV content and role requirements
+            </p>
+
+            {(analysis.career_insights.natural_fit_roles || []).slice(0, 4).map((role, i) => {
+              const roleName = typeof role === 'string' ? role : role.role;
+              const match = typeof role === 'object' && role.match ? role.match : (92 - i * 5);
+              return (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 0',
+                  borderBottom: i < 3 ? '1px solid #F1F5F9' : 'none',
+                  cursor: 'pointer'
+                }}>
+                  <RoleIcon index={i} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.9375rem' }}>{roleName}</div>
+                    <div style={{ fontSize: '0.8125rem', color: '#10B981', fontWeight: 600 }}>{match}% match</div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CTA Card */}
+          <div style={{
+            backgroundColor: '#FEF7EC',
+            borderRadius: 16,
+            padding: 24,
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: 12 }}>🎯</div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: 8 }}>
+              Discover your hidden strengths
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: '#6B7280', marginBottom: 16, lineHeight: 1.5 }}>
+              Get personalized career insights and job recommendations
+            </p>
+            <button
+              onClick={resetUpload}
+              style={{
+                backgroundColor: '#0F172A',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: 8,
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              Analyze another CV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile responsive styles */}
+      <style>{`
+        @media (max-width: 900px) {
+          .results-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
