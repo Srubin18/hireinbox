@@ -930,7 +930,7 @@ function CandidateCard({ candidate, onClick, getInitials, getTimeAgo, formatWhat
    =========================================== */
 function CandidateModal({ candidate, onClose, getInitials, formatWhatsApp }: { candidate: Candidate; onClose: () => void; getInitials: (n: string | null) => string; formatWhatsApp: (p: string) => string }) {
   const [showFullReport, setShowFullReport] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ why: true, evidence: true, risks: true, fit: false, interview: false, alt: false });
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ why: true, strengths: true, weaknesses: true, evidence: true, risks: true, fit: false, interview: false, alt: false });
 
   const colors: Record<string, { bg: string; text: string; border: string }> = {
     shortlist: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
@@ -948,6 +948,20 @@ function CandidateModal({ candidate, onClose, getInitials, formatWhatsApp }: { c
   const interviewFocus = screening?.interview_focus || [];
   const altRoles = screening?.alt_role_suggestions || [];
   const hardReqs = screening?.hard_requirements;
+
+  // Strengths with evidence - from summary
+  const summaryStrengths = (screening?.summary?.strengths || [])
+    .filter((s): s is StrengthItem => {
+      if (typeof s !== 'object' || s === null) return false;
+      const item = s as StrengthItem;
+      return Boolean(item.label && item.evidence && item.evidence !== 'not mentioned' && item.evidence.length > 3);
+    });
+  const summaryWeaknesses = (screening?.summary?.weaknesses || [])
+    .filter((w): w is WeaknessItem => {
+      if (typeof w !== 'object' || w === null) return false;
+      const item = w as WeaknessItem;
+      return Boolean(item.label);
+    });
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
@@ -983,14 +997,34 @@ function CandidateModal({ candidate, onClose, getInitials, formatWhatsApp }: { c
                 {candidate.status === 'shortlist' ? '✓ SHORTLIST' : candidate.status === 'talent_pool' ? '◐ CONSIDER' : '✗ REJECT'}
               </div>
               
+              {/* Exception Applied Badge */}
+              {screening?.exception_applied && (
+                <div style={{
+                  marginTop: 12,
+                  padding: '6px 12px',
+                  background: '#fef3c7',
+                  border: '1px solid #fcd34d',
+                  borderRadius: 8,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}>
+                  <span style={{ fontSize: '1rem' }}>⚡</span>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#92400e' }}>EXCEPTION APPLIED</div>
+                    <div style={{ fontSize: '0.65rem', color: '#a16207' }}>{screening.exception_reason || 'Near-miss with exceptional indicators'}</div>
+                  </div>
+                </div>
+              )}
+
               {/* Confidence */}
               {confidence && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', marginBottom: 4 }}>CONFIDENCE</div>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
                     {['HIGH', 'MEDIUM', 'LOW'].map(level => (
-                      <div key={level} style={{ 
-                        width: 24, height: 8, borderRadius: 4, 
+                      <div key={level} style={{
+                        width: 24, height: 8, borderRadius: 4,
                         background: confidence.level === level ? (level === 'HIGH' ? '#22c55e' : level === 'MEDIUM' ? '#f59e0b' : '#ef4444') : '#e2e8f0'
                       }} />
                     ))}
@@ -1041,6 +1075,40 @@ function CandidateModal({ candidate, onClose, getInitials, formatWhatsApp }: { c
                 {/* WHY */}
                 <CollapsibleSection title="Why" icon="💡" expanded={expandedSections.why} onToggle={() => toggleSection('why')}>
                   <p style={{ fontSize: '0.95rem', color: '#0f172a', lineHeight: 1.6 }}>{screening?.recommendation_reason || candidate.ai_reasoning || 'No reasoning provided.'}</p>
+                </CollapsibleSection>
+
+                {/* STRENGTHS - With CV Evidence */}
+                <CollapsibleSection title="Strengths" icon="✓" expanded={expandedSections.strengths} onToggle={() => toggleSection('strengths')} count={summaryStrengths.length}>
+                  {summaryStrengths.length === 0 ? (
+                    <p style={{ color: '#64748b', fontStyle: 'italic' }}>No evidence-based strengths identified</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {summaryStrengths.map((s, i) => (
+                        <div key={i} style={{ padding: 12, background: '#f0fdf4', borderRadius: 8, borderLeft: '3px solid #22c55e' }}>
+                          <div style={{ fontWeight: 600, color: '#166534', marginBottom: 4 }}>{s.label}</div>
+                          <div style={{ fontSize: '0.85rem', color: '#15803d', fontStyle: 'italic' }}>&ldquo;{s.evidence}&rdquo;</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CollapsibleSection>
+
+                {/* WEAKNESSES / GAPS */}
+                <CollapsibleSection title="Gaps &amp; Missing" icon="⚠" expanded={expandedSections.weaknesses} onToggle={() => toggleSection('weaknesses')} count={summaryWeaknesses.length}>
+                  {summaryWeaknesses.length === 0 ? (
+                    <p style={{ color: '#64748b', fontStyle: 'italic' }}>No significant gaps identified</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {summaryWeaknesses.map((w, i) => (
+                        <div key={i} style={{ padding: 10, background: '#fef2f2', borderRadius: 6, borderLeft: '3px solid #f59e0b' }}>
+                          <div style={{ fontWeight: 600, color: '#92400e', marginBottom: 2 }}>{w.label}</div>
+                          {w.evidence && w.evidence !== 'not mentioned' && (
+                            <div style={{ fontSize: '0.8rem', color: '#b45309', fontStyle: 'italic' }}>{w.evidence}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CollapsibleSection>
 
                 {/* EVIDENCE HIGHLIGHTS */}
