@@ -338,18 +338,31 @@ function detectServerSideException(
   let indicators = 0;
   const indicatorReasons: string[] = [];
 
-  // Check recommendation_reason and fit_assessment for exceptional signals
+  // Check ALL text fields for exceptional signals
   const reasonText = String(analysis.recommendation_reason || '').toLowerCase();
   const summary = analysis.summary as Record<string, unknown> | undefined;
   const fitText = String(summary?.fit_assessment || '').toLowerCase();
-  const fullText = reasonText + ' ' + fitText;
 
-  // Check evidence_highlights for strong performance
+  // Also check strengths array - this is where "High-performing", "Exceptional trajectory" often appear
+  const strengths = summary?.strengths as Array<{ label: string; evidence: string }> | undefined;
+  let strengthsText = '';
+  if (strengths) {
+    strengthsText = strengths.map(s => `${s.label} ${s.evidence}`).join(' ').toLowerCase();
+  }
+
+  // Check evidence_highlights text too
   const highlights = analysis.evidence_highlights as Array<{ claim: string; evidence: string }> | undefined;
+  let highlightsText = '';
+  if (highlights) {
+    highlightsText = highlights.map(h => `${h.claim} ${h.evidence}`).join(' ').toLowerCase();
+  }
+
+  const fullText = [reasonText, fitText, strengthsText, highlightsText].join(' ');
+
+  // Check for >120% targets or overachievement in highlights
   if (highlights) {
     for (const h of highlights) {
       const text = (h.claim + ' ' + h.evidence).toLowerCase();
-      // >120% targets
       if (/1[2-9]\d%|[2-9]\d\d%/.test(text) || /exceeded|surpassed|over.?achiev/i.test(text)) {
         indicators++;
         indicatorReasons.push('High performance metrics');
@@ -358,10 +371,16 @@ function detectServerSideException(
     }
   }
 
-  // Check for awards/top performer
-  if (/award|top.?perform|best|outstanding|excellence|recognition/i.test(fullText)) {
+  // Check for awards/top performer/high-performing
+  if (/award|top.?perform|high.?perform|best|outstanding|excellence|recognition/i.test(fullText)) {
     indicators++;
-    indicatorReasons.push('Awards/recognition');
+    indicatorReasons.push('Awards/high-performance recognition');
+  }
+
+  // Check for exceptional signals (Lerato case: "exceptional growth trajectory")
+  if (/exceptional|extraordinary|remarkable|standout/i.test(fullText)) {
+    indicators++;
+    indicatorReasons.push('Exceptional performance noted');
   }
 
   // Check for rapid promotion
