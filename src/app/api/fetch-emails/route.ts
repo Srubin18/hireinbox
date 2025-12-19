@@ -677,12 +677,22 @@ export async function POST() {
       }
     });
 
-    await connection.openBox('Hireinbox');
-    console.log(`[${traceId}] Connected to Hireinbox folder`);
+    // Try Hireinbox folder first, fall back to INBOX
+    let folderName = 'Hireinbox';
+    try {
+      await connection.openBox('Hireinbox');
+      console.log(`[${traceId}] Connected to Hireinbox folder`);
+    } catch {
+      console.log(`[${traceId}] Hireinbox folder not found, trying INBOX`);
+      await connection.openBox('INBOX');
+      folderName = 'INBOX';
+      console.log(`[${traceId}] Connected to INBOX folder`);
+    }
 
+    // CRITICAL: markSeen: false - only mark as read AFTER successful processing
     const messages = await connection.search(['UNSEEN'], {
       bodies: ['HEADER', 'TEXT', ''],
-      markSeen: true,
+      markSeen: false,  // Don't mark as read until we successfully process
       struct: true
     });
 
@@ -690,6 +700,9 @@ export async function POST() {
     console.log(`[${traceId}] Found ${messages.length} unread emails`);
 
     for (const message of messages.slice(0, 10)) {
+      // Get message UID for marking as read later
+      const messageUid = message.attributes?.uid;
+
       try {
         const all = message.parts.find((p: { which: string }) => p.which === '');
         if (!all) continue;
@@ -706,6 +719,7 @@ export async function POST() {
         if (isSystemEmail(subject, fromEmail, textBody)) {
           results.skippedSystem++;
           console.log(`[${traceId}] SKIPPED SYSTEM: ${subject} from ${fromEmail}`);
+          if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
           continue;
         }
 
@@ -715,6 +729,7 @@ export async function POST() {
         if (spamCheck.isSpam) {
           results.skippedSpam++;
           console.log(`[${traceId}] SKIPPED SPAM: ${subject} from ${fromEmail} (${spamCheck.reason})`);
+          if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
           continue;
         }
 
@@ -725,6 +740,7 @@ export async function POST() {
         if (existing?.length) {
           results.skippedDuplicates++;
           console.log(`[${traceId}] SKIPPED DUPLICATE: ${fromEmail}`);
+          if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
           continue;
         }
 
@@ -753,14 +769,17 @@ export async function POST() {
 
         if (cvText.length < 50) {
           console.log(`[${traceId}] CV too short (${cvText.length} chars), storing as unprocessed`);
-          await supabase.from('candidates').insert({
+          const { error: unprocessedErr } = await supabase.from('candidates').insert({
             company_id: activeRole.company_id, role_id: activeRole.id,
             name: subject, email: fromEmail,
             cv_text: `[PARSE FAILED] ${attachmentInfo.join(', ') || 'no attachments'}`,
             status: 'unprocessed', ai_score: 0, score: 0, strengths: [], missing: ['CV parsing failed']
           });
-          results.storedCount++;
-          results.candidates.push(`[unprocessed] ${fromEmail}`);
+          if (!unprocessedErr) {
+            results.storedCount++;
+            results.candidates.push(`[unprocessed] ${fromEmail}`);
+            if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
+          }
           continue;
         }
 
@@ -820,10 +839,21 @@ export async function POST() {
         if (insertErr) {
           results.errors.push(`DB insert failed: ${candidateName} - ${insertErr.message}`);
           console.error(`[${traceId}] DB error:`, insertErr);
+          // Don't mark as read - allow retry on next fetch
         }
         else {
           results.storedCount++;
           results.candidates.push(`${candidateName} (${analysis.overall_score})`);
+
+          // SUCCESS: Now mark email as read so it's not processed again
+          if (messageUid) {
+            try {
+              await connection.addFlags(messageUid, ['\\Seen']);
+              console.log(`[${traceId}] Marked email as read: UID ${messageUid}`);
+            } catch (flagErr) {
+              console.error(`[${traceId}] Failed to mark as read:`, flagErr);
+            }
+          }
         }
 
       } catch (msgErr) {
