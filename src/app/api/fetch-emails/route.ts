@@ -204,6 +204,135 @@ function isSystemEmail(subject: string, from: string, body?: string): boolean {
   return false;
 }
 
+// SPAM FILTER: Detect non-CV content (news, newsletters, marketing, etc.)
+function isSpamContent(subject: string, from: string, body?: string, hasAttachments?: boolean): { isSpam: boolean; reason: string } {
+  const lowerSubject = (subject || '').toLowerCase();
+  const lowerFrom = (from || '').toLowerCase();
+  const lowerBody = (body || '').toLowerCase();
+  const combinedText = `${lowerSubject} ${lowerBody}`;
+
+  // NEWS ARTICLE PATTERNS - block news/current events content
+  const newsPatterns = [
+    /breaking\s*news/i,
+    /\b(shooting|gunman|shooter|killed|murder|arrested|suspect|crime|criminal)\b/i,
+    /\b(police|fbi|investigation|prosecutor|court\s+case)\b.*\b(dead|found|arrested)\b/i,
+    /\bdead\s+(body|man|woman|person|found)\b/i,
+    /\bfound\s+dead\b/i,
+    /\buniversity\s+shooting\b/i,
+    /\bbreaking\s*:/i,
+    /\balert\s*:/i,
+    /\b(cnn|bbc|nytimes|reuters|associated\s*press|fox\s*news)\b/i,
+  ];
+
+  for (const pattern of newsPatterns) {
+    if (pattern.test(combinedText)) {
+      return { isSpam: true, reason: `News content detected: ${pattern.source}` };
+    }
+  }
+
+  // NEWSLETTER/MARKETING PATTERNS
+  const newsletterPatterns = [
+    /\bunsubscribe\b/i,
+    /\bview\s+in\s+browser\b/i,
+    /\bemail\s+preferences\b/i,
+    /\bmarketing\s+email\b/i,
+    /\bweekly\s+digest\b/i,
+    /\bdaily\s+briefing\b/i,
+    /\bnewsletter\b/i,
+    /\bspecial\s+offer\b/i,
+    /\blimited\s+time\b/i,
+    /\bact\s+now\b/i,
+    /\bdiscount\s+code\b/i,
+    /\bpromo\s+code\b/i,
+  ];
+
+  let newsletterSignals = 0;
+  for (const pattern of newsletterPatterns) {
+    if (pattern.test(combinedText)) {
+      newsletterSignals++;
+    }
+  }
+
+  // If 2+ newsletter signals AND no attachments, it's likely spam
+  if (newsletterSignals >= 2 && !hasAttachments) {
+    return { isSpam: true, reason: `Newsletter/marketing content (${newsletterSignals} signals)` };
+  }
+
+  // KNOWN SPAM SENDERS
+  const spamSenderPatterns = [
+    /newsletter@/i,
+    /marketing@/i,
+    /promo@/i,
+    /sales@/i,
+    /deals@/i,
+    /offers@/i,
+    /news@/i,
+    /updates@/i,
+    /digest@/i,
+    /mailchimp/i,
+    /sendgrid/i,
+    /constantcontact/i,
+  ];
+
+  for (const pattern of spamSenderPatterns) {
+    if (pattern.test(lowerFrom) && !hasAttachments) {
+      return { isSpam: true, reason: `Marketing sender: ${lowerFrom}` };
+    }
+  }
+
+  // SUBJECT LINE RED FLAGS (without attachments)
+  const spamSubjectPatterns = [
+    /^(fw|fwd):\s*(breaking|news|alert)/i,
+    /you\s+won\b/i,
+    /congratulations/i,
+    /claim\s+your\s+prize/i,
+    /urgent\s+action\s+required/i,
+    /verify\s+your\s+account/i,
+    /password\s+(reset|expired)/i,
+    /your\s+order\b/i,
+    /invoice\s+#?\d+/i,
+  ];
+
+  if (!hasAttachments) {
+    for (const pattern of spamSubjectPatterns) {
+      if (pattern.test(lowerSubject)) {
+        return { isSpam: true, reason: `Spam subject pattern: ${pattern.source}` };
+      }
+    }
+  }
+
+  // CV INDICATOR CHECK - if no attachments and no CV-like content, likely not a job application
+  if (!hasAttachments) {
+    const cvIndicators = [
+      /\b(cv|resume|curriculum\s*vitae)\b/i,
+      /\b(application|applying|apply)\s+(for|to)\b/i,
+      /\b(job|position|role|vacancy)\b/i,
+      /\bexperience\s+in\b/i,
+      /\byears?\s+(of\s+)?experience\b/i,
+      /\bqualification/i,
+      /\beducation\b/i,
+      /\bskills?\b/i,
+      /\battached\b/i,
+      /\bplease\s+find\b/i,
+      /\binterested\s+in\b.*\b(position|role|job)\b/i,
+    ];
+
+    let cvSignals = 0;
+    for (const pattern of cvIndicators) {
+      if (pattern.test(combinedText)) {
+        cvSignals++;
+      }
+    }
+
+    // No attachments and no CV indicators = probably not a job application
+    if (cvSignals === 0 && lowerBody.length > 100) {
+      return { isSpam: true, reason: 'No CV indicators and no attachments' };
+    }
+  }
+
+  return { isSpam: false, reason: '' };
+}
+
 function isPDF(attachment: { contentType?: string; filename?: string }): boolean {
   const ct = attachment.contentType?.toLowerCase() || '';
   const fn = attachment.filename?.toLowerCase() || '';
@@ -523,7 +652,7 @@ export async function POST() {
 
   const results = {
     traceId, listedCount: 0, processedCount: 0, storedCount: 0,
-    parsedCount: 0, failedParseCount: 0, skippedDuplicates: 0, skippedSystem: 0,
+    parsedCount: 0, failedParseCount: 0, skippedDuplicates: 0, skippedSystem: 0, skippedSpam: 0,
     candidates: [] as string[], errors: [] as string[]
   };
 
@@ -577,6 +706,15 @@ export async function POST() {
         if (isSystemEmail(subject, fromEmail, textBody)) {
           results.skippedSystem++;
           console.log(`[${traceId}] SKIPPED SYSTEM: ${subject} from ${fromEmail}`);
+          continue;
+        }
+
+        // SPAM FILTER: Block non-CV content (news, newsletters, marketing)
+        const hasAttachments = (parsed.attachments?.length || 0) > 0;
+        const spamCheck = isSpamContent(subject, fromEmail, textBody, hasAttachments);
+        if (spamCheck.isSpam) {
+          results.skippedSpam++;
+          console.log(`[${traceId}] SKIPPED SPAM: ${subject} from ${fromEmail} (${spamCheck.reason})`);
           continue;
         }
 
@@ -696,7 +834,7 @@ export async function POST() {
     }
 
     connection.end();
-    console.log(`[${traceId}] === FETCH END === Listed:${results.listedCount} Processed:${results.processedCount} Stored:${results.storedCount} SkippedSystem:${results.skippedSystem} SkippedDupes:${results.skippedDuplicates}`);
+    console.log(`[${traceId}] === FETCH END === Listed:${results.listedCount} Processed:${results.processedCount} Stored:${results.storedCount} SkippedSystem:${results.skippedSystem} SkippedSpam:${results.skippedSpam} SkippedDupes:${results.skippedDuplicates}`);
 
     return NextResponse.json({
       success: true,
