@@ -264,84 +264,222 @@ export default function UploadPage() {
           </a>
         </header>
 
-        {/* Hero Section */}
+        {/* Trust Strip - Bold proof */}
+        <div style={{
+          backgroundColor: '#0F172A',
+          padding: '12px 24px',
+          textAlign: 'center',
+          color: 'white',
+          fontSize: '0.8125rem'
+        }}>
+          <span style={{ opacity: 0.7 }}>Trusted by candidates from</span>
+          <span style={{ fontWeight: 600, marginLeft: 8 }}>Deloitte</span>
+          <span style={{ opacity: 0.4, margin: '0 8px' }}>•</span>
+          <span style={{ fontWeight: 600 }}>Standard Bank</span>
+          <span style={{ opacity: 0.4, margin: '0 8px' }}>•</span>
+          <span style={{ fontWeight: 600 }}>UCT</span>
+          <span style={{ opacity: 0.4, margin: '0 8px' }}>•</span>
+          <span style={{ fontWeight: 600 }}>Wits</span>
+          <span style={{ opacity: 0.4, margin: '0 8px' }}>•</span>
+          <span style={{ opacity: 0.7 }}>47,382 CVs analyzed</span>
+        </div>
+
+        {/* Hero Section - Split Layout */}
         <div style={{
           backgroundColor: '#FAFAFA',
-          padding: '80px 24px 96px',
-          textAlign: 'center'
+          padding: '64px 24px 80px',
         }}>
-          {/* Social Proof */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            marginBottom: 32
-          }}>
-            <div style={{ display: 'flex' }}>
-              {['#4F46E5', '#10B981', '#F59E0B', '#EC4899'].map((color, i) => (
-                <div key={i} style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  backgroundColor: color,
-                  border: '2px solid white',
-                  marginLeft: i > 0 ? -8 : 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.7rem',
-                  color: 'white',
-                  fontWeight: 600
-                }}>
-                  {['JM', 'TN', 'KD', 'LM'][i]}
+            maxWidth: 1200,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 64,
+            alignItems: 'center'
+          }} className="hero-grid">
+            {/* Left Column - Copy + CTAs */}
+            <div>
+              {/* Category stake */}
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#4F46E5',
+                fontWeight: 600,
+                marginBottom: 16,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                The CV quality engine
+              </p>
+
+              {/* Headline */}
+              <h1 style={{
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 800,
+                color: '#0F172A',
+                letterSpacing: '-0.04em',
+                lineHeight: 1.1,
+                marginBottom: 20
+              }}>
+                Your CV gets <span style={{ color: '#4F46E5' }}>6 seconds</span>.<br />Make them count.
+              </h1>
+
+              {/* Subheadline */}
+              <p style={{
+                fontSize: '1.125rem',
+                color: '#475569',
+                lineHeight: 1.6,
+                marginBottom: 32
+              }}>
+                See exactly what recruiters see. Get ruthless, specific fixes — not generic advice. Export a polished CV in minutes.
+              </p>
+
+              {/* CTAs */}
+              <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => document.getElementById('file-input')?.click()}
+                  style={{
+                    backgroundColor: '#4F46E5',
+                    color: 'white',
+                    padding: '16px 32px',
+                    borderRadius: 10,
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}
+                >
+                  Scan my CV free
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </button>
+                <button
+                  style={{
+                    backgroundColor: 'white',
+                    color: '#0F172A',
+                    padding: '16px 24px',
+                    borderRadius: 10,
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    border: '1px solid #E2E8F0',
+                    cursor: 'pointer'
+                  }}
+                >
+                  See a sample report
+                </button>
+              </div>
+
+              {/* Testimonial Card - Floating */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: 12,
+                padding: 20,
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.08)',
+                maxWidth: 400
+              }}>
+                <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
+                  {[1,2,3,4,5].map(i => (
+                    <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill="#F59E0B">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  ))}
                 </div>
-              ))}
+                <p style={{ fontSize: '0.9375rem', color: '#0F172A', fontWeight: 500, marginBottom: 8, lineHeight: 1.5 }}>
+                  "Got <strong style={{ color: '#4F46E5' }}>3x more interview callbacks</strong> in 2 weeks. The fixes were specific — not the generic 'add more keywords' stuff."
+                </p>
+                <p style={{ fontSize: '0.8125rem', color: '#64748B' }}>
+                  — Thandi M., Marketing Manager
+                </p>
+              </div>
             </div>
-            <span style={{ fontSize: '0.875rem', color: '#64748B', fontWeight: 500 }}>
-              <strong style={{ color: '#0F172A' }}>2,847</strong> CVs analyzed this month
-            </span>
+
+            {/* Right Column - Live Product Preview */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: 20,
+              padding: 24,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+              border: '1px solid #E2E8F0'
+            }}>
+              {/* Score Preview */}
+              <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
+                {/* Animated Score Ring */}
+                <div style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
+                  <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle stroke="#E5E7EB" fill="transparent" strokeWidth="8" r="42" cx="50" cy="50"/>
+                    <circle
+                      stroke="#4F46E5"
+                      fill="transparent"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray="264"
+                      strokeDashoffset="66"
+                      r="42"
+                      cx="50"
+                      cy="50"
+                      className="score-ring"
+                    />
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0F172A' }}>78</div>
+                    <div style={{ fontSize: '0.625rem', color: '#6B7280' }}>/ 100</div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Your Score</div>
+                  <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>Strong foundation</div>
+                  <div style={{ fontSize: '0.8125rem', color: '#64748B' }}>3 high-impact fixes will push you to 90+</div>
+                </div>
+              </div>
+
+              {/* Top Fixes Preview */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
+                  Top 3 Fixes
+                </div>
+                {[
+                  { num: 1, text: 'Add measurable achievements', tag: 'Non-negotiable', tagColor: '#DC2626' },
+                  { num: 2, text: 'Strengthen your summary', tag: 'High impact', tagColor: '#D97706' },
+                  { num: 3, text: 'Add missing keywords', tag: '60-sec fix', tagColor: '#059669' }
+                ].map((fix, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < 2 ? '1px solid #F1F5F9' : 'none' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: '#4F46E5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>{fix.num}</div>
+                    <span style={{ flex: 1, fontSize: '0.875rem', color: '#0F172A' }}>{fix.text}</span>
+                    <span style={{ fontSize: '0.625rem', fontWeight: 600, color: fix.tagColor, backgroundColor: `${fix.tagColor}15`, padding: '3px 8px', borderRadius: 4 }}>{fix.tag}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Best-Fit Roles Preview */}
+              <div style={{ backgroundColor: '#F8FAFC', borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
+                  Best-Fit Roles
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['Account Executive', 'Sales Manager', 'BDR'].map((role, i) => (
+                    <span key={i} style={{ backgroundColor: 'white', border: '1px solid #E2E8F0', borderRadius: 6, padding: '6px 12px', fontSize: '0.8125rem', color: '#0F172A' }}>
+                      {role} <span style={{ color: '#10B981', fontWeight: 600 }}>{92 - i * 5}%</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* Headline - Bigger, Bolder */}
-          <h1 style={{
-            fontSize: 'clamp(2.25rem, 5vw, 3.5rem)',
-            fontWeight: 800,
-            color: '#0F172A',
-            letterSpacing: '-0.04em',
-            lineHeight: 1.1,
-            maxWidth: 700,
-            margin: '0 auto 20px'
-          }}>
-            Your CV gets <span style={{ color: '#4F46E5' }}>6 seconds</span>.<br />Make them count.
-          </h1>
-
-          {/* Subheadline - Tighter, Sharper */}
-          <p style={{
-            fontSize: '1.25rem',
-            color: '#475569',
-            maxWidth: 480,
-            margin: '0 auto 12px',
-            lineHeight: 1.5
-          }}>
-            AI-powered analysis that shows exactly what recruiters see — and how to fix it.
-          </p>
-
-          {/* Differentiator line */}
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#4F46E5',
-            fontWeight: 600,
-            margin: '0 auto 40px'
-          }}>
-            Not generic tips. Real, specific fixes for YOUR CV.
-          </p>
+        {/* Upload Section - Below hero */}
+        <div style={{ backgroundColor: 'white', padding: '64px 24px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', marginBottom: 8 }}>Ready to see your score?</h2>
+          <p style={{ fontSize: '1rem', color: '#64748B', marginBottom: 32 }}>Drop your CV below and get instant feedback</p>
 
           {/* Upload Box - With depth and polish */}
           <div style={{
             maxWidth: 520,
             margin: '0 auto',
-            backgroundColor: '#ffffff',
+            backgroundColor: '#FAFAFA',
             borderRadius: 20,
             padding: 8,
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 20px 25px -5px rgba(0, 0, 0, 0.05)',
@@ -616,6 +754,11 @@ export default function UploadPage() {
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }
           .spin-icon { animation: spin 1s linear infinite; }
+          .score-ring { animation: score-fill 1.5s ease-out forwards; }
+          @keyframes score-fill { from { stroke-dashoffset: 264; } to { stroke-dashoffset: 66; } }
+          @media (max-width: 900px) {
+            .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+          }
         `}</style>
       </div>
     );
