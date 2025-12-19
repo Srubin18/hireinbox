@@ -66,6 +66,8 @@ interface ScreeningResult {
   current_title?: string;
   current_company?: string;
   years_experience?: number;
+  exception_applied?: boolean;
+  exception_reason?: string;
   summary?: {
     strengths?: StrengthItem[] | string[];
     weaknesses?: WeaknessItem[] | string[];
@@ -679,72 +681,236 @@ function hasEvidence(s: unknown): s is StrengthItem {
   return false;
 }
 
+/* ===========================================
+   CANDIDATE CARD - DECISION INSTRUMENT
+   "This is what a thoughtful, fair, evidence-based
+   hiring decision looks like — compressed into a screen."
+   =========================================== */
 function CandidateCard({ candidate, onClick, getInitials, getTimeAgo, formatWhatsApp }: { candidate: Candidate; onClick: () => void; getInitials: (n: string | null) => string; getTimeAgo: (d: string) => string; formatWhatsApp: (p: string) => string }) {
-  const colors: Record<string, { bg: string; text: string }> = {
-    shortlist: { bg: '#dcfce7', text: '#166534' },
-    talent_pool: { bg: '#eef2ff', text: '#4F46E5' },
-    reject: { bg: '#fee2e2', text: '#991b1b' },
+  const colors: Record<string, { bg: string; text: string; border: string; dominant: string }> = {
+    shortlist: { bg: '#dcfce7', text: '#166534', border: '#86efac', dominant: '#15803d' },
+    talent_pool: { bg: '#eef2ff', text: '#4F46E5', border: '#a5b4fc', dominant: '#4338ca' },
+    reject: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5', dominant: '#b91c1c' },
   };
   const c = colors[candidate.status] || colors.reject;
   const screening = candidate.screening_result;
   const confidence = screening?.confidence;
 
-  // FIX #2: DESIGN RULE - Max 2 highlights in list view (prevents AI vomit as models improve)
-  // LOCKED: Do not increase this limit
+  // Evidence highlights - max 3 with real evidence only
   const highlights = (screening?.evidence_highlights || [])
-    .filter(h => h.evidence && h.evidence !== 'not mentioned')
+    .filter(h => h.evidence && h.evidence !== 'not mentioned' && h.evidence.length > 5)
+    .slice(0, 3);
+
+  // Top 2 risks, sorted by severity
+  const risks = screening?.risk_register || [];
+  const topRisks = [...risks]
+    .sort((a, b) => {
+      const order: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+      return (order[a.severity] || 2) - (order[b.severity] || 2);
+    })
     .slice(0, 2);
 
-  // Get top risk
-  const risks = screening?.risk_register || [];
-  const topRisk = risks.length > 0 ? [...risks].sort((a, b) => {
-    const order: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
-    return (order[a.severity] || 2) - (order[b.severity] || 2);
-  })[0] : null;
+  // Context info
+  const location = screening?.location_summary || candidate.location;
+  const workMode = screening?.work_mode;
+  const currentTitle = screening?.current_title;
+  const currentCompany = screening?.current_company;
+  const yearsExp = screening?.years_experience;
+  const exceptionApplied = screening?.exception_applied;
+
+  // Build context line
+  const contextParts: string[] = [];
+  if (currentTitle) contextParts.push(currentTitle);
+  if (currentCompany) contextParts.push(`@ ${currentCompany}`);
+  if (yearsExp) contextParts.push(`${yearsExp}y exp`);
+  const contextLine = contextParts.join(' · ');
+
+  const locationLine = [location, workMode && workMode !== 'unknown' ? workMode : null].filter(Boolean).join(' · ');
 
   return (
-    <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', opacity: candidate.status === 'reject' ? 0.7 : 1 }}>
-      <div onClick={onClick} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 16, cursor: 'pointer' }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: c.bg, color: c.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>{getInitials(candidate.name)}</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <div style={{ fontWeight: 700, fontSize: '1rem' }}>{candidate.name || 'Unknown'}</div>
-            {candidate.score !== null && <div style={{ fontSize: '0.8rem', fontWeight: 700, color: c.text, background: c.bg, padding: '2px 8px', borderRadius: 6 }}>{candidate.score}</div>}
-            {confidence && <div style={{ fontSize: '0.65rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: confidence.level === 'HIGH' ? '#dcfce7' : confidence.level === 'MEDIUM' ? '#fef3c7' : '#fee2e2', color: confidence.level === 'HIGH' ? '#166534' : confidence.level === 'MEDIUM' ? '#92400e' : '#991b1b' }}>{confidence.level}</div>}
-          </div>
-          <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: 6 }}>{candidate.ai_reasoning || 'Processing...'}</div>
-
-          {/* Evidence Highlights */}
-          {highlights.length > 0 && (
-            <div style={{ marginBottom: 6 }}>
-              {highlights.map((h, i) => (
-                <div key={i} style={{ fontSize: '0.75rem', color: '#166534', marginBottom: 2 }}>
-                  <span style={{ fontWeight: 600 }}>✓ {h.claim}</span> — <span style={{ fontStyle: 'italic' }}>"{h.evidence}"</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Top Risk */}
-          {topRisk && (
-            <div style={{ fontSize: '0.7rem', padding: '4px 8px', background: topRisk.severity === 'HIGH' ? '#fee2e2' : '#fffbeb', borderRadius: 4, color: topRisk.severity === 'HIGH' ? '#991b1b' : '#92400e', marginBottom: 6 }}>
-              ⚠ {topRisk.risk} ({topRisk.severity})
-            </div>
-          )}
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ padding: '4px 10px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600, background: c.bg, color: c.text }}>
-              {candidate.status === 'shortlist' ? '✓ Shortlisted' : candidate.status === 'talent_pool' ? '→ Consider' : '✗ Rejected'}
+    <div style={{
+      background: 'white',
+      borderRadius: 12,
+      border: `1px solid ${candidate.status === 'shortlist' ? c.border : '#e2e8f0'}`,
+      overflow: 'hidden',
+      opacity: candidate.status === 'reject' ? 0.75 : 1,
+      boxShadow: candidate.status === 'shortlist' ? '0 2px 8px rgba(22, 101, 52, 0.1)' : 'none'
+    }}>
+      {/* DECISION HEADER - Dominant visual element */}
+      <div style={{
+        background: c.bg,
+        padding: '8px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: `1px solid ${c.border}`
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: c.dominant,
+            textTransform: 'uppercase',
+            letterSpacing: '0.03em'
+          }}>
+            {candidate.status === 'shortlist' ? '✓ SHORTLIST' : candidate.status === 'talent_pool' ? '◐ CONSIDER' : '✗ REJECT'}
+          </span>
+          {exceptionApplied && (
+            <span style={{ fontSize: '0.65rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: '#fef3c7', color: '#92400e' }}>
+              Exception
             </span>
-            <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{getTimeAgo(candidate.created_at)}</span>
-          </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: c.dominant }}>{candidate.score ?? '--'}</span>
+          {confidence && (
+            <span style={{
+              fontSize: '0.6rem',
+              fontWeight: 600,
+              padding: '2px 5px',
+              borderRadius: 4,
+              background: confidence.level === 'HIGH' ? '#dcfce7' : confidence.level === 'MEDIUM' ? '#fef3c7' : '#fee2e2',
+              color: confidence.level === 'HIGH' ? '#166534' : confidence.level === 'MEDIUM' ? '#92400e' : '#991b1b'
+            }}>
+              {confidence.level}
+            </span>
+          )}
         </div>
       </div>
 
-      {candidate.status === 'shortlist' && candidate.phone && (
+      {/* MAIN CONTENT */}
+      <div onClick={onClick} style={{ padding: 16, cursor: 'pointer' }}>
+        {/* IDENTITY & CONTEXT */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 10,
+            background: '#f1f5f9', color: '#475569',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 700, fontSize: '0.9rem', flexShrink: 0
+          }}>
+            {getInitials(candidate.name)}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a', marginBottom: 2 }}>
+              {candidate.name || 'Unknown Candidate'}
+            </div>
+            {contextLine && (
+              <div style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 1 }}>{contextLine}</div>
+            )}
+            {locationLine && (
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{locationLine}</div>
+            )}
+          </div>
+        </div>
+
+        {/* REASONING - Why this decision */}
+        <div style={{
+          fontSize: '0.85rem',
+          color: '#334155',
+          lineHeight: 1.5,
+          marginBottom: 12,
+          padding: '10px 12px',
+          background: '#f8fafc',
+          borderRadius: 8,
+          borderLeft: `3px solid ${c.border}`
+        }}>
+          {candidate.ai_reasoning || screening?.recommendation_reason || 'Processing...'}
+        </div>
+
+        {/* EVIDENCE HIGHLIGHTS - The Trust Engine */}
+        {highlights.length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>Evidence</div>
+            {highlights.map((h, i) => (
+              <div key={i} style={{
+                fontSize: '0.8rem',
+                color: '#166534',
+                marginBottom: 4,
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 6
+              }}>
+                <span style={{ color: '#22c55e', flexShrink: 0 }}>✓</span>
+                <span>
+                  <strong>{h.claim}</strong>
+                  <span style={{ color: '#15803d', fontStyle: 'italic' }}> — "{h.evidence}"</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* RISK REGISTER - Compact, Honest */}
+        {topRisks.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            {topRisks.map((risk, i) => (
+              <div key={i} style={{
+                fontSize: '0.75rem',
+                padding: '6px 10px',
+                marginBottom: 4,
+                background: risk.severity === 'HIGH' ? '#fef2f2' : risk.severity === 'MEDIUM' ? '#fffbeb' : '#f8fafc',
+                borderRadius: 6,
+                color: risk.severity === 'HIGH' ? '#991b1b' : risk.severity === 'MEDIUM' ? '#92400e' : '#64748b',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <span style={{ fontSize: '0.85rem' }}>⚠</span>
+                <span><strong>{risk.risk}</strong> ({risk.severity})</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* FOOTER - Time */}
+        <div style={{ fontSize: '0.7rem', color: '#94a3b8', textAlign: 'right' }}>
+          {getTimeAgo(candidate.created_at)}
+        </div>
+      </div>
+
+      {/* ACTION BAR - Only for actionable candidates */}
+      {(candidate.status === 'shortlist' || candidate.status === 'talent_pool') && candidate.phone && (
         <div style={{ display: 'flex', borderTop: '1px solid #e2e8f0' }}>
-          <a href={'https://wa.me/' + formatWhatsApp(candidate.phone)} target="_blank" onClick={e => e.stopPropagation()} style={{ flex: 1, padding: 10, background: '#25D366', color: 'white', textAlign: 'center', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' }}>💬 WhatsApp</a>
-          <a href={'tel:' + candidate.phone} onClick={e => e.stopPropagation()} style={{ flex: 1, padding: 10, background: '#4F46E5', color: 'white', textAlign: 'center', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem' }}>📞 Call</a>
+          <a
+            href={'https://wa.me/' + formatWhatsApp(candidate.phone)}
+            target="_blank"
+            onClick={e => e.stopPropagation()}
+            style={{
+              flex: 1, padding: 10,
+              background: candidate.status === 'shortlist' ? '#25D366' : '#f1f5f9',
+              color: candidate.status === 'shortlist' ? 'white' : '#475569',
+              textAlign: 'center', textDecoration: 'none',
+              fontWeight: 600, fontSize: '0.85rem'
+            }}
+          >
+            💬 WhatsApp
+          </a>
+          <a
+            href={'tel:' + candidate.phone}
+            onClick={e => e.stopPropagation()}
+            style={{
+              flex: 1, padding: 10,
+              background: candidate.status === 'shortlist' ? '#4F46E5' : '#f1f5f9',
+              color: candidate.status === 'shortlist' ? 'white' : '#475569',
+              textAlign: 'center', textDecoration: 'none',
+              fontWeight: 600, fontSize: '0.85rem'
+            }}
+          >
+            📞 Call
+          </a>
+          <a
+            href={'mailto:' + candidate.email}
+            onClick={e => e.stopPropagation()}
+            style={{
+              flex: 1, padding: 10,
+              background: '#f1f5f9',
+              color: '#475569',
+              textAlign: 'center', textDecoration: 'none',
+              fontWeight: 600, fontSize: '0.85rem'
+            }}
+          >
+            ✉ Email
+          </a>
         </div>
       )}
     </div>
