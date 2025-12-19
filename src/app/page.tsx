@@ -103,8 +103,8 @@ interface Role {
   };
 }
 
-// Brand Logo
-const Logo = ({ size = 36, showText = true, darkBg = false }: { size?: number; showText?: boolean; darkBg?: boolean }) => (
+// Brand Logo with tagline
+const Logo = ({ size = 36, showText = true, showTagline = false, darkBg = false }: { size?: number; showText?: boolean; showTagline?: boolean; darkBg?: boolean }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <rect width="48" height="48" rx="12" fill="#4F46E5"/>
@@ -114,10 +114,17 @@ const Logo = ({ size = 36, showText = true, darkBg = false }: { size?: number; s
       <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
     {showText && (
-      <span style={{ fontSize: size > 30 ? '1.25rem' : '1rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-        <span style={{ color: darkBg ? 'white' : '#0f172a' }}>Hire</span>
-        <span style={{ color: darkBg ? '#A5B4FC' : '#4F46E5' }}>Inbox</span>
-      </span>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: size > 30 ? '1.25rem' : '1rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+          <span style={{ color: darkBg ? 'white' : '#0f172a' }}>Hire</span>
+          <span style={{ color: darkBg ? '#A5B4FC' : '#4F46E5' }}>Inbox</span>
+        </span>
+        {showTagline && (
+          <span style={{ fontSize: '0.65rem', color: darkBg ? '#94a3b8' : '#64748b', fontWeight: 500, letterSpacing: '0.01em' }}>
+            Less noise. Better hires.
+          </span>
+        )}
+      </div>
     )}
   </div>
 );
@@ -492,7 +499,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       {/* SIDEBAR */}
       <aside className="dashboard-sidebar" style={{ width: 260, background: 'white', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={onLogout}>
-          <Logo size={36} />
+          <Logo size={36} showTagline={true} />
         </div>
         
         <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
@@ -1004,12 +1011,20 @@ function CandidateModal({ candidate, onClose, getInitials, formatWhatsApp }: { c
               <DetailRow label="Experience" value={screening?.years_experience ? `${screening.years_experience} years` : null} />
             </div>
 
-            {/* Action Buttons */}
-            {candidate.phone && (
+            {/* Action Buttons - ONLY for actionable candidates (not REJECT) */}
+            {candidate.status !== 'reject' && candidate.phone && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <a href={'https://wa.me/' + formatWhatsApp(candidate.phone)} target="_blank" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, background: '#25D366', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>💬 WhatsApp</a>
                 <a href={'tel:' + candidate.phone} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, background: '#4F46E5', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>📞 Call Now</a>
                 <a href={'mailto:' + candidate.email} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, background: '#f97316', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>📧 Email</a>
+              </div>
+            )}
+
+            {/* For REJECT - show muted email only option */}
+            {candidate.status === 'reject' && candidate.email && (
+              <div style={{ marginTop: 8, padding: 12, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 8, textAlign: 'center' }}>Send outcome notification</div>
+                <a href={'mailto:' + candidate.email} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10, background: '#e2e8f0', color: '#475569', borderRadius: 6, textDecoration: 'none', fontWeight: 500, fontSize: '0.85rem' }}>✉ Email Candidate</a>
               </div>
             )}
           </div>
