@@ -172,38 +172,38 @@ function validateAnalysis(analysis: Record<string, unknown>): boolean {
 
 function buildRoleContext(role: Record<string, unknown>): string {
   const sections: string[] = [];
-  sections.push(`ROLE: \${role.title || 'Unspecified'}\`);
+  sections.push('ROLE: ' + (role.title || 'Unspecified'));
   const context = role.context as Record<string, unknown> | undefined;
   if (context) {
-    if (context.seniority) sections.push(\`SENIORITY: \${context.seniority}\`);
-    if (context.employment_type) sections.push(\`TYPE: \${context.employment_type}\`);
-    if (context.industry) sections.push(\`INDUSTRY: \${context.industry}\`);
+    if (context.seniority) sections.push('SENIORITY: ' + context.seniority);
+    if (context.employment_type) sections.push('TYPE: ' + context.employment_type);
+    if (context.industry) sections.push('INDUSTRY: ' + context.industry);
   }
   const facts = role.facts as Record<string, unknown> | undefined;
   if (facts && Object.keys(facts).length > 0) {
-    sections.push('\\nHARD REQUIREMENTS:');
-    if (facts.min_experience_years !== undefined) sections.push(\`- Minimum \${facts.min_experience_years} years experience\`);
-    if (Array.isArray(facts.required_skills) && facts.required_skills.length > 0) sections.push(\`- Required skills: \${facts.required_skills.join(', ')}\`);
-    if (Array.isArray(facts.qualifications) && facts.qualifications.length > 0) sections.push(\`- Qualifications: \${facts.qualifications.join(', ')}\`);
-    if (facts.location) sections.push(\`- Location: \${facts.location}\`);
-    if (facts.work_type) sections.push(\`- Work type: \${facts.work_type}\`);
-    if (facts.must_have) sections.push(\`- Must have: \${facts.must_have}\`);
+    sections.push('\nHARD REQUIREMENTS:');
+    if (facts.min_experience_years !== undefined) sections.push('- Minimum ' + facts.min_experience_years + ' years experience');
+    if (Array.isArray(facts.required_skills) && facts.required_skills.length > 0) sections.push('- Required skills: ' + facts.required_skills.join(', '));
+    if (Array.isArray(facts.qualifications) && facts.qualifications.length > 0) sections.push('- Qualifications: ' + facts.qualifications.join(', '));
+    if (facts.location) sections.push('- Location: ' + facts.location);
+    if (facts.work_type) sections.push('- Work type: ' + facts.work_type);
+    if (facts.must_have) sections.push('- Must have: ' + facts.must_have);
   }
   const preferences = role.preferences as Record<string, unknown> | undefined;
-  if (preferences?.nice_to_have) sections.push(\`\\nNICE TO HAVE: \${preferences.nice_to_have}\`);
+  if (preferences?.nice_to_have) sections.push('\nNICE TO HAVE: ' + preferences.nice_to_have);
   const aiGuidance = role.ai_guidance as Record<string, unknown> | undefined;
   if (aiGuidance) {
-    if (aiGuidance.strong_fit) sections.push(\`\\nSTRONG FIT LOOKS LIKE: \${aiGuidance.strong_fit}\`);
-    if (aiGuidance.disqualifiers) sections.push(\`\\nDISQUALIFIERS: \${aiGuidance.disqualifiers}\`);
+    if (aiGuidance.strong_fit) sections.push('\nSTRONG FIT LOOKS LIKE: ' + aiGuidance.strong_fit);
+    if (aiGuidance.disqualifiers) sections.push('\nDISQUALIFIERS: ' + aiGuidance.disqualifiers);
   }
   const criteria = role.criteria as Record<string, unknown> | undefined;
   if (criteria && (!facts || Object.keys(facts).length === 0)) {
-    sections.push('\\nREQUIREMENTS:');
-    if (criteria.min_experience_years !== undefined) sections.push(\`- Minimum \${criteria.min_experience_years} years experience\`);
-    if (Array.isArray(criteria.required_skills) && criteria.required_skills.length > 0) sections.push(\`- Required skills: \${criteria.required_skills.join(', ')}\`);
-    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) sections.push(\`- Location: \${criteria.locations.join(' or ')}\`);
+    sections.push('\nREQUIREMENTS:');
+    if (criteria.min_experience_years !== undefined) sections.push('- Minimum ' + criteria.min_experience_years + ' years experience');
+    if (Array.isArray(criteria.required_skills) && criteria.required_skills.length > 0) sections.push('- Required skills: ' + criteria.required_skills.join(', '));
+    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) sections.push('- Location: ' + criteria.locations.join(' or '));
   }
-  return sections.join('\\n');
+  return sections.join('\n');
 }
 
 function mapRecommendationToStatus(recommendation: string): string {
@@ -217,7 +217,7 @@ function mapRecommendationToStatus(recommendation: string): string {
 
 function parseAIResponse(text: string): Record<string, unknown> | null {
   try {
-    const cleaned = text.replace(/^\`\`\`json\\s*/i, '').replace(/^\`\`\`\\s*/i, '').replace(/\\s*\`\`\`$/i, '').trim();
+    const cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
     return JSON.parse(cleaned);
   } catch { return null; }
 }
@@ -244,7 +244,7 @@ export async function POST(request: Request) {
     if (!cvContent || cvContent.trim().length < 50) return NextResponse.json({ error: 'Invalid CV' }, { status: 400 });
 
     const roleContext = buildRoleContext(role);
-    const userPrompt = \`ROLE CONTEXT:\\n\${roleContext}\\n\\nCV TO EVALUATE:\\n\${cvContent}\\n\\nINSTRUCTIONS:\\n1. Every strength MUST have evidence. No evidence = don't include it.\\n2. Apply RULE 7 exception for near-miss candidates with 2+ exceptional indicators.\\n3. If exception applies: recommendation MUST be CONSIDER, score 60-75, exception_applied=true.\\n\\nRespond with valid JSON only.\`;
+    const userPrompt = 'ROLE CONTEXT:\n' + roleContext + '\n\nCV TO EVALUATE:\n' + cvContent + '\n\nINSTRUCTIONS:\n1. Every strength MUST have evidence. No evidence = don\'t include it.\n2. Apply RULE 7 exception for near-miss candidates with 2+ exceptional indicators.\n3. If exception applies: recommendation MUST be CONSIDER, score 60-75, exception_applied=true.\n\nRespond with valid JSON only.';
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
