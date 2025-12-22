@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
+import { SA_CONTEXT_PROMPT, SA_CREATOR_CONTEXT } from '@/lib/sa-context';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -92,7 +92,9 @@ OUTPUT FORMAT - Return valid JSON only:
   "summary": "<4-5 sentence summary>"
 }
 
-${SA_CONTEXT_PROMPT}`;
+${SA_CONTEXT_PROMPT}
+
+${SA_CREATOR_CONTEXT}`;
 
 export async function POST(request: Request) {
   const traceId = Date.now().toString(36);

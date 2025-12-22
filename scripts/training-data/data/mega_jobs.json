@@ -77618,521 +77618,2895 @@
     "id": "job_02944"
   },
   {
-    "title": "Agricultural Field Assistant",
-    "company_name": "Green Harvest Farms",
-    "industry": "Agriculture",
-    "company_type": "SME",
-    "location": "Pietermaritzburg",
-    "min_experience_years": 2,
-    "salary_min": 12000,
-    "salary_max": 18000,
-    "required_skills": [
-      "Crop management",
-      "Soil analysis",
-      "Irrigation systems",
-      "Data collection and reporting"
-    ],
-    "qualifications": [
-      "National Diploma in Agriculture",
-      "Certificate in Sustainable Farming Practices"
-    ],
-    "responsibilities": "Assist in the daily operations of the farm, including planting, maintaining crops, and harvesting. Conduct soil and crop health assessments, implement irrigation schedules, and support the farm manager in achieving productivity targets.",
-    "nice_to_have": [
-      "Experience with organic farming methods",
-      "Knowledge of pest management strategies"
-    ],
-    "id": "job_02945"
-  },
-  {
-    "title": "Property Investment Analyst",
-    "company_name": "Zenzele Properties",
-    "industry": "Real Estate",
+    "job_title": "Relationship Manager",
+    "company_name": "Standard Bank Group",
     "company_type": "Corporate",
+    "industry": "Banking",
     "location": "Johannesburg",
-    "min_experience_years": 3,
-    "salary_min": 35000,
-    "salary_max": 50000,
-    "required_skills": [
-      "Financial modeling",
-      "Market analysis",
-      "Data interpretation",
-      "Communication skills"
-    ],
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 5,
     "qualifications": [
-      "Bachelor's degree in Finance, Real Estate, or related field",
-      "Professional certification in Property Management (optional)"
+      "Bachelor's Degree in Finance, Business Administration, or related field",
+      "Postgraduate qualifications will be advantageous"
     ],
-    "responsibilities": "Conduct in-depth market research to identify potential investment opportunities. Analyze financial data to evaluate property performance and investment viability. Collaborate with property managers and stakeholders to optimize portfolio performance. Prepare reports and presentations for senior management.",
-    "nice_to_have": [
-      "Experience with property valuation software",
-      "Familiarity with South African property law"
-    ],
-    "id": "job_02946"
-  },
-  {
-    "title": "HR Recruitment Consultant",
-    "company_name": "TalentLink Solutions",
-    "industry": "HR & Recruitment",
-    "company_type": "SME",
-    "location": "Johannesburg",
-    "min_experience_years": 3,
-    "salary_min": 25000,
-    "salary_max": 35000,
     "required_skills": [
       "Excellent communication skills",
-      "Proficient in recruitment software",
-      "Strong interpersonal skills",
-      "Ability to work in a fast-paced environment"
+      "Strong analytical abilities",
+      "Client relationship management",
+      "Problem-solving skills",
+      "Sales and negotiation skills",
+      "Knowledge of banking products and services",
+      "Ability to work under pressure"
     ],
-    "qualifications": [
-      "Bachelor's degree in Human Resources, Business Administration, or related field",
-      "Certifications in HR (e.g., SAPS, SHRM) are a plus"
-    ],
-    "responsibilities": "Manage the end-to-end recruitment process, source candidates, conduct interviews, and liaise with clients to meet their staffing needs.",
     "nice_to_have": [
-      "Experience in the South African job market",
-      "Knowledge of labor laws and regulations"
+      "Experience in corporate banking",
+      "Familiarity with CRM software",
+      "Project management experience"
     ],
-    "id": "job_02947"
+    "job_description": "As a Relationship Manager at Standard Bank Group, you will play a pivotal role in managing and nurturing relationships with our corporate clients. You will be responsible for understanding their financial needs, providing tailored solutions, and ensuring a high level of client satisfaction. This hybrid role offers the opportunity to collaborate with cross-functional teams while also engaging directly with clients in the field.",
+    "key_responsibilities": [
+      "Develop and maintain strong relationships with corporate clients",
+      "Identify client financial needs and provide appropriate banking solutions",
+      "Work closely with product teams to deliver tailored offerings",
+      "Monitor client accounts and ensure satisfaction with services",
+      "Conduct regular reviews and assessments of client portfolios",
+      "Participate in client meetings and networking events",
+      "Achieve sales targets and contribute to business growth"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Comprehensive health and wellness programs",
+      "Flexible working hours and hybrid work environment",
+      "Training and professional development opportunities",
+      "Retirement savings plan with employer contribution"
+    ],
+    "id": "job_02845",
+    "generated_at": "2025-12-22T00:25:27.202Z"
   },
   {
-    "title": "Agricultural Technician",
-    "company_name": "GreenField Agri Solutions",
-    "industry": "Agriculture",
-    "company_type": "SME",
-    "location": "Pietermaritzburg",
-    "min_experience_years": 2,
-    "salary_min": 20000,
-    "salary_max": 30000,
-    "required_skills": [
-      "Soil analysis",
-      "Crop management",
-      "Data collection and analysis"
-    ],
+    "job_title": "Credit Analyst",
+    "company_name": "Stellenbosch Banking Corporation",
+    "company_type": "Corporate",
+    "industry": "Banking",
+    "location": "Stellenbosch",
+    "work_mode": "On-site",
+    "seniority": "Mid-level",
+    "salary_range": "R350,000 - R500,000",
+    "experience_required": 3,
     "qualifications": [
-      "Diploma in Agriculture or related field"
+      "Bachelor's degree in Finance, Accounting, or related field",
+      "Professional certification (e.g., CFA, CIMA) preferred"
     ],
-    "responsibilities": "Assist in the management of agricultural projects, conduct soil tests, analyze crop health, and recommend appropriate farming practices to enhance productivity.",
+    "required_skills": [
+      "Financial analysis",
+      "Risk assessment",
+      "Credit reporting",
+      "Data interpretation",
+      "Attention to detail",
+      "Communication",
+      "Problem-solving"
+    ],
     "nice_to_have": [
-      "Experience with precision farming technology",
-      "Knowledge of sustainable farming practices"
+      "Experience with credit scoring systems",
+      "Knowledge of local and international banking regulations"
     ],
-    "id": "job_02948"
+    "job_description": "The Credit Analyst will be responsible for assessing the creditworthiness of potential and existing clients. With a keen eye for financial details, you will analyze credit data and financial statements to determine the risk involved in extending credit or lending money. You will work closely with the risk management team to develop strategies that mitigate credit risk and contribute to the overall financial health of the organization.",
+    "key_responsibilities": [
+      "Evaluate clients' financial information and credit history",
+      "Conduct risk assessments to identify potential credit issues",
+      "Prepare comprehensive credit reports for loan applications",
+      "Monitor existing client portfolios for changes in risk profiles",
+      "Collaborate with sales and risk management teams to provide insights",
+      "Maintain accurate records and documentation of credit assessments",
+      "Stay updated on economic trends and regulatory changes affecting credit risk"
+    ],
+    "benefits": [
+      "Competitive salary with performance bonuses",
+      "Comprehensive health and wellness programs",
+      "Opportunities for professional development and growth",
+      "Retirement savings plan with company contributions"
+    ],
+    "id": "job_02846",
+    "generated_at": "2025-12-22T00:25:36.265Z"
   },
   {
-    "title": "Agricultural Technician",
-    "company_name": "GreenFields AgriTech",
-    "industry": "Agriculture",
-    "company_type": "SME",
-    "location": "Pietermaritzburg",
-    "min_experience_years": 2,
-    "salary_min": 15000,
-    "salary_max": 22000,
-    "required_skills": [
-      "Soil analysis",
-      "Irrigation management",
-      "Crop monitoring"
-    ],
+    "job_title": "Branch Manager",
+    "company_name": "First National Bank",
+    "company_type": "Corporate",
+    "industry": "Banking",
+    "location": "Johannesburg",
+    "work_mode": "On-site",
+    "seniority": "Manager",
+    "salary_range": "R800,000 - R1,200,000",
+    "experience_required": 5,
     "qualifications": [
-      "National Diploma in Agriculture or related field"
+      "Bachelor's Degree in Finance, Business Administration, or related field",
+      "MBA preferred"
     ],
-    "responsibilities": "Conduct soil and crop health assessments, implement irrigation systems, and provide technical support to farmers to enhance crop yield.",
+    "required_skills": [
+      "Leadership",
+      "Financial analysis",
+      "Customer relationship management",
+      "Risk management",
+      "Sales strategy development",
+      "Team management",
+      "Compliance knowledge"
+    ],
     "nice_to_have": [
-      "Experience with precision agriculture technologies",
-      "Knowledge of sustainable farming practices"
+      "Project management certification",
+      "Experience with digital banking solutions"
     ],
-    "id": "job_02949"
+    "job_description": "As the Branch Manager at First National Bank, you will lead a team of banking professionals, ensuring excellent service delivery and operational efficiency. You will be responsible for driving sales growth, managing branch operations, and developing strategies that align with the bank's objectives. Your leadership will foster a positive work environment while maintaining a strong community presence.",
+    "key_responsibilities": [
+      "Oversee daily branch operations and ensure compliance with banking regulations",
+      "Develop and implement strategies to achieve sales targets",
+      "Manage and mentor branch staff to enhance performance",
+      "Cultivate and maintain relationships with key clients and stakeholders",
+      "Conduct regular performance reviews and provide feedback to team members",
+      "Analyze branch performance metrics and report to senior management",
+      "Address customer inquiries and resolve issues in a timely manner"
+    ],
+    "benefits": [
+      "Medical aid contribution",
+      "Performance-based bonuses",
+      "Pension fund contribution",
+      "Employee training and development programs",
+      "Flexible working hours"
+    ],
+    "id": "job_02847",
+    "generated_at": "2025-12-22T00:25:44.355Z"
   },
   {
-    "title": "Field Operations Manager",
-    "company_name": "Green Fields Agriculture Co.",
-    "industry": "Agriculture",
-    "company_type": "SME",
-    "location": "Pietermaritzburg",
-    "min_experience_years": 3,
-    "salary_min": 25000,
-    "salary_max": 35000,
+    "job_title": "Risk Analyst",
+    "company_name": "First National Bank of South Africa",
+    "company_type": "Corporate",
+    "industry": "Banking",
+    "location": "Kimberley",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R500,000 - R700,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Business, or a related field",
+      "Risk Management certification (e.g., FRM or PRM) is an advantage"
+    ],
     "required_skills": [
-      "Crop management",
-      "Irrigation systems knowledge",
-      "Team leadership",
+      "Strong analytical and quantitative skills",
+      "Proficiency in risk assessment tools",
+      "Knowledge of regulatory requirements",
+      "Excellent communication skills",
+      "Ability to work under pressure",
+      "Attention to detail",
+      "Proficient in Microsoft Excel and financial modeling"
+    ],
+    "nice_to_have": [
+      "Experience with credit risk analysis",
+      "Familiarity with data visualization software",
+      "Knowledge of market risk management"
+    ],
+    "job_description": "As a Risk Analyst at First National Bank of South Africa, you will play a crucial role in identifying, analyzing, and mitigating potential risks that could impact the bank's operations and financial stability. This position requires a keen attention to detail and the ability to interpret complex data to inform decision-making processes. You will collaborate with various departments to ensure compliance with internal policies and regulatory requirements while contributing to the development of strategies to enhance the bank's risk management framework.",
+    "key_responsibilities": [
+      "Conduct risk assessments to identify potential threats to the bank's assets and operations",
+      "Analyze financial data to evaluate the potential impact of risk factors",
+      "Prepare detailed reports on risk analysis and mitigation strategies",
+      "Collaborate with cross-functional teams to develop risk management policies and procedures",
+      "Monitor and report on key risk indicators to senior management",
+      "Support the implementation of risk management software and tools",
+      "Stay updated on industry trends and regulatory changes affecting risk management"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Comprehensive health insurance",
+      "Retirement savings plan with company contributions",
+      "Flexible work hours and hybrid work environment",
+      "Professional development opportunities"
+    ],
+    "id": "job_02848",
+    "generated_at": "2025-12-22T00:25:58.847Z"
+  },
+  {
+    "job_title": "Investment Analyst",
+    "company_name": "FirstRand Bank",
+    "company_type": "Corporate",
+    "industry": "Banking",
+    "location": "Alexandra",
+    "work_mode": "On-site",
+    "seniority": "Mid-level",
+    "salary_range": "R500,000 - R700,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Economics, or a related field",
+      "CFA or similar certification is a plus"
+    ],
+    "required_skills": [
+      "Financial analysis",
+      "Investment research",
+      "Data interpretation",
+      "Report writing",
+      "Attention to detail",
+      "Communication skills",
+      "Excel proficiency"
+    ],
+    "nice_to_have": [
+      "Experience with investment software",
+      "Knowledge of South African financial markets"
+    ],
+    "job_description": "FirstRand Bank is seeking a motivated and detail-oriented Investment Analyst to join our dynamic team in Alexandra. The successful candidate will be responsible for conducting in-depth investment research, analyzing market trends, and providing strategic insights to support our investment decisions. You will work closely with senior analysts and portfolio managers to evaluate investment opportunities and risks, contributing to the overall success of our investment portfolio.",
+    "key_responsibilities": [
+      "Conduct thorough financial analysis of investment options",
+      "Develop comprehensive investment reports and presentations",
+      "Monitor and evaluate market conditions and trends",
+      "Collaborate with cross-functional teams to align investment strategies",
+      "Assist in the preparation of investment proposals for stakeholders",
+      "Perform due diligence on potential investment opportunities",
+      "Maintain up-to-date knowledge of industry developments and regulations"
+    ],
+    "benefits": [
+      "Competitive salary package",
+      "Performance-based bonuses",
+      "Comprehensive health insurance",
+      "Retirement savings plan",
+      "Opportunities for professional development"
+    ],
+    "id": "job_02849",
+    "generated_at": "2025-12-22T00:26:05.880Z"
+  },
+  {
+    "job_title": "Private Banker",
+    "company_name": "First National Bank (FNB)",
+    "company_type": "Corporate",
+    "industry": "Banking",
+    "location": "Pretoria",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R850000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's Degree in Finance, Business Administration or related field",
+      "Certified Financial Planner (CFP) or equivalent qualification"
+    ],
+    "required_skills": [
+      "Strong financial acumen",
+      "Excellent interpersonal skills",
+      "Ability to build and maintain client relationships",
+      "Knowledge of investment products",
+      "Strong analytical skills",
+      "Effective communication skills",
+      "Problem-solving abilities"
+    ],
+    "nice_to_have": [
+      "Experience with high-net-worth clients",
+      "Masters in Business Administration (MBA)",
+      "Bilingual proficiency (English and Afrikaans)"
+    ],
+    "job_description": "As a Private Banker at FNB, you will be responsible for providing tailored banking solutions to a select group of high-net-worth clients. Your role will involve assessing the financial needs of clients, advising them on investment strategies, and ensuring their financial goals are achieved through our comprehensive banking services. You will work closely with other specialists within the bank to deliver exceptional service and create value for our clients.",
+    "key_responsibilities": [
+      "Develop and maintain relationships with high-net-worth clients",
+      "Assess clients' financial situations and provide customized banking solutions",
+      "Monitor and manage clients' investment portfolios",
+      "Collaborate with internal teams to deliver comprehensive financial services",
+      "Provide ongoing financial advice and support to clients",
+      "Ensure compliance with regulatory requirements and internal policies",
+      "Identify opportunities for cross-selling additional bank products"
+    ],
+    "benefits": [
+      "Competitive salary and performance-based bonuses",
+      "Comprehensive health and wellness benefits",
+      "Retirement savings plan with company contributions",
+      "Ongoing professional development and training opportunities"
+    ],
+    "id": "job_02850",
+    "generated_at": "2025-12-22T00:26:16.085Z"
+  },
+  {
+    "job_title": "Compliance Officer",
+    "company_name": "First National Bank (FNB) South Africa",
+    "company_type": "Corporate",
+    "industry": "Banking",
+    "location": "Durban",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R450,000 - R600,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Law, Business Administration, or related field",
+      "Certification in Compliance (e.g., ACOI, CAMS) is an advantage"
+    ],
+    "required_skills": [
+      "Strong understanding of banking regulations",
+      "Risk assessment and management skills",
+      "Excellent analytical skills",
+      "Attention to detail",
+      "Effective communication skills",
+      "Ability to work independently and as part of a team",
+      "Proficiency in compliance software and tools"
+    ],
+    "nice_to_have": [
+      "Experience with anti-money laundering (AML) practices",
+      "Knowledge of data protection regulations",
+      "Experience in internal auditing"
+    ],
+    "job_description": "As a Compliance Officer at First National Bank, you will play a crucial role in ensuring that our operations adhere to both internal policies and regulatory requirements. You will be responsible for conducting compliance audits, monitoring transactions, and implementing compliance programs to mitigate risk. Your analytical capabilities will help identify potential areas of non-compliance and develop strategies to address them. This position offers a flexible working environment, enabling you to balance your professional and personal life effectively.",
+    "key_responsibilities": [
+      "Monitor and review compliance with banking regulations and internal policies",
+      "Conduct internal audits and compliance assessments",
+      "Prepare compliance reports and documentation for stakeholders",
+      "Provide training and support to staff on compliance-related issues",
+      "Coordinate with regulatory bodies during audits and inspections",
+      "Investigate compliance breaches and recommend corrective actions",
+      "Stay updated on changes in legislation and compliance requirements"
+    ],
+    "benefits": [
+      "Health and wellness programs",
+      "Retirement savings plan with company contribution",
+      "Professional development and training opportunities",
+      "Flexible working hours",
+      "Employee discounts on banking products"
+    ],
+    "id": "job_02851",
+    "generated_at": "2025-12-22T00:26:28.759Z"
+  },
+  {
+    "job_title": "Treasury Analyst",
+    "company_name": "First National Bank",
+    "company_type": "Corporate",
+    "industry": "Banking",
+    "location": "Bloemfontein",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R450,000 - R600,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Accounting, or a related field",
+      "Certification in Treasury Management (CTP) is a plus"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Proficiency in Excel and financial modeling",
+      "Understanding of cash management principles",
+      "Knowledge of risk management strategies",
+      "Excellent communication skills",
+      "Ability to work independently",
+      "Attention to detail"
+    ],
+    "nice_to_have": [
+      "Experience with treasury management systems",
+      "Familiarity with South African banking regulations"
+    ],
+    "job_description": "As a Treasury Analyst at First National Bank, you will play a critical role in managing the company's liquidity, funding, and financial risk. You will analyze cash flow forecasts and provide insights that inform strategic financial decisions. This position offers the opportunity to work remotely, providing you with the flexibility to manage your work-life balance while contributing to a leading corporate in the banking sector.",
+    "key_responsibilities": [
+      "Monitor daily cash positions and prepare forecasts",
+      "Assist in the management of financial risk related to currency and interest rates",
+      "Support the execution of Treasury operations and transactions",
+      "Collaborate with finance teams to ensure accurate reporting",
+      "Conduct analysis on funding strategies and liquidity requirements",
+      "Prepare and present reports to senior management",
+      "Stay updated on industry trends and best practices"
+    ],
+    "benefits": [
+      "Flexible working hours",
+      "Comprehensive medical aid",
+      "Retirement savings plan",
+      "Training and development opportunities"
+    ],
+    "id": "job_02852",
+    "generated_at": "2025-12-22T00:26:39.058Z"
+  },
+  {
+    "job_title": "Underwriter",
+    "company_name": "Soweto Assurance Ltd.",
+    "company_type": "Corporate",
+    "industry": "Insurance",
+    "location": "Soweto",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R350,000 - R500,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Business Administration, or related field",
+      "Relevant underwriting certification is a plus"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Attention to detail",
+      "Excellent communication skills",
+      "Risk assessment",
+      "Customer service orientation",
+      "Proficiency in underwriting software"
+    ],
+    "nice_to_have": [
+      "Experience with commercial insurance",
+      "Knowledge of local regulatory requirements",
+      "Bilingual in English and Zulu"
+    ],
+    "job_description": "Soweto Assurance Ltd. is seeking a dedicated and detail-oriented Underwriter to join our dynamic team. In this remote role, you will be responsible for evaluating insurance applications, assessing risks, and determining appropriate coverage options for our clients. Your expertise will help us maintain our commitment to providing excellent service while ensuring sound underwriting decisions.\n\nAs an Underwriter, you will leverage your analytical skills to analyze data and make informed decisions. You will work closely with agents and clients, providing guidance and support throughout the underwriting process. The ideal candidate will have a strong background in insurance underwriting and a proactive approach to problem-solving.",
+    "key_responsibilities": [
+      "Review and assess insurance applications",
+      "Analyze risks and determine coverage terms",
+      "Collaborate with sales and underwriting teams",
+      "Provide exceptional customer service to clients and agents",
+      "Maintain accurate records of underwriting decisions",
+      "Stay updated on industry trends and regulations",
+      "Participate in training sessions and continuous professional development"
+    ],
+    "benefits": [
+      "Flexible remote working arrangements",
+      "Competitive salary with performance bonuses",
+      "Comprehensive health insurance",
+      "Retirement savings plan with company contribution",
+      "Opportunities for professional growth and development"
+    ],
+    "id": "job_02853",
+    "generated_at": "2025-12-22T00:26:53.099Z"
+  },
+  {
+    "job_title": "Claims Manager",
+    "company_name": "SecureCover Insurance Ltd.",
+    "company_type": "Corporate",
+    "industry": "Insurance",
+    "location": "Polokwane",
+    "work_mode": "On-site",
+    "seniority": "Manager",
+    "salary_range": "R600,000 - R800,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's Degree in Business Administration, Insurance, or related field",
+      "Postgraduate qualifications will be an advantage"
+    ],
+    "required_skills": [
+      "Strong leadership skills",
+      "Excellent communication skills",
+      "In-depth knowledge of insurance claims processes",
+      "Analytical thinking",
+      "Customer service orientation",
+      "Attention to detail",
       "Problem-solving skills"
     ],
-    "qualifications": [
-      "Diploma in Agriculture",
-      "Bachelor's degree in Agricultural Science (preferred)"
-    ],
-    "responsibilities": "Oversee daily farm operations, manage crop production schedules, implement effective irrigation strategies, and lead a team of farm workers to ensure high productivity levels.",
     "nice_to_have": [
-      "Pesticide application certification",
-      "Experience with organic farming practices"
+      "Project management experience",
+      "Knowledge of relevant legislation",
+      "Fluent in multiple languages"
     ],
-    "id": "job_02950"
+    "job_description": "SecureCover Insurance Ltd. is seeking an experienced Claims Manager to oversee our claims department in Polokwane. The ideal candidate will have a robust background in insurance claims management, demonstrating a track record of leading teams and driving efficiency in claims processing. This role requires strong analytical skills and the ability to develop strategies to improve customer satisfaction and claims turnaround times.",
+    "key_responsibilities": [
+      "Manage and lead the claims team to ensure high performance and productivity",
+      "Oversee the claims process from inception to resolution, ensuring compliance with company policies and regulations",
+      "Review and analyze claims for validity and make recommendations for improvements",
+      "Prepare reports on claims trends and performance metrics for senior management",
+      "Develop training programs for claims staff to enhance skills and knowledge",
+      "Collaborate with other departments to streamline claims processing and improve customer experience",
+      "Handle escalated claims issues and provide resolutions in a timely manner"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Health and wellness benefits",
+      "Retirement savings plan with company contributions",
+      "Professional development opportunities",
+      "Flexible leave options"
+    ],
+    "id": "job_02854",
+    "generated_at": "2025-12-22T00:27:19.180Z"
   },
   {
-    "title": "Beauty Therapist",
-    "company_name": "Glow & Bliss Spa",
-    "industry": "Beauty & Wellness",
-    "company_type": "SME",
+    "job_title": "Actuarial Analyst",
+    "company_name": "InsureTech Solutions",
+    "company_type": "Corporate",
+    "industry": "Insurance",
     "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 8000,
-    "salary_max": 12000,
-    "required_skills": [
-      "Facial treatments",
-      "Massage techniques",
-      "Customer service",
-      "Product knowledge"
-    ],
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R500,000 - R700,000",
+    "experience_required": 3,
     "qualifications": [
-      "Diploma in Beauty Therapy",
-      "CIDESCO or ITEC certification"
+      "Bachelor's degree in Actuarial Science",
+      "Completion of at least 4 actuarial exams"
     ],
-    "responsibilities": "Provide a range of beauty treatments to clients, maintain high standards of cleanliness, recommend products and treatments, and ensure a positive customer experience.",
+    "required_skills": [
+      "Statistical analysis",
+      "Risk assessment",
+      "Financial modeling",
+      "SQL proficiency",
+      "Data visualization",
+      "Strong analytical skills",
+      "Attention to detail"
+    ],
     "nice_to_have": [
-      "Social media marketing experience",
-      "Additional qualifications in holistic therapies"
+      "Experience with actuarial software",
+      "Knowledge of insurance regulations",
+      "Project management skills"
     ],
-    "id": "job_02951"
+    "job_description": "InsureTech Solutions is seeking a skilled Actuarial Analyst to join our dynamic team in Cape Town. The ideal candidate will contribute to the development and implementation of actuarial models that drive business decisions and support our growth strategy. In this role, you will collaborate with multi-disciplinary teams to analyze data and present insights that enhance our product offerings and risk management strategies.",
+    "key_responsibilities": [
+      "Conduct actuarial analysis to support pricing and product development",
+      "Develop and maintain actuarial models for various insurance products",
+      "Prepare reports and presentations for senior management and stakeholders",
+      "Assist in the preparation of regulatory filings and compliance documentation",
+      "Collaborate with underwriting and finance teams to assess risk exposure",
+      "Identify trends and provide recommendations based on data analysis",
+      "Support the continuous improvement of actuarial processes and methodologies"
+    ],
+    "benefits": [
+      "Competitive salary package",
+      "Flexible work hours and remote work options",
+      "Comprehensive health and wellness programs",
+      "Professional development opportunities",
+      "Performance-based bonuses"
+    ],
+    "id": "job_02855",
+    "generated_at": "2025-12-22T00:28:12.769Z"
   },
   {
-    "title": "Guest Services Coordinator",
-    "company_name": "Rainbow Retreat Guest House",
-    "industry": "Hospitality",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 15000,
-    "salary_max": 20000,
+    "job_title": "Business Development Manager",
+    "company_name": "SafeGuard Insurance Group",
+    "company_type": "Corporate",
+    "industry": "Insurance",
+    "location": "Umlazi",
+    "work_mode": "Hybrid",
+    "seniority": "Manager",
+    "salary_range": "R600,000 - R800,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Marketing, or related field",
+      "Postgraduate qualification in Insurance or Business Management (advantageous)"
+    ],
     "required_skills": [
-      "Customer service excellence",
+      "Strong negotiation skills",
+      "Excellent communication abilities",
+      "Strategic thinking",
+      "Customer relationship management",
+      "Market analysis",
+      "Project management",
+      "Sales acumen"
+    ],
+    "nice_to_have": [
+      "Experience in digital marketing",
+      "Exposure to insurance products",
+      "Familiarity with CRM software"
+    ],
+    "job_description": "SafeGuard Insurance Group is seeking a dynamic and results-driven Business Development Manager to join our team in Umlazi. In this pivotal role, you will spearhead our business development initiatives, working to expand our market presence and drive growth in our insurance offerings. The ideal candidate will possess a keen understanding of the insurance landscape and be adept at identifying new business opportunities.",
+    "key_responsibilities": [
+      "Develop and execute business development strategies",
+      "Build and maintain strong client relationships",
+      "Identify and pursue new business opportunities",
+      "Collaborate with marketing to create promotional campaigns",
+      "Conduct market research to identify trends",
+      "Prepare and deliver persuasive presentations to stakeholders",
+      "Monitor industry developments and competitor activities"
+    ],
+    "benefits": [
+      "Competitive salary package",
+      "Performance bonuses",
+      "Flexible working hours",
+      "Professional development opportunities",
+      "Comprehensive health insurance"
+    ],
+    "id": "job_02856",
+    "generated_at": "2025-12-22T00:29:27.838Z"
+  },
+  {
+    "job_title": "Product Manager",
+    "company_name": "InsureSure Holdings",
+    "company_type": "Corporate",
+    "industry": "Insurance",
+    "location": "Sandton",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R600,000 - R800,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Marketing, or related field",
+      "Product Management certification (e.g., Scrum, Agile)"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Excellent communication skills",
+      "Project management expertise",
+      "Problem-solving abilities",
+      "Customer-focused mindset",
+      "Technical understanding of insurance products",
+      "Ability to work collaboratively in cross-functional teams"
+    ],
+    "nice_to_have": [
+      "Experience with digital insurance products",
+      "Knowledge of regulatory requirements in the insurance industry",
+      "Experience in data analytics tools"
+    ],
+    "job_description": "Join InsureSure Holdings as a Product Manager, where you will play a pivotal role in shaping and managing our insurance product portfolio. You will be responsible for driving product strategy, defining product roadmaps, and ensuring alignment with market needs and company goals. With a focus on innovation and customer satisfaction, you will collaborate with various teams to enhance our offerings and improve user experience.\n\nIn this dynamic role, you will have the opportunity to analyze market trends, gather customer feedback, and translate insights into impactful product features. Your expertise will directly contribute to our growth as a leader in the insurance industry, ensuring our products not only meet but exceed customer expectations.",
+    "key_responsibilities": [
+      "Develop and maintain product roadmaps for insurance offerings",
+      "Conduct market research and competitive analysis to identify opportunities",
+      "Collaborate with sales, marketing, and IT teams to launch new products",
+      "Gather and prioritize product requirements based on customer feedback",
+      "Monitor product performance and implement enhancements as needed",
+      "Prepare and present product updates to stakeholders",
+      "Ensure compliance with industry regulations and standards"
+    ],
+    "benefits": [
+      "Flexible work hours and remote work options",
+      "Comprehensive health and wellness programs",
+      "Professional development and training opportunities",
+      "Performance-based bonuses and incentives",
+      "Employee discounts on insurance products"
+    ],
+    "id": "job_02857",
+    "generated_at": "2025-12-22T00:29:37.963Z"
+  },
+  {
+    "job_title": "Policy Administrator",
+    "company_name": "SecureLife Insurance Ltd.",
+    "company_type": "Corporate",
+    "industry": "Insurance",
+    "location": "Sandton",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R300,000 - R450,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Business Administration, or related field",
+      "Insurance-specific certifications (e.g., RE5) preferred"
+    ],
+    "required_skills": [
+      "Attention to detail",
+      "Strong analytical skills",
+      "Excellent communication skills",
+      "Proficiency in Microsoft Office Suite",
+      "Knowledge of insurance products",
+      "Customer service orientation"
+    ],
+    "nice_to_have": [
+      "Experience with insurance policy management software",
+      "Project management skills",
+      "Ability to work independently",
+      "Familiarity with regulatory requirements"
+    ],
+    "job_description": "SecureLife Insurance Ltd. is seeking a motivated and detail-oriented Policy Administrator to join our dynamic team. In this role, you will be responsible for managing and processing insurance policies, ensuring compliance with industry regulations, and providing exceptional support to our clients and internal teams. This remote position offers the opportunity to contribute to a leading corporate environment while enjoying a flexible work schedule.\n\nAs a Policy Administrator, you'll play a crucial role in maintaining accurate records, assisting with policy renewals, and addressing any inquiries from clients or partners. Your expertise will help streamline our operations and ensure that our clients receive the highest level of service, reinforcing our commitment to their financial security.",
+    "key_responsibilities": [
+      "Manage and maintain insurance policy records and documentation",
+      "Process new policy applications and renewals in a timely manner",
+      "Assist clients with inquiries related to their policies",
+      "Ensure compliance with industry regulations and company policies",
+      "Collaborate with underwriting and claims teams to resolve issues",
+      "Conduct audits of policy files for accuracy and completeness",
+      "Support the development and implementation of process improvements"
+    ],
+    "benefits": [
+      "Comprehensive medical aid and retirement plan",
+      "Performance-based bonuses",
+      "Flexible working hours",
+      "Opportunities for professional development and training",
+      "Employee wellness programs"
+    ],
+    "id": "job_02858",
+    "generated_at": "2025-12-22T00:29:48.915Z"
+  },
+  {
+    "job_title": "Mining Engineer",
+    "company_name": "South African Mining Corporation (SAMC)",
+    "company_type": "Corporate",
+    "industry": "Mining",
+    "location": "Pretoria",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 3,
+    "qualifications": [
+      "BEng in Mining Engineering",
+      "Professional Engineer (Pr. Eng) certification"
+    ],
+    "required_skills": [
+      "Geotechnical analysis",
+      "Mine planning",
+      "Project management",
+      "Cost estimation",
+      "Data analysis",
+      "Health and safety compliance",
+      "CAD software proficiency"
+    ],
+    "nice_to_have": [
+      "Postgraduate qualification in Mining",
+      "Experience with environmental management",
+      "Knowledge of lean mining principles"
+    ],
+    "job_description": "As a Mining Engineer at South African Mining Corporation (SAMC), you will play a crucial role in the design and implementation of mining operations. You will collaborate with a team of engineers and geologists to optimize the extraction of mineral resources while ensuring compliance with safety and environmental standards. You will be involved in both surface and underground mining projects, utilizing your expertise to enhance operational efficiency and productivity.",
+    "key_responsibilities": [
+      "Conduct feasibility studies and develop project plans.",
+      "Design mining layouts and optimize resource extraction methods.",
+      "Monitor and ensure compliance with health and safety regulations.",
+      "Collaborate with cross-functional teams to improve mining processes.",
+      "Prepare technical reports and present findings to stakeholders.",
+      "Provide technical support during the execution of mining projects.",
+      "Assist in the management of project timelines and budgets."
+    ],
+    "benefits": [
+      "Comprehensive medical aid coverage",
+      "Retirement savings plan with company contribution",
+      "Performance-based bonuses",
+      "Flexible working hours and remote work options",
+      "Professional development and training opportunities"
+    ],
+    "id": "job_02859",
+    "generated_at": "2025-12-22T00:30:18.528Z"
+  },
+  {
+    "job_title": "Geologist",
+    "company_name": "Mineral Resources Group",
+    "company_type": "Corporate",
+    "industry": "Mining",
+    "location": "Polokwane",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 5,
+    "qualifications": [
+      "BSc in Geology or related field",
+      "Professional registration with SACNASP"
+    ],
+    "required_skills": [
+      "Geological mapping",
+      "Data analysis",
+      "Mineral resource estimation",
+      "Fieldwork proficiency",
+      "Report writing",
+      "Project management",
+      "Environmental compliance"
+    ],
+    "nice_to_have": [
+      "Experience with GIS software",
+      "Knowledge of South African mining regulations"
+    ],
+    "job_description": "We are seeking a motivated and skilled Geologist to join our dynamic team at Mineral Resources Group. The successful candidate will be responsible for conducting geological assessments and providing expertise in mineral exploration projects. This remote role offers the opportunity to work with an experienced team while contributing to sustainable mining practices and innovative resource management solutions.",
+    "key_responsibilities": [
+      "Conduct geological surveys and assessments for mineral exploration.",
+      "Analyze geological data and create detailed reports.",
+      "Collaborate with cross-functional teams to support mining operations.",
+      "Monitor environmental impact and ensure compliance with regulations.",
+      "Develop and implement project plans for exploration initiatives.",
+      "Provide technical guidance and mentorship to junior staff.",
+      "Stay updated with industry trends and advancements in geology."
+    ],
+    "benefits": [
+      "Competitive salary package",
+      "Flexible remote work hours",
+      "Professional development opportunities",
+      "Health and wellness programs",
+      "Employee assistance program"
+    ],
+    "id": "job_02860",
+    "generated_at": "2025-12-22T00:30:26.167Z"
+  },
+  {
+    "job_title": "Safety Manager",
+    "company_name": "Goldfields South Africa",
+    "company_type": "Corporate",
+    "industry": "Mining",
+    "location": "Centurion",
+    "work_mode": "Remote",
+    "seniority": "Manager",
+    "salary_range": "800000-1000000 ZAR",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Safety Management, Occupational Health, or related field",
+      "SAMTRAC or similar safety qualification"
+    ],
+    "required_skills": [
+      "Risk assessment",
+      "Incident investigation",
+      "Safety audits",
+      "Regulatory compliance",
+      "Training and development",
+      "Emergency response planning",
+      "Data analysis"
+    ],
+    "nice_to_have": [
+      "ISO 45001 certification",
+      "Experience with mining operations",
+      "Knowledge of environmental management",
+      "Strong leadership skills"
+    ],
+    "job_description": "We are seeking an experienced Safety Manager to join our team at Goldfields South Africa. The successful candidate will be responsible for developing, implementing, and managing safety programs to ensure compliance with regulatory requirements and to foster a culture of safety across our mining operations. This role is essential for maintaining the health and safety of our employees and the environment in which we operate.",
+    "key_responsibilities": [
+      "Develop and enforce safety policies and practices to ensure compliance with legislative requirements",
+      "Conduct safety audits and inspections to identify hazards and implement corrective actions",
+      "Lead incident investigations and prepare reports on findings and recommendations",
+      "Design and deliver training programs to enhance safety awareness among employees",
+      "Collaborate with management and employees to promote a proactive safety culture",
+      "Monitor safety performance metrics and report findings to senior management",
+      "Stay updated on industry regulations and best practices in occupational health and safety"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Comprehensive health and wellness programs",
+      "Remote work flexibility",
+      "Opportunities for professional development and training",
+      "Retirement savings plan with company matching"
+    ],
+    "id": "job_02861",
+    "generated_at": "2025-12-22T00:30:37.127Z"
+  },
+  {
+    "job_title": "Plant Manager",
+    "company_name": "Mineral Resources Ltd.",
+    "company_type": "Corporate",
+    "industry": "Mining",
+    "location": "Pietermaritzburg",
+    "work_mode": "On-site",
+    "seniority": "Manager",
+    "salary_range": "R1,200,000 - R1,500,000",
+    "experience_required": 8,
+    "qualifications": [
+      "Bachelor's degree in Engineering, Mining, or related field",
+      "MBA or Management qualification preferred"
+    ],
+    "required_skills": [
+      "Strong leadership and personnel management",
+      "Project management",
+      "Operational efficiency optimization",
+      "Health and safety compliance",
+      "Budget management",
+      "Problem-solving skills",
+      "Excellent communication abilities"
+    ],
+    "nice_to_have": [
+      "Experience with Lean Manufacturing",
+      "Knowledge of environmental regulations",
+      "SAP or ERP system experience"
+    ],
+    "job_description": "As the Plant Manager at Mineral Resources Ltd., you will oversee the day-to-day operations of our mining plant in Pietermaritzburg. Your primary focus will be to ensure that production goals are met while maintaining safety and environmental standards. You will lead a team of skilled professionals, guiding them in achieving operational excellence and continuous improvement. This role requires a strategic mindset, effective communication, and the ability to manage multiple projects simultaneously.",
+    "key_responsibilities": [
+      "Manage plant operations to ensure efficient and safe production processes",
+      "Develop and implement production strategies in line with corporate goals",
+      "Monitor and report on operational KPIs to senior management",
+      "Lead and mentor plant staff, fostering a culture of safety and teamwork",
+      "Ensure compliance with health, safety, and environmental regulations",
+      "Manage plant budgets and control costs effectively",
+      "Coordinate maintenance and upgrade projects to minimize downtime"
+    ],
+    "benefits": [
+      "Competitive salary with performance-based bonuses",
+      "Comprehensive medical aid and retirement fund",
+      "Opportunities for professional development and training",
+      "Relocation assistance for eligible candidates",
+      "Employee wellness programs"
+    ],
+    "id": "job_02862",
+    "generated_at": "2025-12-22T00:30:47.659Z"
+  },
+  {
+    "job_title": "Environmental Officer",
+    "company_name": "Umoya Mining Solutions",
+    "company_type": "Corporate",
+    "industry": "Mining",
+    "location": "Pietermaritzburg",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R480,000 - R650,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Environmental Science, Ecology, or related field",
+      "Postgraduate qualification in Environmental Management (preferred)"
+    ],
+    "required_skills": [
+      "Environmental impact assessment",
+      "Regulatory compliance",
+      "Data analysis",
+      "Project management",
+      "Report writing",
+      "Stakeholder engagement",
+      "GIS proficiency"
+    ],
+    "nice_to_have": [
+      "Experience in mining operations",
+      "Knowledge of ISO 14001 standards"
+    ],
+    "job_description": "Umoya Mining Solutions is seeking a dedicated Environmental Officer to join our team in Pietermaritzburg. The ideal candidate will play a crucial role in managing environmental compliance and sustainability initiatives within our mining operations. You will collaborate with various departments to ensure adherence to local and international environmental laws, while promoting innovative practices that minimize our ecological footprint.\n\nAs part of a large corporate environment, you will engage with stakeholders, conduct environmental assessments, and assist in the development of strategies to enhance our sustainability efforts. This position offers a dynamic work environment with opportunities for professional growth and skill enhancement.",
+    "key_responsibilities": [
+      "Conduct environmental impact assessments and audits",
+      "Monitor compliance with environmental legislation and company policies",
+      "Develop and implement environmental management plans",
+      "Prepare and submit environmental reports to regulatory authorities",
+      "Collaborate with internal teams on sustainability projects",
+      "Engage with local communities and stakeholders on environmental issues",
+      "Provide training and support to staff on environmental practices"
+    ],
+    "benefits": [
+      "Competitive salary",
+      "Performance-based bonuses",
+      "Health and wellness programs",
+      "Professional development opportunities",
+      "Flexible working hours"
+    ],
+    "id": "job_02863",
+    "generated_at": "2025-12-22T00:30:58.104Z"
+  },
+  {
+    "job_title": "Procurement Manager",
+    "company_name": "Siyanda Mining Corporation",
+    "company_type": "Corporate",
+    "industry": "Mining",
+    "location": "Umlazi",
+    "work_mode": "Hybrid",
+    "seniority": "Manager",
+    "salary_range": "R600,000 - R800,000",
+    "experience_required": 7,
+    "qualifications": [
+      "Bachelor's degree in Supply Chain Management, Business Administration, or related field",
+      "Professional certification (e.g., CIPS) is an advantage"
+    ],
+    "required_skills": [
+      "Strategic sourcing",
+      "Supplier relationship management",
+      "Contract negotiation",
+      "Cost analysis",
+      "Inventory management",
+      "Data analysis",
+      "Excellent communication skills"
+    ],
+    "nice_to_have": [
+      "Knowledge of mining industry regulations",
+      "Experience with ERP systems",
+      "Project management skills"
+    ],
+    "job_description": "We are seeking a dynamic Procurement Manager to join our team at Siyanda Mining Corporation. In this role, you will be responsible for managing the procurement processes, ensuring that all materials and services are sourced efficiently to meet the operational needs of the company. You will work closely with various departments to develop procurement strategies that align with our business objectives while maintaining strong supplier relationships.",
+    "key_responsibilities": [
+      "Develop and implement procurement strategies that support business goals",
+      "Manage supplier selection and evaluation processes",
+      "Negotiate contracts and agreements with suppliers",
+      "Monitor and analyze market trends to identify potential risks and opportunities",
+      "Collaborate with cross-functional teams to streamline procurement processes",
+      "Ensure compliance with company policies and regulatory requirements",
+      "Prepare and present reports on procurement activities and performance metrics"
+    ],
+    "benefits": [
+      "Competitive salary and performance-based bonuses",
+      "Medical aid and retirement fund contributions",
+      "Professional development and training opportunities",
+      "Flexible working hours and hybrid work environment"
+    ],
+    "id": "job_02864",
+    "generated_at": "2025-12-22T00:31:08.379Z"
+  },
+  {
+    "job_title": "HR Manager",
+    "company_name": "Mineral Resources South Africa",
+    "company_type": "Corporate",
+    "industry": "Mining",
+    "location": "Polokwane",
+    "work_mode": "On-site",
+    "seniority": "Manager",
+    "salary_range": "800000-1000000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Human Resources, Business Administration, or related field",
+      "Postgraduate qualification in HR or Business Management (advantageous)"
+    ],
+    "required_skills": [
+      "Strong knowledge of labor legislation",
+      "Excellent communication skills",
+      "Conflict resolution skills",
+      "Employee engagement strategies",
+      "Performance management",
+      "Training and development",
+      "Organizational development"
+    ],
+    "nice_to_have": [
+      "Experience in a mining environment",
+      "HRIS proficiency",
+      "Change management experience"
+    ],
+    "job_description": "We are seeking an experienced HR Manager to join our team at Mineral Resources South Africa, based in Polokwane. The HR Manager will be responsible for leading and managing the Human Resources function, ensuring alignment with the company's strategic goals. The role requires a proactive individual who can navigate complex labor relations while fostering a positive work environment and enhancing employee engagement.",
+    "key_responsibilities": [
+      "Develop and implement HR policies and procedures in line with organizational goals",
+      "Manage recruitment and selection processes to attract top talent",
+      "Oversee employee onboarding and training programs",
+      "Implement performance management systems to evaluate employee performance",
+      "Provide guidance on employee relations issues and ensure compliance with labor laws",
+      "Develop strategies to enhance employee engagement and retention",
+      "Collaborate with management to identify workforce planning needs"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Comprehensive medical aid and retirement fund",
+      "Opportunities for professional development and training",
+      "Annual leave and family responsibility leave",
+      "Employee wellness programs"
+    ],
+    "id": "job_02865",
+    "generated_at": "2025-12-22T00:31:20.782Z"
+  },
+  {
+    "job_title": "Network Engineer",
+    "company_name": "Telkom SA",
+    "company_type": "Corporate",
+    "industry": "Telecommunications",
+    "location": "Alexandra",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R400,000 - R600,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Computer Science, Information Technology, or related field",
+      "Cisco Certified Network Associate (CCNA) certification"
+    ],
+    "required_skills": [
+      "Network design and implementation",
+      "Troubleshooting skills",
+      "Firewall configuration",
+      "Routing and switching",
+      "VPN setup and management",
+      "Network monitoring tools",
+      "Excellent communication skills"
+    ],
+    "nice_to_have": [
+      "Cisco Certified Network Professional (CCNP)",
+      "Experience with cloud networking",
+      "Knowledge of VoIP technologies"
+    ],
+    "job_description": "As a Network Engineer at Telkom SA, you will play a crucial role in designing, implementing, and maintaining our network infrastructure. You will work closely with cross-functional teams to ensure robust network performance and security, while also troubleshooting and resolving network issues as they arise. This position offers the opportunity to work remotely, allowing flexibility while being part of a dynamic telecommunications environment.",
+    "key_responsibilities": [
+      "Design and implement network solutions based on business requirements.",
+      "Monitor network performance and troubleshoot issues to ensure optimal functionality.",
+      "Collaborate with IT teams to create and maintain network security protocols.",
+      "Assist in capacity planning and network upgrades.",
+      "Document network configurations and changes to maintain accurate records.",
+      "Provide support for network-related incidents and requests.",
+      "Stay updated with the latest networking technologies and industry trends."
+    ],
+    "benefits": [
+      "Flexible working hours",
+      "Health and wellness programs",
+      "Professional development opportunities",
+      "Remote work allowance",
+      "Performance-based bonuses"
+    ],
+    "id": "job_02866",
+    "generated_at": "2025-12-22T00:31:30.950Z"
+  },
+  {
+    "job_title": "Product Manager",
+    "company_name": "Telco Innovations South Africa",
+    "company_type": "Corporate",
+    "industry": "Telecommunications",
+    "location": "Tembisa",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R600,000 - R800,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's Degree in Business, Marketing, or related field",
+      "Product Management Certification (e.g., Scrum, Agile)"
+    ],
+    "required_skills": [
+      "Product lifecycle management",
+      "Market research and analysis",
+      "Agile methodologies",
+      "Data-driven decision making",
+      "Cross-functional team collaboration"
+    ],
+    "nice_to_have": [
+      "Experience in telecommunications industry",
+      "Familiarity with digital marketing",
+      "Advanced degree (MBA)"
+    ],
+    "job_description": "Join Telco Innovations South Africa as a Product Manager and play a pivotal role in shaping our telecommunications offerings. You will be responsible for defining product strategy, crafting compelling product roadmaps, and ensuring delivery aligns with customer needs and market trends. Working closely with cross-functional teams, you will lead the development of innovative solutions that enhance user experience and drive revenue growth.",
+    "key_responsibilities": [
+      "Define product vision and strategy based on market insights and customer feedback.",
+      "Collaborate with engineering, marketing, and sales teams to deliver successful product launches.",
+      "Conduct competitive analysis and market research to identify trends and opportunities.",
+      "Manage the product backlog and prioritize features based on business value.",
+      "Monitor product performance and gather user feedback for continuous improvement."
+    ],
+    "benefits": [
+      "Flexible working hours and remote work options.",
+      "Comprehensive medical aid and wellness programs.",
+      "Professional development and training opportunities.",
+      "Generous leave policies, including family responsibility leave."
+    ],
+    "id": "job_02867",
+    "generated_at": "2025-12-22T00:31:40.628Z"
+  },
+  {
+    "job_title": "Sales Manager",
+    "company_name": "Telkom South Africa",
+    "company_type": "Corporate",
+    "industry": "Telecommunications",
+    "location": "Mitchells Plain",
+    "work_mode": "Flexible",
+    "seniority": "Manager",
+    "salary_range": "R800000 - R1,200000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Marketing, or related field",
+      "MBA preferred"
+    ],
+    "required_skills": [
+      "Sales strategy development",
+      "Team leadership",
+      "Customer relationship management",
+      "Data analysis",
+      "Negotiation skills",
+      "Communication skills",
+      "Problem-solving"
+    ],
+    "nice_to_have": [
+      "Knowledge of telecommunications industry",
+      "Experience with CRM software",
+      "Ability to speak Afrikaans or Xhosa"
+    ],
+    "job_description": "As a Sales Manager at Telkom South Africa, you will drive the sales strategy and lead a dynamic team to achieve ambitious sales targets in the telecommunications sector. This role requires a data-driven approach to identify market opportunities and develop innovative solutions tailored to our customers' needs. You will play a critical role in enhancing customer satisfaction and expanding our market presence in Mitchells Plain and surrounding areas.",
+    "key_responsibilities": [
+      "Develop and execute sales strategies to meet company objectives",
+      "Lead, mentor, and develop a high-performing sales team",
+      "Analyze market trends and identify new business opportunities",
+      "Establish and maintain relationships with key clients and partners",
+      "Prepare sales reports and forecasts for senior management",
+      "Collaborate with marketing teams to enhance brand visibility",
+      "Conduct regular training sessions for the sales team"
+    ],
+    "benefits": [
+      "Flexible working hours and remote work options",
+      "Performance-based bonuses",
+      "Comprehensive medical aid and pension plan",
+      "Employee discounts on telecommunications products",
+      "Continuous professional development opportunities"
+    ],
+    "id": "job_02868",
+    "generated_at": "2025-12-22T00:31:49.294Z"
+  },
+  {
+    "job_title": "Customer Experience Manager",
+    "company_name": "TelCom SA",
+    "company_type": "Corporate",
+    "industry": "Telecommunications",
+    "location": "Mamelodi",
+    "work_mode": "Hybrid",
+    "seniority": "Manager",
+    "salary_range": "R80000 - R120000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Marketing or related field",
+      "Certification in Customer Experience Management (CXM) is advantageous"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Excellent communication and interpersonal skills",
+      "Customer-centric mindset",
+      "Project management",
+      "Problem-solving abilities",
+      "Ability to work under pressure",
+      "Familiarity with customer experience software"
+    ],
+    "nice_to_have": [
+      "Experience in telecommunications industry",
+      "Knowledge of data analytics tools",
+      "Leadership experience"
+    ],
+    "job_description": "As the Customer Experience Manager at TelCom SA, you will be responsible for developing and implementing strategies that enhance the overall customer experience across all touchpoints. You will lead a team dedicated to understanding customer needs and driving satisfaction through innovative solutions. Your role will involve collaboration with various departments to ensure alignment with our customer-first approach and to continually improve our service offerings.",
+    "key_responsibilities": [
+      "Develop and execute customer experience strategies that drive customer satisfaction and loyalty",
+      "Analyze customer feedback and data to identify trends and areas for improvement",
+      "Lead a team of customer service representatives and trainers",
+      "Collaborate with marketing, sales, and product teams to ensure a unified customer experience",
+      "Monitor and report on key performance indicators related to customer experience",
+      "Implement customer experience initiatives and assess their impact",
+      "Create training programs to enhance customer service skills among staff"
+    ],
+    "benefits": [
+      "Flexible working hours",
+      "Health and wellness programs",
+      "Performance bonuses",
+      "Professional development opportunities",
+      "Employee discounts on telecommunications services"
+    ],
+    "id": "job_02869",
+    "generated_at": "2025-12-22T00:31:59.839Z"
+  },
+  {
+    "job_title": "Data Scientist",
+    "company_name": "Telkom SA SOC Ltd",
+    "company_type": "Corporate",
+    "industry": "Telecommunications",
+    "location": "Kimberley",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Data Science, Statistics, Computer Science, or related field"
+    ],
+    "required_skills": [
+      "Python",
+      "R",
+      "SQL",
+      "Machine Learning",
+      "Data Visualization",
+      "Statistical Analysis",
+      "Big Data Technologies"
+    ],
+    "nice_to_have": [
+      "Cloud Computing",
+      "Experience with Telecom Data",
+      "Familiarity with ETL processes"
+    ],
+    "job_description": "We are seeking a talented and motivated Data Scientist to join our dynamic team at Telkom SA. In this role, you will leverage data analytics to drive insights and inform business strategies within our telecommunications services. You will collaborate with various departments to design and implement data-driven solutions that enhance customer experience and operational efficiency.\n\nAs a Data Scientist, you will be responsible for analyzing large datasets, developing predictive models, and delivering actionable insights that support decision-making across the company. Your expertise will play a critical role in shaping our data strategy and ensuring that we remain at the forefront of the telecommunications industry.",
+    "key_responsibilities": [
+      "Analyze complex datasets to identify trends and patterns.",
+      "Develop and implement predictive models to optimize business outcomes.",
+      "Collaborate with cross-functional teams to define data requirements and deliver insights.",
+      "Visualize data findings through dashboards and reports for stakeholders.",
+      "Ensure data quality and integrity through rigorous testing and validation.",
+      "Stay current with industry trends and advancements in data science methodologies.",
+      "Mentor junior team members and assist in their professional development."
+    ],
+    "benefits": [
+      "Flexible working hours and remote work options.",
+      "Comprehensive medical aid and retirement benefits.",
+      "Opportunities for professional development and training.",
+      "Performance-based bonuses and incentives.",
+      "Employee discounts on telecommunications services."
+    ],
+    "id": "job_02870",
+    "generated_at": "2025-12-22T00:32:08.661Z"
+  },
+  {
+    "job_title": "Business Analyst",
+    "company_name": "Telecom Innovations South Africa",
+    "company_type": "Corporate",
+    "industry": "Telecommunications",
+    "location": "Cape Town",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R500000 - R700000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Information Technology, or a related field",
+      "Relevant certifications (e.g., CBAP, PMI-PBA) are advantageous"
+    ],
+    "required_skills": [
+      "Strong analytical and problem-solving skills",
+      "Proficiency in data visualization tools (e.g., Tableau, Power BI)",
+      "Experience with SQL and database management",
+      "Excellent communication and presentation abilities",
+      "Ability to work collaboratively in a team-oriented environment"
+    ],
+    "nice_to_have": [
+      "Experience in Agile methodologies",
+      "Familiarity with telecommunications industry standards",
+      "Knowledge of project management tools (e.g., Jira, Trello)"
+    ],
+    "job_description": "Telecom Innovations South Africa is seeking a motivated Business Analyst to join our dynamic team in Cape Town. As a Business Analyst, you will play a crucial role in analyzing business processes, identifying areas for improvement, and implementing data-driven solutions. You will collaborate closely with cross-functional teams to ensure that our projects align with both customer and business needs.\n\nIn this hybrid role, you will be responsible for gathering and documenting requirements, conducting stakeholder interviews, and creating detailed reports on project performance. Your expertise will help us optimize our operations and enhance customer satisfaction through innovative telecommunications solutions.",
+    "key_responsibilities": [
+      "Conduct thorough analysis of business processes and workflows",
+      "Gather, document, and validate business requirements from stakeholders",
+      "Create data models and visualizations to support decision-making",
+      "Facilitate workshops and meetings to elicit and refine requirements",
+      "Collaborate with IT and development teams to ensure successful implementation of solutions",
+      "Monitor project progress and report on key performance indicators",
+      "Provide training and support to end-users as needed"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Comprehensive health insurance plan",
+      "Flexible working hours and remote work options",
+      "Professional development opportunities and training programs",
+      "Employee wellness programs and team-building activities"
+    ],
+    "id": "job_02871",
+    "generated_at": "2025-12-22T00:33:57.163Z"
+  },
+  {
+    "job_title": "Brand Manager",
+    "company_name": "SABMiller South Africa",
+    "company_type": "Corporate",
+    "industry": "FMCG",
+    "location": "East London",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R500,000 - R700,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Marketing, Business Administration, or related field"
+    ],
+    "required_skills": [
+      "Brand strategy development",
+      "Market research analysis",
+      "Digital marketing",
+      "Communication skills",
+      "Team collaboration",
+      "Project management",
+      "Creative thinking"
+    ],
+    "nice_to_have": [
+      "Experience in product development",
+      "Familiarity with consumer insights tools",
+      "Leadership skills"
+    ],
+    "job_description": "As a Brand Manager at SABMiller, you will play a pivotal role in driving the growth and success of our product portfolio. You will be responsible for developing and implementing brand strategies that resonate with our consumers while ensuring alignment with the overall company objectives. Your ability to analyze market trends and consumer insights will allow you to enhance brand visibility and profitability.\n\nYou will work closely with cross-functional teams including sales, marketing, and product development to ensure that our brands are represented and marketed effectively. Creativity, strategic thinking, and a results-oriented approach are essential as you manage campaigns and initiatives to elevate our brand presence in the competitive FMCG landscape.",
+    "key_responsibilities": [
+      "Develop and execute brand marketing strategies and plans",
+      "Conduct market research to identify consumer needs and trends",
+      "Collaborate with marketing teams to create impactful promotional campaigns",
+      "Monitor brand performance and adjust strategies as needed",
+      "Manage product launches and ensure alignment with brand messaging",
+      "Work closely with sales teams to support brand initiatives",
+      "Analyze sales data and consumer feedback to inform future brand direction"
+    ],
+    "benefits": [
+      "Competitive salary with performance bonuses",
+      "Comprehensive health insurance",
+      "Retirement savings plan",
+      "Generous annual leave policy",
+      "Professional development opportunities"
+    ],
+    "id": "job_02872",
+    "generated_at": "2025-12-22T00:34:35.508Z"
+  },
+  {
+    "job_title": "Trade Marketing Manager",
+    "company_name": "ABC Consumer Goods",
+    "company_type": "Corporate",
+    "industry": "FMCG",
+    "location": "Bloemfontein",
+    "work_mode": "Flexible",
+    "seniority": "Manager",
+    "salary_range": "R800000 - R1,000,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Marketing, Business Administration, or related field",
+      "Postgraduate qualification in Marketing (advantageous)"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Excellent communication skills",
+      "Project management",
+      "Team leadership",
+      "Budget management",
+      "Consumer insights analysis",
+      "Branding and positioning"
+    ],
+    "nice_to_have": [
+      "Experience in digital marketing",
+      "Knowledge of South African retail landscape",
+      "Fluency in Afrikaans"
+    ],
+    "job_description": "As a Trade Marketing Manager at ABC Consumer Goods, you will be responsible for developing and implementing trade marketing strategies that enhance brand visibility and drive sales growth. You will collaborate closely with sales, marketing, and supply chain teams to ensure that our products are effectively positioned in the market. Your role will also involve analyzing market trends and consumer behavior to design promotional activities that resonate with our target audience.",
+    "key_responsibilities": [
+      "Develop and execute trade marketing initiatives to support business objectives.",
+      "Collaborate with sales teams to create effective in-store promotions.",
+      "Analyze market trends and provide insights for strategic decision-making.",
+      "Manage trade budgets and ensure optimal allocation of resources.",
+      "Coordinate with cross-functional teams to align marketing and sales efforts.",
+      "Monitor and report on the effectiveness of trade marketing campaigns.",
+      "Build and maintain strong relationships with key retail partners."
+    ],
+    "benefits": [
+      "Flexible work hours and remote work options.",
+      "Performance-based bonuses and incentives.",
+      "Comprehensive medical aid and retirement plan.",
+      "Opportunities for professional development and training.",
+      "Employee discounts on products."
+    ],
+    "id": "job_02873",
+    "generated_at": "2025-12-22T00:34:46.854Z"
+  },
+  {
+    "job_title": "Supply Chain Manager",
+    "company_name": "Zest Foods South Africa",
+    "company_type": "Corporate",
+    "industry": "FMCG",
+    "location": "Pietermaritzburg",
+    "work_mode": "Flexible",
+    "seniority": "Manager",
+    "salary_range": "R800000 - R950000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Supply Chain Management, Logistics, or related field",
+      "Postgraduate qualification is an advantage"
+    ],
+    "required_skills": [
+      "Strategic planning",
+      "Inventory management",
+      "Vendor negotiation",
+      "Data analysis",
+      "Cross-functional collaboration",
+      "Supply chain optimization",
+      "ERP systems proficiency"
+    ],
+    "nice_to_have": [
+      "Lean Six Sigma certification",
+      "Experience with sustainability initiatives"
+    ],
+    "job_description": "Zest Foods South Africa is seeking a dynamic Supply Chain Manager to join our team in Pietermaritzburg. In this pivotal role, you will oversee our end-to-end supply chain operations, ensuring the seamless delivery of our products to customers while optimizing costs and enhancing efficiency. You will collaborate with various departments to align supply chain strategies with business objectives and drive continuous improvement initiatives.",
+    "key_responsibilities": [
+      "Manage and optimize all supply chain operations from procurement to distribution.",
+      "Develop and implement supply chain strategies that align with corporate goals.",
+      "Coordinate with suppliers and vendors to negotiate contracts and manage relationships.",
+      "Monitor inventory levels and ensure adequate stock is maintained.",
+      "Analyze supply chain data to identify trends and areas for improvement.",
+      "Lead a team of supply chain professionals and foster a culture of collaboration.",
+      "Ensure compliance with industry regulations and company policies."
+    ],
+    "benefits": [
+      "Flexible working hours",
+      "Performance-based bonuses",
+      "Comprehensive health and wellness programs",
+      "Professional development and training opportunities"
+    ],
+    "id": "job_02874",
+    "generated_at": "2025-12-22T00:34:55.438Z"
+  },
+  {
+    "job_title": "Key Account Manager",
+    "company_name": "SABMiller South Africa",
+    "company_type": "Corporate",
+    "industry": "FMCG",
+    "location": "Khayelitsha",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R60000 - R75000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Marketing, or related field"
+    ],
+    "required_skills": [
+      "Strategic account management",
+      "Customer relationship management",
+      "Sales forecasting",
+      "Negotiation skills",
+      "Analytical skills",
+      "Communication skills",
+      "Problem-solving",
+      "Team collaboration"
+    ],
+    "nice_to_have": [
+      "Experience in the FMCG sector",
+      "Project management certification",
+      "Knowledge of supply chain processes"
+    ],
+    "job_description": "As a Key Account Manager at SABMiller, you will play a critical role in driving growth and maintaining strong relationships with our key clients in the FMCG sector. You will be responsible for understanding client needs, delivering tailored solutions, and collaborating with cross-functional teams to ensure customer satisfaction. Your strategic approach will enable you to identify growth opportunities and enhance our market presence in Khayelitsha.",
+    "key_responsibilities": [
+      "Develop and implement strategic account plans to achieve sales targets",
+      "Manage key client relationships and ensure high levels of customer satisfaction",
+      "Conduct regular business reviews with clients to understand their needs and challenges",
+      "Collaborate with marketing and supply chain teams to deliver integrated solutions",
+      "Analyze market trends and competitor activity to inform business strategies",
+      "Prepare and present sales forecasts and performance reports",
+      "Participate in negotiations and contract renewals"
+    ],
+    "benefits": [
+      "Performance-based bonuses",
+      "Comprehensive health insurance",
+      "Retirement savings plan",
+      "Flexible working hours",
+      "Professional development opportunities"
+    ],
+    "id": "job_02875",
+    "generated_at": "2025-12-22T00:35:03.026Z"
+  },
+  {
+    "job_title": "Category Manager",
+    "company_name": "FreshChoice Brands",
+    "company_type": "Corporate",
+    "industry": "FMCG",
+    "location": "Cape Town",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R600,000 - R800,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Marketing, or related field"
+    ],
+    "required_skills": [
+      "Category analysis",
+      "Market research",
+      "Strategic planning",
+      "Budget management",
+      "Negotiation",
+      "Cross-functional collaboration",
+      "Data analysis"
+    ],
+    "nice_to_have": [
+      "Experience in e-commerce",
+      "Project management certification",
+      "Knowledge of SAP"
+    ],
+    "job_description": "As a Category Manager at FreshChoice Brands, you will play a pivotal role in developing and executing category strategies that align with our company objectives. You will analyze market trends, consumer insights, and competitor activity to drive sustainable growth within our product categories. This is an excellent opportunity for a strategic thinker with a passion for the FMCG industry to make a significant impact on our brand portfolio.",
+    "key_responsibilities": [
+      "Develop and implement category strategies to optimize product assortment and sales performance.",
+      "Conduct regular market analysis to identify growth opportunities and consumer trends.",
+      "Collaborate with the marketing and sales teams to align promotional activities with category objectives.",
+      "Manage supplier relationships, negotiate contracts, and ensure compliance with pricing agreements.",
+      "Monitor category performance and adjust strategies based on KPI metrics and sales data.",
+      "Lead cross-functional projects to enhance category visibility and drive customer engagement.",
+      "Prepare and present category insights and plans to senior management."
+    ],
+    "benefits": [
+      "Competitive salary package with performance bonuses",
+      "Comprehensive health and wellness programs",
+      "Opportunities for professional development and career advancement",
+      "Flexible working hours and remote work options",
+      "Employee discounts on company products"
+    ],
+    "id": "job_02876",
+    "generated_at": "2025-12-22T00:35:12.765Z"
+  },
+  {
+    "job_title": "Demand Planner",
+    "company_name": "Tembisa FMCG Solutions",
+    "company_type": "Corporate",
+    "industry": "FMCG",
+    "location": "Tembisa",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R45000 - R60000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Supply Chain Management, Business Administration, or a related field"
+    ],
+    "required_skills": [
+      "Demand forecasting",
+      "Inventory management",
+      "Data analysis",
+      "ERP systems proficiency",
+      "Strong communication skills",
+      "Problem-solving",
+      "Attention to detail"
+    ],
+    "nice_to_have": [
+      "SAP experience",
+      "Experience in FMCG sector",
+      "Project management certification"
+    ],
+    "job_description": "Tembisa FMCG Solutions is seeking a dynamic and detail-oriented Demand Planner to join our growing team. In this remote role, you will play a crucial part in ensuring our products are available to meet customer demand while minimizing excess inventory. You will analyze market trends, collaborate with various departments, and utilize forecasting tools to optimize supply chain performance.",
+    "key_responsibilities": [
+      "Analyze historical data and market trends to create accurate demand forecasts.",
+      "Collaborate with sales, marketing, and production teams to align on inventory levels.",
+      "Monitor inventory health and implement strategies to reduce excess stock.",
+      "Prepare and present regular reports on demand planning metrics to management.",
+      "Utilize ERP systems to track and manage product availability.",
+      "Identify opportunities for process improvement within the supply chain.",
+      "Maintain strong relationships with suppliers and vendors."
+    ],
+    "benefits": [
+      "Flexible working hours",
+      "Health and wellness programs",
+      "Professional development opportunities",
+      "Performance bonuses",
+      "Remote work allowance"
+    ],
+    "id": "job_02877",
+    "generated_at": "2025-12-22T00:35:21.505Z"
+  },
+  {
+    "job_title": "Medical Representative",
+    "company_name": "PharmaSA Solutions",
+    "company_type": "Corporate",
+    "industry": "Pharmaceutical",
+    "location": "Pretoria",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R25,000 - R35,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Life Sciences, Pharmacy or a related field"
+    ],
+    "required_skills": [
+      "Excellent communication skills",
+      "Sales and negotiation skills",
+      "Strong presentation abilities",
+      "Time management",
+      "Problem-solving skills",
+      "Ability to work independently",
+      "Understanding of the pharmaceutical industry"
+    ],
+    "nice_to_have": [
+      "Previous experience in a similar role",
+      "Networking skills",
+      "Knowledge of CRM software"
+    ],
+    "job_description": "PharmaSA Solutions is seeking a motivated and dynamic Medical Representative to join our team in Pretoria. The successful candidate will be responsible for promoting and selling our range of pharmaceutical products to healthcare professionals, ensuring that they are well-informed about the benefits and applications of our products. You will play a crucial role in fostering relationships with doctors, pharmacists, and other medical staff to drive sales and expand our market presence.",
+    "key_responsibilities": [
+      "Promote and sell pharmaceutical products to healthcare professionals.",
+      "Develop and maintain relationships with key accounts.",
+      "Conduct product presentations and demonstrations.",
+      "Manage territory and achieve sales targets.",
+      "Provide up-to-date product information and educate healthcare professionals.",
+      "Gather market intelligence and report on competitor activities.",
+      "Participate in conferences and trade shows as required."
+    ],
+    "benefits": [
+      "Medical aid contributions",
+      "Performance bonuses",
+      "Flexible work hours",
+      "Training and development opportunities",
+      "Employee wellness programs"
+    ],
+    "id": "job_02878",
+    "generated_at": "2025-12-22T00:35:31.839Z"
+  },
+  {
+    "job_title": "Regulatory Affairs Manager",
+    "company_name": "PharmaLink South Africa",
+    "company_type": "Corporate",
+    "industry": "Pharmaceutical",
+    "location": "Soweto",
+    "work_mode": "Flexible",
+    "seniority": "Manager",
+    "salary_range": "R800,000 - R1,200,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Pharmacy, Life Sciences, or a related field",
+      "Postgraduate qualification is an advantage"
+    ],
+    "required_skills": [
+      "In-depth knowledge of South African pharmaceutical regulations",
+      "Experience with regulatory submissions",
+      "Strong analytical skills",
+      "Excellent communication skills",
+      "Project management experience",
+      "Ability to work in a fast-paced environment",
+      "Attention to detail"
+    ],
+    "nice_to_have": [
+      "Knowledge of international regulatory standards",
+      "Experience in clinical trials",
+      "Multilingual skills"
+    ],
+    "job_description": "PharmaLink South Africa is seeking a skilled Regulatory Affairs Manager to join our dynamic team in Soweto. In this role, you will be responsible for ensuring that our pharmaceutical products comply with all regulatory requirements. You will lead the regulatory affairs team, guiding them in the preparation and submission of documentation to regulatory authorities and liaising with various internal departments to ensure compliance throughout the product lifecycle.",
+    "key_responsibilities": [
+      "Develop and implement regulatory strategies for new and existing products",
+      "Prepare and submit regulatory documentation to the South African Health Products Regulatory Authority (SAHPRA)",
+      "Monitor changes in regulations and assess their impact on the company",
+      "Collaborate with R&D, quality assurance, and marketing teams",
+      "Provide training and guidance to the regulatory affairs team",
+      "Lead regulatory audits and inspections",
+      "Maintain up-to-date knowledge of industry trends and best practices"
+    ],
+    "benefits": [
+      "Competitive salary and performance-based bonuses",
+      "Medical aid and retirement fund contributions",
+      "Flexible working hours and remote work options",
+      "Opportunities for professional development and training",
+      "Employee wellness programs"
+    ],
+    "id": "job_02879",
+    "generated_at": "2025-12-22T00:35:40.337Z"
+  },
+  {
+    "job_title": "Clinical Research Associate",
+    "company_name": "PharmaTech Solutions",
+    "company_type": "Corporate",
+    "industry": "Pharmaceutical",
+    "location": "Pietermaritzburg",
+    "work_mode": "On-site",
+    "seniority": "Mid-level",
+    "salary_range": "R45000 - R60000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Life Sciences, Pharmacy, or related field",
+      "Clinical Research Certification (e.g., ACRP, SoCRA) preferred"
+    ],
+    "required_skills": [
+      "Strong understanding of clinical trial processes",
+      "Excellent communication skills",
+      "Attention to detail",
+      "Data management skills",
+      "Problem-solving ability",
+      "Ability to work in a team",
+      "Knowledge of Good Clinical Practice (GCP)"
+    ],
+    "nice_to_have": [
+      "Experience with electronic data capture systems",
+      "Knowledge of regulatory environments",
+      "Clinical trial monitoring experience"
+    ],
+    "job_description": "As a Clinical Research Associate at PharmaTech Solutions, you will play a crucial role in the planning, execution, and monitoring of clinical trials. You will work closely with clinical sites to ensure compliance with study protocols and regulatory requirements. This position offers the opportunity to contribute to innovative pharmaceutical research while developing your skills in a dynamic environment.",
+    "key_responsibilities": [
+      "Monitor clinical trials to ensure adherence to protocol and regulatory requirements",
+      "Conduct site visits and provide training to site staff",
+      "Collect, review, and verify clinical trial data for accuracy",
+      "Assist in the preparation of study documentation and reports",
+      "Collaborate with cross-functional teams to facilitate the smooth execution of trials",
+      "Identify and resolve issues that may impact trial timelines",
+      "Maintain up-to-date knowledge of industry trends and regulations"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Comprehensive medical aid coverage",
+      "Retirement fund contributions",
+      "Professional development and training opportunities",
+      "Employee wellness programs"
+    ],
+    "id": "job_02880",
+    "generated_at": "2025-12-22T00:35:49.552Z"
+  },
+  {
+    "job_title": "Quality Assurance Manager",
+    "company_name": "MediPharm Solutions",
+    "company_type": "Corporate",
+    "industry": "Pharmaceutical",
+    "location": "Mamelodi",
+    "work_mode": "Flexible",
+    "seniority": "Manager",
+    "salary_range": "80000 - 120000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor’s degree in Pharmacy, Chemistry, or a related field",
+      "Postgraduate qualification in Quality Assurance is an advantage"
+    ],
+    "required_skills": [
+      "Strong understanding of regulatory requirements (GMP, FDA, WHO)",
+      "Proven experience in quality management systems",
+      "Excellent analytical and problem-solving skills",
+      "Strong leadership and team management abilities",
+      "Effective communication skills"
+    ],
+    "nice_to_have": [
+      "Experience with Lean Six Sigma methodologies",
+      "Familiarity with electronic quality management systems (eQMS)",
+      "Project management certification"
+    ],
+    "job_description": "MediPharm Solutions is seeking a highly motivated Quality Assurance Manager to lead our quality assurance initiatives in Mamelodi. The ideal candidate will ensure that our pharmaceutical products meet the highest standards of quality and regulatory compliance. You will collaborate closely with various departments to implement quality systems and drive continuous improvement efforts.",
+    "key_responsibilities": [
+      "Develop and manage quality assurance policies and procedures",
+      "Conduct regular audits and inspections to ensure compliance with standards",
+      "Lead investigations into product quality issues and implement corrective actions",
+      "Coordinate training programs for staff on quality assurance practices",
+      "Prepare and present quality reports to senior management and stakeholders",
+      "Oversee the validation of manufacturing processes and equipment",
+      "Monitor industry trends and ensure adherence to evolving regulations"
+    ],
+    "benefits": [
+      "Competitive salary with performance-based bonuses",
+      "Comprehensive medical aid and retirement plans",
+      "Flexible working hours and remote work options",
+      "Opportunities for professional development and training",
+      "Employee wellness programs"
+    ],
+    "id": "job_02881",
+    "generated_at": "2025-12-22T00:35:56.974Z"
+  },
+  {
+    "job_title": "Product Manager",
+    "company_name": "PharmaSouth Ltd.",
+    "company_type": "Corporate",
+    "industry": "Pharmaceutical",
+    "location": "Bloemfontein",
+    "work_mode": "On-site",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's Degree in Pharmacy, Life Sciences, or Business Administration",
+      "MBA is a plus"
+    ],
+    "required_skills": [
+      "Product lifecycle management",
+      "Market analysis",
+      "Cross-functional collaboration",
+      "Project management",
+      "Regulatory knowledge",
+      "Data-driven decision making",
+      "Excellent communication skills"
+    ],
+    "nice_to_have": [
+      "Experience in the pharmaceutical industry",
+      "Familiarity with digital marketing strategies"
+    ],
+    "job_description": "PharmaSouth Ltd. is seeking a skilled Product Manager to join our dynamic team in Bloemfontein. The ideal candidate will drive the strategic direction of our product portfolio, ensuring alignment with market needs and business goals. You will work closely with R&D, marketing, and sales teams to bring innovative pharmaceutical products to market and enhance existing offerings.",
+    "key_responsibilities": [
+      "Develop and implement product strategies that align with company vision",
+      "Conduct market research to identify customer needs and market trends",
+      "Collaborate with cross-functional teams to launch new products",
+      "Monitor product performance and adjust strategy as needed",
+      "Manage product lifecycle from conception to discontinuation",
+      "Prepare and present product updates to stakeholders",
+      "Ensure compliance with regulatory requirements during product development"
+    ],
+    "benefits": [
+      "Competitive salary with performance bonuses",
+      "Comprehensive health insurance",
+      "Retirement savings plan with company match",
+      "Professional development opportunities",
+      "Work-life balance initiatives"
+    ],
+    "id": "job_02882",
+    "generated_at": "2025-12-22T00:36:04.087Z"
+  },
+  {
+    "job_title": "Management Consultant",
+    "company_name": "Soweto Consulting Solutions",
+    "company_type": "Corporate",
+    "industry": "Consulting",
+    "location": "Soweto",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R900000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Management, or related field",
+      "MBA preferred"
+    ],
+    "required_skills": [
+      "Analytical thinking",
+      "Problem-solving",
+      "Project management",
+      "Communication",
+      "Client relationship management",
+      "Strategic planning",
+      "Data analysis"
+    ],
+    "nice_to_have": [
+      "Familiarity with financial modeling",
+      "Experience in change management",
+      "Knowledge of local market trends"
+    ],
+    "job_description": "Soweto Consulting Solutions is seeking a talented and motivated Management Consultant to join our dynamic team. In this role, you will work closely with clients to identify their business challenges and provide strategic solutions to enhance operational efficiency and drive growth. You will leverage your expertise in data analysis and project management to deliver actionable insights that empower our clients to make informed decisions.",
+    "key_responsibilities": [
+      "Conduct thorough market and business analysis to identify opportunities and challenges",
+      "Develop and present strategic recommendations to clients",
+      "Manage multiple projects simultaneously while ensuring timely delivery",
+      "Collaborate with cross-functional teams to implement solutions",
+      "Facilitate workshops and training sessions with client teams",
+      "Build and maintain strong client relationships",
+      "Stay updated on industry trends to provide relevant insights"
+    ],
+    "benefits": [
+      "Flexible work hours",
+      "Professional development opportunities",
+      "Health and wellness programs",
+      "Remote work allowance",
+      "Performance-based bonuses"
+    ],
+    "id": "job_02883",
+    "generated_at": "2025-12-22T00:36:12.366Z"
+  },
+  {
+    "job_title": "Strategy Analyst",
+    "company_name": "Consulting Innovations SA",
+    "company_type": "Corporate",
+    "industry": "Consulting",
+    "location": "East London",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R450,000 - R650,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Business, Economics, or a related field",
+      "Postgraduate qualification preferred"
+    ],
+    "required_skills": [
+      "Analytical thinking",
+      "Data interpretation",
+      "Project management",
+      "Presentation skills",
+      "Stakeholder engagement",
+      "Problem-solving",
+      "Strategic planning"
+    ],
+    "nice_to_have": [
+      "Experience with data visualization tools",
+      "Familiarity with the consulting industry",
+      "Knowledge of financial modeling"
+    ],
+    "job_description": "As a Strategy Analyst at Consulting Innovations SA, you will play a pivotal role in shaping our clients' strategic direction. You will be responsible for analyzing market trends, evaluating competitive positioning, and providing actionable insights that inform decision-making. Your analytical skills will be crucial in helping clients navigate complex challenges and seize new opportunities for growth.",
+    "key_responsibilities": [
+      "Conduct comprehensive market research and analysis to identify growth opportunities.",
+      "Develop strategic frameworks to support client initiatives.",
+      "Collaborate with cross-functional teams to implement strategies.",
+      "Prepare detailed reports and presentations for stakeholders.",
+      "Monitor industry trends and competitive landscape.",
+      "Assist in the development of client proposals and presentations.",
+      "Support senior strategists in project execution and client management."
+    ],
+    "benefits": [
+      "Flexible work hours and hybrid work environment",
+      "Professional development opportunities",
+      "Health and wellness programs",
+      "Performance-based bonuses",
+      "Employee assistance programs"
+    ],
+    "id": "job_02884",
+    "generated_at": "2025-12-22T00:36:20.978Z"
+  },
+  {
+    "job_title": "Business Analyst",
+    "company_name": "Consulting Solutions SA",
+    "company_type": "Corporate",
+    "industry": "Consulting",
+    "location": "Pietermaritzburg",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R45000 - R60000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Information Technology, or related field",
+      "Certification in Business Analysis (e.g., CBAP, CCBA) is a plus"
+    ],
+    "required_skills": [
+      "Strong analytical and problem-solving skills",
+      "Proficiency in data analysis tools (e.g., Excel, SQL)",
+      "Experience with business process modeling",
+      "Excellent verbal and written communication skills",
+      "Ability to work independently and in a team environment"
+    ],
+    "nice_to_have": [
+      "Familiarity with Agile methodologies",
+      "Experience with stakeholder management",
+      "Knowledge of project management tools (e.g., JIRA, Trello)"
+    ],
+    "job_description": "We are seeking a motivated Business Analyst to join our dynamic team at Consulting Solutions SA. In this remote role, you will collaborate with various stakeholders to identify business requirements, analyze data, and recommend solutions that drive business performance. Your insights will help shape strategies and improve processes within our consulting projects, making a significant impact on our clients' success.\n\nAs a Business Analyst, you will be responsible for translating complex data into actionable insights, preparing reports, and presenting findings to stakeholders. You will play a key role in ensuring that project goals are met and that our clients receive the highest quality of service.",
+    "key_responsibilities": [
+      "Gather and document business requirements from stakeholders",
+      "Analyze and interpret data to identify trends and insights",
+      "Create process models and suggest improvements",
+      "Collaborate with cross-functional teams to ensure project success",
+      "Prepare and deliver presentations to stakeholders",
+      "Assist in the development of project plans and timelines",
+      "Support project management and implementation efforts"
+    ],
+    "benefits": [
+      "Competitive salary and performance-based bonuses",
+      "Flexible working hours and remote work options",
+      "Comprehensive health and wellness programs",
+      "Opportunities for professional development and certifications",
+      "Inclusive company culture with regular team-building activities"
+    ],
+    "id": "job_02885",
+    "generated_at": "2025-12-22T00:36:33.064Z"
+  },
+  {
+    "job_title": "Change Manager",
+    "company_name": "Consulting Solutions Group",
+    "company_type": "Corporate",
+    "industry": "Consulting",
+    "location": "Cape Town",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Management, or a related field",
+      "Change Management certification (e.g., Prosci, ACMP)"
+    ],
+    "required_skills": [
+      "Excellent communication skills",
+      "Project management proficiency",
+      "Analytical thinking",
+      "Stakeholder engagement",
+      "Problem-solving skills",
+      "Adaptability",
+      "Team collaboration"
+    ],
+    "nice_to_have": [
+      "Experience with Agile methodologies",
+      "Knowledge of digital transformation processes",
+      "Familiarity with data analysis tools"
+    ],
+    "job_description": "We are seeking a dynamic and experienced Change Manager to join our team at Consulting Solutions Group. In this role, you will be instrumental in guiding organizations through transitions and ensuring that changes are smoothly implemented and well-received. You will work closely with various stakeholders to develop and execute change management strategies that promote a culture of continuous improvement and adaptation.",
+    "key_responsibilities": [
+      "Develop change management strategies and plans tailored to specific projects",
+      "Conduct impact analyses to understand the effects of changes on the organization",
+      "Engage with stakeholders to gather feedback and address concerns",
+      "Create training and communication materials to support change initiatives",
+      "Monitor and report on the progress of change initiatives and their effectiveness",
+      "Facilitate workshops and training sessions for teams impacted by change",
+      "Provide ongoing support and coaching to employees during the transition period"
+    ],
+    "benefits": [
+      "Competitive salary with performance-based bonuses",
+      "Flexible working hours and remote work options",
+      "Comprehensive health and wellness benefits",
+      "Opportunities for professional development and training",
+      "Work in a vibrant and inclusive corporate culture"
+    ],
+    "id": "job_02886",
+    "generated_at": "2025-12-22T00:36:41.156Z"
+  },
+  {
+    "job_title": "Project Manager",
+    "company_name": "Insight Consulting Group",
+    "company_type": "Corporate",
+    "industry": "Consulting",
+    "location": "Port Elizabeth",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R850000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Project Management, or related field",
+      "PMP certification is a plus"
+    ],
+    "required_skills": [
+      "Excellent communication skills",
+      "Strong leadership abilities",
+      "Risk management",
+      "Budget management",
+      "Stakeholder engagement",
+      "Agile methodologies",
+      "Problem-solving skills"
+    ],
+    "nice_to_have": [
+      "Experience with project management software",
+      "Knowledge of the consulting industry",
+      "MBA or relevant postgraduate qualification"
+    ],
+    "job_description": "Insight Consulting Group is seeking a highly motivated Project Manager to join our dynamic team in Port Elizabeth. In this role, you will lead and manage a diverse range of consulting projects, ensuring they are delivered on time, within scope, and on budget. You will collaborate closely with clients, stakeholders, and cross-functional teams, utilizing your expertise to guide project execution and drive continuous improvement.",
+    "key_responsibilities": [
+      "Plan, execute, and finalize projects according to strict deadlines and within budget",
+      "Define project scope, goals, and deliverables in collaboration with stakeholders",
+      "Coordinate and manage project resources and team members effectively",
+      "Monitor and report on project progress, risks, and issues",
+      "Facilitate communication and collaboration among all project stakeholders",
+      "Ensure compliance with company policies, procedures, and standards",
+      "Lead project meetings and provide regular updates to senior management"
+    ],
+    "benefits": [
+      "Competitive salary package",
+      "Flexible work hours",
+      "Professional development opportunities",
+      "Health and wellness programs",
+      "Employee assistance programs"
+    ],
+    "id": "job_02887",
+    "generated_at": "2025-12-22T00:36:50.226Z"
+  },
+  {
+    "job_title": "Associate Consultant",
+    "company_name": "Strategic Insights Consulting",
+    "company_type": "Corporate",
+    "industry": "Consulting",
+    "location": "Stellenbosch",
+    "work_mode": "Hybrid",
+    "seniority": "Junior",
+    "salary_range": "R35000 - R45000",
+    "experience_required": 1,
+    "qualifications": [
+      "Bachelor's degree in Business Administration, Economics, or related field",
+      "Honours degree will be an advantage"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Excellent communication abilities",
+      "Proficiency in Microsoft Office Suite",
+      "Project management skills",
+      "Customer relationship management"
+    ],
+    "nice_to_have": [
+      "Experience with data analysis tools",
+      "Familiarity with consulting methodologies",
+      "Knowledge of South African market trends"
+    ],
+    "job_description": "As an Associate Consultant at Strategic Insights Consulting, you will be a key player in delivering high-impact solutions to our diverse client base. You will work closely with senior consultants to understand client needs, analyze data, and develop actionable strategies. This role offers an excellent opportunity for recent graduates or those looking to kickstart their consulting careers in a dynamic and supportive environment.",
+    "key_responsibilities": [
+      "Assist in conducting research and data analysis for client projects",
+      "Prepare and deliver presentations to clients and stakeholders",
+      "Support project management efforts to ensure timely delivery of solutions",
+      "Engage with clients to gather requirements and provide updates",
+      "Contribute to the development of consulting methodologies and best practices"
+    ],
+    "benefits": [
+      "Flexible working hours",
+      "Professional development opportunities",
+      "Health and wellness programs",
+      "Employee assistance program",
+      "Monthly team-building activities"
+    ],
+    "id": "job_02888",
+    "generated_at": "2025-12-22T00:36:58.741Z"
+  },
+  {
+    "job_title": "Audit Manager",
+    "company_name": "Deloitte South Africa",
+    "company_type": "Corporate",
+    "industry": "Big 4 Accounting",
+    "location": "Sandton",
+    "work_mode": "Hybrid",
+    "seniority": "Manager",
+    "salary_range": "800000-1200000",
+    "experience_required": 5,
+    "qualifications": [
+      "CA(SA) or equivalent qualification",
+      "B.Com degree or equivalent"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Excellent communication skills",
+      "Leadership abilities",
+      "Proficiency in audit software",
+      "Knowledge of IFRS and local regulations",
+      "Project management skills",
+      "Client relationship management"
+    ],
+    "nice_to_have": [
+      "Advanced degree (MBA or similar)",
+      "Experience in a specific industry (e.g., financial services)",
+      "Foreign language skills",
+      "Experience with data analytics tools"
+    ],
+    "job_description": "Deloitte South Africa is seeking a talented Audit Manager to join our dynamic team in Sandton. In this role, you will lead audit engagements and manage a team of auditors, ensuring compliance with the highest standards of quality and professionalism. You will be responsible for developing and maintaining client relationships, identifying opportunities for improvement, and providing strategic insights to enhance client operations.",
+    "key_responsibilities": [
+      "Oversee and manage the audit process from planning to completion",
+      "Lead and mentor a team of junior auditors",
+      "Review audit work papers and financial statements",
+      "Ensure compliance with regulatory requirements and audit standards",
+      "Develop and maintain client relationships",
+      "Identify and communicate audit risks and findings",
+      "Assist in the development of audit methodologies and best practices"
+    ],
+    "benefits": [
+      "Competitive salary package",
+      "Performance-based bonus structure",
+      "Comprehensive health and wellness programs",
+      "Flexible working hours and remote work options",
+      "Ongoing professional development and training opportunities"
+    ],
+    "id": "job_02889",
+    "generated_at": "2025-12-22T00:37:07.117Z"
+  },
+  {
+    "job_title": "Tax Consultant",
+    "company_name": "Deloitte South Africa",
+    "company_type": "Corporate",
+    "industry": "Big 4 Accounting",
+    "location": "Centurion",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R400,000 - R600,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Accounting, Finance or related field",
+      "Postgraduate qualification in Taxation (advantageous)",
+      "Registered Tax Practitioner (advantageous)"
+    ],
+    "required_skills": [
+      "Strong understanding of South African tax legislation",
+      "Analytical and problem-solving skills",
+      "Excellent communication skills, both written and verbal",
+      "Attention to detail",
+      "Ability to work under pressure and meet deadlines",
+      "Proficient in Microsoft Office Suite",
+      "Experience with tax software applications"
+    ],
+    "nice_to_have": [
+      "Experience in international tax",
+      "Knowledge of transfer pricing regulations",
+      "Project management skills"
+    ],
+    "job_description": "As a Tax Consultant at Deloitte South Africa, you will play a pivotal role in providing comprehensive tax services to our diverse portfolio of clients. You will work closely with senior consultants and managers to deliver high-quality tax advice, ensuring compliance with local and international tax regulations while optimizing client tax positions. Your contributions will help shape the future of our clients' financial strategies.",
+    "key_responsibilities": [
+      "Prepare and review tax returns and documentation for clients",
+      "Conduct tax research and analysis to provide sound advice",
+      "Assist in tax planning initiatives and strategies",
+      "Manage client relationships and provide exceptional service",
+      "Stay up to date with changes in tax legislation",
+      "Collaborate with cross-functional teams on tax-related projects",
+      "Support senior staff in audit and compliance engagements"
+    ],
+    "benefits": [
+      "Flexible working hours",
+      "Professional development opportunities",
+      "Health and wellness programs",
+      "Generous leave policies",
+      "Employee assistance programs"
+    ],
+    "id": "job_02890",
+    "generated_at": "2025-12-22T00:37:15.458Z"
+  },
+  {
+    "job_title": "Advisory Manager",
+    "company_name": "Deloitte South Africa",
+    "company_type": "Corporate",
+    "industry": "Big 4 Accounting",
+    "location": "Alexandra",
+    "work_mode": "On-site",
+    "seniority": "Manager",
+    "salary_range": "900000 - 1200000",
+    "experience_required": 5,
+    "qualifications": [
+      "CA(SA)",
+      "MBA",
+      "BCom (Finance/Accounting)"
+    ],
+    "required_skills": [
+      "Project Management",
+      "Client Relationship Management",
+      "Financial Analysis",
+      "Risk Assessment",
+      "Strategic Planning",
+      "Analytical Skills",
+      "Presentation Skills"
+    ],
+    "nice_to_have": [
+      "Change Management Certification",
+      "Experience in Digital Transformation",
+      "Industry-specific Knowledge"
+    ],
+    "job_description": "As an Advisory Manager at Deloitte South Africa, you will play a pivotal role in delivering exceptional consulting services to our diverse client base. You will lead a team of professionals, ensuring high-quality project deliverables while fostering a culture of continuous improvement and innovation. Your expertise will help clients navigate complex business challenges through effective risk management and strategic insights.\n\nYou will engage with senior stakeholders, providing them with tailored advice and solutions that drive performance and efficiency. The ideal candidate is a strategic thinker with a proven track record in advisory services, adept at managing multiple projects simultaneously and mentoring junior staff.",
+    "key_responsibilities": [
+      "Lead advisory projects from inception to completion, ensuring alignment with client objectives.",
+      "Manage and develop a high-performing team, providing mentorship and guidance.",
+      "Engage with clients to understand their business needs and deliver tailored solutions.",
+      "Conduct thorough financial analysis and risk assessments to inform strategic recommendations.",
+      "Present findings and strategies effectively to clients and stakeholders.",
+      "Monitor project progress, budgets, and timelines, ensuring projects are delivered on time and within scope.",
+      "Collaborate with cross-functional teams to leverage diverse expertise in problem-solving."
+    ],
+    "benefits": [
+      "Competitive salary and performance-based bonuses.",
+      "Comprehensive health insurance and wellness programs.",
+      "Opportunities for professional development and continuous learning.",
+      "Flexible working hours and work-life balance initiatives.",
+      "Employee assistance programs and wellness resources."
+    ],
+    "id": "job_02891",
+    "generated_at": "2025-12-22T00:37:26.936Z"
+  },
+  {
+    "job_title": "Senior Associate",
+    "company_name": "Deloitte South Africa",
+    "company_type": "Corporate",
+    "industry": "Big 4 Accounting",
+    "location": "Polokwane",
+    "work_mode": "On-site",
+    "seniority": "Senior",
+    "salary_range": "800000 - 950000",
+    "experience_required": 4,
+    "qualifications": [
+      "Bachelor's Degree in Accounting, Finance, or related field",
+      "CA(SA) or equivalent qualification preferred"
+    ],
+    "required_skills": [
+      "Financial analysis",
+      "Tax compliance",
+      "Audit procedures",
+      "Client relationship management",
+      "Excellent communication skills",
+      "Project management",
+      "Data analysis"
+    ],
+    "nice_to_have": [
+      "Experience with SAP",
+      "Knowledge of IFRS",
+      "Foreign language proficiency"
+    ],
+    "job_description": "As a Senior Associate at Deloitte South Africa, you will play a crucial role in delivering exceptional audit and advisory services to our clients. You will work closely with a diverse portfolio of clients in various industries, helping them navigate complex financial regulations and optimize their operations. The ideal candidate will bring a strong analytical mindset and a passion for client service, contributing to the growth and success of both our clients and the firm.",
+    "key_responsibilities": [
+      "Conduct audits and reviews of client financial statements",
+      "Prepare tax returns and ensure compliance with local legislation",
+      "Assist in the development of audit strategies and plans",
+      "Build and maintain strong client relationships",
+      "Mentor and guide junior staff members",
+      "Prepare and present findings and recommendations to clients",
+      "Collaborate with cross-functional teams on client projects"
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses",
+      "Comprehensive medical aid and retirement plans",
+      "Continuous professional development opportunities",
+      "Flexible working hours",
+      "Employee wellness programs"
+    ],
+    "id": "job_02892",
+    "generated_at": "2025-12-22T00:37:38.156Z"
+  },
+  {
+    "job_title": "Manager",
+    "company_name": "KPMG South Africa",
+    "company_type": "Corporate",
+    "industry": "Big 4 Accounting",
+    "location": "Mitchells Plain",
+    "work_mode": "Hybrid",
+    "seniority": "Manager",
+    "salary_range": "R800000 - R1,200,000",
+    "experience_required": 5,
+    "qualifications": [
+      "CA(SA)",
+      "BCom Accounting",
+      "MBA (advantageous)"
+    ],
+    "required_skills": [
+      "Leadership",
+      "Financial Analysis",
+      "Client Relationship Management",
+      "Project Management",
+      "Risk Assessment",
+      "Communication"
+    ],
+    "nice_to_have": [
+      "Data Analytics",
+      "Knowledge of IFRS",
+      "Business Development"
+    ],
+    "job_description": "KPMG South Africa is seeking a highly motivated and experienced Manager to join our dynamic team in Mitchells Plain. The successful candidate will play a pivotal role in leading audit engagements, managing client relationships, and developing strategies to enhance service delivery. This position requires a blend of technical expertise and strong leadership skills to navigate the complexities of the accounting landscape.",
+    "key_responsibilities": [
+      "Oversee and manage audit engagements from planning to completion.",
+      "Develop and maintain strong client relationships to understand their needs.",
+      "Lead and mentor a team of auditors and junior staff members.",
+      "Ensure compliance with relevant auditing standards and regulations.",
+      "Conduct risk assessments and develop effective audit strategies.",
+      "Prepare and present audit findings and recommendations to clients.",
+      "Collaborate with cross-functional teams to enhance service offerings."
+    ],
+    "benefits": [
+      "Medical Aid",
+      "Retirement Fund",
+      "Performance Bonuses",
+      "Professional Development Opportunities",
+      "Flexible Working Hours"
+    ],
+    "id": "job_02893",
+    "generated_at": "2025-12-22T00:37:46.920Z"
+  },
+  {
+    "job_title": "Director",
+    "company_name": "KPMG South Africa",
+    "company_type": "Corporate",
+    "industry": "Big 4 Accounting",
+    "location": "Pietermaritzburg",
+    "work_mode": "Remote",
+    "seniority": "Director",
+    "salary_range": "1800000-2200000",
+    "experience_required": 10,
+    "qualifications": [
+      "CA(SA)",
+      "MBA or relevant postgraduate qualification"
+    ],
+    "required_skills": [
+      "Strategic Planning",
+      "Financial Analysis",
+      "Client Relationship Management",
+      "Team Leadership",
+      "Project Management",
+      "Regulatory Compliance",
+      "Risk Management"
+    ],
+    "nice_to_have": [
+      "International Experience",
+      "Advanced Data Analytics Skills",
+      "Proficiency in ERP Systems"
+    ],
+    "job_description": "As a Director at KPMG South Africa, you will play a pivotal role in shaping the strategic direction of our firm while driving growth and excellence in service delivery. You will be responsible for managing key client relationships, leading high-performing teams, and contributing to the development of innovative solutions that meet the evolving needs of our clients in the financial landscape. This role requires a dynamic leader with a strong financial background and exceptional interpersonal skills to foster collaboration and engagement across teams.",
+    "key_responsibilities": [
+      "Lead and mentor teams to deliver exceptional client service.",
+      "Develop and implement strategic plans to drive business growth.",
+      "Foster strong relationships with key clients and stakeholders.",
+      "Ensure compliance with regulatory requirements and internal policies.",
+      "Oversee financial analysis and budgeting processes.",
+      "Identify new business opportunities and lead proposals.",
+      "Collaborate with senior leadership to align departmental goals with company strategy."
+    ],
+    "benefits": [
+      "Competitive salary with performance bonuses.",
+      "Flexible working hours and remote work options.",
+      "Comprehensive health and wellness programs.",
+      "Ongoing professional development and training opportunities."
+    ],
+    "id": "job_02894",
+    "generated_at": "2025-12-22T00:37:55.970Z"
+  },
+  {
+    "job_title": "Associate Attorney",
+    "company_name": "Lexis South Africa Inc.",
+    "company_type": "Corporate",
+    "industry": "Corporate Law",
+    "location": "East London",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R400000 - R600000",
+    "experience_required": 3,
+    "qualifications": [
+      "LLB Degree",
+      "Admitted Attorney",
+      "Postgraduate Diploma in Corporate Law (preferred)"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Excellent written and verbal communication",
+      "Research proficiency",
+      "Negotiation skills",
+      "Client management",
+      "Attention to detail",
+      "Problem-solving"
+    ],
+    "nice_to_have": [
+      "Experience in mergers and acquisitions",
+      "Familiarity with compliance regulations",
+      "Multilingual abilities"
+    ],
+    "job_description": "Lexis South Africa Inc. is seeking a dedicated and experienced Associate Attorney to join our growing corporate law team. The successful candidate will provide legal support to our clients on a variety of corporate matters, including contract negotiations, compliance issues, and corporate governance. This position offers an exciting opportunity to work with a diverse portfolio of clients in a fast-paced environment while collaborating with senior attorneys to develop innovative legal strategies.",
+    "key_responsibilities": [
+      "Draft and review legal documents, including contracts and agreements.",
+      "Conduct thorough legal research and analysis to support client needs.",
+      "Assist in the negotiation of terms and conditions with clients and stakeholders.",
+      "Provide legal advice on corporate governance and compliance matters.",
+      "Maintain up-to-date knowledge of relevant laws and regulations.",
+      "Support senior attorneys in managing client relationships and case strategies.",
+      "Participate in client meetings and contribute to business development efforts."
+    ],
+    "benefits": [
+      "Flexible work hours",
+      "Professional development opportunities",
+      "Health insurance coverage",
+      "Annual performance bonuses",
+      "Remote working allowance"
+    ],
+    "id": "job_02895",
+    "generated_at": "2025-12-22T00:38:05.292Z"
+  },
+  {
+    "job_title": "Senior Associate",
+    "company_name": "LexCorp Attorneys",
+    "company_type": "Corporate",
+    "industry": "Corporate Law",
+    "location": "Port Elizabeth",
+    "work_mode": "Hybrid",
+    "seniority": "Senior",
+    "salary_range": "R800,000 - R1,200,000",
+    "experience_required": 5,
+    "qualifications": [
+      "LLB degree",
+      "Admitted Attorney in South Africa",
+      "Postgraduate qualification in Corporate Law (advantageous)"
+    ],
+    "required_skills": [
+      "Strong analytical skills",
+      "Excellent written and verbal communication",
+      "Negotiation skills",
+      "Client relationship management",
+      "Understanding of corporate governance"
+    ],
+    "nice_to_have": [
+      "Experience in dispute resolution",
+      "Knowledge of regulatory compliance",
+      "Fluency in Afrikaans or Xhosa"
+    ],
+    "job_description": "LexCorp Attorneys is seeking a highly skilled Senior Associate to join our dynamic Corporate Law team in Port Elizabeth. The successful candidate will play a pivotal role in advising corporate clients on a variety of legal matters, ensuring compliance with local and international regulations. This position offers a unique opportunity to work in a hybrid model, allowing for a blend of remote and in-office work.",
+    "key_responsibilities": [
+      "Advise clients on complex corporate transactions and legal issues.",
+      "Draft and review legal documents, contracts, and agreements.",
+      "Conduct legal research and analysis to support client needs.",
+      "Manage client relationships and maintain high satisfaction levels.",
+      "Collaborate with junior associates and provide mentorship.",
+      "Stay updated on industry trends and legal developments.",
+      "Assist in business development efforts and client outreach."
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses.",
+      "Comprehensive health insurance.",
+      "Professional development and training opportunities.",
+      "Flexible work hours and remote work options.",
+      "Paid leave and wellness programs."
+    ],
+    "id": "job_02896",
+    "generated_at": "2025-12-22T00:38:15.201Z"
+  },
+  {
+    "job_title": "Legal Advisor",
+    "company_name": "StellarCorp Legal Solutions",
+    "company_type": "Corporate",
+    "industry": "Corporate Law",
+    "location": "Bloemfontein",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R500,000 - R800,000",
+    "experience_required": 3,
+    "qualifications": [
+      "LLB Degree",
+      "Admitted Attorney",
+      "Postgraduate diploma in Corporate Law (preferred)"
+    ],
+    "required_skills": [
+      "Contract drafting and negotiation",
+      "Legal research and analysis",
+      "Regulatory compliance",
+      "Risk management",
       "Strong communication skills",
       "Problem-solving abilities",
       "Attention to detail"
     ],
-    "qualifications": [
-      "Diploma in Hospitality Management or related field"
-    ],
-    "responsibilities": "Manage guest check-ins and check-outs, address guest inquiries and complaints, coordinate with housekeeping and maintenance teams, ensure a welcoming environment, and assist in marketing efforts for the guest house.",
     "nice_to_have": [
-      "Experience in a similar role",
-      "Knowledge of local attractions and dining options",
-      "Fluent in additional languages"
+      "Experience in mergers and acquisitions",
+      "Knowledge of employment law",
+      "Fluency in Afrikaans or Sesotho"
     ],
-    "id": "job_02952"
+    "job_description": "StellarCorp Legal Solutions is seeking a dedicated Legal Advisor to join our dynamic team in Bloemfontein. As a key member of our corporate legal team, you will provide expert legal advice to support our business operations, ensuring compliance with applicable laws and regulations. This role offers flexibility in work arrangements, allowing for a balanced professional and personal life while working in a fast-paced corporate environment.",
+    "key_responsibilities": [
+      "Draft, review, and negotiate contracts and agreements.",
+      "Conduct legal research to support business initiatives and compliance.",
+      "Advise on regulatory issues and corporate governance matters.",
+      "Assist in managing corporate risk and compliance frameworks.",
+      "Collaborate with cross-functional teams on various legal issues.",
+      "Provide training and support to staff on legal matters.",
+      "Stay updated on changes in legislation affecting the business."
+    ],
+    "benefits": [
+      "Flexible working hours.",
+      "Comprehensive health insurance.",
+      "Professional development opportunities.",
+      "Performance-based bonuses.",
+      "Employee wellness programs."
+    ],
+    "id": "job_02897",
+    "generated_at": "2025-12-22T00:38:27.341Z"
   },
   {
-    "title": "Full Stack Developer",
-    "company_name": "Tech Innovators SA",
-    "industry": "Tech Startup",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 30000,
-    "salary_max": 50000,
-    "required_skills": [
-      "JavaScript",
-      "React",
-      "Node.js",
-      "HTML",
-      "CSS"
-    ],
-    "qualifications": [
-      "Bachelor's degree in Computer Science or related field"
-    ],
-    "responsibilities": "Develop and maintain web applications, collaborate with cross-functional teams, and ensure high performance and responsiveness of applications.",
-    "nice_to_have": [
-      "Experience with cloud services (AWS, Azure)",
-      "Knowledge of Agile methodologies",
-      "Familiarity with DevOps practices"
-    ],
-    "id": "job_02953"
-  },
-  {
-    "title": "Sales Representative",
-    "company_name": "FreshBite Foods",
-    "industry": "FMCG",
-    "company_type": "SME",
+    "job_title": "Company Secretary",
+    "company_name": "LexisCorp Solutions",
+    "company_type": "Corporate",
+    "industry": "Corporate Law",
     "location": "Johannesburg",
-    "min_experience_years": 2,
-    "salary_min": 18000,
-    "salary_max": 22000,
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R800,000 - R1,200,000",
+    "experience_required": 5,
+    "qualifications": [
+      "LLB degree",
+      "Admitted Attorney",
+      "Postgraduate diploma in Corporate Law"
+    ],
     "required_skills": [
+      "Strong understanding of corporate governance",
       "Excellent communication skills",
-      "Customer relationship management",
-      "Negotiation skills"
+      "Attention to detail",
+      "Organizational skills",
+      "Ability to work independently"
     ],
-    "qualifications": [
-      "Diploma in Sales and Marketing",
-      "Degree in Business Administration (preferred)"
-    ],
-    "responsibilities": "Manage and develop client relationships, achieve sales targets, identify new business opportunities, and provide feedback on market trends.",
     "nice_to_have": [
-      "Experience in the FMCG sector",
-      "Proficiency in CRM software",
-      "Valid driver's license"
+      "Experience with compliance management",
+      "Knowledge of international corporate law",
+      "Project management certification"
     ],
-    "id": "job_02954"
+    "job_description": "LexisCorp Solutions, a leader in the Corporate Law sector, is seeking a proactive and detail-oriented Company Secretary to join our dynamic team in Johannesburg. The successful candidate will play a key role in ensuring that the company adheres to legal standards and best practices in corporate governance. You will collaborate closely with the board of directors and senior management to facilitate effective communication and compliance with statutory obligations.",
+    "key_responsibilities": [
+      "Ensure compliance with corporate governance policies and regulations",
+      "Prepare and maintain accurate company records and documentation",
+      "Assist in the organization and preparation of board meetings and annual general meetings",
+      "Advise the board on legal and regulatory matters",
+      "Coordinate the implementation of company policies and procedures",
+      "Act as a liaison between the board of directors and shareholders",
+      "Monitor changes in relevant legislation and the regulatory environment"
+    ],
+    "benefits": [
+      "Flexible work hours",
+      "Health and wellness programs",
+      "Training and professional development opportunities",
+      "Retirement savings plan",
+      "Annual performance bonus"
+    ],
+    "id": "job_02898",
+    "generated_at": "2025-12-22T00:38:39.164Z"
   },
   {
-    "title": "Registered Nurse",
-    "company_name": "HealthWise Clinics",
-    "industry": "Healthcare",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 25000,
-    "salary_max": 35000,
-    "required_skills": [
-      "Patient care",
-      "Clinical assessment",
-      "Team collaboration",
-      "Communication skills"
-    ],
-    "qualifications": [
-      "Registered Nurse qualification",
-      "Valid South African nursing license",
-      "BLS certification"
-    ],
-    "responsibilities": "Provide high-quality patient care, perform clinical assessments, collaborate with healthcare team members, and maintain accurate patient records.",
-    "nice_to_have": [
-      "Experience in a primary healthcare setting",
-      "Additional certifications in specialized nursing fields"
-    ],
-    "id": "job_02955"
-  },
-  {
-    "title": "Restaurant Manager",
-    "company_name": "Taste of Africa Bistro",
-    "industry": "Hospitality",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 3,
-    "salary_min": 25000,
-    "salary_max": 35000,
-    "required_skills": [
-      "Team leadership",
-      "Customer service",
-      "Budget management",
-      "Conflict resolution"
-    ],
-    "qualifications": [
-      "Diploma in Hospitality Management",
-      "Certificate in Food and Beverage Service"
-    ],
-    "responsibilities": "Oversee daily operations of the restaurant, manage staff schedules, ensure high levels of customer satisfaction, handle inventory and supply orders, and maintain compliance with health and safety regulations.",
-    "nice_to_have": [
-      "Experience with POS systems",
-      "Knowledge of local cuisine",
-      "Fluent in Afrikaans"
-    ],
-    "id": "job_02956"
-  },
-  {
-    "title": "Junior Software Developer",
-    "company_name": "TechInnovate Solutions",
-    "industry": "Tech Startup",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 25000,
-    "salary_max": 35000,
-    "required_skills": [
-      "JavaScript",
-      "HTML",
-      "CSS",
-      "React",
-      "Node.js"
-    ],
-    "qualifications": [
-      "Bachelor's degree in Computer Science or related field"
-    ],
-    "responsibilities": "Develop and maintain web applications, collaborate with cross-functional teams, troubleshoot and debug applications, ensure code quality and best practices.",
-    "nice_to_have": [
-      "Experience with cloud services (AWS, Azure)",
-      "Familiarity with Agile methodologies",
-      "Knowledge of RESTful APIs"
-    ],
-    "id": "job_02957"
-  },
-  {
-    "title": "Logistics Coordinator",
-    "company_name": "Cape Logistics Solutions",
-    "industry": "Transport & Logistics",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 20000,
-    "salary_max": 30000,
-    "required_skills": [
-      "Supply Chain Management",
-      "Inventory Control",
-      "Customer Service",
-      "Communication"
-    ],
-    "qualifications": [
-      "Diploma in Logistics or Supply Chain Management",
-      "Relevant certification is a plus"
-    ],
-    "responsibilities": "Manage and coordinate logistics operations, oversee inventory management, liaise with customers and suppliers, ensure timely delivery of goods, and maintain accurate records.",
-    "nice_to_have": [
-      "Experience with transport management software",
-      "Knowledge of customs regulations"
-    ],
-    "id": "job_02958"
-  },
-  {
-    "title": "Junior Banking Consultant",
-    "company_name": "Mzanzi Financial Solutions",
-    "industry": "Banking",
-    "company_type": "SME",
-    "location": "Johannesburg",
-    "min_experience_years": 2,
-    "salary_min": 25000,
-    "salary_max": 35000,
-    "required_skills": [
-      "Customer Service",
-      "Financial Analysis",
-      "Communication"
-    ],
-    "qualifications": [
-      "Bachelor's Degree in Finance or Business Administration"
-    ],
-    "responsibilities": "Provide financial advice to clients, assist with account management, and support the sales team in reaching their targets.",
-    "nice_to_have": [
-      "Experience with CRM software",
-      "Knowledge of local banking regulations"
-    ],
-    "id": "job_02959"
-  },
-  {
-    "title": "Junior Consultant",
-    "company_name": "Insight Solutions Pty Ltd",
-    "industry": "Consulting",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 25000,
-    "salary_max": 35000,
-    "required_skills": [
-      "Analytical thinking",
-      "Problem solving",
-      "Communication skills",
-      "Project management"
-    ],
-    "qualifications": [
-      "Bachelor's degree in Business Administration, Management, or related field"
-    ],
-    "responsibilities": "Assist in the development of strategic plans for clients, conduct market research, analyze data, prepare reports, and support senior consultants in project delivery.",
-    "nice_to_have": [
-      "Experience with data analysis tools",
-      "Knowledge of South African market trends"
-    ],
-    "id": "job_02960"
-  },
-  {
-    "title": "Security Officer",
-    "company_name": "SafeGuard Security Solutions",
-    "industry": "Security",
-    "company_type": "SME",
-    "location": "Johannesburg",
-    "min_experience_years": 2,
-    "salary_min": 12000,
-    "salary_max": 15000,
-    "required_skills": [
-      "Surveillance monitoring",
-      "Emergency response",
-      "Report writing",
-      "Communication skills"
-    ],
-    "qualifications": [
-      "Grade 12",
-      "PSIRA Registration"
-    ],
-    "responsibilities": "Monitor and patrol premises to prevent and detect signs of intrusion and ensure security of doors, windows, and gates. Prepare reports on daily activities and incidents. Respond promptly to alarms and investigate disturbances.",
-    "nice_to_have": [
-      "First Aid Certification",
-      "Firearm competency"
-    ],
-    "id": "job_02961"
-  },
-  {
-    "title": "Project Manager",
-    "company_name": "BuildTech Solutions",
-    "industry": "Construction",
+    "job_title": "Compliance Manager",
+    "company_name": "Lexis Corporate Solutions",
     "company_type": "Corporate",
-    "location": "Johannesburg",
-    "min_experience_years": 5,
-    "salary_min": 800000,
-    "salary_max": 1200000,
-    "required_skills": [
-      "Project management",
-      "Budgeting and cost control",
-      "Team leadership",
-      "Contract negotiation"
-    ],
+    "industry": "Corporate Law",
+    "location": "Bloemfontein",
+    "work_mode": "Flexible",
+    "seniority": "Manager",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 5,
     "qualifications": [
-      "Bachelor’s degree in Construction Management, Civil Engineering, or related field",
-      "PMP certification preferred"
+      "LLB Degree",
+      "Compliance Certification (e.g., CCEP)",
+      "Master's in Corporate Law (preferred)"
     ],
-    "responsibilities": "Oversee construction projects from initiation to completion, ensuring adherence to timelines, budgets, and quality standards. Coordinate with contractors, suppliers, and clients to achieve project goals.",
-    "nice_to_have": [
-      "Experience with green building practices",
-      "Knowledge of local construction regulations"
-    ],
-    "id": "job_02962"
-  },
-  {
-    "title": "Network Optimization Specialist",
-    "company_name": "Telkom SA SOC Limited",
-    "industry": "Telecommunications",
-    "company_type": "Corporate",
-    "location": "Centurion, Gauteng",
-    "min_experience_years": 3,
-    "salary_min": 300000,
-    "salary_max": 500000,
     "required_skills": [
-      "Network performance analysis",
-      "Troubleshooting and problem-solving",
-      "Knowledge of networking protocols (TCP/IP, MPLS, etc.)",
-      "Experience with network monitoring tools"
-    ],
-    "qualifications": [
-      "Bachelor's degree in Telecommunications, Computer Science, or a related field",
-      "Cisco Certified Network Associate (CCNA) or equivalent certification"
-    ],
-    "responsibilities": "Monitor and analyze network performance, identify issues, and implement optimization strategies to enhance service delivery and customer satisfaction.",
-    "nice_to_have": [
-      "Experience with network design and implementation",
-      "Familiarity with cloud networking solutions",
-      "Project management skills"
-    ],
-    "id": "job_02963"
-  },
-  {
-    "title": "Junior Project Consultant",
-    "company_name": "Innovate Consulting Solutions",
-    "industry": "Professional Services",
-    "company_type": "SME",
-    "location": "Cape Town",
-    "min_experience_years": 2,
-    "salary_min": 25000,
-    "salary_max": 35000,
-    "required_skills": [
-      "Project Management",
-      "Communication",
+      "Regulatory Compliance",
+      "Risk Management",
+      "Legal Research",
+      "Policy Development",
+      "Stakeholder Engagement",
       "Analytical Thinking",
-      "Client Relationship Management"
+      "Communication Skills"
     ],
-    "qualifications": [
-      "Bachelor's degree in Business Administration or related field"
-    ],
-    "responsibilities": "Assist in managing client projects, conducting research and analysis, preparing project documentation, and communicating with stakeholders to ensure project objectives are met.",
     "nice_to_have": [
-      "Experience with project management software",
-      "Knowledge of Agile methodologies",
-      "Ability to speak Afrikaans or Xhosa"
+      "Project Management",
+      "ISO Certification",
+      "Knowledge of Financial Regulations"
     ],
-    "id": "job_02964"
+    "job_description": "Lexis Corporate Solutions is seeking a highly motivated Compliance Manager to join our team in Bloemfontein. The Compliance Manager will be responsible for ensuring that the company adheres to legal standards and in-house policies. The ideal candidate will have a strong background in corporate law and compliance practices, providing guidance and support across various departments to foster a culture of integrity and accountability.",
+    "key_responsibilities": [
+      "Develop and implement compliance programs to mitigate risks.",
+      "Monitor regulatory changes and ensure the company stays compliant.",
+      "Conduct regular audits and assessments of compliance practices.",
+      "Provide training and resources for staff on compliance issues.",
+      "Work closely with legal teams to address and resolve compliance-related inquiries.",
+      "Prepare reports for senior management on compliance status and risk assessments.",
+      "Collaborate with external legal and regulatory agencies as needed."
+    ],
+    "benefits": [
+      "Competitive salary and performance-based bonuses.",
+      "Flexible working hours and remote working options.",
+      "Comprehensive medical aid and retirement benefits.",
+      "Professional development and training opportunities.",
+      "A supportive work environment with opportunities for career advancement."
+    ],
+    "id": "job_02899",
+    "generated_at": "2025-12-22T00:39:16.215Z"
+  },
+  {
+    "job_title": "Contracts Manager",
+    "company_name": "Legal Solutions South Africa",
+    "company_type": "Corporate",
+    "industry": "Corporate Law",
+    "location": "Sandton",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R600,000 - R800,000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's Degree in Law",
+      "Postgraduate Diploma in Contract Management"
+    ],
+    "required_skills": [
+      "Contract Drafting",
+      "Negotiation",
+      "Legal Research",
+      "Risk Assessment",
+      "Stakeholder Engagement",
+      "Compliance Management",
+      "Attention to Detail"
+    ],
+    "nice_to_have": [
+      "Project Management Certification",
+      "Experience with International Contracts"
+    ],
+    "job_description": "Legal Solutions South Africa is seeking a skilled Contracts Manager to join our dynamic team in Sandton. The successful candidate will be responsible for overseeing and managing all contract-related activities within the organization. This includes drafting, reviewing, and negotiating contracts, as well as ensuring compliance with legal standards and organizational policies. The ideal candidate will have a strong understanding of corporate law and a proven track record of effective contract management.",
+    "key_responsibilities": [
+      "Draft, review, and negotiate contracts with clients and suppliers.",
+      "Ensure compliance with legal standards and internal policies.",
+      "Manage contract lifecycle from inception to execution.",
+      "Provide legal advice and support to various departments.",
+      "Conduct risk assessments related to contracts.",
+      "Collaborate with stakeholders to understand contractual needs.",
+      "Maintain accurate records and documentation of contracts."
+    ],
+    "benefits": [
+      "Competitive salary and performance bonuses.",
+      "Comprehensive medical aid and retirement plans.",
+      "Flexible working hours with a hybrid work model.",
+      "Professional development opportunities."
+    ],
+    "id": "job_02900",
+    "generated_at": "2025-12-22T00:39:25.091Z"
+  },
+  {
+    "job_title": "Analyst",
+    "company_name": "InvestCorp South Africa",
+    "company_type": "Corporate",
+    "industry": "Investment Banking",
+    "location": "Polokwane",
+    "work_mode": "On-site",
+    "seniority": "Junior",
+    "salary_range": "R300,000 - R450,000",
+    "experience_required": 1,
+    "qualifications": [
+      "Bachelor's degree in Finance, Economics, or related field"
+    ],
+    "required_skills": [
+      "Financial analysis",
+      "Data interpretation",
+      "Excel proficiency",
+      "Attention to detail",
+      "Problem-solving",
+      "Communication skills",
+      "Team collaboration"
+    ],
+    "nice_to_have": [
+      "Experience with financial modeling",
+      "Knowledge of investment strategies"
+    ],
+    "job_description": "InvestCorp South Africa is seeking a motivated and detail-oriented Analyst to join our dynamic team in Polokwane. The successful candidate will play a key role in supporting our investment banking operations by conducting thorough market analysis, preparing financial reports, and assisting in the development of investment strategies. This is an excellent opportunity for individuals looking to kick-start their career in the investment banking sector within a supportive and challenging environment.\n\nAs an Analyst, you will work closely with senior team members to assess financial performance, identify trends, and provide actionable insights to enhance decision-making. You will have the opportunity to develop your analytical skills and contribute to impactful projects that drive our business forward.",
+    "key_responsibilities": [
+      "Conduct market and financial analysis to support investment decisions",
+      "Prepare detailed reports and presentations for internal stakeholders",
+      "Collaborate with senior analysts to develop financial models",
+      "Assist in the evaluation of investment opportunities",
+      "Monitor and report on market trends and economic data",
+      "Participate in team meetings and contribute to strategic discussions",
+      "Maintain accurate records and documentation of analysis performed"
+    ],
+    "benefits": [
+      "Competitive salary with performance bonuses",
+      "Comprehensive medical aid coverage",
+      "Retirement savings plan",
+      "Professional development opportunities",
+      "Work-life balance initiatives"
+    ],
+    "id": "job_02901",
+    "generated_at": "2025-12-22T00:41:13.326Z"
+  },
+  {
+    "job_title": "Associate",
+    "company_name": "InvestSure Capital",
+    "company_type": "Corporate",
+    "industry": "Investment Banking",
+    "location": "Midrand",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Economics, or related field",
+      "CFA Level I preferred"
+    ],
+    "required_skills": [
+      "Financial analysis",
+      "Valuation techniques",
+      "Excel proficiency",
+      "Presentation skills",
+      "Team collaboration",
+      "Attention to detail",
+      "Problem-solving"
+    ],
+    "nice_to_have": [
+      "Experience with financial modeling",
+      "Knowledge of M&A processes"
+    ],
+    "job_description": "InvestSure Capital is seeking a motivated and analytical Associate to join our dynamic team in Midrand. In this role, you will play a crucial part in supporting investment banking projects and providing insightful analysis that drives decision-making. You will work closely with senior bankers to assist in executing transactions and developing client relationships.",
+    "key_responsibilities": [
+      "Conduct financial analysis and valuation of companies",
+      "Prepare pitch books and presentations for client meetings",
+      "Assist in the execution of mergers and acquisitions",
+      "Collaborate with cross-functional teams to gather relevant data",
+      "Support due diligence processes and prepare reports",
+      "Maintain and update financial models",
+      "Participate in client meetings and discussions"
+    ],
+    "benefits": [
+      "Competitive salary package",
+      "Performance-based bonuses",
+      "Comprehensive health insurance",
+      "Retirement savings plan",
+      "Professional development opportunities"
+    ],
+    "id": "job_02902",
+    "generated_at": "2025-12-22T00:41:22.479Z"
+  },
+  {
+    "job_title": "Portfolio Manager",
+    "company_name": "SouthInvest Bank",
+    "company_type": "Corporate",
+    "industry": "Investment Banking",
+    "location": "Durban",
+    "work_mode": "Remote",
+    "seniority": "Mid-level",
+    "salary_range": "R600000 - R800000",
+    "experience_required": 5,
+    "qualifications": [
+      "Bachelor's degree in Finance, Economics, or related field",
+      "CFA or equivalent certification preferred"
+    ],
+    "required_skills": [
+      "Portfolio management",
+      "Financial analysis",
+      "Risk assessment",
+      "Investment strategies",
+      "Client relationship management",
+      "Strong communication skills",
+      "Proficiency in financial software"
+    ],
+    "nice_to_have": [
+      "Experience with ESG investing",
+      "Knowledge of alternative investments",
+      "Leadership experience"
+    ],
+    "job_description": "SouthInvest Bank is seeking a skilled Portfolio Manager to join our dynamic team in Durban. As a key player in our Investment Banking division, you will be responsible for managing a diverse portfolio of investment assets, ensuring optimal performance and alignment with our clients' strategic goals. You will collaborate with various teams to develop investment strategies and provide insights to enhance client satisfaction and retention.\n\nIn this remote role, you will leverage your analytical skills and industry knowledge to assess market trends and identify investment opportunities. You will play a vital role in advising clients on portfolio management, risk mitigation, and financial growth strategies, contributing to the overall success of SouthInvest Bank.",
+    "key_responsibilities": [
+      "Manage and optimize client investment portfolios",
+      "Conduct thorough financial analysis and market research",
+      "Develop tailored investment strategies that align with client objectives",
+      "Monitor portfolio performance and provide regular updates to clients",
+      "Collaborate with internal teams to identify new investment opportunities",
+      "Ensure compliance with regulatory requirements and internal policies",
+      "Build and maintain strong relationships with clients and stakeholders"
+    ],
+    "benefits": [
+      "Flexible working hours and remote work options",
+      "Comprehensive health and wellness benefits",
+      "Professional development and training opportunities",
+      "Performance-based bonuses",
+      "Retirement savings plan with company contributions"
+    ],
+    "id": "job_02903",
+    "generated_at": "2025-12-22T00:41:34.816Z"
+  },
+  {
+    "job_title": "Research Analyst",
+    "company_name": "InvestoBank South Africa",
+    "company_type": "Corporate",
+    "industry": "Investment Banking",
+    "location": "Nelspruit",
+    "work_mode": "Hybrid",
+    "seniority": "Mid-level",
+    "salary_range": "R480,000 - R600,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Economics, or a related field",
+      "Relevant certifications (CFA, CIMA) are a plus"
+    ],
+    "required_skills": [
+      "Financial Analysis",
+      "Data Interpretation",
+      "Market Research",
+      "Statistical Software Proficiency",
+      "Report Writing",
+      "Communication Skills",
+      "Attention to Detail"
+    ],
+    "nice_to_have": [
+      "Knowledge of South African Financial Markets",
+      "Experience with SQL",
+      "Presentation Skills"
+    ],
+    "job_description": "InvestoBank South Africa is seeking a motivated and analytical Research Analyst to join our team in Nelspruit. This is an exciting opportunity to contribute to our investment strategies by conducting in-depth market research and providing insightful analysis. The successful candidate will work closely with senior analysts and management to produce comprehensive reports that inform our investment decisions and strategies.",
+    "key_responsibilities": [
+      "Conduct thorough market research and analysis to identify investment opportunities.",
+      "Prepare detailed reports and presentations on findings and recommendations.",
+      "Monitor and evaluate financial market trends and economic indicators.",
+      "Collaborate with team members to support strategic investment initiatives.",
+      "Utilize statistical tools and software to interpret data effectively.",
+      "Assist in the preparation of investment proposals and client presentations.",
+      "Engage in continuous learning to stay updated on market developments."
+    ],
+    "benefits": [
+      "Competitive salary and performance-based bonuses.",
+      "Comprehensive medical aid and retirement savings plan.",
+      "Flexible working hours and hybrid work environment.",
+      "Opportunities for professional development and training.",
+      "Employee wellness programs and team-building activities."
+    ],
+    "id": "job_02904",
+    "generated_at": "2025-12-22T00:41:59.664Z"
+  },
+  {
+    "job_title": "Corporate Finance Associate",
+    "company_name": "InvestSure Capital",
+    "company_type": "Corporate",
+    "industry": "Investment Banking",
+    "location": "Soweto",
+    "work_mode": "Flexible",
+    "seniority": "Mid-level",
+    "salary_range": "R500,000 - R700,000",
+    "experience_required": 3,
+    "qualifications": [
+      "Bachelor's degree in Finance, Accounting, or related field",
+      "CFA Level 1 (preferred)"
+    ],
+    "required_skills": [
+      "Financial modeling",
+      "Data analysis",
+      "Excel proficiency",
+      "Communication skills",
+      "Attention to detail",
+      "Team collaboration",
+      "Problem-solving"
+    ],
+    "nice_to_have": [
+      "Experience in mergers and acquisitions",
+      "Knowledge of South African financial regulations"
+    ],
+    "job_description": "InvestSure Capital is seeking a motivated Corporate Finance Associate to join our growing team in Soweto. In this role, you will play a crucial part in supporting our investment banking operations by assisting with financial analysis, modeling, and strategic planning. You will collaborate closely with senior finance professionals and clients to deliver insightful recommendations and solutions. This is a fantastic opportunity for individuals looking to build their career in a dynamic and challenging environment.",
+    "key_responsibilities": [
+      "Assist in preparing financial models for client presentations",
+      "Conduct thorough market research and industry analysis",
+      "Support senior associates in transaction execution",
+      "Develop pitch books and client proposals",
+      "Prepare detailed financial reports and presentations",
+      "Engage in client meetings and contribute to strategic discussions",
+      "Monitor and evaluate financial performance metrics"
+    ],
+    "benefits": [
+      "Competitive salary with performance bonuses",
+      "Flexible work hours and remote work options",
+      "Comprehensive health insurance",
+      "Professional development opportunities",
+      "Employee wellness programs"
+    ],
+    "id": "job_02905",
+    "generated_at": "2025-12-22T00:43:53.661Z"
   }
 ]
