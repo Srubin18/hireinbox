@@ -3,6 +3,7 @@ import Imap from 'imap-simple';
 import { simpleParser } from 'mailparser';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -157,7 +158,9 @@ Return valid JSON only — no markdown, no commentary.
   }
 }
 
-CRITICAL: If a strength lacks evidence, DO NOT include it.`;
+CRITICAL: If a strength lacks evidence, DO NOT include it.
+
+${SA_CONTEXT_PROMPT}`;
 
 function isSystemEmail(subject: string, from: string, body?: string): boolean {
   const lowerSubject = (subject || '').toLowerCase();
@@ -423,7 +426,8 @@ async function extractPDFText(buffer: Buffer, traceId: string, filename: string)
       console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
       return pdfText;
     } else {
-      const pdfParse = (await import('pdf-parse')).default;
+      const pdfParseModule = await import('pdf-parse');
+      const pdfParse = pdfParseModule.default || pdfParseModule;
       const data = await pdfParse(buffer);
       console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
       return data.text || '';

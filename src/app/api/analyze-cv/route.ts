@@ -4,6 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -98,11 +99,14 @@ Return valid JSON only — no markdown, no commentary.
   },
 
   "summary": "<3-4 sentences summarizing the CV and key recommendations>"
-}`;
+}
+
+${SA_CONTEXT_PROMPT}`;
 
 async function extractPDFText(buffer: Buffer, filename: string): Promise<string> {
   try {
     const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+    console.log(`[PDF] Extracting from ${filename}, size: ${buffer.length}, production: ${isProduction}`);
 
     if (isProduction && process.env.CONVERTAPI_SECRET) {
       const base64PDF = buffer.toString('base64');
@@ -122,11 +126,47 @@ async function extractPDFText(buffer: Buffer, filename: string): Promise<string>
       const textResponse = await fetch(result.Files[0].Url);
       return await textResponse.text();
     } else {
-      const pdfParse = (await import('pdf-parse')).default;
-      const data = await pdfParse(buffer);
-      return data.text || '';
+      // Use pdf2json for Node.js/Next.js (no worker issues)
+      console.log('[PDF] Using pdf2json for local extraction');
+      const PDFParser = (await import('pdf2json')).default;
+
+      return new Promise((resolve) => {
+        const pdfParser = new PDFParser();
+
+        pdfParser.on('pdfParser_dataReady', (pdfData: { Pages?: Array<{ Texts?: Array<{ R?: Array<{ T?: string }> }> }> }) => {
+          let text = '';
+          if (pdfData.Pages) {
+            for (const page of pdfData.Pages) {
+              if (page.Texts) {
+                for (const textItem of page.Texts) {
+                  if (textItem.R) {
+                    for (const r of textItem.R) {
+                      if (r.T) {
+                        text += decodeURIComponent(r.T) + ' ';
+                      }
+                    }
+                  }
+                }
+              }
+              text += '\n';
+            }
+          }
+          console.log('[PDF] Extracted text length:', text.length);
+          resolve(text.trim());
+        });
+
+        pdfParser.on('pdfParser_dataError', (errData: { parserError?: Error }) => {
+          console.error('[PDF] Parser error:', errData.parserError?.message || errData.parserError);
+          resolve('');
+        });
+
+        pdfParser.parseBuffer(buffer);
+      });
     }
-  } catch { return ''; }
+  } catch (e) {
+    console.error('[PDF] Extraction error:', e);
+    return '';
+  }
 }
 
 async function extractWordText(buffer: Buffer): Promise<string> {
@@ -144,33 +184,48 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get('cv') as File | null;
-
-    if (!file) {
-      return NextResponse.json({ error: 'No CV file provided' }, { status: 400 });
-    }
-
-    const filename = file.name.toLowerCase();
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    console.log(`[${traceId}][B2C] Processing: ${file.name} (${buffer.length} bytes)`);
+    const pastedText = formData.get('cvText') as string | null;
 
     let cvText = '';
 
-    if (filename.endsWith('.pdf')) {
-      cvText = await extractPDFText(buffer, file.name);
-    } else if (filename.endsWith('.doc') || filename.endsWith('.docx')) {
-      cvText = await extractWordText(buffer);
-    } else if (filename.endsWith('.txt')) {
-      cvText = buffer.toString('utf-8');
-    } else {
-      return NextResponse.json({
-        error: 'Unsupported file type. Please upload a PDF, Word document, or text file.'
-      }, { status: 400 });
+    // Handle pasted text (no file upload needed)
+    if (pastedText && pastedText.length > 50) {
+      cvText = pastedText;
+      console.log(`[${traceId}][B2C] Processing pasted text: ${cvText.length} characters`);
+    }
+    // Handle file upload
+    else if (file) {
+      const filename = file.name.toLowerCase();
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      console.log(`[${traceId}][B2C] Processing: ${file.name} (${buffer.length} bytes)`);
+
+      if (buffer.length === 0) {
+        return NextResponse.json({
+          error: 'File appears to be empty. Please try uploading again or use paste mode.'
+        }, { status: 400 });
+      }
+
+      if (filename.endsWith('.pdf')) {
+        cvText = await extractPDFText(buffer, file.name);
+      } else if (filename.endsWith('.doc') || filename.endsWith('.docx')) {
+        cvText = await extractWordText(buffer);
+      } else if (filename.endsWith('.txt')) {
+        cvText = buffer.toString('utf-8');
+      } else {
+        return NextResponse.json({
+          error: 'Unsupported file type. Please upload a PDF, Word document, or text file.'
+        }, { status: 400 });
+      }
+    }
+    // No input provided
+    else {
+      return NextResponse.json({ error: 'No CV file or text provided' }, { status: 400 });
     }
 
     if (cvText.length < 50) {
       return NextResponse.json({
-        error: 'Could not extract text from your CV. Please ensure it\'s not an image-only PDF.'
+        error: 'Could not extract text from your CV. Please ensure it\'s not an image-only PDF or paste your CV text directly.'
       }, { status: 400 });
     }
 
@@ -207,7 +262,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      analysis
+      analysis,
+      originalCV: cvText  // Return for CV rewriting feature
     });
 
   } catch (error) {

@@ -239,6 +239,7 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }}></div>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }}></div>
             <span style={{ marginLeft: 12, fontSize: '0.8rem', color: '#64748b' }}>yourcompany@hireinbox.co.za</span>
+            <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#94a3b8', background: '#f1f5f9', padding: '2px 8px', borderRadius: 4 }}>Example</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'white', borderRadius: 10, border: '2px solid #dcfce7' }}>
@@ -272,18 +273,18 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
       <section style={{ padding: '32px 16px', borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', background: '#fafafa' }}>
         <div className="stats-row" style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 64 }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 800, color: '#0f172a' }}>6 from 50</div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Average shortlist</div>
+            <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 800, color: '#0f172a' }}>Instant</div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>CV screening</div>
           </div>
           <div className="stats-divider" style={{ width: 1, height: 40, background: '#e2e8f0' }}></div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 800, color: '#0f172a' }}>2 min</div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>To first decision</div>
+            <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 800, color: '#0f172a' }}>Evidence</div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Every decision explained</div>
           </div>
           <div className="stats-divider" style={{ width: 1, height: 40, background: '#e2e8f0' }}></div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 800, color: '#0f172a' }}>100%</div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Candidates notified</div>
+            <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 800, color: '#0f172a' }}>SA-built</div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>POPIA compliant</div>
           </div>
         </div>
       </section>
@@ -437,12 +438,15 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
             <Logo size={24} />
             <div style={{ fontSize: '0.55rem', color: '#94a3b8', marginTop: 2, marginLeft: 34 }}>Less noise. Better hires.</div>
           </div>
-          <div className="footer-links" style={{ display: 'flex', gap: 16 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Built by Simon Rubin, Cape Town</div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 2 }}>Questions? simon@hireinbox.co.za</div>
+          </div>
+          <div className="footer-links" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
             <a href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.8rem' }}>Privacy</a>
             <a href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.8rem' }}>Terms</a>
-            <a href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.8rem' }}>POPIA</a>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>© 2025 🇿🇦</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>© 2025 HireInbox 🇿🇦</div>
         </div>
       </footer>
     </div>
@@ -537,6 +541,18 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </div>
 
           <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Creators <span style={{ marginLeft: 6, background: '#8B5CF6', color: 'white', padding: '2px 6px', borderRadius: 8, fontSize: '0.55rem', fontWeight: 700 }}>NEW</span></div>
+            <NavItem icon="🎬" label="Creator Passport" color="#8B5CF6" onClick={() => setActiveTab('creators')} />
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Pro Tools</div>
+            <NavItem icon="🔍" label="Headhunter Search" color="#8B5CF6" onClick={() => setActiveTab('headhunter')} />
+            <NavItem icon="⭐" label="Elite Talent" color="#F59E0B" onClick={() => setActiveTab('elite')} />
+            <NavItem icon="📋" label="Reference Check" color="#10B981" onClick={() => setActiveTab('references')} />
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Roles</div>
             {roles.map(r => (
               <NavItem key={r.id} icon="💼" label={r.title} active={selectedRole === r.id} onClick={() => setSelectedRole(r.id)} />
@@ -608,6 +624,15 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </div>
 
           {/* MAIN CONTENT */}
+          {activeTab === 'creators' ? (
+            <CreatorPassportHub />
+          ) : activeTab === 'headhunter' ? (
+            <HeadhunterSearch candidates={candidates} onSelectCandidate={setSelectedCandidate} />
+          ) : activeTab === 'elite' ? (
+            <EliteTalentHub candidates={candidates.filter(c => (c.screening_result?.overall_score || c.score || 0) >= 80)} onSelectCandidate={setSelectedCandidate} />
+          ) : activeTab === 'references' ? (
+            <ReferenceCheckHub candidates={candidates} />
+          ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24 }}>
             {/* CANDIDATES LIST */}
             <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
@@ -715,6 +740,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               )}
             </div>
           </div>
+          )}
         </div>
       </main>
 
@@ -1300,11 +1326,760 @@ function CollapsibleSection({ title, icon, expanded, onToggle, count, highlight,
   );
 }
 
+/* ===========================================
+   HEADHUNTER SEARCH - Pro talent search
+   Find the best candidates across your pool
+   =========================================== */
+function HeadhunterSearch({ candidates, onSelectCandidate }: { candidates: Candidate[]; onSelectCandidate: (c: Candidate) => void }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [minScore, setMinScore] = useState(0);
+  const [minExperience, setMinExperience] = useState(0);
+  const [sortBy, setSortBy] = useState<'score' | 'experience' | 'newest'>('score');
+  const [eliteOnly, setEliteOnly] = useState(false);
+
+  // Filter and sort candidates
+  const filteredCandidates = candidates
+    .filter(c => {
+      const screening = c.screening_result;
+      const score = screening?.overall_score || c.score || 0;
+      const experience = screening?.years_experience || 0;
+      const name = c.name || '';
+      const skills = (screening?.hard_requirements?.met || []).join(' ').toLowerCase();
+
+      // Elite filter (80+)
+      if (eliteOnly && score < 80) return false;
+
+      // Min score filter
+      if (score < minScore) return false;
+
+      // Min experience filter
+      if (experience < minExperience) return false;
+
+      // Search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = name.toLowerCase().includes(query);
+        const matchesSkills = skills.includes(query);
+        const matchesEmail = (c.email || '').toLowerCase().includes(query);
+        if (!matchesName && !matchesSkills && !matchesEmail) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      const aScreening = a.screening_result;
+      const bScreening = b.screening_result;
+
+      if (sortBy === 'score') {
+        return (bScreening?.overall_score || b.score || 0) - (aScreening?.overall_score || a.score || 0);
+      } else if (sortBy === 'experience') {
+        return (bScreening?.years_experience || 0) - (aScreening?.years_experience || 0);
+      } else {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
+  const eliteCount = candidates.filter(c => (c.screening_result?.overall_score || c.score || 0) >= 80).length;
+
+  return (
+    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)', padding: 24, color: 'white' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🔍</div>
+          <div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Headhunter Search</h2>
+            <p style={{ fontSize: '0.875rem', opacity: 0.9, margin: 0 }}>Find the best talent in your pool</p>
+          </div>
+          <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 800 }}>{candidates.length}</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Total candidates</div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by name, skill, or email..."
+            style={{
+              width: '100%',
+              padding: '14px 16px 14px 44px',
+              borderRadius: 10,
+              border: 'none',
+              fontSize: '0.9375rem',
+              background: 'rgba(255,255,255,0.95)',
+              color: '#0f172a',
+              outline: 'none'
+            }}
+          />
+          <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Elite Toggle */}
+        <button
+          onClick={() => setEliteOnly(!eliteOnly)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '8px 16px',
+            borderRadius: 100,
+            border: eliteOnly ? '2px solid #8B5CF6' : '2px solid #e2e8f0',
+            background: eliteOnly ? '#F5F3FF' : 'white',
+            color: eliteOnly ? '#7C3AED' : '#64748b',
+            fontWeight: 600,
+            fontSize: '0.8125rem',
+            cursor: 'pointer'
+          }}
+        >
+          <span>⭐</span> Elite Only (80+)
+          <span style={{ background: eliteOnly ? '#8B5CF6' : '#e2e8f0', color: eliteOnly ? 'white' : '#64748b', padding: '2px 8px', borderRadius: 100, fontSize: '0.75rem' }}>{eliteCount}</span>
+        </button>
+
+        {/* Min Score */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>Min Score:</span>
+          <select value={minScore} onChange={e => setMinScore(parseInt(e.target.value))} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.8125rem', background: 'white' }}>
+            <option value={0}>Any</option>
+            <option value={50}>50+</option>
+            <option value={60}>60+</option>
+            <option value={70}>70+</option>
+            <option value={80}>80+</option>
+            <option value={90}>90+</option>
+          </select>
+        </div>
+
+        {/* Min Experience */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>Experience:</span>
+          <select value={minExperience} onChange={e => setMinExperience(parseInt(e.target.value))} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.8125rem', background: 'white' }}>
+            <option value={0}>Any</option>
+            <option value={1}>1+ years</option>
+            <option value={2}>2+ years</option>
+            <option value={3}>3+ years</option>
+            <option value={5}>5+ years</option>
+            <option value={10}>10+ years</option>
+          </select>
+        </div>
+
+        {/* Sort */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+          <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 500 }}>Sort:</span>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value as 'score' | 'experience' | 'newest')} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.8125rem', background: 'white' }}>
+            <option value="score">Highest Score</option>
+            <option value="experience">Most Experience</option>
+            <option value="newest">Newest First</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div style={{ padding: 24 }}>
+        <div style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: 16 }}>
+          Showing <strong style={{ color: '#0f172a' }}>{filteredCandidates.length}</strong> of {candidates.length} candidates
+        </div>
+
+        {filteredCandidates.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: '3rem', marginBottom: 16 }}>🔍</div>
+            <div style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>No candidates match your filters</div>
+            <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Try adjusting your search criteria</div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+            {filteredCandidates.slice(0, 20).map(candidate => {
+              const screening = candidate.screening_result;
+              const score = screening?.overall_score || candidate.score || 0;
+              const experience = screening?.years_experience || 0;
+              const skills = (screening?.hard_requirements?.met || []).slice(0, 4);
+
+              return (
+                <div
+                  key={candidate.id}
+                  onClick={() => onSelectCandidate(candidate)}
+                  style={{
+                    background: 'white',
+                    border: score >= 80 ? '2px solid #8B5CF6' : '1px solid #e2e8f0',
+                    borderRadius: 12,
+                    padding: 16,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    position: 'relative'
+                  }}
+                >
+                  {score >= 80 && (
+                    <div style={{ position: 'absolute', top: -8, right: 12, background: '#8B5CF6', color: 'white', fontSize: '0.6875rem', fontWeight: 700, padding: '3px 8px', borderRadius: 100 }}>
+                      ⭐ ELITE
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                    {/* Score Circle */}
+                    <div style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      background: score >= 80 ? 'linear-gradient(135deg, #8B5CF6, #6366F1)' : score >= 60 ? '#10B981' : '#F59E0B',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '1rem'
+                    }}>
+                      {score}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.9375rem', marginBottom: 2 }}>
+                        {candidate.name || 'Unknown'}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        {experience > 0 ? `${experience} years exp` : 'Experience not specified'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Skills */}
+                  {skills.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {skills.map((skill, i) => (
+                        <span key={i} style={{ fontSize: '0.6875rem', padding: '3px 8px', background: '#f1f5f9', borderRadius: 4, color: '#475569' }}>
+                          {skill}
+                        </span>
+                      ))}
+                      {(screening?.hard_requirements?.met?.length || 0) > 4 && (
+                        <span style={{ fontSize: '0.6875rem', padding: '3px 8px', color: '#94a3b8' }}>
+                          +{(screening?.hard_requirements?.met?.length || 0) - 4} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {filteredCandidates.length > 20 && (
+          <div style={{ textAlign: 'center', marginTop: 24, fontSize: '0.875rem', color: '#64748b' }}>
+            Showing top 20 results. Refine your search to see more specific matches.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ===========================================
+   ELITE TALENT HUB - Premium 80+ candidates
+   Special features for top performers
+   =========================================== */
+function EliteTalentHub({ candidates, onSelectCandidate }: { candidates: Candidate[]; onSelectCandidate: (c: Candidate) => void }) {
+  return (
+    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
+      {/* Premium Header */}
+      <div style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', padding: 32, color: 'white', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -20, right: -20, width: 150, height: 150, background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: -30, left: '30%', width: 100, height: 100, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>⭐</div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, marginBottom: 4 }}>Elite Talent Hub</h2>
+            <p style={{ fontSize: '0.9375rem', opacity: 0.9, margin: 0 }}>Your top 80+ score candidates with premium features</p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '3rem', fontWeight: 800, lineHeight: 1 }}>{candidates.length}</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Elite candidates</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Elite Features Overview */}
+      <div style={{ padding: 24, borderBottom: '1px solid #e2e8f0', background: '#FFFBEB' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+          Elite Candidate Features
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {[
+            { icon: '🎥', title: 'Video Intro', desc: 'See their personality', status: 'available' },
+            { icon: '✓', title: 'Verified Profile', desc: 'ID & credentials checked', status: 'coming' },
+            { icon: '📞', title: 'Direct Contact', desc: 'Skip the queue', status: 'available' },
+            { icon: '📋', title: 'Pre-checked Refs', desc: 'References verified', status: 'coming' },
+          ].map((feature, i) => (
+            <div key={i} style={{ background: 'white', borderRadius: 12, padding: 16, border: '1px solid #FDE68A', position: 'relative' }}>
+              {feature.status === 'coming' && (
+                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: '0.625rem', fontWeight: 600, color: '#92400E', background: '#FEF3C7', padding: '2px 6px', borderRadius: 4 }}>SOON</div>
+              )}
+              <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>{feature.icon}</div>
+              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem', marginBottom: 2 }}>{feature.title}</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{feature.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Elite Candidates Grid */}
+      <div style={{ padding: 24 }}>
+        {candidates.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '64px 24px' }}>
+            <div style={{ fontSize: '4rem', marginBottom: 16 }}>⭐</div>
+            <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>No elite candidates yet</div>
+            <div style={{ fontSize: '0.875rem', color: '#64748b', maxWidth: 400, margin: '0 auto' }}>
+              Candidates scoring 80+ will appear here with access to premium features like video intros and verified profiles.
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+            {candidates.map(candidate => {
+              const screening = candidate.screening_result;
+              const score = screening?.overall_score || candidate.score || 0;
+
+              return (
+                <div
+                  key={candidate.id}
+                  onClick={() => onSelectCandidate(candidate)}
+                  style={{
+                    background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+                    border: '2px solid #F59E0B',
+                    borderRadius: 16,
+                    padding: 20,
+                    cursor: 'pointer',
+                    position: 'relative'
+                  }}
+                >
+                  {/* Elite Badge */}
+                  <div style={{ position: 'absolute', top: -10, right: 16, background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', fontSize: '0.6875rem', fontWeight: 700, padding: '4px 12px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    ⭐ ELITE
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                    {/* Score */}
+                    <div style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '1.25rem',
+                      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                    }}>
+                      {score}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem', marginBottom: 4 }}>
+                        {candidate.name || 'Unknown'}
+                      </div>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                        {screening?.years_experience ? `${screening.years_experience} years exp` : 'Experience N/A'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button style={{ flex: 1, padding: '8px 12px', background: 'white', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                      🎥 Video
+                    </button>
+                    <button style={{ flex: 1, padding: '8px 12px', background: 'white', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                      📞 Contact
+                    </button>
+                    <button style={{ flex: 1, padding: '8px 12px', background: '#F59E0B', border: 'none', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, color: 'white', cursor: 'pointer' }}>
+                      View
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ===========================================
+   REFERENCE CHECK HUB - Smart reference verification
+   AI-powered reference checking system
+   =========================================== */
+function ReferenceCheckHub({ candidates }: { candidates: Candidate[] }) {
+  const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
+
+  // Mock reference data for demo
+  const referenceRequests = [
+    { id: '1', candidateName: 'Thabo Molefe', status: 'pending', refs: 2, sent: '2 days ago' },
+    { id: '2', candidateName: 'Sarah Johnson', status: 'complete', refs: 3, sent: '5 days ago', score: 92 },
+  ];
+
+  return (
+    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', padding: 32, color: 'white' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>📋</div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, marginBottom: 4 }}>Smart Reference Check</h2>
+            <p style={{ fontSize: '0.9375rem', opacity: 0.9, margin: 0 }}>AI-powered reference verification with fraud detection</p>
+          </div>
+        </div>
+      </div>
+
+      {/* How it Works */}
+      <div style={{ padding: 24, borderBottom: '1px solid #e2e8f0', background: '#F0FDF4' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+          How it works
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {[
+            { num: 1, title: 'Request', desc: 'Candidate provides 2-3 references' },
+            { num: 2, title: 'Verify', desc: 'We verify referee identity & role' },
+            { num: 3, title: 'Survey', desc: 'Smart questionnaire sent via email' },
+            { num: 4, title: 'AI Analysis', desc: 'Red flags & insights surfaced' },
+          ].map((step, i) => (
+            <div key={i} style={{ display: 'flex', gap: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10B981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0 }}>{step.num}</div>
+              <div>
+                <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem', marginBottom: 2 }}>{step.title}</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{step.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Features */}
+      <div style={{ padding: 24, borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+          🤖 AI-Powered Analysis
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          {[
+            { icon: '🚩', title: 'Red Flag Detection', desc: 'Spots hesitation, vague answers, inconsistencies' },
+            { icon: '✓', title: 'Claim Verification', desc: 'Cross-checks achievements mentioned in CV' },
+            { icon: '📊', title: 'Reference Score', desc: 'Quantified endorsement strength (0-100)' },
+          ].map((feature, i) => (
+            <div key={i} style={{ background: '#F8FAFC', borderRadius: 12, padding: 16 }}>
+              <div style={{ fontSize: '1.25rem', marginBottom: 8 }}>{feature.icon}</div>
+              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem', marginBottom: 4 }}>{feature.title}</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: 1.5 }}>{feature.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Reference Requests */}
+      <div style={{ padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reference Requests</div>
+            <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>Track and manage reference checks</div>
+          </div>
+          <button style={{ background: '#10B981', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            + New Request
+          </button>
+        </div>
+
+        {/* Requests List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {referenceRequests.map(req => (
+            <div key={req.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                background: req.status === 'complete' ? '#D1FAE5' : '#FEF3C7',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.25rem'
+              }}>
+                {req.status === 'complete' ? '✓' : '⏳'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{req.candidateName}</div>
+                <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>{req.refs} references • Sent {req.sent}</div>
+              </div>
+              {req.status === 'complete' && req.score && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10B981' }}>{req.score}</div>
+                  <div style={{ fontSize: '0.6875rem', color: '#64748b' }}>Ref Score</div>
+                </div>
+              )}
+              <span style={{
+                padding: '6px 12px',
+                borderRadius: 100,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                background: req.status === 'complete' ? '#D1FAE5' : '#FEF3C7',
+                color: req.status === 'complete' ? '#166534' : '#92400E'
+              }}>
+                {req.status === 'complete' ? 'Complete' : 'Pending'}
+              </span>
+              <button style={{ background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: 8, fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer' }}>
+                View
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Sample Report Preview */}
+        <div style={{ marginTop: 32, background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)', borderRadius: 16, padding: 24, border: '1px solid #A7F3D0' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>
+            Sample Reference Report
+          </div>
+
+          <div style={{ background: 'white', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1.125rem' }}>Sarah Johnson</div>
+                <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>3 references verified</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.5rem' }}>92</div>
+                <div style={{ fontSize: '0.6875rem', color: '#64748b', marginTop: 4 }}>Reference Score</div>
+              </div>
+            </div>
+
+            {/* Key Findings */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div style={{ background: '#F0FDF4', borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#166534', marginBottom: 4 }}>✓ VERIFIED CLAIMS</div>
+                <div style={{ fontSize: '0.8125rem', color: '#0f172a' }}>"Exceeded quota by 150%" confirmed by 2/3 refs</div>
+              </div>
+              <div style={{ background: '#F0FDF4', borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#166534', marginBottom: 4 }}>✓ STRONG ENDORSEMENT</div>
+                <div style={{ fontSize: '0.8125rem', color: '#0f172a' }}>"Would rehire immediately" - Former Manager</div>
+              </div>
+            </div>
+
+            {/* AI Insights */}
+            <div style={{ background: '#EEF2FF', borderRadius: 8, padding: 12 }}>
+              <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: '#4338CA', marginBottom: 4 }}>🤖 AI INSIGHT</div>
+              <div style={{ fontSize: '0.8125rem', color: '#0f172a' }}>
+                All 3 references showed consistent enthusiasm. No hesitation detected. Strong pattern of leadership praise.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <button style={{ background: '#10B981', color: 'white', border: 'none', padding: '12px 24px', borderRadius: 10, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
+              Start Your First Reference Check →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===========================================
+   CREATOR PASSPORT HUB - THE MONEY MAKER
+   =========================================== */
+function CreatorPassportHub() {
+  const [showDemo, setShowDemo] = useState(false);
+
+  return (
+    <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
+      {/* Header - Dark & Bold */}
+      <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)', padding: 32, color: 'white' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
+          <div style={{ width: 72, height: 72, borderRadius: 16, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', flexShrink: 0 }}>🎬</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0 }}>Creator Passport</h2>
+              <span style={{ background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', padding: '4px 10px', borderRadius: 100, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.03em' }}>NEW</span>
+            </div>
+            <p style={{ fontSize: '1rem', opacity: 0.9, margin: 0, maxWidth: 500 }}>
+              Stop looking like a bot. Prove you're real. Land brand deals.
+            </p>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontSize: '2.25rem', fontWeight: 800 }}>R49</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>one-time</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Bar - The Pain */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid #e2e8f0' }}>
+        {[
+          { value: 'R2B', label: 'Lost to fraud yearly', color: '#ef4444' },
+          { value: '79%', label: 'Creator burnout rate', color: '#f59e0b' },
+          { value: '1 in 4', label: 'Buy fake followers', color: '#ef4444' },
+          { value: '55%', label: 'Engagement is fake', color: '#f59e0b' },
+        ].map((stat, i) => (
+          <div key={i} style={{ padding: '20px 24px', textAlign: 'center', borderRight: i < 3 ? '1px solid #e2e8f0' : 'none' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: stat.color }}>{stat.value}</div>
+            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* The Problem - Raw & Honest */}
+      <div style={{ padding: 24, background: '#fef2f2', borderBottom: '1px solid #fecaca' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <span style={{ fontSize: '1.25rem' }}>🚫</span>
+          <span style={{ fontWeight: 700, color: '#991b1b', fontSize: '0.9rem' }}>Why brands ghost you</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          {[
+            "They can't tell real creators from fakes",
+            "Your media kit is just numbers anyone can buy",
+            "They've been burned before — trust no one now",
+            "You look exactly like the frauds. Same PDFs. Same claims."
+          ].map((problem, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: '0.875rem', color: '#7f1d1d' }}>
+              <span style={{ color: '#dc2626', fontWeight: 700 }}>×</span>
+              <span>{problem}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* The Solution - What We Do */}
+      <div style={{ padding: 24 }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 20 }}>
+          What Creator Passport Does
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+          {[
+            { icon: '🎥', title: 'Video Authenticity', desc: 'AI analyzes your pitch video — eye contact, confidence, energy. Stuff bots can\'t fake.' },
+            { icon: '✓', title: 'Verified Badge', desc: 'One link to share with brands. They see you\'re real. No more PDFs that never get opened.' },
+            { icon: '🎯', title: 'Coaching Tips', desc: 'Specific feedback with timestamps. "At 0:23 you looked away — here\'s how to fix it."' },
+            { icon: '🇿🇦', title: 'SA Context', desc: 'Understands local brands, accents, culture. Global tools don\'t get our market.' },
+          ].map((feature, i) => (
+            <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: '1.5rem', marginBottom: 10 }}>{feature.icon}</div>
+              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem', marginBottom: 6 }}>{feature.title}</div>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>{feature.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sample Passport Preview */}
+      <div style={{ margin: '0 24px 24px', background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', borderRadius: 16, padding: 24, color: 'white' }}>
+        <div style={{ fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6, marginBottom: 16 }}>Example Creator Passport</div>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', flexShrink: 0 }}>👤</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>Thandi M.</span>
+              <span style={{ background: '#10B981', padding: '3px 8px', borderRadius: 100, fontSize: '0.65rem', fontWeight: 700 }}>✓ VERIFIED</span>
+            </div>
+            <div style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: 12 }}>Lifestyle Creator • Cape Town • 45K followers</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                { label: 'Authenticity', score: 87 },
+                { label: 'Confidence', score: 82 },
+                { label: 'Energy', score: 91 },
+              ].map((score, i) => (
+                <span key={i} style={{ background: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: 100, fontSize: '0.75rem' }}>
+                  {score.label}: <strong>{score.score}</strong>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div style={{ margin: '0 24px 24px', background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid #a7f3d0', borderRadius: 16, padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontWeight: 700, color: '#166534', fontSize: '1.1rem', marginBottom: 4 }}>Get your Creator Passport</div>
+          <div style={{ fontSize: '0.9rem', color: '#15803d' }}>2 minutes. One video. Start getting deals.</div>
+        </div>
+        <button
+          onClick={() => window.location.href = '/upload?mode=creator'}
+          style={{ background: '#166534', color: 'white', border: 'none', padding: '14px 28px', borderRadius: 10, fontSize: '1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+        >
+          Start Verification →
+        </button>
+      </div>
+
+      {/* How It Works */}
+      <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>How it works</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          {[
+            { num: 1, title: 'Record', desc: '60-second pitch video' },
+            { num: 2, title: 'Analyze', desc: 'AI checks authenticity' },
+            { num: 3, title: 'Get Badge', desc: 'Verified creator status' },
+            { num: 4, title: 'Share', desc: 'One link for brands' },
+          ].map((step, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#4F46E5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1rem', marginBottom: 10 }}>{step.num}</div>
+              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem', marginBottom: 2 }}>{step.title}</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{step.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Coming Soon: Creator Inbox */}
+      <div style={{ margin: 24, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '1px solid #fcd34d', borderRadius: 16, padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <span style={{ fontSize: '1.5rem' }}>📬</span>
+          <div>
+            <div style={{ fontWeight: 700, color: '#92400e', fontSize: '1rem' }}>Coming Soon: Creator Business Inbox</div>
+            <div style={{ fontSize: '0.85rem', color: '#a16207' }}>R99/month — Manage brand deals, invoicing, and more</div>
+          </div>
+          <span style={{ marginLeft: 'auto', background: '#f59e0b', color: 'white', padding: '4px 10px', borderRadius: 100, fontSize: '0.7rem', fontWeight: 700 }}>Q1 2025</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          {[
+            'AI Deal Scanner — Spot good offers, flag bad ones',
+            'Auto invoicing — Get paid faster',
+            'Brand CRM — Track all conversations',
+          ].map((feature, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: '#78350f' }}>
+              <span style={{ color: '#f59e0b' }}>✓</span>
+              <span>{feature}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NewRoleModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [title, setTitle] = useState('');
-  const [minExp, setMinExp] = useState(2);
-  const [skills, setSkills] = useState('');
+  const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+
+  // Step 1: Basic Info
+  const [title, setTitle] = useState('');
+  const [location, setLocation] = useState('');
+  const [isRemote, setIsRemote] = useState(false);
+  const [employmentType, setEmploymentType] = useState('full-time');
+  const [salaryMin, setSalaryMin] = useState('');
+  const [salaryMax, setSalaryMax] = useState('');
+
+  // Step 2: Requirements
+  const [minExp, setMinExp] = useState(2);
+  const [requiredSkills, setRequiredSkills] = useState('');
+  const [education, setEducation] = useState('any');
+  const [hardRequirements, setHardRequirements] = useState('');
+
+  // Step 3: Nice-to-haves
+  const [preferredSkills, setPreferredSkills] = useState('');
+  const [bonuses, setBonuses] = useState('');
+
+  // Step 4: Full JD
+  const [fullJD, setFullJD] = useState('');
 
   const handleCreate = async () => {
     if (!title) return;
@@ -1317,9 +2092,25 @@ function NewRoleModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
           title,
           criteria: {
             min_experience_years: minExp,
-            required_skills: skills.split(',').map(s => s.trim()).filter(Boolean),
-            preferred_skills: [],
-            locations: [],
+            required_skills: requiredSkills.split(',').map(s => s.trim()).filter(Boolean),
+            preferred_skills: preferredSkills.split(',').map(s => s.trim()).filter(Boolean),
+            education: education,
+            hard_requirements: hardRequirements,
+            locations: location ? [location] : [],
+            is_remote: isRemote,
+          },
+          facts: {
+            employment_type: employmentType,
+            salary_min: salaryMin ? parseInt(salaryMin) : null,
+            salary_max: salaryMax ? parseInt(salaryMax) : null,
+            location: location,
+            is_remote: isRemote,
+          },
+          preferences: {
+            bonuses: bonuses,
+          },
+          ai_guidance: {
+            full_job_description: fullJD,
           }
         })
       });
@@ -1328,38 +2119,198 @@ function NewRoleModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
     setIsCreating(false);
   };
 
+  const inputStyle = { width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '0.9375rem', outline: 'none', transition: 'border-color 0.2s' };
+  const labelStyle = { display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#0f172a', marginBottom: 6 };
+  const hintStyle = { fontSize: '0.75rem', color: '#94a3b8', marginTop: 4 };
+
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 480, padding: 28, boxShadow: '0 25px 80px rgba(0,0,0,0.25)' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: 24 }}>Create New Role</h2>
-        
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>Role Title</label>
-          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Senior Developer" style={{ width: '100%', padding: '14px 16px', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem' }} />
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <div style={{ padding: '24px 28px 0', borderBottom: '1px solid #f1f5f9' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Create New Role</h2>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          {/* Progress Steps */}
+          <div style={{ display: 'flex', gap: 8, paddingBottom: 16 }}>
+            {[
+              { num: 1, label: 'Basic Info' },
+              { num: 2, label: 'Requirements' },
+              { num: 3, label: 'Nice-to-haves' },
+              { num: 4, label: 'Job Description' }
+            ].map(s => (
+              <div key={s.num} onClick={() => s.num <= step && setStep(s.num)} style={{ flex: 1, cursor: s.num <= step ? 'pointer' : 'default' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: step >= s.num ? '#4F46E5' : '#e2e8f0', color: step >= s.num ? 'white' : '#94a3b8', fontSize: '0.6875rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{s.num}</div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: step >= s.num ? '#0f172a' : '#94a3b8' }}>{s.label}</span>
+                </div>
+                <div style={{ height: 3, borderRadius: 2, backgroundColor: step >= s.num ? '#4F46E5' : '#e2e8f0' }} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>Min. Experience</label>
-          <select value={minExp} onChange={e => setMinExp(parseInt(e.target.value))} style={{ width: '100%', padding: '14px 16px', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem', background: 'white' }}>
-            <option value={0}>No minimum</option>
-            <option value={1}>1+ years</option>
-            <option value={2}>2+ years</option>
-            <option value={3}>3+ years</option>
-            <option value={5}>5+ years</option>
-          </select>
+        {/* Content */}
+        <div style={{ padding: 28, overflowY: 'auto', flex: 1 }}>
+          {step === 1 && (
+            <div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={labelStyle}>Role Title *</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Sales Manager, Senior Developer" style={inputStyle} />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                <div>
+                  <label style={labelStyle}>Location</label>
+                  <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Cape Town" style={inputStyle} disabled={isRemote} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Employment Type</label>
+                  <select value={employmentType} onChange={e => setEmploymentType(e.target.value)} style={{ ...inputStyle, background: 'white' }}>
+                    <option value="full-time">Full-time</option>
+                    <option value="part-time">Part-time</option>
+                    <option value="contract">Contract</option>
+                    <option value="internship">Internship</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={isRemote} onChange={e => { setIsRemote(e.target.checked); if (e.target.checked) setLocation(''); }} style={{ width: 18, height: 18, accentColor: '#4F46E5' }} />
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#0f172a' }}>This is a remote position</span>
+                </label>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Salary Range (ZAR, optional)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <input type="number" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} placeholder="Min (e.g. 25000)" style={inputStyle} />
+                  <input type="number" value={salaryMax} onChange={e => setSalaryMax(e.target.value)} placeholder="Max (e.g. 45000)" style={inputStyle} />
+                </div>
+                <div style={hintStyle}>Monthly salary range helps filter candidates with mismatched expectations</div>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={labelStyle}>Minimum Experience *</label>
+                <select value={minExp} onChange={e => setMinExp(parseInt(e.target.value))} style={{ ...inputStyle, background: 'white' }}>
+                  <option value={0}>No minimum</option>
+                  <option value={1}>1+ years</option>
+                  <option value={2}>2+ years</option>
+                  <option value={3}>3+ years</option>
+                  <option value={5}>5+ years</option>
+                  <option value={7}>7+ years</option>
+                  <option value={10}>10+ years</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={labelStyle}>Required Skills *</label>
+                <input type="text" value={requiredSkills} onChange={e => setRequiredSkills(e.target.value)} placeholder="e.g. Sales, CRM, Cold calling, Negotiation" style={inputStyle} />
+                <div style={hintStyle}>Comma-separated. Candidates without these will be marked as gaps.</div>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={labelStyle}>Education Requirement</label>
+                <select value={education} onChange={e => setEducation(e.target.value)} style={{ ...inputStyle, background: 'white' }}>
+                  <option value="any">Any / Not required</option>
+                  <option value="matric">Matric / Grade 12</option>
+                  <option value="diploma">Diploma / Certificate</option>
+                  <option value="degree">Bachelor's Degree</option>
+                  <option value="honours">Honours / Postgrad</option>
+                  <option value="masters">Master's Degree</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Hard Requirements (Non-negotiables)</label>
+                <textarea value={hardRequirements} onChange={e => setHardRequirements(e.target.value)} placeholder="e.g. Must have driver's license, Must be willing to travel 50%, Must have own transport" style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} />
+                <div style={hintStyle}>One per line. These are dealbreakers — AI will flag candidates missing any of these.</div>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
+              <div style={{ backgroundColor: '#F0FDF4', borderRadius: 12, padding: 16, marginBottom: 24, border: '1px solid #BBF7D0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: '1rem' }}>💡</span>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#166534' }}>Nice-to-haves help, but don't disqualify</span>
+                </div>
+                <p style={{ fontSize: '0.8125rem', color: '#15803D', margin: 0, lineHeight: 1.5 }}>
+                  Candidates with these get bonus points, but won't be rejected if missing.
+                </p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={labelStyle}>Preferred Skills</label>
+                <input type="text" value={preferredSkills} onChange={e => setPreferredSkills(e.target.value)} placeholder="e.g. HubSpot, Salesforce, LinkedIn Sales Navigator" style={inputStyle} />
+                <div style={hintStyle}>Comma-separated. Nice to have, not required.</div>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Bonus Points / Other Preferences</label>
+                <textarea value={bonuses} onChange={e => setBonuses(e.target.value)} placeholder="e.g. Experience in SaaS, Bilingual (English/Afrikaans), Existing book of business, Industry connections" style={{ ...inputStyle, minHeight: 120, resize: 'vertical' }} />
+                <div style={hintStyle}>Anything else that would make a candidate stand out</div>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div>
+              <div style={{ backgroundColor: '#EEF2FF', borderRadius: 12, padding: 16, marginBottom: 24, border: '1px solid #C7D2FE' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: '1rem' }}>🤖</span>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#4338CA' }}>AI-powered matching</span>
+                </div>
+                <p style={{ fontSize: '0.8125rem', color: '#4F46E5', margin: 0, lineHeight: 1.5 }}>
+                  Paste your full job description. Our AI will extract additional context to better match candidates.
+                </p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Full Job Description (optional)</label>
+                <textarea value={fullJD} onChange={e => setFullJD(e.target.value)} placeholder="Paste your complete job description here...
+
+Example:
+We are looking for a dynamic Sales Manager to join our growing team in Cape Town. You will be responsible for...
+
+Responsibilities:
+- Lead a team of 5 sales reps
+- Achieve monthly targets of R500k
+- Build relationships with key accounts
+..." style={{ ...inputStyle, minHeight: 250, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }} />
+                <div style={hintStyle}>The more detail you provide, the better the AI can match candidates</div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>Required Skills</label>
-          <input type="text" value={skills} onChange={e => setSkills(e.target.value)} placeholder="e.g. Python, Django, PostgreSQL" style={{ width: '100%', padding: '14px 16px', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem' }} />
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 6 }}>Separate with commas</div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: '14px', background: 'white', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer', color: '#475569' }}>Cancel</button>
-          <button onClick={handleCreate} disabled={isCreating || !title} style={{ flex: 1, padding: '14px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 600, cursor: 'pointer', opacity: isCreating || !title ? 0.5 : 1 }}>
-            {isCreating ? 'Creating...' : 'Create Role'}
-          </button>
+        {/* Footer */}
+        <div style={{ padding: '16px 28px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 12 }}>
+          {step > 1 && (
+            <button onClick={() => setStep(step - 1)} style={{ padding: '12px 20px', background: 'white', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '0.9375rem', fontWeight: 600, cursor: 'pointer', color: '#475569' }}>
+              ← Back
+            </button>
+          )}
+          <div style={{ flex: 1 }} />
+          {step < 4 ? (
+            <button onClick={() => setStep(step + 1)} disabled={step === 1 && !title} style={{ padding: '12px 24px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: 10, fontSize: '0.9375rem', fontWeight: 600, cursor: 'pointer', opacity: step === 1 && !title ? 0.5 : 1 }}>
+              Continue →
+            </button>
+          ) : (
+            <button onClick={handleCreate} disabled={isCreating || !title} style={{ padding: '12px 24px', background: '#10B981', color: 'white', border: 'none', borderRadius: 10, fontSize: '0.9375rem', fontWeight: 600, cursor: 'pointer', opacity: isCreating || !title ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {isCreating ? 'Creating...' : '✓ Create Role'}
+            </button>
+          )}
         </div>
       </div>
     </div>

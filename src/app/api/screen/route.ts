@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -154,7 +155,9 @@ Return valid JSON only — no markdown, no commentary.
   }
 }
 
-CRITICAL: If a strength lacks evidence, DO NOT include it.`;
+CRITICAL: If a strength lacks evidence, DO NOT include it.
+
+${SA_CONTEXT_PROMPT}`;
 
 function validateAnalysis(analysis: Record<string, unknown>): boolean {
   const score = analysis.overall_score;

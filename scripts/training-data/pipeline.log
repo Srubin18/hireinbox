@@ -1,0 +1,50 @@
+
+╔══════════════════════════════════════════════════════════╗
+║                                                          ║
+║   HIREINBOX - AI TRAINING DATA PIPELINE                  ║
+║                                                          ║
+║   This will generate:                                    ║
+║   • 300 South African job posts                          ║
+║   • 1,000 synthetic CVs (varied quality)                 ║
+║   • 1,000 AI screening verdicts                          ║
+║   • CSV export for human review                          ║
+║                                                          ║
+║   Estimated cost: ~$50-70                                ║
+║   Estimated time: 2-3 hours                              ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+
+
+==================================================
+STEP: Generate 300 Job Posts
+==================================================
+
+(node:38551) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:38551) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(node:38551) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/simon/Desktop/hireinbox/scripts/training-data/run-pipeline.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/simon/Desktop/hireinbox/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38576) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+SyntaxError: Export 'JobPost' is not defined in module
+    at compileSourceTextModule (node:internal/modules/esm/utils:318:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:111:18)
+    at ModuleLoader.<anonymous> (node:internal/modules/esm/translators:664:10)
+    at ModuleLoader.#translate (node:internal/modules/esm/loader:473:20)
+    at afterLoad (node:internal/modules/esm/loader:529:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:534:12)
+    at ModuleLoader.#getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:571:36)
+    at afterResolve (node:internal/modules/esm/loader:624:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:630:12)
+    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:649:32)
+
+❌ Pipeline failed: Error: Generate 300 Job Posts failed with code 1
+    at ChildProcess.<anonymous> (file:///Users/simon/Desktop/hireinbox/scripts/training-data/run-pipeline.ts:43:16)
+    at ChildProcess.emit (node:events:508:28)
+    at ChildProcess.emit (node:domain:489:12)
+    at maybeClose (node:internal/child_process:1101:16)
+    at Process.ChildProcess._handle.onexit (node:internal/child_process:305:5)
+
+The pipeline saves progress, so you can re-run to continue from where it stopped.

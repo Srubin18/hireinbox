@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Passport - UI Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; }
+
+        .container { max-width: 1000px; margin: 40px auto; padding: 20px; }
+
+        /* The actual Creator Passport Hub mockup */
+        .passport-hub {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Header section */
+        .hub-header {
+            padding: 32px;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #3730a3 100%);
+            color: white;
+        }
+
+        .hub-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hub-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            max-width: 500px;
+        }
+
+        .hub-header .badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10B981;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 1px;
+            background: #e2e8f0;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: white;
+            padding: 20px 24px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Main content */
+        .hub-content {
+            padding: 32px;
+        }
+
+        /* The problem section - raw, honest */
+        .problem-section {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .problem-section h3 {
+            color: #991b1b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .problem-section ul {
+            list-style: none;
+            color: #7f1d1d;
+            font-size: 0.9rem;
+        }
+
+        .problem-section li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .problem-section li::before {
+            content: '×';
+            position: absolute;
+            left: 0;
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        /* What we offer */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .feature-card h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .feature-card p {
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* CTA section */
+        .cta-section {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cta-left h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 4px;
+        }
+
+        .cta-left p {
+            font-size: 0.9rem;
+            color: #15803d;
+        }
+
+        .cta-button {
+            background: #166534;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            background: #14532d;
+        }
+
+        /* Sample passport preview */
+        .passport-preview {
+            background: #1e1b4b;
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+            margin-top: 24px;
+        }
+
+        .passport-preview h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-bottom: 16px;
+        }
+
+        .preview-content {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .creator-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .creator-info h5 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .creator-info p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .score-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .score-pill {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #10B981;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        /* Pricing */
+        .price-tag {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4F46E5;
+        }
+
+        .price-note {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* --- SIDEBAR MOCKUP --- */
+        .sidebar-mockup {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+
+        .sidebar-mockup h2 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            color: #64748b;
+        }
+
+        .sidebar-nav {
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+            width: 220px;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            padding: 8px 12px 4px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: #f8fafc;
+        }
+
+        .nav-item.new {
+            color: #4F46E5;
+            background: #eef2ff;
+            font-weight: 600;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: #4F46E5;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- SIDEBAR POSITION MOCKUP -->
+        <div class="sidebar-mockup">
+            <h2>SIDEBAR - Where "Creators" goes (between Candidates and Pro Tools)</h2>
+            <div class="sidebar-nav">
+                <div class="nav-section-label">Candidates</div>
+                <div class="nav-item">Shortlisted</div>
+                <div class="nav-item">Talent Pool</div>
+                <div class="nav-item">Rejected</div>
+
+                <div class="nav-section-label" style="margin-top: 12px; color: #8B5CF6;">Creators <span class="badge">NEW</span></div>
+                <div class="nav-item new">Creator Passport</div>
+                <div class="nav-item new">Verified Creators</div>
+
+                <div class="nav-section-label" style="margin-top: 12px;">Pro Tools</div>
+                <div class="nav-item">Headhunter Search</div>
+                <div class="nav-item">Elite Talent</div>
+            </div>
+        </div>
+
+        <!-- THE ACTUAL CREATOR PASSPORT HUB -->
+        <h2 style="margin-bottom: 16px; color: #64748b; font-size: 1rem;">MAIN CONTENT - Creator Passport Hub</h2>
+
+        <div class="passport-hub">
+            <!-- Header with gradient -->
+            <div class="hub-header">
+                <h1>Creator Passport</h1>
+                <p>Verify your authenticity. Land brand deals. Stop looking like a bot.</p>
+                <span class="badge">AI-VERIFIED VIDEO ANALYSIS</span>
+            </div>
+
+            <!-- Stats bar -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-number">R2B</div>
+                    <div class="stat-label">Lost to fraud yearly</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">79%</div>
+                    <div class="stat-label">Creator burnout rate</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">1 in 4</div>
+                    <div class="stat-label">Buy fake followers</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" style="color: #10B981;">R49</div>
+                    <div class="stat-label">One-time verification</div>
+                </div>
+            </div>
+
+            <div class="hub-content">
+
+                <!-- The problem - honest, raw -->
+                <div class="problem-section">
+                    <h3>Why brands ghost you:</h3>
+                    <ul>
+                        <li>They can't tell real creators from fakes</li>
+                        <li>Your media kit is just numbers anyone can fake</li>
+                        <li>55% of Instagram engagement is bought</li>
+                        <li>They've been burned before - now they trust no one</li>
+                    </ul>
+                </div>
+
+                <!-- What we do -->
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎥</div>
+                        <h4>Video Authenticity Check</h4>
+                        <p>AI analyzes your pitch video - eye contact, confidence, energy. Stuff bots can't fake.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">✓</div>
+                        <h4>Verified Badge</h4>
+                        <p>One link to share with brands. They see you're real. No more PDFs that never get opened.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h4>Coaching Tips</h4>
+                        <p>Get specific feedback with timestamps. "At 0:23 you looked away - here's how to fix it."</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🇿🇦</div>
+                        <h4>SA Context</h4>
+                        <p>Understands local brands, accents, culture. Global tools don't get our market.</p>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="cta-section">
+                    <div class="cta-left">
+                        <h3>Get your Creator Passport</h3>
+                        <p>2 minutes. One video. Start getting deals.</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="price-tag">R49</div>
+                        <div class="price-note">one-time</div>
+                    </div>
+                    <button class="cta-button">Start Verification</button>
+                </div>
+
+                <!-- Sample passport -->
+                <div class="passport-preview">
+                    <h4>Example Creator Passport</h4>
+                    <div class="preview-content">
+                        <div class="creator-photo">👤</div>
+                        <div class="creator-info">
+                            <h5>Thandi M.</h5>
+                            <p>Lifestyle Creator • Cape Town • 45K followers</p>
+                            <div class="score-pills">
+                                <span class="score-pill">Authenticity: 87</span>
+                                <span class="score-pill">Confidence: 82</span>
+                                <span class="score-pill">Energy: 91</span>
+                            </div>
+                        </div>
+                        <span class="verified-badge">✓ VERIFIED</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <p style="margin-top: 40px; color: #94a3b8; font-size: 0.85rem; text-align: center;">
+            This is a mockup. Approve it and I'll build the real thing.
+        </p>
+
+    </div>
+</body>
+</html>
