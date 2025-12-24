@@ -103,7 +103,7 @@ interface Role {
   };
 }
 
-// Brand Logo with tagline
+// Brand Logo with tagline (HireInbox)
 const Logo = ({ size = 36, showText = true, showTagline = false, darkBg = false }: { size?: number; showText?: boolean; showTagline?: boolean; darkBg?: boolean }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
@@ -128,6 +128,33 @@ const Logo = ({ size = 36, showText = true, showTagline = false, darkBg = false 
     )}
   </div>
 );
+
+// Mafadi Logo - Building bars icon with company name
+const MafadiLogo = ({ size = 40 }: { size?: number }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px' }}>
+    {/* Building bars - varying heights like skyline */}
+    <svg width={size * 0.8} height={size} viewBox="0 0 32 40" fill="none">
+      <rect x="0" y="20" width="5" height="20" fill="#111111" rx="1"/>
+      <rect x="7" y="10" width="5" height="30" fill="#111111" rx="1"/>
+      <rect x="14" y="16" width="5" height="24" fill="#111111" rx="1"/>
+      <rect x="21" y="4" width="5" height="36" fill="#111111" rx="1"/>
+      <rect x="28" y="14" width="4" height="26" fill="#111111" rx="1"/>
+    </svg>
+    <div style={{ display: 'flex', alignItems: 'baseline', marginLeft: 4 }}>
+      <span style={{ fontSize: size * 0.55, fontWeight: 400, color: '#111111', letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif" }}>Mafadi</span>
+      <span style={{ fontSize: size * 0.25, fontWeight: 400, color: '#111111', marginLeft: 2 }}>.Group</span>
+    </div>
+  </div>
+);
+
+// Mafadi Departments for Property Management Company
+const MAFADI_DEPARTMENTS = [
+  { id: 'sales', name: 'Sales & Letting', icon: '🏠' },
+  { id: 'property', name: 'Property Management', icon: '🏢' },
+  { id: 'bodycorp', name: 'Body Corporate', icon: '📋' },
+  { id: 'finance', name: 'Finance & Collections', icon: '💰' },
+  { id: 'maintenance', name: 'Maintenance', icon: '🔧' },
+];
 
 export default function Home() {
   const [view, setView] = useState<'landing' | 'dashboard'>('landing');
@@ -205,6 +232,7 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
             <a href="#how" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>How it works</a>
             <a href="#pricing" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>Pricing</a>
             <a href="/upload" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 500 }}>For candidates</a>
+            <a href="/upload?mode=creator" style={{ color: '#8B5CF6', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>For creators</a>
           </div>
           <div className="nav-cta-desktop" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button onClick={onLogin} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', padding: '8px 14px' }}>Log in</button>
@@ -366,8 +394,42 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
             </div>
           </div>
           <a href="/upload" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#4F46E5', color: 'white', padding: '12px 24px', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none' }}>
-            Get free CV feedback <span>→</span>
+            Get your Talent Passport <span>→</span>
           </a>
+        </div>
+      </section>
+
+      {/* FOR CREATORS - Funky, different vibe */}
+      <section id="creators" style={{ padding: '56px 16px', background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #581c87 100%)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#c4b5fd', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }}>For creators</div>
+          <h2 style={{ fontSize: 'clamp(1.4rem, 5vw, 2.5rem)', fontWeight: 800, color: 'white', marginBottom: 16, lineHeight: 1.2 }}>
+            Brands want to see the real you.<br />
+            <span style={{ color: '#c4b5fd' }}>Not your follower count.</span>
+          </h2>
+          <p style={{ fontSize: 'clamp(0.9rem, 3vw, 1.1rem)', color: 'rgba(255,255,255,0.8)', marginBottom: 32, lineHeight: 1.6, maxWidth: 600, margin: '0 auto 32px' }}>
+            Record a 60-second intro. Get scored on confidence, energy, and authenticity.
+            Share one verified link with brands instead of another PDF they'll never open.
+          </p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginBottom: 32, flexWrap: 'wrap' }}>
+            {[
+              { icon: '🎬', label: 'Video verified' },
+              { icon: '✓', label: 'Authenticity score' },
+              { icon: '🔗', label: 'One shareable link' },
+              { icon: '🇿🇦', label: 'SA brands get it' },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: '1.25rem' }}>{item.icon}</span>
+                <span style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <a href="/upload?mode=creator" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', color: 'white', padding: '14px 32px', borderRadius: 12, fontSize: '1rem', fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 20px rgba(139, 92, 246, 0.4)' }}>
+            Get your Creator Passport — R49
+          </a>
+          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 12 }}>One-time. No subscription. Yours forever.</p>
         </div>
       </section>
 
@@ -520,77 +582,79 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         }
       `}</style>
 
-      {/* SIDEBAR */}
-      <aside className="dashboard-sidebar" style={{ width: 260, background: 'white', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={onLogout}>
-          <Logo size={36} showTagline={true} />
+      {/* SIDEBAR - Mafadi White-Label */}
+      <aside className="dashboard-sidebar" style={{ width: 260, background: 'white', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
+        {/* Company Logo */}
+        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid #e5e7eb' }}>
+          <MafadiLogo size={36} />
         </div>
-        
+
         <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
+          {/* Departments */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Overview</div>
-            <NavItem icon="📊" label="Dashboard" active />
-            <NavItem icon="📧" label="Live Inbox" badge={candidates.filter(c => !c.score).length || undefined} badgeColor="#f97316" onClick={handleFetchEmails} />
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Departments</div>
+            {MAFADI_DEPARTMENTS.map(dept => (
+              <NavItem key={dept.id} icon={dept.icon} label={dept.name} onClick={() => setActiveTab('all')} />
+            ))}
           </div>
 
+          {/* Pipeline */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Candidates</div>
-            <NavItem icon="✓" label="Shortlisted" badge={shortlistCount || undefined} onClick={() => setActiveTab('shortlist')} />
-            <NavItem icon="🧠" label="Talent Pool" badge={poolCount || undefined} onClick={() => setActiveTab('talent_pool')} />
-            <NavItem icon="✗" label="Rejected" onClick={() => setActiveTab('reject')} />
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Pipeline</div>
+            <NavItem icon="📧" label="Inbox" badge={candidates.filter(c => !c.score).length || undefined} badgeColor="#111111" onClick={handleFetchEmails} />
+            <NavItem icon="✓" label="Shortlisted" badge={shortlistCount || undefined} onClick={() => setActiveTab('shortlist')} active={activeTab === 'shortlist'} />
+            <NavItem icon="◐" label="Talent Pool" badge={poolCount || undefined} onClick={() => setActiveTab('talent_pool')} active={activeTab === 'talent_pool'} />
+            <NavItem icon="✗" label="Rejected" badge={rejectCount || undefined} onClick={() => setActiveTab('reject')} active={activeTab === 'reject'} />
           </div>
 
+          {/* Active Roles */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Creators <span style={{ marginLeft: 6, background: '#8B5CF6', color: 'white', padding: '2px 6px', borderRadius: 8, fontSize: '0.55rem', fontWeight: 700 }}>NEW</span></div>
-            <NavItem icon="🎬" label="Creator Passport" color="#8B5CF6" onClick={() => setActiveTab('creators')} />
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Pro Tools</div>
-            <NavItem icon="🔍" label="Headhunter Search" color="#8B5CF6" onClick={() => setActiveTab('headhunter')} />
-            <NavItem icon="⭐" label="Elite Talent" color="#F59E0B" onClick={() => setActiveTab('elite')} />
-            <NavItem icon="📋" label="Reference Check" color="#10B981" onClick={() => setActiveTab('references')} />
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Roles</div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Active Roles</div>
             {roles.map(r => (
               <NavItem key={r.id} icon="💼" label={r.title} active={selectedRole === r.id} onClick={() => setSelectedRole(r.id)} />
             ))}
-            <NavItem icon="+" label="Add New Role" color="#4F46E5" onClick={() => setShowNewRoleModal(true)} />
+            <NavItem icon="+" label="Add New Role" color="#111111" onClick={() => setShowNewRoleModal(true)} />
           </div>
 
+          {/* Settings */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Settings</div>
-            <NavItem icon="⚙️" label="Company Settings" onClick={() => alert('Company Settings — Coming soon')} />
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Settings</div>
+            <NavItem icon="⚙️" label="Company" onClick={() => alert('Company Settings — Coming soon')} />
             <NavItem icon="👥" label="Team" onClick={() => alert('Team Management — Coming soon')} />
-            <NavItem icon="💳" label="Billing" onClick={() => alert('Billing — Coming soon')} />
           </div>
         </nav>
 
-        <div style={{ padding: 16, borderTop: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, background: '#f8fafc' }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#4F46E5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>SM</div>
+        {/* User Profile */}
+        <div style={{ padding: 16, borderTop: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, background: '#f9fafb' }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#111111', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>SM</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f172a' }}>Simon M.</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>simon@acme.co.za</div>
+              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#111111' }}>Simon M.</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>simon@mafadi.co.za</div>
             </div>
+          </div>
+        </div>
+
+        {/* Powered by HireInbox */}
+        <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span style={{ fontSize: '0.65rem', color: '#9ca3af' }}>Powered by</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280' }}>HireInbox</span>
           </div>
         </div>
       </aside>
 
       {/* MAIN */}
       <main className="dashboard-main" style={{ flex: 1, marginLeft: 260 }}>
-        <header style={{ background: 'white', borderBottom: '1px solid #e2e8f0', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
+        <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div onClick={onLogout} style={{ cursor: 'pointer' }}><Logo size={28} /></div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>Dashboard</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111111' }}>Recruitment Dashboard</h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={handleFetchEmails} disabled={isFetchingEmails} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
-              📄 {isFetchingEmails ? 'Checking...' : 'Check Emails'}
+            <button onClick={handleFetchEmails} disabled={isFetchingEmails} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, color: '#111111', cursor: 'pointer' }}>
+              📧 {isFetchingEmails ? 'Checking...' : 'Check Emails'}
             </button>
-            <button onClick={() => setShowNewRoleModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => setShowNewRoleModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: '#111111', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
               + New Role
             </button>
           </div>
@@ -617,7 +681,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
           {/* STATS */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 32 }}>
-            <StatCard icon="📧" iconBg="#eef2ff" value={candidates.length.toString()} label="CVs this month" trend="+12%" />
+            <StatCard icon="📧" iconBg="#eef2ff" value={candidates.length.toString()} label="Screened this month" trend="+12%" />
             <StatCard icon="✓" iconBg="#ecfdf5" value={shortlistCount.toString()} label="Shortlisted" trend="+8%" />
             <StatCard icon="🧠" iconBg="#fffbeb" value={poolCount.toString()} label="In Talent Pool" />
             <StatCard icon="⏱️" iconBg="#fff7ed" value={(candidates.length * 4.5 / 60).toFixed(1) + 'h'} label="Time saved" gradient extra={'≈ R' + (candidates.length * 150).toLocaleString() + ' in admin costs'} />
@@ -1889,167 +1953,124 @@ function ReferenceCheckHub({ candidates }: { candidates: Candidate[] }) {
    CREATOR PASSPORT HUB - THE MONEY MAKER
    =========================================== */
 function CreatorPassportHub() {
-  const [showDemo, setShowDemo] = useState(false);
-
   return (
     <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
-      {/* Header - Dark & Bold */}
-      <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)', padding: 32, color: 'white' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20 }}>
-          <div style={{ width: 72, height: 72, borderRadius: 16, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', flexShrink: 0 }}>🎬</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0 }}>Creator Passport</h2>
-              <span style={{ background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', padding: '4px 10px', borderRadius: 100, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.03em' }}>NEW</span>
-            </div>
-            <p style={{ fontSize: '1rem', opacity: 0.9, margin: 0, maxWidth: 500 }}>
-              Stop looking like a bot. Prove you're real. Land brand deals.
-            </p>
+      {/* Header - Clean, human, passport-like */}
+      <div style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)', padding: '40px 32px', color: 'white' }}>
+        <div style={{ maxWidth: 600 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <span style={{ fontSize: '1.5rem' }}>🎬</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.9 }}>Creator Passport</span>
           </div>
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontSize: '2.25rem', fontWeight: 800 }}>R49</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>one-time</div>
-          </div>
+          <h2 style={{ fontSize: '2rem', fontWeight: 700, margin: '0 0 12px 0', lineHeight: 1.2 }}>
+            Show brands the real you.
+          </h2>
+          <p style={{ fontSize: '1.05rem', opacity: 0.9, margin: 0, lineHeight: 1.5 }}>
+            Brands want to work with real people, not follower counts. Record a quick intro, get verified, and share one link that proves you're worth their investment.
+          </p>
         </div>
       </div>
 
-      {/* Stats Bar - The Pain */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid #e2e8f0' }}>
-        {[
-          { value: 'R2B', label: 'Lost to fraud yearly', color: '#ef4444' },
-          { value: '79%', label: 'Creator burnout rate', color: '#f59e0b' },
-          { value: '1 in 4', label: 'Buy fake followers', color: '#ef4444' },
-          { value: '55%', label: 'Engagement is fake', color: '#f59e0b' },
-        ].map((stat, i) => (
-          <div key={i} style={{ padding: '20px 24px', textAlign: 'center', borderRight: i < 3 ? '1px solid #e2e8f0' : 'none' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: stat.color }}>{stat.value}</div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* The Problem - Raw & Honest */}
-      <div style={{ padding: 24, background: '#fef2f2', borderBottom: '1px solid #fecaca' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <span style={{ fontSize: '1.25rem' }}>🚫</span>
-          <span style={{ fontWeight: 700, color: '#991b1b', fontSize: '0.9rem' }}>Why brands ghost you</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-          {[
-            "They can't tell real creators from fakes",
-            "Your media kit is just numbers anyone can buy",
-            "They've been burned before — trust no one now",
-            "You look exactly like the frauds. Same PDFs. Same claims."
-          ].map((problem, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: '0.875rem', color: '#7f1d1d' }}>
-              <span style={{ color: '#dc2626', fontWeight: 700 }}>×</span>
-              <span>{problem}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* The Solution - What We Do */}
-      <div style={{ padding: 24 }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 20 }}>
-          What Creator Passport Does
-        </div>
+      {/* The honest truth */}
+      <div style={{ padding: '28px 32px', background: '#fafafa', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', marginBottom: 16 }}>Why this matters:</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
           {[
-            { icon: '🎥', title: 'Video Authenticity', desc: 'AI analyzes your pitch video — eye contact, confidence, energy. Stuff bots can\'t fake.' },
-            { icon: '✓', title: 'Verified Badge', desc: 'One link to share with brands. They see you\'re real. No more PDFs that never get opened.' },
-            { icon: '🎯', title: 'Coaching Tips', desc: 'Specific feedback with timestamps. "At 0:23 you looked away — here\'s how to fix it."' },
-            { icon: '🇿🇦', title: 'SA Context', desc: 'Understands local brands, accents, culture. Global tools don\'t get our market.' },
-          ].map((feature, i) => (
-            <div key={i} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20 }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: 10 }}>{feature.icon}</div>
-              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem', marginBottom: 6 }}>{feature.title}</div>
-              <div style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>{feature.desc}</div>
+            { title: 'Brands are scared', desc: "They've been burned by fake followers. They need to see you're real before they'll pay you." },
+            { title: 'PDFs don\'t work', desc: "Everyone sends the same media kit. It sits unopened in their inbox." },
+            { title: 'You\'re not a number', desc: "10K followers means nothing if your engagement is bought. Show your personality instead." },
+            { title: 'Local brands get it', desc: "We understand SA creators, accents, and what brands here actually look for." },
+          ].map((item, i) => (
+            <div key={i} style={{ padding: 16, background: 'white', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.9rem', marginBottom: 4 }}>{item.title}</div>
+              <div style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>{item.desc}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Sample Passport Preview */}
-      <div style={{ margin: '0 24px 24px', background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', borderRadius: 16, padding: 24, color: 'white' }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.6, marginBottom: 16 }}>Example Creator Passport</div>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', flexShrink: 0 }}>👤</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>Thandi M.</span>
-              <span style={{ background: '#10B981', padding: '3px 8px', borderRadius: 100, fontSize: '0.65rem', fontWeight: 700 }}>✓ VERIFIED</span>
-            </div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: 12 }}>Lifestyle Creator • Cape Town • 45K followers</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {[
-                { label: 'Authenticity', score: 87 },
-                { label: 'Confidence', score: 82 },
-                { label: 'Energy', score: 91 },
-              ].map((score, i) => (
-                <span key={i} style={{ background: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: 100, fontSize: '0.75rem' }}>
-                  {score.label}: <strong>{score.score}</strong>
-                </span>
-              ))}
+      {/* Example Passport - Visual proof */}
+      <div style={{ padding: '32px', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 20 }}>What you get</div>
+
+        {/* Passport Card */}
+        <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', borderRadius: 20, padding: 28, color: 'white', maxWidth: 500 }}>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #f472b6, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', flexShrink: 0, border: '3px solid rgba(255,255,255,0.3)' }}>👩🏾</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>Thandi Molefe</span>
+                <span style={{ background: '#10B981', padding: '3px 10px', borderRadius: 100, fontSize: '0.65rem', fontWeight: 600 }}>VERIFIED</span>
+              </div>
+              <div style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: 16 }}>Lifestyle & Food • Cape Town</div>
+
+              <div style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
+                {[
+                  { label: 'Confidence', value: '82' },
+                  { label: 'Energy', value: '91' },
+                  { label: 'Clarity', value: '88' },
+                ].map((stat, i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stat.value}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ fontSize: '0.8rem', opacity: 0.7, fontStyle: 'italic' }}>
+                "Genuine enthusiasm, great camera presence, connects naturally with audience"
+              </div>
             </div>
           </div>
+        </div>
+
+        <div style={{ marginTop: 20, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          {['Shareable link', 'Timestamped feedback', 'Coaching tips', 'Verified badge'].map((item, i) => (
+            <span key={i} style={{ background: '#f1f5f9', padding: '8px 14px', borderRadius: 100, fontSize: '0.8rem', color: '#475569', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: '#8b5cf6' }}>✓</span> {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Simple steps */}
+      <div style={{ padding: '28px 32px', background: '#fafafa', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', gap: 32, justifyContent: 'center' }}>
+          {[
+            { num: '1', title: 'Record 60 seconds', desc: 'Introduce yourself naturally' },
+            { num: '2', title: 'Get your scores', desc: 'Confidence, energy, clarity' },
+            { num: '3', title: 'Share your passport', desc: 'One link for all brand pitches' },
+          ].map((step, i) => (
+            <div key={i} style={{ textAlign: 'center', maxWidth: 160 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#8b5cf6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.9rem', margin: '0 auto 10px' }}>{step.num}</div>
+              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.9rem', marginBottom: 4 }}>{step.title}</div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{step.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* CTA */}
-      <div style={{ margin: '0 24px 24px', background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', border: '1px solid #a7f3d0', borderRadius: 16, padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontWeight: 700, color: '#166534', fontSize: '1.1rem', marginBottom: 4 }}>Get your Creator Passport</div>
-          <div style={{ fontSize: '0.9rem', color: '#15803d' }}>2 minutes. One video. Start getting deals.</div>
-        </div>
+      <div style={{ padding: '32px', textAlign: 'center' }}>
         <button
           onClick={() => window.location.href = '/upload?mode=creator'}
-          style={{ background: '#166534', color: 'white', border: 'none', padding: '14px 28px', borderRadius: 10, fontSize: '1rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+          style={{ background: '#7c3aed', color: 'white', border: 'none', padding: '16px 40px', borderRadius: 12, fontSize: '1.05rem', fontWeight: 600, cursor: 'pointer', marginBottom: 12 }}
         >
-          Start Verification →
+          Get Your Creator Passport — R49
         </button>
-      </div>
-
-      {/* How It Works */}
-      <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>How it works</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-          {[
-            { num: 1, title: 'Record', desc: '60-second pitch video' },
-            { num: 2, title: 'Analyze', desc: 'AI checks authenticity' },
-            { num: 3, title: 'Get Badge', desc: 'Verified creator status' },
-            { num: 4, title: 'Share', desc: 'One link for brands' },
-          ].map((step, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#4F46E5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1rem', marginBottom: 10 }}>{step.num}</div>
-              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.875rem', marginBottom: 2 }}>{step.title}</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{step.desc}</div>
-            </div>
-          ))}
+        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+          One-time payment. No subscription. Your passport is yours forever.
         </div>
       </div>
 
-      {/* Coming Soon: Creator Inbox */}
-      <div style={{ margin: 24, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '1px solid #fcd34d', borderRadius: 16, padding: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <span style={{ fontSize: '1.5rem' }}>📬</span>
-          <div>
-            <div style={{ fontWeight: 700, color: '#92400e', fontSize: '1rem' }}>Coming Soon: Creator Business Inbox</div>
-            <div style={{ fontSize: '0.85rem', color: '#a16207' }}>R99/month — Manage brand deals, invoicing, and more</div>
+      {/* Coming Soon */}
+      <div style={{ margin: '0 32px 32px', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 12, padding: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: '1.25rem' }}>📬</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, color: '#92400e', fontSize: '0.95rem' }}>Coming soon: Creator Inbox</div>
+            <div style={{ fontSize: '0.8rem', color: '#a16207' }}>Manage brand deals, contracts, and invoicing in one place</div>
           </div>
-          <span style={{ marginLeft: 'auto', background: '#f59e0b', color: 'white', padding: '4px 10px', borderRadius: 100, fontSize: '0.7rem', fontWeight: 700 }}>Q1 2025</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-          {[
-            'AI Deal Scanner — Spot good offers, flag bad ones',
-            'Auto invoicing — Get paid faster',
-            'Brand CRM — Track all conversations',
-          ].map((feature, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: '#78350f' }}>
-              <span style={{ color: '#f59e0b' }}>✓</span>
-              <span>{feature}</span>
-            </div>
-          ))}
         </div>
       </div>
     </div>

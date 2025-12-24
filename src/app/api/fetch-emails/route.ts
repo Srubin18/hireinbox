@@ -3,7 +3,8 @@ import Imap from 'imap-simple';
 import { simpleParser } from 'mailparser';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
-import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
+import { SA_CONTEXT_PROMPT, SA_RECRUITER_CONTEXT } from '@/lib/sa-context';
+import { sendAcknowledgmentEmail } from '@/lib/email';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,10 +15,52 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Synced with screen/route.ts - includes Rule 7 dominance enforcement
+// Synced with screen/route.ts - includes Knockout + Ranking system
 const TALENT_SCOUT_PROMPT = `You are HireInbox's Principal Talent Scout — a world-class recruiter whose judgment consistently outperforms senior human recruiters.
 
 Your output is used to make real hiring decisions. Your standard is BETTER THAN HUMAN.
+
+=============================
+KNOCKOUT + RANKING SYSTEM
+=============================
+
+This is a TWO-PHASE assessment:
+
+PHASE 1: KNOCKOUTS (Pass/Fail Hard Requirements)
+------------------------------------------------
+Knockouts are NON-NEGOTIABLE requirements from the role. Candidate MUST pass ALL knockouts to proceed.
+
+Common knockouts (check against role requirements):
+- Minimum years of experience
+- Required qualifications (e.g., CA(SA), degree, certification)
+- Required skills (specific technical or functional skills)
+- Location/work authorization
+- Industry experience (if specified as required)
+
+For EACH knockout:
+- PASS: Clear evidence the requirement is met
+- FAIL: Requirement not met or not mentioned
+- EXCEPTION: Near-miss with exceptional trajectory (see Rule 7)
+
+If ANY knockout = FAIL (without exception): recommendation = REJECT
+
+PHASE 2: RANKING FACTORS (Differentiators for Survivors)
+---------------------------------------------------------
+Only candidates who PASS all knockouts (or qualify via exception) get ranked.
+
+Ranking factors (score 0-100 each):
+1. EXPERIENCE DEPTH: Quality and relevance of experience beyond minimum
+2. ACHIEVEMENT EVIDENCE: Quantified results, metrics, impact
+3. SKILLS MATCH: Alignment with required + nice-to-have skills
+4. TRAJECTORY: Career progression, promotions, growth pattern
+5. CULTURE SIGNALS: Industry fit, company size fit, values alignment
+
+Each factor contributes to overall_score:
+- EXPERIENCE DEPTH: 25%
+- ACHIEVEMENT EVIDENCE: 30%
+- SKILLS MATCH: 25%
+- TRAJECTORY: 15%
+- CULTURE SIGNALS: 5%
 
 =============================
 CORE RULES (NON-NEGOTIABLE)
@@ -62,7 +105,7 @@ EXCEPTION RULE (DOMINANT)
 =============================
 
 RULE 7 — NEAR-MISS EXCEPTION (DOMINANT OVERRIDE)
-This rule OVERRIDES strict minimum-experience rejection logic.
+This rule OVERRIDES knockout failure for experience requirements ONLY.
 
 Definition:
 - Experience requirement miss is within 6–12 months (e.g., requirement 3.0 years and candidate has 2.0–2.9 years AND strong evidence of trajectory).
@@ -76,22 +119,21 @@ Exceptional indicators (need 2+):
 - Major deals closed with metrics
 
 If this exception triggers:
-- recommendation MUST be "CONSIDER"
-- recommendation MUST NOT be "REJECT" (REJECT IS FORBIDDEN)
-- hard_requirements.experience must go under "partial" with explanation
+- The experience knockout becomes "EXCEPTION" instead of "FAIL"
+- recommendation MUST be "CONSIDER" (not REJECT)
 - recommendation_reason MUST explicitly state: "Exception applied"
 
 If exception does NOT trigger:
-Apply normal strict logic.
+Apply normal knockout logic.
 
 =============================
 SCORING CALIBRATION
 =============================
 
-- SHORTLIST = 80–100 (never below 80)
-- CONSIDER = 60–79 (never below 60)
-- REJECT with some positives = 40–59
-- REJECT no positives = 0–39
+- SHORTLIST = 80–100 (passed all knockouts + strong ranking)
+- CONSIDER = 60–79 (passed knockouts OR exception applied)
+- REJECT with some positives = 40–59 (failed knockouts but has strengths)
+- REJECT no positives = 0–39 (failed knockouts, weak overall)
 
 If exception triggers, overall_score MUST be between 60–75.
 
@@ -113,9 +155,65 @@ Return valid JSON only — no markdown, no commentary.
   "years_experience": <number or null>,
   "education_level": "<education or null>",
 
+  "knockouts": {
+    "all_passed": <true|false>,
+    "checks": [
+      {
+        "requirement": "<e.g., '3+ years sales experience'>",
+        "status": "<PASS|FAIL|EXCEPTION>",
+        "evidence": "<direct quote or 'not mentioned'>",
+        "weight": "<CRITICAL>"
+      }
+    ],
+    "failed_count": <number>,
+    "exception_applied": <true|false>
+  },
+
+  "ranking": {
+    "eligible": <true|false>,
+    "factors": [
+      {
+        "factor": "EXPERIENCE_DEPTH",
+        "score": <0-100>,
+        "weight": 0.25,
+        "evidence": "<quote or metric>",
+        "notes": "<brief explanation>"
+      },
+      {
+        "factor": "ACHIEVEMENT_EVIDENCE",
+        "score": <0-100>,
+        "weight": 0.30,
+        "evidence": "<quote or metric>",
+        "notes": "<brief explanation>"
+      },
+      {
+        "factor": "SKILLS_MATCH",
+        "score": <0-100>,
+        "weight": 0.25,
+        "evidence": "<quote or metric>",
+        "notes": "<brief explanation>"
+      },
+      {
+        "factor": "TRAJECTORY",
+        "score": <0-100>,
+        "weight": 0.15,
+        "evidence": "<quote or metric>",
+        "notes": "<brief explanation>"
+      },
+      {
+        "factor": "CULTURE_SIGNALS",
+        "score": <0-100>,
+        "weight": 0.05,
+        "evidence": "<quote or metric>",
+        "notes": "<brief explanation>"
+      }
+    ],
+    "weighted_score": <0-100>
+  },
+
   "overall_score": <0-100>,
   "recommendation": "<SHORTLIST|CONSIDER|REJECT>",
-  "recommendation_reason": "<1-2 sentences with explicit evidence; if exception applied must include phrase 'Exception applied'>",
+  "recommendation_reason": "<1-2 sentences explaining: which knockouts passed/failed, top ranking factors, and final decision>",
 
   "confidence": {
     "level": "<HIGH|MEDIUM|LOW>",
@@ -159,8 +257,11 @@ Return valid JSON only — no markdown, no commentary.
 }
 
 CRITICAL: If a strength lacks evidence, DO NOT include it.
+CRITICAL: Knockouts determine PASS/FAIL. Ranking differentiates survivors.
 
-${SA_CONTEXT_PROMPT}`;
+${SA_CONTEXT_PROMPT}
+
+${SA_RECRUITER_CONTEXT}`;
 
 function isSystemEmail(subject: string, from: string, body?: string): boolean {
   const lowerSubject = (subject || '').toLowerCase();
@@ -402,37 +503,60 @@ function buildRoleContext(role: Record<string, unknown>): string {
 }
 
 async function extractPDFText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
-  try {
-    console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes)`);
-    const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+  const maxRetries = 2;
 
-    if (isProduction && process.env.CONVERTAPI_SECRET) {
-      const base64PDF = buffer.toString('base64');
-      const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          Parameters: [
-            { Name: 'File', FileValue: { Name: filename, Data: base64PDF } },
-            { Name: 'StoreFile', Value: true }
-          ]
-        }),
-      });
-      if (!response.ok) { console.error(`[${traceId}][PDF] ConvertAPI error: ${response.status}`); return ''; }
-      const result = await response.json();
-      if (!result.Files?.[0]?.Url) { console.error(`[${traceId}][PDF] No URL`); return ''; }
-      const textResponse = await fetch(result.Files[0].Url);
-      const pdfText = await textResponse.text();
-      console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
-      return pdfText;
-    } else {
-      const pdfParseModule = await import('pdf-parse');
-      const pdfParse = pdfParseModule.default || pdfParseModule;
-      const data = await pdfParse(buffer);
-      console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
-      return data.text || '';
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes) - Attempt ${attempt}`);
+      const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+
+      if (isProduction && process.env.CONVERTAPI_SECRET) {
+        const base64PDF = buffer.toString('base64');
+        const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            Parameters: [
+              { Name: 'File', FileValue: { Name: filename, Data: base64PDF } },
+              { Name: 'StoreFile', Value: true }
+            ]
+          }),
+        });
+        if (!response.ok) {
+          console.error(`[${traceId}][PDF] ConvertAPI error: ${response.status}`);
+          if (attempt < maxRetries) continue;
+          return '';
+        }
+        const result = await response.json();
+        if (!result.Files?.[0]?.Url) {
+          console.error(`[${traceId}][PDF] No URL in response`);
+          if (attempt < maxRetries) continue;
+          return '';
+        }
+        const textResponse = await fetch(result.Files[0].Url);
+        const pdfText = await textResponse.text();
+
+        // Validate we got meaningful content
+        if (pdfText.length < 100) {
+          console.error(`[${traceId}][PDF] ConvertAPI returned too little text: ${pdfText.length} chars`);
+          if (attempt < maxRetries) continue;
+        }
+
+        console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
+        return pdfText;
+      } else {
+        const pdfParseModule = await import('pdf-parse');
+        const pdfParse = pdfParseModule.default || pdfParseModule;
+        const data = await pdfParse(buffer);
+        console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
+        return data.text || '';
+      }
+    } catch (e) {
+      console.error(`[${traceId}][PDF] ERROR on attempt ${attempt}:`, e);
+      if (attempt === maxRetries) return '';
     }
-  } catch (e) { console.error(`[${traceId}][PDF] ERROR:`, e); return ''; }
+  }
+  return '';
 }
 
 async function extractWordText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
@@ -597,8 +721,9 @@ Respond with valid JSON only.`;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       console.log(`[${traceId}][AI] Attempt ${attempt}...`);
+      // Use fine-tuned HireInbox model for CV screening
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v2:CpqMmcSD',
         temperature: 0,
         max_tokens: 4000,
         messages,
@@ -739,13 +864,13 @@ export async function POST() {
           continue;
         }
 
-        // 24-hour duplicate check
+        // 24-hour duplicate check - only skip if previous was successfully processed
         const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
-        const { data: existing } = await supabase.from('candidates').select('id')
+        const { data: existing } = await supabase.from('candidates').select('id, status')
           .eq('email', fromEmail).eq('role_id', activeRole.id).gte('created_at', oneDayAgo).limit(1);
-        if (existing?.length) {
+        if (existing?.length && existing[0].status !== 'unprocessed') {
           results.skippedDuplicates++;
-          console.log(`[${traceId}] SKIPPED DUPLICATE: ${fromEmail}`);
+          console.log(`[${traceId}] SKIPPED DUPLICATE: ${fromEmail} (already processed as ${existing[0].status})`);
           if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
           continue;
         }
@@ -829,7 +954,6 @@ export async function POST() {
           name: candidateName,
           email: String(analysis.candidate_email || fromEmail),
           phone: analysis.candidate_phone ? String(analysis.candidate_phone) : null,
-          location: String(analysis.location_summary || analysis.candidate_location || ''),
           cv_text: cvText,
           ai_score: Number(analysis.overall_score),
           ai_recommendation: String(analysis.recommendation),
@@ -850,6 +974,27 @@ export async function POST() {
         else {
           results.storedCount++;
           results.candidates.push(`${candidateName} (${analysis.overall_score})`);
+
+          // AUTO-ACKNOWLEDGMENT: Send email to candidate confirming receipt
+          const candidateEmail = String(analysis.candidate_email || fromEmail);
+          if (candidateEmail && candidateEmail.includes('@')) {
+            try {
+              const ackResult = await sendAcknowledgmentEmail(
+                candidateEmail,
+                candidateName,
+                activeRole.title,
+                'Mafadi Group' // Company name - TODO: get from company config
+              );
+              if (ackResult.success) {
+                console.log(`[${traceId}] Auto-acknowledgment sent to: ${candidateEmail}`);
+              } else {
+                console.error(`[${traceId}] Auto-acknowledgment failed:`, ackResult.error);
+              }
+            } catch (ackErr) {
+              console.error(`[${traceId}] Auto-acknowledgment error:`, ackErr);
+              // Don't fail the whole process if email fails
+            }
+          }
 
           // SUCCESS: Now mark email as read so it's not processed again
           if (messageUid) {
