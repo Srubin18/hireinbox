@@ -10,7 +10,9 @@
     "postinstall": "node scripts/fix-pdf-parse.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@supabase/supabase-js": "^2.87.1",
+    "html2canvas": "^1.4.1",
     "imap-simple": "^5.1.0",
     "mailparser": "^3.9.1",
     "mammoth": "^1.11.0",
