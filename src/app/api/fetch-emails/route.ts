@@ -721,11 +721,12 @@ Respond with valid JSON only.`;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       console.log(`[${traceId}][AI] Attempt ${attempt}...`);
-      // Use fine-tuned HireInbox model for CV screening
+      // Use base gpt-4o-mini for reliability (fine-tuned model has JSON issues)
       const completion = await openai.chat.completions.create({
-        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v2:CpqMmcSD',
+        model: 'gpt-4o-mini',
         temperature: 0,
         max_tokens: 4000,
+        response_format: { type: 'json_object' },
         messages,
       });
       const text = completion.choices[0]?.message?.content || '';
@@ -955,13 +956,13 @@ export async function POST() {
           email: String(analysis.candidate_email || fromEmail),
           phone: analysis.candidate_phone ? String(analysis.candidate_phone) : null,
           cv_text: cvText,
-          ai_score: Number(analysis.overall_score),
+          ai_score: Math.round(Number(analysis.overall_score)),
           ai_recommendation: String(analysis.recommendation),
           ai_reasoning: String(analysis.recommendation_reason || summary?.fit_assessment || ''),
           screening_result: analysis,
           screened_at: new Date().toISOString(),
           status: status,
-          score: Number(analysis.overall_score),
+          score: Math.round(Number(analysis.overall_score)),
           strengths: strengths,
           missing: weaknesses,
         });
