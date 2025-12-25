@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 /* ===========================================
-   HIREINBOX B2C - World-Class CV Analysis
-   Matching the premium design reference
+   HIREINBOX B2C - Talent Passport & Creator Passport
+   Two modes: job seekers (default) and creators (?mode=creator)
    =========================================== */
 
 // Types
@@ -53,6 +54,9 @@ interface VideoAnalysis {
     confidence: { score: number; calculation: string };
     engagement: { score: number; calculation: string };
     authenticity: { score: number; calculation: string };
+    // Creator mode additional scores
+    energy?: { score: number; calculation?: string };
+    camera_presence?: { score: number; calculation?: string };
   };
   expression_analysis: {
     positive_expressions: string[];
@@ -138,6 +142,79 @@ interface VideoAnalysis {
     unique_differentiator: string;
   };
   summary: string;
+  // Additional fields for enhanced video analysis
+  vibe_check?: string;
+  interview_decision?: {
+    would_interview: boolean;
+    confidence: string;
+    reasoning: string;
+    key_factor: string;
+    would_recommend_to_colleague?: boolean;
+    decision_reasoning?: string;
+    concerns_for_hiring_meeting?: string[];
+    points_to_explore_in_interview?: string[];
+  };
+  creator_badge?: {
+    badge: string;
+    evidence: string;
+  };
+  creator_type?: string;
+  reality_check?: {
+    would_watch_10_seconds: boolean;
+    brand_would_pay: boolean;
+    stands_out: boolean;
+    honest_assessment: string;
+  };
+  what_to_fix_first?: string;
+  problems_detected?: {
+    filler_words?: string;
+    eye_contact_breaks?: string;
+    technical_issues?: string;
+    generic_phrases?: string[];
+    dead_moments?: string[];
+  };
+  talent_assessment?: {
+    standout_skill?: string;
+    voice_quality?: string;
+    detected_talents?: string[];
+    talent_note?: string;
+  };
+  what_brands_will_love?: string[];
+  standout_moments?: Array<{
+    timestamp: string;
+    what: string;
+    why_brands_care: string;
+  }>;
+  level_up_tips?: Array<{
+    tip: string;
+    why: string;
+    priority: string;
+  }>;
+  brand_fit?: {
+    ideal_brand_types?: string[];
+    content_style?: string;
+    unique_angle?: string;
+  };
+  encouragement?: string;
+  red_flags?: {
+    flags: string[];
+    severity: string;
+    filler_word_count?: number;
+    fillers_detected?: string[];
+    eye_contact_drops?: string[];
+    generic_phrases?: string[];
+    weak_moments?: string[];
+    eye_contact_issues?: string;
+    content_issues?: string;
+    nervous_habits?: string[];
+    generic_phrases_used?: string[];
+  };
+  key_differentiator?: string;
+  sa_context_integration?: {
+    qualifications_discussed?: string[];
+    institutions_mentioned?: string[];
+    relevance_to_sa_market?: string;
+  };
 }
 
 // Logo Component
@@ -234,7 +311,11 @@ const RoleIcon = ({ index }: { index: number }) => {
   );
 };
 
-export default function UploadPage() {
+function UploadPageContent() {
+  const searchParams = useSearchParams();
+  const isCreatorMode = searchParams.get('mode') === 'creator';
+  const isDemoMode = searchParams.get('demo') === 'true';
+
   const [file, setFile] = useState<File | null>(null);
   const [pasteMode, setPasteMode] = useState(false);
   const [pastedText, setPastedText] = useState('');
@@ -255,6 +336,9 @@ export default function UploadPage() {
   const [videoAnalysis, setVideoAnalysis] = useState<VideoAnalysis | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [showVisualPassport, setShowVisualPassport] = useState(false);
+  const passportRef = useRef<HTMLDivElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const videoChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -848,6 +932,18 @@ export default function UploadPage() {
       formData.append('frames', JSON.stringify(frames));
       formData.append('frameTimestamps', JSON.stringify(timestamps));
 
+      // Pass mode for creator-specific feedback
+      if (isCreatorMode) {
+        formData.append('mode', 'creator');
+        console.log('[CREATOR] Using Creator Passport analysis mode');
+      }
+
+      // Pass demo flag for investor demos (bypasses API, uses mock data)
+      if (isDemoMode) {
+        formData.append('demo', 'true');
+        console.log('[DEMO] Demo mode enabled - using mock data');
+      }
+
       // Pass voice metrics for audio analysis
       if (voiceMetrics && voiceMetrics.avgPitch > 0) {
         formData.append('voiceMetrics', JSON.stringify(voiceMetrics));
@@ -878,7 +974,16 @@ export default function UploadPage() {
       }
 
       console.log(`[FERRARI] Analysis complete - version: ${data.version}, frames analyzed: ${data.framesAnalyzed}`);
+      console.log(`[DEBUG] Setting videoAnalysis:`, data.analysis ? 'HAS DATA' : 'NO DATA', data.analysis?.overall_score);
       setVideoAnalysis(data.analysis);
+
+      // Store the best profile photo (first frame captured)
+      if (capturedFrames.length > 0) {
+        setProfilePhoto(capturedFrames[0]);
+        console.log(`[PASSPORT] Stored profile photo from frame 1`);
+      }
+
+      console.log(`[DEBUG] videoAnalysis set, closing modal`);
       setShowVideoModal(false);
     } catch (err) {
       setVideoError(err instanceof Error ? err.message : 'Analysis failed');
@@ -1837,10 +1942,24 @@ export default function UploadPage() {
               )}
 
               {isAnalyzingVideo && (
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" className="spin-icon" style={{ color: '#8B5CF6' }}>
-                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeLinecap="round"/>
-                  </svg>
+                <div style={{ textAlign: 'center', padding: 24 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" style={{ color: '#8B5CF6', animation: 'spin 1s linear infinite' }}>
+                      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'white', marginBottom: 8 }}>
+                    {isCreatorMode ? '🎬 Analyzing Your Video...' : 'Analyzing Your Video...'}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                    Our AI is reviewing your video frame-by-frame. This takes 15-30 seconds.
+                  </div>
+                  <style>{`
+                    @keyframes spin {
+                      from { transform: rotate(0deg); }
+                      to { transform: rotate(360deg); }
+                    }
+                  `}</style>
                 </div>
               )}
             </div>
@@ -2162,6 +2281,99 @@ export default function UploadPage() {
                 ))}
               </div>
 
+              {/* Interview Decision */}
+              {videoAnalysis.interview_decision && (
+                <div style={{
+                  backgroundColor: videoAnalysis.interview_decision.would_interview ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                  border: `1px solid ${videoAnalysis.interview_decision.would_interview ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 24
+                }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12, color: videoAnalysis.interview_decision.would_interview ? '#10B981' : '#EF4444' }}>
+                    Interview Decision: {videoAnalysis.interview_decision.would_interview ? '✅ Would Interview' : '❌ Would Not Interview'}
+                  </h3>
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.85rem' }}>
+                      {videoAnalysis.interview_decision.would_recommend_to_colleague ? '✅' : '❌'} Would recommend to colleague
+                    </span>
+                  </div>
+                  {videoAnalysis.interview_decision.decision_reasoning && (
+                    <p style={{ fontSize: '0.85rem', opacity: 0.9, fontStyle: 'italic', marginBottom: 12 }}>
+                      "{videoAnalysis.interview_decision.decision_reasoning}"
+                    </p>
+                  )}
+                  {videoAnalysis.interview_decision.concerns_for_hiring_meeting && videoAnalysis.interview_decision.concerns_for_hiring_meeting.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: 6 }}>Concerns for hiring meeting:</div>
+                      <ul style={{ margin: 0, paddingLeft: 20, fontSize: '0.85rem' }}>
+                        {videoAnalysis.interview_decision.concerns_for_hiring_meeting.map((concern: string, i: number) => (
+                          <li key={i} style={{ marginBottom: 4 }}>{concern}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Red Flags */}
+              {videoAnalysis.red_flags && (
+                <div style={{
+                  backgroundColor: 'rgba(239,68,68,0.1)',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 24
+                }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12, color: '#EF4444' }}>Red Flags Detected</h3>
+                  <div style={{ display: 'grid', gap: 10, fontSize: '0.85rem' }}>
+                    {(videoAnalysis.red_flags.filler_word_count ?? 0) > 0 && (
+                      <div>
+                        <strong>Filler words:</strong> {videoAnalysis.red_flags.filler_word_count ?? 0} total
+                        {videoAnalysis.red_flags.fillers_detected && videoAnalysis.red_flags.fillers_detected.length > 0 && (
+                          <span style={{ opacity: 0.7 }}> ({videoAnalysis.red_flags.fillers_detected.join(', ')})</span>
+                        )}
+                      </div>
+                    )}
+                    {videoAnalysis.red_flags.eye_contact_issues && videoAnalysis.red_flags.eye_contact_issues !== 'none' && (
+                      <div><strong>Eye contact:</strong> {videoAnalysis.red_flags.eye_contact_issues}</div>
+                    )}
+                    {videoAnalysis.red_flags.content_issues && (
+                      <div><strong>Content:</strong> {videoAnalysis.red_flags.content_issues}</div>
+                    )}
+                    {videoAnalysis.red_flags.nervous_habits && videoAnalysis.red_flags.nervous_habits.length > 0 && (
+                      <div><strong>Nervous habits:</strong> {videoAnalysis.red_flags.nervous_habits.join(', ')}</div>
+                    )}
+                    {videoAnalysis.red_flags.generic_phrases_used && videoAnalysis.red_flags.generic_phrases_used.length > 0 && (
+                      <div>
+                        <strong>Generic phrases:</strong>{' '}
+                        {videoAnalysis.red_flags.generic_phrases_used.map((phrase: string, i: number) => (
+                          <span key={i} style={{ background: 'rgba(239,68,68,0.2)', padding: '2px 6px', borderRadius: 4, marginRight: 4 }}>
+                            "{phrase}"
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* What to Fix First */}
+              {videoAnalysis.what_to_fix_first && (
+                <div style={{
+                  background: 'rgba(251,146,60,0.15)',
+                  border: '1px solid rgba(251,146,60,0.4)',
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 24
+                }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 8, color: '#fb923c' }}>
+                    🎯 Fix This First
+                  </h4>
+                  <p style={{ fontSize: '0.9rem', margin: 0 }}>{videoAnalysis.what_to_fix_first}</p>
+                </div>
+              )}
+
               {/* Employer Appeal */}
               {videoAnalysis.employer_appeal && (
                 <div style={{
@@ -2193,6 +2405,75 @@ export default function UploadPage() {
 
               {/* Summary */}
               <p style={{ opacity: 0.8, lineHeight: 1.7, fontSize: '0.95rem' }}>{videoAnalysis.summary}</p>
+
+              {/* WhatsApp Share - Talent Passport */}
+              <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    const passport = `🎯 TALENT PASSPORT${analysis?.candidate_name ? ` - ${analysis.candidate_name}` : ''}
+━━━━━━━━━━━━━━━━━━━━━
+Score: ${videoAnalysis.overall_score}/100 | ${videoAnalysis.passport_badge?.badge_earned || videoAnalysis.score_headline}
+${videoAnalysis.percentile_estimate || ''}
+
+${videoAnalysis.interview_decision?.would_interview ? '✅ Would Interview' : '❌ Would Not Interview'}
+📊 Clarity ${videoAnalysis.scores?.clarity?.score || '-'} | Confidence ${videoAnalysis.scores?.confidence?.score || '-'} | Engagement ${videoAnalysis.scores?.engagement?.score || '-'}
+
+${videoAnalysis.employer_appeal?.best_fit_roles ? `Best Fit: ${videoAnalysis.employer_appeal.best_fit_roles.join(', ')}` : ''}
+${videoAnalysis.what_to_fix_first ? `🎯 Fix First: ${videoAnalysis.what_to_fix_first}` : ''}
+
+🔗 Verified by HireInbox AI
+🇿🇦 Built in Cape Town`;
+                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(passport)}`;
+                    window.open(whatsappUrl, '_blank');
+                  }}
+                  style={{
+                    background: '#25D366',
+                    color: 'white',
+                    border: 'none',
+                    padding: '14px 28px',
+                    borderRadius: 12,
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}
+                >
+                  📱 Share Talent Passport
+                </button>
+                <button
+                  onClick={() => {
+                    const passport = `🎯 TALENT PASSPORT${analysis?.candidate_name ? ` - ${analysis.candidate_name}` : ''}
+━━━━━━━━━━━━━━━━━━━━━
+Score: ${videoAnalysis.overall_score}/100 | ${videoAnalysis.passport_badge?.badge_earned || videoAnalysis.score_headline}
+${videoAnalysis.percentile_estimate || ''}
+
+${videoAnalysis.interview_decision?.would_interview ? '✅ Would Interview' : '❌ Would Not Interview'}
+📊 Clarity ${videoAnalysis.scores?.clarity?.score || '-'} | Confidence ${videoAnalysis.scores?.confidence?.score || '-'} | Engagement ${videoAnalysis.scores?.engagement?.score || '-'}
+
+${videoAnalysis.employer_appeal?.best_fit_roles ? `Best Fit: ${videoAnalysis.employer_appeal.best_fit_roles.join(', ')}` : ''}
+${videoAnalysis.what_to_fix_first ? `🎯 Fix First: ${videoAnalysis.what_to_fix_first}` : ''}
+
+🔗 Verified by HireInbox AI
+🇿🇦 Built in Cape Town`;
+                    navigator.clipboard.writeText(passport);
+                    alert('Passport copied to clipboard!');
+                  }}
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    padding: '14px 28px',
+                    borderRadius: 12,
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  📋 Copy Passport
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -2201,7 +2482,1026 @@ export default function UploadPage() {
   }
 
   /* ============================================
-     UPLOAD VIEW
+     CREATOR PASSPORT - Full Landing Page
+     ============================================ */
+  if (!analysis && isCreatorMode) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#0f0a1a',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        color: 'white'
+      }}>
+        {/* Navigation */}
+        <nav style={{
+          padding: '16px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          maxWidth: 1200,
+          margin: '0 auto'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.25rem'
+            }}>🎬</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Creator Passport</div>
+              <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>by HireInbox</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <a href="#how" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '0.9rem' }}>How it works</a>
+            <a href="#features" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '0.9rem' }}>Features</a>
+            <a href="#pricing" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: '0.9rem' }}>Pricing</a>
+            <button onClick={openVideoRecorder} style={{
+              background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+              color: 'white', border: 'none', padding: '10px 20px',
+              borderRadius: 8, fontWeight: 600, cursor: 'pointer'
+            }}>Get Started</button>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <section style={{
+          padding: '80px 24px 100px',
+          textAlign: 'center',
+          background: 'radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)'
+        }}>
+          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <div style={{
+              display: 'inline-block', background: 'rgba(236, 72, 153, 0.2)',
+              padding: '6px 16px', borderRadius: 100, fontSize: '0.8rem',
+              color: '#f472b6', marginBottom: 24
+            }}>
+              Stop getting ghosted by brands
+            </div>
+            <h1 style={{
+              fontSize: 'clamp(2.5rem, 6vw, 4rem)',
+              fontWeight: 800,
+              lineHeight: 1.1,
+              marginBottom: 24,
+              background: 'linear-gradient(135deg, #fff 0%, #c4b5fd 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              Prove you're real.<br />Land brand deals.
+            </h1>
+            <p style={{
+              fontSize: '1.25rem',
+              color: 'rgba(255,255,255,0.7)',
+              maxWidth: 600,
+              margin: '0 auto 16px',
+              lineHeight: 1.6
+            }}>
+              Turn a 60-second intro into a verified link that gets more brand replies and better rates.
+            </p>
+            <p style={{
+              fontSize: '1rem',
+              color: 'rgba(255,255,255,0.5)',
+              maxWidth: 550,
+              margin: '0 auto 40px',
+              lineHeight: 1.5
+            }}>
+              Brands are burned by fakes. Your Creator Passport proves you're the real deal — with video verification, authenticity scores, and one shareable link.
+            </p>
+            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={openVideoRecorder} style={{
+                background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                color: 'white', border: 'none', padding: '18px 36px',
+                borderRadius: 12, fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 8px 30px rgba(139, 92, 246, 0.4)'
+              }}>
+                Get Your Passport — R49
+              </button>
+              <button onClick={showSampleVideoAnalysis} style={{
+                background: 'rgba(255,255,255,0.1)', color: 'white',
+                border: '1px solid rgba(255,255,255,0.2)', padding: '18px 36px',
+                borderRadius: 12, fontSize: '1.1rem', cursor: 'pointer'
+              }}>
+                See Example
+              </button>
+            </div>
+            <p style={{ fontSize: '0.85rem', opacity: 0.5, marginTop: 16 }}>
+              One-time payment • No subscription • Yours forever
+            </p>
+            {/* Trust strip */}
+            <div style={{ marginTop: 32, display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
+              {[
+                'Built in South Africa 🇿🇦',
+                'POPIA-friendly',
+                'Used by early creators',
+              ].map((item, i) => (
+                <span key={i} style={{ fontSize: '0.8rem', opacity: 0.4 }}>{item}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Problem Section */}
+        <section style={{ padding: '60px 24px', background: 'rgba(255,255,255,0.02)' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 12 }}>Why brands ghost you</h2>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.1rem' }}>It's not personal. They're just scared.</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+              {[
+                { icon: '🤖', title: '1 in 4 creators buy fake followers', desc: 'Brands have been burned. They trust no one now.' },
+                { icon: '📄', title: 'Media kits all look the same', desc: 'PDFs with screenshots. Anyone can fake those.' },
+                { icon: '😶', title: '55% of engagement is fake', desc: 'Comment pods, bots, engagement groups. Brands know.' },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 16, padding: 28
+                }}>
+                  <div style={{ fontSize: '2rem', marginBottom: 16 }}>{item.icon}</div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 8, color: '#f472b6' }}>{item.title}</h3>
+                  <p style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Solution Section */}
+        <section id="features" style={{ padding: '80px 24px' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 56 }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 12 }}>Your unfakeable proof</h2>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.1rem' }}>Video-verified authenticity that bots can't replicate</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
+              {[
+                { icon: '🎥', title: 'Video Verification', desc: 'Record a 60-second intro. Our AI analyzes eye contact, confidence, energy, and authenticity. Stuff bots can\'t fake.', color: '#8B5CF6' },
+                { icon: '📊', title: 'Authenticity Score', desc: 'Get scored on clarity, confidence, engagement, and genuine expression. Brands see proof, not promises.', color: '#EC4899' },
+                { icon: '🔗', title: 'One Shareable Link', desc: 'No more PDFs that get ignored. One verified profile link for all your brand pitches.', color: '#8B5CF6' },
+                { icon: '💡', title: 'Timestamped Coaching', desc: '"At 0:23 you looked away — here\'s how to fix it." Specific feedback to improve your pitch.', color: '#EC4899' },
+                { icon: '🏆', title: 'Verified Badge', desc: 'Show brands you passed video verification. Stand out from the fakes instantly.', color: '#8B5CF6' },
+                { icon: '🇿🇦', title: 'Built for SA Creators', desc: 'We understand local brands, accents, and culture. Global tools don\'t get our market.', color: '#EC4899' },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 16, padding: 28, display: 'flex', gap: 20
+                }}>
+                  <div style={{
+                    width: 56, height: 56, borderRadius: 14, flexShrink: 0,
+                    background: `${item.color}20`, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', fontSize: '1.5rem'
+                  }}>{item.icon}</div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 8 }}>{item.title}</h3>
+                    <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how" style={{ padding: '80px 24px', background: 'rgba(139, 92, 246, 0.05)' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 56 }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 12 }}>Get verified in 2 minutes</h2>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 32 }}>
+              {[
+                { num: '1', title: 'Record', desc: '60-second intro video. Just be yourself — that\'s the whole point.', icon: '🎬' },
+                { num: '2', title: 'Get Analyzed', desc: 'AI scores your confidence, energy, clarity, and authentic expression.', icon: '🔍' },
+                { num: '3', title: 'Share & Win', desc: 'Get your verified passport link. Share it with every brand you pitch.', icon: '🚀' },
+              ].map((step, i) => (
+                <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: 20, margin: '0 auto 20px',
+                    background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '2rem'
+                  }}>{step.icon}</div>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%', margin: '-50px auto 20px',
+                    background: '#0f0a1a', border: '2px solid #8B5CF6',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 700, fontSize: '0.9rem'
+                  }}>{step.num}</div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: 8 }}>{step.title}</h3>
+                  <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Testimonial */}
+          <div style={{ maxWidth: 600, margin: '48px auto 0', textAlign: 'center' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 24,
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <p style={{ fontSize: '1.1rem', fontStyle: 'italic', opacity: 0.9, marginBottom: 16, lineHeight: 1.6 }}>
+                "Landed my first paid campaign a week after sending my Passport. Brands finally took me seriously."
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #f472b6, #c084fc)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>👩🏽</div>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Lerato K.</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>Lifestyle Creator • Johannesburg</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Sample Passport Preview */}
+        <section style={{ padding: '80px 24px' }}>
+          <div style={{ maxWidth: 700, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 12 }}>What brands see</h2>
+              <p style={{ color: 'rgba(255,255,255,0.6)' }}>Your Creator Passport — one link that says it all</p>
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+              borderRadius: 24, padding: 32, border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', marginBottom: 24 }}>
+                <div style={{
+                  width: 80, height: 80, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #f472b6, #c084fc)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '2.5rem', border: '3px solid rgba(255,255,255,0.2)'
+                }}>👩🏾</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>Thandi M.</span>
+                    <span style={{
+                      background: '#10B981', padding: '4px 12px', borderRadius: 100,
+                      fontSize: '0.7rem', fontWeight: 700
+                    }}>✓ VERIFIED</span>
+                  </div>
+                  <div style={{ opacity: 0.8, marginBottom: 16 }}>Lifestyle & Food Creator • Cape Town • 45K followers</div>
+                  <div style={{ display: 'flex', gap: 20 }}>
+                    {[
+                      { label: 'Confidence', score: 87 },
+                      { label: 'Energy', score: 91 },
+                      { label: 'Clarity', score: 82 },
+                      { label: 'Authenticity', score: 89 },
+                    ].map((s, i) => (
+                      <div key={i}>
+                        <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#EC4899' }}>{s.score}</div>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16,
+                fontSize: '0.9rem', opacity: 0.8, fontStyle: 'italic'
+              }}>
+                "Genuine warmth and natural enthusiasm. Great camera presence with consistent energy throughout. Connects authentically with audience."
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section id="pricing" style={{ padding: '80px 24px', background: 'rgba(255,255,255,0.02)' }}>
+          <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: 32 }}>Simple pricing</h2>
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1))',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 40
+            }}>
+              <div style={{ fontSize: '4rem', fontWeight: 800, marginBottom: 8 }}>R49</div>
+              <div style={{ opacity: 0.6, marginBottom: 24 }}>One-time payment</div>
+              <div style={{ textAlign: 'left', marginBottom: 32 }}>
+                {[
+                  'Video authenticity analysis',
+                  'Confidence, energy & clarity scores',
+                  'Timestamped coaching tips',
+                  'Verified creator badge',
+                  'Shareable passport link',
+                  'Unlimited re-records (coming soon)',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    <span style={{ color: '#10B981' }}>✓</span>
+                    <span style={{ fontSize: '0.95rem' }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={openVideoRecorder} style={{
+                width: '100%', background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                color: 'white', border: 'none', padding: '18px',
+                borderRadius: 12, fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer'
+              }}>
+                Get Your Creator Passport
+              </button>
+              <p style={{ fontSize: '0.8rem', opacity: 0.5, marginTop: 16 }}>
+                No subscription. No hidden fees. Yours forever.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer style={{ padding: '40px 24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: '1.25rem' }}>🎬</span>
+              <span style={{ fontWeight: 600 }}>Creator Passport</span>
+              <span style={{ opacity: 0.5 }}>by HireInbox</span>
+            </div>
+            <div style={{ opacity: 0.5, fontSize: '0.9rem' }}>
+              Built in Cape Town 🇿🇦
+            </div>
+          </div>
+        </footer>
+
+        {/* Video Recording Modal */}
+        {showVideoModal && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24
+          }}>
+            <div style={{
+              backgroundColor: '#1e1b4b', borderRadius: 24, padding: 32,
+              maxWidth: 600, width: '100%', textAlign: 'center'
+            }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 8 }}>Record Your Intro</h3>
+              <p style={{ opacity: 0.7, marginBottom: 24 }}>60 seconds to show brands who you really are</p>
+
+              {videoError && (
+                <div style={{ background: 'rgba(239,68,68,0.2)', padding: 16, borderRadius: 12, marginBottom: 20, color: '#fca5a5' }}>
+                  {videoError}
+                </div>
+              )}
+
+              <video
+                ref={videoPreviewRef}
+                autoPlay
+                muted
+                playsInline
+                style={{ width: '100%', maxWidth: 400, borderRadius: 16, marginBottom: 20, background: '#000' }}
+              />
+              <canvas ref={canvasRef} style={{ display: 'none' }} width={320} height={240} />
+
+              {isAnalyzingVideo ? (
+                <div style={{ padding: 20 }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 8 }}>Analyzing your presence...</div>
+                  <div style={{ opacity: 0.7 }}>This takes about 30 seconds</div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                  {!isRecording ? (
+                    <button onClick={startRecording} disabled={!cameraReady} style={{
+                      background: cameraReady ? 'linear-gradient(135deg, #8B5CF6, #EC4899)' : 'rgba(255,255,255,0.1)',
+                      color: 'white', border: 'none', padding: '16px 32px', borderRadius: 12,
+                      fontSize: '1rem', fontWeight: 600, cursor: cameraReady ? 'pointer' : 'not-allowed'
+                    }}>
+                      {cameraReady ? '🔴 Start Recording' : 'Loading camera...'}
+                    </button>
+                  ) : (
+                    <button onClick={stopRecording} style={{
+                      background: '#EF4444', color: 'white', border: 'none',
+                      padding: '16px 32px', borderRadius: 12, fontSize: '1rem', fontWeight: 600, cursor: 'pointer'
+                    }}>
+                      ⏹ Stop ({60 - recordingTime}s left)
+                    </button>
+                  )}
+                  <button onClick={closeVideoModal} style={{
+                    background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none',
+                    padding: '16px 24px', borderRadius: 12, cursor: 'pointer'
+                  }}>
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Video Analysis Results - Creator Passport */}
+        {videoAnalysis && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.95)', overflow: 'auto', zIndex: 1000, padding: 24
+          }}>
+            <div style={{
+              maxWidth: 800, margin: '0 auto', backgroundColor: '#1e1b4b',
+              borderRadius: 24, padding: 32, color: 'white'
+            }}>
+              {/* Header with Badge */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                <div>
+                  <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: 8 }}>🎬 Your Creator Passport</h2>
+                  {videoAnalysis.creator_badge && (
+                    <div style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.3))',
+                      padding: '6px 14px', borderRadius: 100, fontSize: '0.85rem'
+                    }}>
+                      🏆 {videoAnalysis.creator_badge.badge}
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => setVideoAnalysis(null)} style={{
+                  background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white',
+                  padding: '8px 16px', borderRadius: 8, cursor: 'pointer'
+                }}>Close</button>
+              </div>
+
+              {/* Money metric for high scores */}
+              {videoAnalysis.overall_score >= 80 && (
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: 12, padding: '12px 16px', marginBottom: 24, textAlign: 'center'
+                }}>
+                  <span style={{ color: '#34d399', fontWeight: 600 }}>
+                    🎯 Creators with scores above 80 see up to 2x more positive replies from brands
+                  </span>
+                </div>
+              )}
+
+              {/* Overall Score + Vibe Check */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 24, marginBottom: 24,
+                padding: 24, background: 'rgba(139,92,246,0.2)', borderRadius: 16
+              }}>
+                <div style={{
+                  width: 100, height: 100, borderRadius: '50%',
+                  background: `conic-gradient(#EC4899 ${videoAnalysis.overall_score * 3.6}deg, rgba(255,255,255,0.1) 0deg)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: '50%', backgroundColor: '#1e1b4b',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'
+                  }}>
+                    <span style={{ fontSize: '2rem', fontWeight: 700 }}>{videoAnalysis.overall_score}</span>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>/100</span>
+                  </div>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: 4 }}>{videoAnalysis.score_headline}</h3>
+                  <p style={{ opacity: 0.8, fontSize: '0.95rem' }}>{videoAnalysis.vibe_check || videoAnalysis.summary}</p>
+                </div>
+              </div>
+
+              {/* Score Breakdown */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+                {videoAnalysis.scores && Object.entries(videoAnalysis.scores).map(([key, value]) => {
+                  const scoreData = typeof value === 'object' ? value : { score: value };
+                  return (
+                    <div key={key} style={{
+                      backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 14, textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#EC4899' }}>{scoreData.score}</div>
+                      <div style={{ fontSize: '0.7rem', opacity: 0.7, textTransform: 'capitalize' }}>{key.replace('_', ' ')}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Creator Type Badge */}
+              {videoAnalysis.creator_type && (
+                <div style={{ marginBottom: 20, textAlign: 'center' }}>
+                  <span style={{
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.3))',
+                    padding: '8px 20px', borderRadius: 100, fontSize: '0.9rem', fontWeight: 600,
+                    textTransform: 'capitalize'
+                  }}>
+                    {videoAnalysis.creator_type.replace('_', ' ')} Creator
+                  </span>
+                </div>
+              )}
+
+              {/* Reality Check - Honest Assessment */}
+              {videoAnalysis.reality_check && (
+                <div style={{
+                  background: videoAnalysis.overall_score < 60 ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)',
+                  border: `1px solid ${videoAnalysis.overall_score < 60 ? 'rgba(239,68,68,0.3)' : 'rgba(59,130,246,0.3)'}`,
+                  borderRadius: 12, padding: 16, marginBottom: 24
+                }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 12, color: videoAnalysis.overall_score < 60 ? '#f87171' : '#60a5fa' }}>
+                    Reality Check
+                  </h4>
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.8rem' }}>
+                      {videoAnalysis.reality_check.would_watch_10_seconds ? '✅' : '❌'} Would watch 10s
+                    </span>
+                    <span style={{ fontSize: '0.8rem' }}>
+                      {videoAnalysis.reality_check.brand_would_pay ? '✅' : '❌'} Brand would pay
+                    </span>
+                    <span style={{ fontSize: '0.8rem' }}>
+                      {videoAnalysis.reality_check.stands_out ? '✅' : '❌'} Stands out
+                    </span>
+                  </div>
+                  {videoAnalysis.reality_check.honest_assessment && (
+                    <p style={{ fontSize: '0.85rem', opacity: 0.9, fontStyle: 'italic' }}>
+                      "{videoAnalysis.reality_check.honest_assessment}"
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Priority Fix */}
+              {videoAnalysis.what_to_fix_first && (
+                <div style={{
+                  background: 'rgba(251,146,60,0.15)', border: '1px solid rgba(251,146,60,0.4)',
+                  borderRadius: 12, padding: 16, marginBottom: 24
+                }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 8, color: '#fb923c' }}>
+                    🎯 Fix This First
+                  </h4>
+                  <p style={{ fontSize: '0.9rem' }}>{videoAnalysis.what_to_fix_first}</p>
+                </div>
+              )}
+
+              {/* Problems Detected */}
+              {videoAnalysis.problems_detected && (
+                <div style={{
+                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                  borderRadius: 12, padding: 16, marginBottom: 24
+                }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 12, color: '#f87171' }}>
+                    ⚠️ Problems Detected
+                  </h4>
+                  <div style={{ display: 'grid', gap: 8, fontSize: '0.85rem' }}>
+                    {videoAnalysis.problems_detected.filler_words && (
+                      <div><strong>Filler words:</strong> {videoAnalysis.problems_detected.filler_words}</div>
+                    )}
+                    {videoAnalysis.problems_detected.eye_contact_breaks && (
+                      <div><strong>Eye contact breaks:</strong> {videoAnalysis.problems_detected.eye_contact_breaks}</div>
+                    )}
+                    {videoAnalysis.problems_detected.technical_issues && (
+                      <div><strong>Technical:</strong> {videoAnalysis.problems_detected.technical_issues}</div>
+                    )}
+                    {videoAnalysis.problems_detected.generic_phrases && videoAnalysis.problems_detected.generic_phrases.length > 0 && (
+                      <div>
+                        <strong>Generic phrases:</strong>{' '}
+                        {videoAnalysis.problems_detected.generic_phrases.map((phrase: string, i: number) => (
+                          <span key={i} style={{ background: 'rgba(239,68,68,0.2)', padding: '2px 6px', borderRadius: 4, marginRight: 4 }}>
+                            "{phrase}"
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {videoAnalysis.problems_detected.dead_moments && videoAnalysis.problems_detected.dead_moments.length > 0 && (
+                      <div><strong>Dead moments:</strong> {videoAnalysis.problems_detected.dead_moments.join(', ')}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Talent Assessment */}
+              {videoAnalysis.talent_assessment && (
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.1))',
+                  border: '1px solid rgba(251,191,36,0.3)',
+                  borderRadius: 16, padding: 20, marginBottom: 28
+                }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12, color: '#fbbf24' }}>🎤 Talent Assessment</h3>
+                  {videoAnalysis.talent_assessment.standout_skill && (
+                    <div style={{ marginBottom: 12 }}>
+                      <span style={{ opacity: 0.7, fontSize: '0.85rem' }}>Standout Skill: </span>
+                      <span style={{ fontWeight: 600 }}>{videoAnalysis.talent_assessment.standout_skill}</span>
+                    </div>
+                  )}
+                  {videoAnalysis.talent_assessment.voice_quality && (
+                    <div style={{ marginBottom: 12 }}>
+                      <span style={{ opacity: 0.7, fontSize: '0.85rem' }}>Voice Quality: </span>
+                      <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{videoAnalysis.talent_assessment.voice_quality}</span>
+                    </div>
+                  )}
+                  {videoAnalysis.talent_assessment.detected_talents && videoAnalysis.talent_assessment.detected_talents.length > 0 && (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                      {videoAnalysis.talent_assessment.detected_talents.map((talent: string, i: number) => (
+                        <span key={i} style={{
+                          background: 'rgba(251,191,36,0.2)', padding: '4px 12px', borderRadius: 6, fontSize: '0.8rem'
+                        }}>{talent}</span>
+                      ))}
+                    </div>
+                  )}
+                  {videoAnalysis.talent_assessment.talent_note && (
+                    <p style={{ opacity: 0.9, fontSize: '0.9rem', lineHeight: 1.5, fontStyle: 'italic' }}>
+                      "{videoAnalysis.talent_assessment.talent_note}"
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* What Brands Will Love */}
+              {videoAnalysis.what_brands_will_love && videoAnalysis.what_brands_will_love.length > 0 && (
+                <div style={{ marginBottom: 28 }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12, color: '#34d399' }}>💚 What Brands Will Love</h3>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {videoAnalysis.what_brands_will_love.map((item: string, i: number) => (
+                      <span key={i} style={{
+                        background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+                        padding: '8px 14px', borderRadius: 8, fontSize: '0.85rem'
+                      }}>{item}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Standout Moments */}
+              {videoAnalysis.standout_moments && videoAnalysis.standout_moments.length > 0 && (
+                <div style={{ marginBottom: 28 }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>✨ Standout Moments</h3>
+                  {videoAnalysis.standout_moments.slice(0, 2).map((moment: { timestamp: string; what: string; why_brands_care: string }, i: number) => (
+                    <div key={i} style={{
+                      backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 14, marginBottom: 10
+                    }}>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                        <span style={{ color: '#EC4899', fontWeight: 600, fontSize: '0.8rem' }}>{moment.timestamp}</span>
+                        <div>
+                          <div style={{ fontWeight: 500, marginBottom: 4 }}>{moment.what}</div>
+                          <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>{moment.why_brands_care}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Level Up Tips */}
+              <div style={{ marginBottom: 28 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🚀 Level Up Tips</h3>
+                {((videoAnalysis.level_up_tips as Array<{ tip?: string; why?: string; priority?: string | number; category?: string; issue?: string; fix?: string; impact?: string }>) || (videoAnalysis.coaching_tips as Array<{ tip?: string; why?: string; priority?: string | number; category?: string; issue?: string; fix?: string; impact?: string }>) || []).slice(0, 3).map((tip, i: number) => (
+                  <div key={i} style={{
+                    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 14, marginBottom: 10
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <strong style={{ fontSize: '0.9rem' }}>{tip.tip || `${tip.category}: ${tip.issue}`}</strong>
+                      <span style={{
+                        fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4,
+                        backgroundColor: (tip.priority === 'try this first' || tip.impact === 'HIGH') ? 'rgba(236,72,153,0.2)' : 'rgba(139,92,246,0.2)',
+                        color: (tip.priority === 'try this first' || tip.impact === 'HIGH') ? '#f472b6' : '#a78bfa'
+                      }}>{String(tip.priority || tip.impact || '')}</span>
+                    </div>
+                    <p style={{ opacity: 0.7, fontSize: '0.85rem' }}>{tip.why || tip.fix}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Brand Fit */}
+              {videoAnalysis.brand_fit && (
+                <div style={{ marginBottom: 28 }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 12 }}>🎯 Brand Fit</h3>
+                  <div style={{
+                    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 16
+                  }}>
+                    <div style={{ marginBottom: 12 }}>
+                      <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>Ideal for: </span>
+                      <span style={{ fontWeight: 500 }}>{videoAnalysis.brand_fit.ideal_brand_types?.join(', ')}</span>
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>Content style: </span>
+                      <span style={{ fontWeight: 500, textTransform: 'capitalize' }}>{videoAnalysis.brand_fit.content_style}</span>
+                    </div>
+                    {videoAnalysis.brand_fit.unique_angle && (
+                      <div style={{
+                        background: 'rgba(139,92,246,0.15)', padding: '10px 14px', borderRadius: 8,
+                        fontSize: '0.9rem', fontStyle: 'italic'
+                      }}>
+                        "{videoAnalysis.brand_fit.unique_angle}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Encouragement */}
+              {videoAnalysis.encouragement && (
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15))',
+                  borderRadius: 12, padding: 20, marginBottom: 28, textAlign: 'center'
+                }}>
+                  <p style={{ fontSize: '1rem', lineHeight: 1.6, fontStyle: 'italic' }}>
+                    {videoAnalysis.encouragement}
+                  </p>
+                </div>
+              )}
+
+              {/* Create Your Passport CTA */}
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button
+                  onClick={() => setShowVisualPassport(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '18px 40px',
+                    borderRadius: 12,
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)'
+                  }}
+                >
+                  Get Your Creator Passport
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================
+           VISUAL CREATOR PASSPORT - Shareable Document
+           ============================================ */}
+        {showVisualPassport && videoAnalysis && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.95)', overflow: 'auto', zIndex: 2000, padding: 24
+          }}>
+            {/* Passport Document - Designed for download/share */}
+            <div
+              ref={passportRef}
+              style={{
+                maxWidth: 500, margin: '0 auto', borderRadius: 20, overflow: 'hidden',
+                background: 'linear-gradient(180deg, #1e1b4b 0%, #0f0a2a 100%)',
+                boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+              }}
+            >
+              {/* Header Strip */}
+              <div style={{
+                background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+                padding: '16px 24px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                borderBottom: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.9rem'
+                  }}>C</div>
+                  <span style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem', letterSpacing: '0.02em' }}>Creator Passport</span>
+                </div>
+                <div style={{
+                  color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontWeight: 500
+                }}>
+                  {new Date().toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </div>
+              </div>
+
+              {/* Profile Section */}
+              <div style={{ padding: '32px 24px 24px', textAlign: 'center' }}>
+                {/* Profile Photo */}
+                <div style={{
+                  width: 120, height: 120, borderRadius: '50%', margin: '0 auto 20px',
+                  border: '4px solid #EC4899',
+                  boxShadow: '0 8px 32px rgba(236, 72, 153, 0.4)',
+                  overflow: 'hidden',
+                  background: profilePhoto ? 'transparent' : 'linear-gradient(135deg, #6366f1, #a855f7)'
+                }}>
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt="Creator"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%', height: '100%', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      fontSize: '2.5rem', fontWeight: 700, color: 'white', opacity: 0.6
+                    }}>
+                      ?
+                    </div>
+                  )}
+                </div>
+
+                {/* Score Circle */}
+                <div style={{
+                  width: 100, height: 100, borderRadius: '50%', margin: '0 auto 16px',
+                  background: `conic-gradient(#EC4899 ${videoAnalysis.overall_score * 3.6}deg, rgba(255,255,255,0.1) 0deg)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: '50%', backgroundColor: '#1e1b4b',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'
+                  }}>
+                    <span style={{ fontSize: '2rem', fontWeight: 700, color: 'white' }}>{videoAnalysis.overall_score}</span>
+                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)' }}>CREATOR SCORE</span>
+                  </div>
+                </div>
+
+                {/* Badge */}
+                {videoAnalysis.creator_badge && (
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    padding: '8px 16px', borderRadius: 8, marginBottom: 16,
+                    fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', fontWeight: 500
+                  }}>
+                    {videoAnalysis.creator_badge.badge}
+                  </div>
+                )}
+
+                {/* Creator Type */}
+                {videoAnalysis.creator_type && (
+                  <div style={{
+                    color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem',
+                    textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 20
+                  }}>
+                    {videoAnalysis.creator_type.replace('_', ' ')} Creator
+                  </div>
+                )}
+              </div>
+
+              {/* Score Grid */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 1, background: 'rgba(255,255,255,0.1)', margin: '0 24px 24px'
+              }}>
+                {[
+                  { label: 'Energy', score: videoAnalysis.scores?.energy?.score || 0 },
+                  { label: 'Authentic', score: videoAnalysis.scores?.authenticity?.score || 0 },
+                  { label: 'Clarity', score: videoAnalysis.scores?.clarity?.score || 0 },
+                  { label: 'Presence', score: videoAnalysis.scores?.camera_presence?.score || 0 }
+                ].map((item, i) => (
+                  <div key={i} style={{
+                    background: '#1e1b4b', padding: '12px 8px', textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#EC4899' }}>{item.score}</div>
+                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{item.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Status Banner */}
+              <div style={{
+                margin: '0 24px 24px',
+                background: videoAnalysis.reality_check?.brand_would_pay
+                  ? 'rgba(16, 185, 129, 0.12)'
+                  : 'rgba(251, 191, 36, 0.12)',
+                border: `1px solid ${videoAnalysis.reality_check?.brand_would_pay ? 'rgba(16, 185, 129, 0.25)' : 'rgba(251, 191, 36, 0.25)'}`,
+                borderRadius: 8, padding: '12px 16px', textAlign: 'center'
+              }}>
+                <span style={{
+                  fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em',
+                  color: videoAnalysis.reality_check?.brand_would_pay ? '#34d399' : '#fbbf24'
+                }}>
+                  {videoAnalysis.reality_check?.brand_would_pay ? 'BRAND PARTNERSHIP READY' : 'DEVELOPING'}
+                </span>
+              </div>
+
+              {/* Best For Section */}
+              {videoAnalysis.brand_fit?.ideal_brand_types && videoAnalysis.brand_fit.ideal_brand_types.length > 0 && (
+                <div style={{ margin: '0 24px 24px' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    Best For
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {videoAnalysis.brand_fit.ideal_brand_types.slice(0, 3).map((brand: string, i: number) => (
+                      <span key={i} style={{
+                        background: 'rgba(139,92,246,0.2)', padding: '6px 12px', borderRadius: 6,
+                        fontSize: '0.8rem', color: '#a78bfa'
+                      }}>{brand}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div style={{
+                background: 'rgba(0,0,0,0.3)', padding: '16px 24px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
+                    <rect width="48" height="48" rx="8" fill="#4F46E5"/>
+                    <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
+                    <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
+                  </svg>
+                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem' }}>
+                    <span style={{ color: 'white', fontWeight: 600 }}>Hire</span>
+                    <span style={{ color: '#4F46E5' }}>Inbox</span>
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>
+                  🇿🇦 Cape Town
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ maxWidth: 500, margin: '24px auto 0', display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={async () => {
+                  const { default: html2canvas } = await import('html2canvas');
+                  if (passportRef.current) {
+                    const canvas = await html2canvas(passportRef.current, {
+                      backgroundColor: null,
+                      scale: 2,
+                      useCORS: true
+                    });
+                    const link = document.createElement('a');
+                    link.download = 'creator-passport.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                  }
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                  color: 'white', border: 'none', padding: '14px 28px',
+                  borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8
+                }}
+              >
+                📥 Download Passport
+              </button>
+
+              <button
+                onClick={async () => {
+                  const { default: html2canvas } = await import('html2canvas');
+                  if (passportRef.current) {
+                    const canvas = await html2canvas(passportRef.current, {
+                      backgroundColor: '#1e1b4b',
+                      scale: 2,
+                      useCORS: true
+                    });
+
+                    // Try native share first (works on mobile)
+                    const tryNativeShare = async (blob: Blob) => {
+                      if (navigator.share && navigator.canShare) {
+                        const file = new File([blob], 'creator-passport.png', { type: 'image/png' });
+                        if (navigator.canShare({ files: [file] })) {
+                          try {
+                            await navigator.share({
+                              files: [file],
+                              title: 'My Creator Passport',
+                              text: `Check out my Creator Passport! Score: ${videoAnalysis.overall_score}/100`
+                            });
+                            return true;
+                          } catch {
+                            return false;
+                          }
+                        }
+                      }
+                      return false;
+                    };
+
+                    canvas.toBlob(async (blob) => {
+                      if (blob) {
+                        const shared = await tryNativeShare(blob);
+                        if (!shared) {
+                          // Desktop fallback: Download image first, then open WhatsApp
+                          const link = document.createElement('a');
+                          link.download = 'creator-passport.png';
+                          link.href = canvas.toDataURL('image/png');
+                          link.click();
+
+                          // Then open WhatsApp with message
+                          setTimeout(() => {
+                            const text = `Creator Passport\n\nScore: ${videoAnalysis.overall_score}/100\n${videoAnalysis.creator_badge?.badge ? `${videoAnalysis.creator_badge.badge}` : ''}\n\nPassport image downloaded - attach to share.\n\nhireinbox.co.za`;
+                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                          }, 500);
+                        }
+                      }
+                    }, 'image/png');
+                  }
+                }}
+                style={{
+                  background: '#25D366', color: 'white', border: 'none',
+                  padding: '14px 28px', borderRadius: 10, fontSize: '0.95rem',
+                  fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8
+                }}
+              >
+                📱 Share on WhatsApp
+              </button>
+
+              <button
+                onClick={() => setShowVisualPassport(false)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)', color: 'white',
+                  border: '1px solid rgba(255,255,255,0.2)', padding: '14px 28px',
+                  borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer'
+                }}
+              >
+                ← Back
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ============================================
+     UPLOAD VIEW - Job Seekers (Talent Passport)
      ============================================ */
   if (!analysis) {
     return (
@@ -3857,5 +5157,28 @@ export default function UploadPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+// Wrapper with Suspense for useSearchParams
+export default function UploadPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#ffffff',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', marginBottom: 16 }}>🎯</div>
+          <div style={{ color: '#64748b' }}>Loading...</div>
+        </div>
+      </div>
+    }>
+      <UploadPageContent />
+    </Suspense>
   );
 }
