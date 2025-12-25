@@ -298,14 +298,15 @@ export async function POST(request: Request) {
 
     console.log(`[${traceId}][B2C] Extracted ${cvText.length} characters`);
 
-    // Analyze with fine-tuned HireInbox model
+    // Use base gpt-4o-mini with JSON mode for reliability
     const completion = await openai.chat.completions.create({
-      model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v2:CpqMmcSD',
+      model: 'gpt-4o-mini',
       temperature: 0.3,
       max_tokens: 3000,
+      response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: CV_COACH_PROMPT },
-        { role: 'user', content: `Please analyze this CV and provide detailed feedback:\n\n${cvText}` }
+        { role: 'user', content: `Please analyze this CV and provide detailed feedback. Return valid JSON only:\n\n${cvText}` }
       ],
     });
 
