@@ -119,6 +119,7 @@ export async function sendAcknowledgmentEmail(
     await verifyTransporter();
 
     const firstName = candidateName?.split(' ')[0] || 'there';
+    const company = companyName || 'our team';
 
     const content = `
       <p style="margin: 0 0 24px 0; font-size: 16px; color: ${COLORS.primary};">
@@ -126,46 +127,46 @@ export async function sendAcknowledgmentEmail(
       </p>
 
       <p style="margin: 0 0 20px 0; font-size: 16px; color: ${COLORS.primary};">
-        We've received your application for <strong>${roleTitle}</strong>.
+        Thank you for applying for the <strong>${roleTitle}</strong> position at <strong>${company}</strong>.
       </p>
 
       <p style="margin: 0 0 20px 0; font-size: 16px; color: ${COLORS.secondary};">
-        Our system reviews every CV carefully against the role requirements. This usually takes a short amount of time, depending on volume.
+        We've received your CV and our team is reviewing it against the role requirements. We use AI-assisted screening to ensure every application gets a fair and thorough review.
       </p>
 
       <p style="margin: 0 0 32px 0; font-size: 16px; color: ${COLORS.primary};">
-        <strong>You will hear back from us</strong> — whether the outcome is positive or not.
+        <strong>You will hear back from us</strong> — we respond to every applicant, whether the outcome is positive or not.
       </p>
 
       <p style="margin: 0 0 8px 0; font-size: 16px; color: ${COLORS.secondary};">
-        Thanks for taking the time to apply.
+        Thanks for your interest in joining ${company}.
       </p>
 
       <p style="margin: 0; font-size: 16px; color: ${COLORS.primary};">
-        The HireInbox Team
+        The ${company} Hiring Team
       </p>
     `;
 
     const text = `Hi ${firstName},
 
-We've received your application for ${roleTitle}.
+Thank you for applying for the ${roleTitle} position at ${company}.
 
-Our system reviews every CV carefully against the role requirements. This usually takes a short amount of time, depending on volume.
+We've received your CV and our team is reviewing it against the role requirements. We use AI-assisted screening to ensure every application gets a fair and thorough review.
 
-You will hear back from us — whether the outcome is positive or not.
+You will hear back from us — we respond to every applicant, whether the outcome is positive or not.
 
-Thanks for taking the time to apply.
+Thanks for your interest in joining ${company}.
 
-The HireInbox Team
+The ${company} Hiring Team
 
 ---
-This message was sent automatically by HireInbox.
+This message was sent automatically.
 Your data is handled in accordance with POPIA regulations.`;
 
     await transporter.sendMail({
-      from: `"HireInbox" <${process.env.GMAIL_USER}>`,
+      from: `"${company}" <${process.env.GMAIL_USER}>`,
       to,
-      subject: `We've received your application`,
+      subject: `Application Received - ${roleTitle} at ${company}`,
       text,
       html: wrapEmail(content),
     });

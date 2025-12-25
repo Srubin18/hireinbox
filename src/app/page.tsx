@@ -436,52 +436,95 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
       {/* PRICING */}
       <section id="pricing" style={{ padding: '48px 16px', maxWidth: 1120, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h2 style={{ fontSize: 'clamp(1.2rem, 4vw, 2rem)', fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Costs less than one bad interview</h2>
-          <p style={{ fontSize: '0.9rem', color: '#64748b' }}>Free to try. Cancel anytime.</p>
+          <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Simple, SME-friendly pricing.</h2>
+          <p style={{ fontSize: '1rem', color: '#0f172a' }}><span style={{ color: '#4F46E5', fontWeight: 600 }}>Employer pays</span>. Candidates never do.</p>
         </div>
-        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 960, margin: '0 auto' }}>
-          <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 16px' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Starter</h3>
-            <p style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 12 }}>Hiring 1-2x a year</p>
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>R399</span>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>/mo</span>
-            </div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: 16 }}>
-              <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 20 CVs/month</li>
-              <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 1 active role</li>
-            </ul>
-            <button onClick={onLogin} style={{ width: '100%', padding: '10px', background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Try free</button>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 16, padding: '24px', maxWidth: 960, margin: '0 auto', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Costs less than one bad interview</h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Free to try. Cancel anytime.</p>
           </div>
-          <div style={{ background: '#0f172a', border: '1px solid #0f172a', borderRadius: 12, padding: '20px 16px', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', background: '#4F46E5', color: 'white', padding: '3px 8px', borderRadius: 100, fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Popular</div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'white', marginBottom: 4 }}>Growth</h3>
-            <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 12 }}>Regular hiring</p>
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>R799</span>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>/mo</span>
+          <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {/* Starter */}
+            <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 16px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Starter</h4>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 12 }}>Hiring 1-2x a year</p>
+              <div style={{ display: 'inline-block', background: '#fef08a', padding: '6px 12px', borderRadius: 6, marginBottom: 16 }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>R399</span>
+                <span style={{ fontSize: '0.75rem', color: '#0f172a' }}>/mo</span>
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: 16 }}>
+                <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 20 CVs/month</li>
+                <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 1 active role</li>
+              </ul>
+              <button onClick={onLogin} style={{ width: '100%', padding: '10px', background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Try free</button>
             </div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: 16 }}>
-              <li style={{ fontSize: '0.8rem', color: '#e2e8f0', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#4ade80' }}>✓</span> 50 CVs/month</li>
-              <li style={{ fontSize: '0.8rem', color: '#e2e8f0', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#4ade80' }}>✓</span> 3 roles + Pool</li>
-            </ul>
-            <button onClick={onLogin} style={{ width: '100%', padding: '10px', background: 'white', color: '#0f172a', border: 'none', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Try free</button>
-          </div>
-          <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 16px' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Business</h3>
-            <p style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 12 }}>Always hiring</p>
-            <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>R1,499</span>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>/mo</span>
+            {/* Growth */}
+            <div style={{ background: 'white', border: '2px solid #0f172a', borderRadius: 12, padding: '20px 16px', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', background: '#22c55e', color: 'white', padding: '3px 10px', borderRadius: 100, fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Popular</div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Growth</h4>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 12 }}>Regular hiring</p>
+              <div style={{ display: 'inline-block', background: '#fef08a', padding: '6px 12px', borderRadius: 6, marginBottom: 16 }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>R1,999</span>
+                <span style={{ fontSize: '0.75rem', color: '#0f172a' }}>/mo</span>
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: 16 }}>
+                <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 50 CVs/month</li>
+                <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 3 roles + Pool</li>
+              </ul>
+              <button onClick={onLogin} style={{ width: '100%', padding: '10px', background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Try free</button>
             </div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: 16 }}>
-              <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 100 CVs/month</li>
-              <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> Unlimited + Team</li>
-            </ul>
-            <button onClick={onLogin} style={{ width: '100%', padding: '10px', background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Try free</button>
+            {/* Business */}
+            <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '20px 16px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Business</h4>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: 12 }}>Always hiring</p>
+              <div style={{ display: 'inline-block', background: '#fef08a', padding: '6px 12px', borderRadius: 6, marginBottom: 16 }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>R4,999</span>
+                <span style={{ fontSize: '0.75rem', color: '#0f172a' }}>/mo</span>
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: 16 }}>
+                <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> 100 CVs/month</li>
+                <li style={{ fontSize: '0.8rem', color: '#475569', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: '#059669' }}>✓</span> Unlimited + Team</li>
+              </ul>
+              <button onClick={onLogin} style={{ width: '100%', padding: '10px', background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Try free</button>
+            </div>
           </div>
         </div>
-        <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#94a3b8', marginTop: 20 }}>No contracts. POPIA compliant.</p>
+        {/* Feature details */}
+        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, maxWidth: 960, margin: '24px auto 0' }}>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: 1.6 }}>
+            <ul style={{ listStyle: 'disc', paddingLeft: 16, margin: 0 }}>
+              <li>1 active role</li>
+              <li>Up to 50 CV screenings / month</li>
+              <li>Ranked candidates with explanations</li>
+              <li>Shortlist / reject workflow</li>
+              <li>Email-based candidate updates</li>
+            </ul>
+            <p style={{ marginTop: 12, fontSize: '0.7rem' }}><strong>Best for:</strong> Small teams hiring a few times a year.</p>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: 1.6 }}>
+            <ul style={{ listStyle: 'disc', paddingLeft: 16, margin: 0 }}>
+              <li>Up to 5 active roles</li>
+              <li>Up to 300 CV screenings / month</li>
+              <li>Advanced screening logic and scoring</li>
+              <li>On-the-fence candidates highlighted</li>
+              <li>Automated candidate communication</li>
+              <li>Early access to talent pool matches</li>
+            </ul>
+            <p style={{ marginTop: 12, fontSize: '0.7rem' }}><strong>Best for:</strong> Growing SMEs hiring consistently.</p>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: 1.6 }}>
+            <ul style={{ listStyle: 'disc', paddingLeft: 16, margin: 0 }}>
+              <li>Unlimited active roles</li>
+              <li>Up to 1,500 CV screenings / month</li>
+              <li>Team access and permissions</li>
+              <li>Full talent pool access and matching</li>
+              <li>Premium candidate features (video profiles, ID verification)</li>
+            </ul>
+            <p style={{ marginTop: 12, fontSize: '0.7rem' }}><strong>Best for:</strong> Agencies, call centres, and always-hiring businesses.</p>
+          </div>
+        </div>
+        <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#94a3b8', marginTop: 24 }}>No contracts. POPIA compliant. Candidates never pay.</p>
       </section>
 
       {/* FINAL CTA */}
@@ -636,10 +679,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         </div>
 
         {/* Powered by HireInbox */}
-        <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span style={{ fontSize: '0.65rem', color: '#9ca3af' }}>Powered by</span>
-            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280' }}>HireInbox</span>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: '0.6rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Powered by</span>
+            <Logo size={24} showTagline={true} />
           </div>
         </div>
       </aside>
