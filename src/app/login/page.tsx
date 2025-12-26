@@ -60,7 +60,14 @@ function LoginPageContent() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message);
+      // Better error messages for common cases
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        setError('Please check your email and click the confirmation link before signing in.');
+      } else if (error.message.toLowerCase().includes('invalid login')) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(error.message);
+      }
       setLoading(false);
     } else {
       router.push(redirectTo);
