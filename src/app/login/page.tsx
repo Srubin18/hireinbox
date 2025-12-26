@@ -286,8 +286,8 @@ function LoginPageContent() {
                     required
                     style={{
                       width: '100%',
-                      padding: '12px 16px',
-                      fontSize: '0.9375rem',
+                      padding: '14px 16px',
+                      fontSize: '16px',
                       border: '1px solid #e2e8f0',
                       borderRadius: 10,
                       outline: 'none',
@@ -330,8 +330,8 @@ function LoginPageContent() {
                         required
                         style={{
                           width: '100%',
-                          padding: '12px 48px 12px 16px',
-                          fontSize: '0.9375rem',
+                          padding: '14px 48px 14px 16px',
+                          fontSize: '16px',
                           border: '1px solid #e2e8f0',
                           borderRadius: 10,
                           outline: 'none',
@@ -493,6 +493,10 @@ function LoginPageContent() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         input::placeholder { color: #9CA3AF; }
+        @media (max-width: 480px) {
+          header { padding: 16px !important; }
+          main { padding: 24px 16px !important; }
+        }
       `}</style>
     </div>
   );

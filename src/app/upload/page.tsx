@@ -1162,7 +1162,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
             )}
 
             {/* Role & Industry Selection */}
-            <div style={{
+            <div className="role-industry-grid" style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: 16,
@@ -1353,7 +1353,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
               What you'll get
             </h2>
 
-            <div style={{
+            <div className="features-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: 24
@@ -1482,6 +1482,8 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
         <style>{`
           @media (max-width: 768px) {
             .grid-3 { grid-template-columns: 1fr !important; }
+            .features-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+            .role-industry-grid { grid-template-columns: 1fr !important; }
           }
         `}</style>
       </div>
@@ -1509,7 +1511,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
         <div style={{ cursor: 'pointer' }} onClick={resetUpload}>
           <Logo size={32} />
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="header-buttons" style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={() => setShowShareModal(true)}
             style={{
@@ -1560,7 +1562,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
       </header>
 
       {/* Main Content */}
-      <div style={{
+      <div className="results-grid" style={{
         maxWidth: 1100,
         margin: '0 auto',
         padding: '40px 24px',
@@ -1578,7 +1580,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
             marginBottom: 24,
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
           }}>
-            <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
+            <div className="score-card-flex" style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
               <CircularScore score={analysis.overall_score} />
               <div style={{ flex: 1 }}>
                 <h1 style={{
@@ -2344,6 +2346,12 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         .spin-icon { animation: spin 1s linear infinite; }
+        @media (max-width: 768px) {
+          .results-grid { grid-template-columns: 1fr !important; padding: 20px 16px !important; }
+          .score-card-flex { flex-direction: column !important; gap: 20px !important; align-items: center !important; text-align: center !important; }
+          .header-buttons { flex-wrap: wrap !important; gap: 8px !important; }
+          .header-buttons button { padding: 8px 12px !important; font-size: 0.8rem !important; }
+        }
       `}</style>
     </div>
   );
