@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mafadi | HireInbox Command Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Mafadi Brand */
+      --mafadi-black: #0a0a0a;
+      --mafadi-dark: #111111;
+      --mafadi-surface: #1a1a1a;
+      --mafadi-surface-hover: #222222;
+      --mafadi-border: #2a2a2a;
+      --mafadi-green: #22c55e;
+      --mafadi-green-dim: rgba(34, 197, 94, 0.15);
+      --mafadi-green-glow: rgba(34, 197, 94, 0.4);
+
+      /* Status */
+      --status-healthy: #22c55e;
+      --status-attention: #eab308;
+      --status-urgent: #ef4444;
+      --status-inactive: #6b7280;
+
+      /* Text */
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --text-tertiary: rgba(255, 255, 255, 0.4);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--mafadi-black);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ========================================
+       LAYOUT
+    ======================================== */
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ========================================
+       LEFT NAVIGATION
+    ======================================== */
+    .sidebar {
+      width: 260px;
+      background: var(--mafadi-dark);
+      border-right: 1px solid var(--mafadi-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .logo-section {
+      padding: 24px;
+      border-bottom: 1px solid var(--mafadi-border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--mafadi-green), #15803d);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: white;
+      box-shadow: 0 4px 20px var(--mafadi-green-glow);
+    }
+
+    .logo-text {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-subtitle {
+      font-size: 0.7rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 2px;
+    }
+
+    .nav-section {
+      padding: 20px 16px 8px;
+    }
+
+    .nav-section-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      padding-left: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-bottom: 2px;
+      text-decoration: none;
+      color: var(--text-secondary);
+    }
+
+    .nav-item:hover {
+      background: var(--mafadi-surface);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--mafadi-green-dim);
+      color: var(--mafadi-green);
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      opacity: 0.7;
+    }
+
+    .nav-item.active .nav-icon {
+      opacity: 1;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--mafadi-green);
+      color: black;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .nav-badge.urgent {
+      background: var(--status-urgent);
+      color: white;
+    }
+
+    .district-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-left: auto;
+    }
+
+    .district-indicator.healthy { background: var(--status-healthy); }
+    .district-indicator.attention { background: var(--status-attention); }
+    .district-indicator.urgent { background: var(--status-urgent); }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--mafadi-border);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .user-info:hover {
+      background: var(--mafadi-surface);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .user-name {
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .user-role {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+    }
+
+    /* ========================================
+       MAIN CONTENT
+    ======================================== */
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 64px;
+      background: var(--mafadi-dark);
+      border-bottom: 1px solid var(--mafadi-border);
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-size: 0.85rem;
+      color: var(--text-tertiary);
+    }
+
+    .topbar-title strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .search-bar {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      width: 300px;
+    }
+
+    .search-bar input {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      width: 100%;
+      outline: none;
+    }
+
+    .search-bar input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 16px;
+    }
+
+    .topbar-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--mafadi-border);
+      background: var(--mafadi-surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .topbar-btn:hover {
+      background: var(--mafadi-surface-hover);
+      color: var(--text-primary);
+    }
+
+    .content {
+      padding: 32px;
+    }
+
+    /* ========================================
+       GREETING SECTION
+    ======================================== */
+    .greeting {
+      margin-bottom: 32px;
+    }
+
+    .greeting-text {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .greeting-subtext {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .greeting-subtext .highlight {
+      color: var(--mafadi-green);
+      font-weight: 600;
+    }
+
+    /* ========================================
+       STATS ROW
+    ======================================== */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-value.green { color: var(--mafadi-green); }
+
+    .stat-change {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .stat-change.positive {
+      color: var(--status-healthy);
+    }
+
+    /* ========================================
+       DISTRICTS GRID - THE TOWN
+    ======================================== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .section-action {
+      font-size: 0.85rem;
+      color: var(--mafadi-green);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .section-action:hover {
+      text-decoration: underline;
+    }
+
+    .districts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .district-card {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .district-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--status-healthy);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .district-card:hover {
+      border-color: var(--mafadi-green);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .district-card:hover::before {
+      opacity: 1;
+    }
+
+    .district-card.attention::before { background: var(--status-attention); }
+    .district-card.urgent::before { background: var(--status-urgent); }
+    .district-card.attention:hover { border-color: var(--status-attention); }
+    .district-card.urgent:hover { border-color: var(--status-urgent); }
+
+    .district-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .district-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .district-roles {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    .district-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--status-healthy);
+    }
+
+    .district-status.attention {
+      background: rgba(234, 179, 8, 0.15);
+      color: var(--status-attention);
+    }
+
+    .district-status.urgent {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--status-urgent);
+    }
+
+    .district-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .district-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .district-metric {
+      text-align: center;
+    }
+
+    .district-metric-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .district-metric-label {
+      font-size: 0.7rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .district-progress {
+      height: 6px;
+      background: var(--mafadi-border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .district-progress-bar {
+      height: 100%;
+      background: var(--mafadi-green);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .district-progress-bar.attention { background: var(--status-attention); }
+    .district-progress-bar.urgent { background: var(--status-urgent); }
+
+    .district-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    .district-kpi {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .district-kpi-value {
+      color: var(--mafadi-green);
+      font-weight: 600;
+    }
+
+    /* ========================================
+       PRIORITY PANEL
+    ======================================== */
+    .priority-panel {
+      background: linear-gradient(135deg, var(--mafadi-surface), var(--mafadi-dark));
+      border: 1px solid var(--mafadi-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .priority-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .priority-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--mafadi-green-dim);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .priority-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .priority-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    .priority-items {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .priority-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .priority-item:hover {
+      border-color: var(--mafadi-green);
+      background: var(--mafadi-surface-hover);
+    }
+
+    .priority-item-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .priority-item-icon.interview {
+      background: rgba(99, 102, 241, 0.15);
+    }
+
+    .priority-item-icon.match {
+      background: rgba(34, 197, 94, 0.15);
+    }
+
+    .priority-item-icon.inbox {
+      background: rgba(234, 179, 8, 0.15);
+    }
+
+    .priority-item-content {
+      flex: 1;
+    }
+
+    .priority-item-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .priority-item-meta {
+      font-size: 0.85rem;
+      color: var(--text-tertiary);
+    }
+
+    .priority-item-action {
+      padding: 8px 16px;
+      background: var(--mafadi-green);
+      color: black;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .priority-item-action:hover {
+      background: #16a34a;
+    }
+
+    .priority-item-action.secondary {
+      background: var(--mafadi-border);
+      color: var(--text-primary);
+    }
+
+    .priority-item-action.secondary:hover {
+      background: var(--mafadi-surface-hover);
+    }
+
+    /* ========================================
+       RECENT ACTIVITY
+    ======================================== */
+    .activity-section {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    .activity-feed {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--mafadi-border);
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .activity-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .activity-content {
+      flex: 1;
+    }
+
+    .activity-text {
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .activity-text strong {
+      color: var(--text-primary);
+    }
+
+    .activity-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    .activity-tag {
+      background: var(--mafadi-border);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .activity-score {
+      color: var(--mafadi-green);
+      font-weight: 600;
+    }
+
+    /* ========================================
+       AI INSIGHTS
+    ======================================== */
+    .insights-panel {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .insight-item {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--mafadi-border);
+    }
+
+    .insight-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .insight-label {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .insight-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .insight-context {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .insight-trend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .insight-trend.up {
+      color: var(--status-healthy);
+    }
+
+    .insight-trend.down {
+      color: var(--status-urgent);
+    }
+
+    /* ========================================
+       CANDIDATE QUICK VIEW (Modal Preview)
+    ======================================== */
+    .candidate-preview {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      background: var(--mafadi-dark);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 20px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+    }
+
+    .candidate-preview.show {
+      display: block;
+    }
+
+    .candidate-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--mafadi-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .candidate-main {
+      display: flex;
+      gap: 16px;
+    }
+
+    .candidate-photo {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .candidate-info h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .candidate-title {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .candidate-tags {
+      display: flex;
+      gap: 8px;
+    }
+
+    .candidate-tag {
+      background: var(--mafadi-border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .candidate-tag.district {
+      background: var(--mafadi-green-dim);
+      color: var(--mafadi-green);
+    }
+
+    .candidate-score-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(var(--mafadi-green) 82%, var(--mafadi-border) 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .candidate-score-inner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--mafadi-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .candidate-score-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .candidate-score-label {
+      font-size: 0.6rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+    }
+
+    .candidate-body {
+      padding: 24px;
+    }
+
+    .evidence-section {
+      margin-bottom: 20px;
+    }
+
+    .evidence-title {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .evidence-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: var(--mafadi-surface);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .evidence-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--mafadi-green-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .evidence-icon.warning {
+      background: rgba(234, 179, 8, 0.15);
+    }
+
+    .evidence-content strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .evidence-quote {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .candidate-actions {
+      padding: 20px 24px;
+      border-top: 1px solid var(--mafadi-border);
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--mafadi-green);
+      color: black;
+    }
+
+    .btn-primary:hover {
+      background: #16a34a;
+    }
+
+    .btn-secondary {
+      background: var(--mafadi-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--mafadi-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--mafadi-surface-hover);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--status-urgent);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* ========================================
+       OVERLAY
+    ======================================== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 999;
+      display: none;
+    }
+
+    .overlay.show {
+      display: block;
+    }
+
+    /* ========================================
+       POWERED BY
+    ======================================== */
+    .powered-by {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      font-size: 0.7rem;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .powered-logo {
+      font-weight: 700;
+      color: var(--mafadi-green);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo-section">
+        <div class="logo">
+          <div class="logo-mark">M</div>
+          <div>
+            <div class="logo-text">Mafadi</div>
+            <div class="logo-subtitle">Property Group</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Overview</div>
+        <a href="#" class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          Command Center
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Districts</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          Sales & Letting
+          <div class="district-indicator healthy"></div>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+          Portfolio Managers
+          <div class="district-indicator healthy"></div>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          Body Corporate
+          <div class="district-indicator attention"></div>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M12 12h.01"/>
+          </svg>
+          Finance
+          <div class="district-indicator urgent"></div>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          Maintenance
+          <div class="district-indicator healthy"></div>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Airbnb Ops
+          <div class="district-indicator healthy"></div>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Pipeline</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+          </svg>
+          Inbox
+          <span class="nav-badge">24</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          Shortlist
+          <span class="nav-badge">8</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+          Video Interviews
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Tools</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+          </svg>
+          Analytics
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Settings
+        </a>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">TM</div>
+          <div>
+            <div class="user-name">Thabo Molefe</div>
+            <div class="user-role">HR Manager</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-title">
+          <strong>Command Center</strong> &middot; Mafadi Property Group
+        </div>
+        <div class="search-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" placeholder="Search candidates, roles...">
+        </div>
+        <div class="topbar-actions">
+          <button class="topbar-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <path d="M12 17h.01"/>
+            </svg>
+          </button>
+          <button class="topbar-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- GREETING -->
+        <div class="greeting">
+          <h1 class="greeting-text">Good morning, Thabo</h1>
+          <p class="greeting-subtext">
+            You have <span class="highlight">24 new CVs</span> waiting and <span class="highlight">3 candidates</span> ready for interview.
+          </p>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">CVs This Month</div>
+            <div class="stat-value">156</div>
+            <div class="stat-change positive">+23% vs last month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Shortlisted</div>
+            <div class="stat-value green">24</div>
+            <div class="stat-change">15% conversion rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Hired</div>
+            <div class="stat-value">8</div>
+            <div class="stat-change positive">On track for Q4</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg. Time to Hire</div>
+            <div class="stat-value">4.2<span style="font-size: 1rem; color: var(--text-tertiary);"> days</span></div>
+            <div class="stat-change positive">-1.3 days vs industry</div>
+          </div>
+        </div>
+
+        <!-- DISTRICTS GRID -->
+        <div class="section-header">
+          <h2 class="section-title">Your Districts</h2>
+          <a href="#" class="section-action">Manage Districts</a>
+        </div>
+
+        <div class="districts-grid">
+          <!-- Sales & Letting -->
+          <div class="district-card" onclick="showCandidate()">
+            <div class="district-header">
+              <div>
+                <div class="district-name">Sales & Letting Agents</div>
+                <div class="district-roles">3 open roles</div>
+              </div>
+              <div class="district-status">
+                <div class="district-status-dot"></div>
+                Healthy
+              </div>
+            </div>
+            <div class="district-metrics">
+              <div class="district-metric">
+                <div class="district-metric-value">12</div>
+                <div class="district-metric-label">Pipeline</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">4</div>
+                <div class="district-metric-label">Shortlisted</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">2</div>
+                <div class="district-metric-label">Interview</div>
+              </div>
+            </div>
+            <div class="district-progress">
+              <div class="district-progress-bar" style="width: 80%;"></div>
+            </div>
+            <div class="district-footer">
+              <span>Last activity: 2 hours ago</span>
+              <div class="district-kpi">
+                Sales exp: <span class="district-kpi-value">85%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Portfolio Managers -->
+          <div class="district-card">
+            <div class="district-header">
+              <div>
+                <div class="district-name">Portfolio Managers</div>
+                <div class="district-roles">2 open roles</div>
+              </div>
+              <div class="district-status">
+                <div class="district-status-dot"></div>
+                Healthy
+              </div>
+            </div>
+            <div class="district-metrics">
+              <div class="district-metric">
+                <div class="district-metric-value">8</div>
+                <div class="district-metric-label">Pipeline</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">3</div>
+                <div class="district-metric-label">Shortlisted</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">1</div>
+                <div class="district-metric-label">Interview</div>
+              </div>
+            </div>
+            <div class="district-progress">
+              <div class="district-progress-bar" style="width: 60%;"></div>
+            </div>
+            <div class="district-footer">
+              <span>Last activity: 4 hours ago</span>
+              <div class="district-kpi">
+                5+ yrs exp: <span class="district-kpi-value">75%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Body Corporate -->
+          <div class="district-card attention">
+            <div class="district-header">
+              <div>
+                <div class="district-name">Body Corporate Ops</div>
+                <div class="district-roles">2 open roles</div>
+              </div>
+              <div class="district-status attention">
+                <div class="district-status-dot"></div>
+                Needs Attention
+              </div>
+            </div>
+            <div class="district-metrics">
+              <div class="district-metric">
+                <div class="district-metric-value">5</div>
+                <div class="district-metric-label">Pipeline</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">1</div>
+                <div class="district-metric-label">Shortlisted</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">0</div>
+                <div class="district-metric-label">Interview</div>
+              </div>
+            </div>
+            <div class="district-progress">
+              <div class="district-progress-bar attention" style="width: 35%;"></div>
+            </div>
+            <div class="district-footer">
+              <span>Last activity: 2 days ago</span>
+              <div class="district-kpi">
+                CSOS: <span class="district-kpi-value">40%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Finance -->
+          <div class="district-card urgent">
+            <div class="district-header">
+              <div>
+                <div class="district-name">Finance & Collections</div>
+                <div class="district-roles">2 open roles</div>
+              </div>
+              <div class="district-status urgent">
+                <div class="district-status-dot"></div>
+                Urgent
+              </div>
+            </div>
+            <div class="district-metrics">
+              <div class="district-metric">
+                <div class="district-metric-value">3</div>
+                <div class="district-metric-label">Pipeline</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">0</div>
+                <div class="district-metric-label">Shortlisted</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">0</div>
+                <div class="district-metric-label">Interview</div>
+              </div>
+            </div>
+            <div class="district-progress">
+              <div class="district-progress-bar urgent" style="width: 20%;"></div>
+            </div>
+            <div class="district-footer">
+              <span>Last activity: 3 days ago</span>
+              <div class="district-kpi">
+                CA(SA): <span class="district-kpi-value">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Maintenance -->
+          <div class="district-card">
+            <div class="district-header">
+              <div>
+                <div class="district-name">Maintenance / Field Ops</div>
+                <div class="district-roles">4 open roles</div>
+              </div>
+              <div class="district-status">
+                <div class="district-status-dot"></div>
+                Healthy
+              </div>
+            </div>
+            <div class="district-metrics">
+              <div class="district-metric">
+                <div class="district-metric-value">18</div>
+                <div class="district-metric-label">Pipeline</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">6</div>
+                <div class="district-metric-label">Shortlisted</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">2</div>
+                <div class="district-metric-label">Interview</div>
+              </div>
+            </div>
+            <div class="district-progress">
+              <div class="district-progress-bar" style="width: 90%;"></div>
+            </div>
+            <div class="district-footer">
+              <span>Last activity: 1 hour ago</span>
+              <div class="district-kpi">
+                Trade cert: <span class="district-kpi-value">72%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Airbnb Ops -->
+          <div class="district-card">
+            <div class="district-header">
+              <div>
+                <div class="district-name">Airbnb & Short-Stay</div>
+                <div class="district-roles">2 open roles</div>
+              </div>
+              <div class="district-status">
+                <div class="district-status-dot"></div>
+                Active
+              </div>
+            </div>
+            <div class="district-metrics">
+              <div class="district-metric">
+                <div class="district-metric-value">9</div>
+                <div class="district-metric-label">Pipeline</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">3</div>
+                <div class="district-metric-label">Shortlisted</div>
+              </div>
+              <div class="district-metric">
+                <div class="district-metric-value">1</div>
+                <div class="district-metric-label">Interview</div>
+              </div>
+            </div>
+            <div class="district-progress">
+              <div class="district-progress-bar" style="width: 65%;"></div>
+            </div>
+            <div class="district-footer">
+              <span>Last activity: 5 hours ago</span>
+              <div class="district-kpi">
+                Weekend avail: <span class="district-kpi-value">89%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRIORITY PANEL -->
+        <div class="priority-panel">
+          <div class="priority-header">
+            <div class="priority-icon">&#9889;</div>
+            <div>
+              <div class="priority-title">Today's Priority Actions</div>
+              <div class="priority-subtitle">AI-ranked by urgency and impact</div>
+            </div>
+          </div>
+          <div class="priority-items">
+            <div class="priority-item" onclick="showCandidate()">
+              <div class="priority-item-icon interview">&#128249;</div>
+              <div class="priority-item-content">
+                <div class="priority-item-title">3 candidates ready for video interview</div>
+                <div class="priority-item-meta">Finance (1) &middot; Sales (2) &middot; Avg score: 81</div>
+              </div>
+              <button class="priority-item-action">Send Invites</button>
+            </div>
+            <div class="priority-item" onclick="showCandidate()">
+              <div class="priority-item-icon match">&#11088;</div>
+              <div class="priority-item-content">
+                <div class="priority-item-title">Strong match: Sarah Mokoena for Body Corporate Manager</div>
+                <div class="priority-item-meta">Score: 82 &middot; 8 years sectional title experience &middot; CSOS registered</div>
+              </div>
+              <button class="priority-item-action">Review</button>
+            </div>
+            <div class="priority-item">
+              <div class="priority-item-icon inbox">&#128232;</div>
+              <div class="priority-item-content">
+                <div class="priority-item-title">24 unscreened CVs in inbox</div>
+                <div class="priority-item-meta">Oldest: 3 days ago &middot; 8 for Finance, 6 for Maintenance</div>
+              </div>
+              <button class="priority-item-action secondary">Screen All</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITY + INSIGHTS -->
+        <div class="activity-section">
+          <div class="activity-feed">
+            <div class="section-header" style="margin-bottom: 16px;">
+              <h2 class="section-title">Recent Activity</h2>
+              <a href="#" class="section-action">View All</a>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-avatar">SM</div>
+              <div class="activity-content">
+                <div class="activity-text">
+                  <strong>Sarah Mokoena</strong> screened for Body Corporate Manager
+                </div>
+                <div class="activity-meta">
+                  <span class="activity-tag">Body Corporate</span>
+                  <span class="activity-score">Score: 82</span>
+                  <span>2 hours ago</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-avatar" style="background: linear-gradient(135deg, #22c55e, #15803d);">TK</div>
+              <div class="activity-content">
+                <div class="activity-text">
+                  <strong>Thabo Khumalo</strong> shortlisted for Senior Letting Agent
+                </div>
+                <div class="activity-meta">
+                  <span class="activity-tag">Sales & Letting</span>
+                  <span class="activity-score">Score: 78</span>
+                  <span>4 hours ago</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-avatar" style="background: linear-gradient(135deg, #eab308, #a16207);">DL</div>
+              <div class="activity-content">
+                <div class="activity-text">
+                  <strong>David Louw</strong> completed video interview
+                </div>
+                <div class="activity-meta">
+                  <span class="activity-tag">Maintenance</span>
+                  <span class="activity-score">Video Score: 85</span>
+                  <span>Yesterday</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-avatar" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">JN</div>
+              <div class="activity-content">
+                <div class="activity-text">
+                  <strong>John Nkosi</strong> rejected - does not meet requirements
+                </div>
+                <div class="activity-meta">
+                  <span class="activity-tag">Finance</span>
+                  <span style="color: var(--status-urgent);">No CA(SA)</span>
+                  <span>Yesterday</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="section-header" style="margin-bottom: 16px;">
+              <h2 class="section-title">AI Insights</h2>
+            </div>
+
+            <div class="insight-item">
+              <div class="insight-label">Top Performing District</div>
+              <div class="insight-value">Maintenance</div>
+              <div class="insight-context">Highest pipeline velocity, 6 shortlisted</div>
+              <div class="insight-trend up">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 15l-6-6-6 6"/>
+                </svg>
+                32% faster than other districts
+              </div>
+            </div>
+
+            <div class="insight-item">
+              <div class="insight-label">Hiring Bottleneck</div>
+              <div class="insight-value">Finance District</div>
+              <div class="insight-context">0 qualified CA(SA) candidates in 2 weeks</div>
+              <div class="insight-trend down">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 8v4M12 16h.01"/>
+                </svg>
+                Consider expanding search criteria
+              </div>
+            </div>
+
+            <div class="insight-item">
+              <div class="insight-label">Quality Signal</div>
+              <div class="insight-value">Sectional Title Exp</div>
+              <div class="insight-context">Candidates with this skill hired 3x more often in Body Corporate</div>
+            </div>
+
+            <div class="insight-item">
+              <div class="insight-label">Your Hiring Pattern</div>
+              <div class="insight-value" style="font-size: 0.95rem;">80% of hires have 5+ years property experience</div>
+              <div class="insight-context">AI now prioritizes this in screening</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- CANDIDATE PREVIEW MODAL -->
+  <div class="overlay" id="overlay" onclick="hideCandidate()"></div>
+  <div class="candidate-preview" id="candidatePreview">
+    <div class="candidate-header">
+      <div class="candidate-main">
+        <div class="candidate-photo">SM</div>
+        <div class="candidate-info">
+          <h3>Sarah Mokoena</h3>
+          <div class="candidate-title">Senior Portfolio Manager &middot; 8 years experience</div>
+          <div class="candidate-tags">
+            <span class="candidate-tag district">Body Corporate</span>
+            <span class="candidate-tag">Johannesburg</span>
+            <span class="candidate-tag">Available immediately</span>
+          </div>
+        </div>
+      </div>
+      <div class="candidate-score-circle">
+        <div class="candidate-score-inner">
+          <div class="candidate-score-value">82</div>
+          <div class="candidate-score-label">Score</div>
+        </div>
+      </div>
+    </div>
+    <div class="candidate-body">
+      <div class="evidence-section">
+        <div class="evidence-title">Strengths (Evidence-Based)</div>
+        <div class="evidence-item">
+          <div class="evidence-icon">&#10003;</div>
+          <div class="evidence-content">
+            <strong>Sectional Title Expertise</strong>
+            <div class="evidence-quote">"Managed 15 sectional title schemes across Gauteng, including Sandton City Apartments (450 units)"</div>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="evidence-icon">&#10003;</div>
+          <div class="evidence-content">
+            <strong>Compliance Knowledge</strong>
+            <div class="evidence-quote">"CSOS registered since 2019. Completed advanced trustees training programme 2023"</div>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="evidence-icon">&#10003;</div>
+          <div class="evidence-content">
+            <strong>Levy Collection Success</strong>
+            <div class="evidence-quote">"Improved levy collection rate from 72% to 94% within 12 months"</div>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-section">
+        <div class="evidence-title">Considerations</div>
+        <div class="evidence-item">
+          <div class="evidence-icon warning">&#9888;</div>
+          <div class="evidence-content">
+            <strong>No HOA experience mentioned</strong>
+            <div class="evidence-quote">Focus has been sectional title only - may need training for HOA workflows</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="candidate-actions">
+      <button class="btn btn-primary">Shortlist</button>
+      <button class="btn btn-secondary">Request Interview</button>
+      <button class="btn btn-danger">Reject</button>
+    </div>
+  </div>
+
+  <div class="powered-by">
+    Powered by <span class="powered-logo">HireInbox</span>
+  </div>
+
+  <script>
+    function showCandidate() {
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('candidatePreview').classList.add('show');
+    }
+
+    function hideCandidate() {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('candidatePreview').classList.remove('show');
+    }
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hideCandidate();
+    });
+  </script>
+</body>
+</html>

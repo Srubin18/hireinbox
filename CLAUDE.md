@@ -102,13 +102,13 @@ This is NON-NEGOTIABLE. Every AI feature must connect to the same intelligence:
 
 | Feature | Status |
 |---------|--------|
-| B2B CV screening (IMAP + GPT-4o) | **REAL** |
-| B2C CV analysis (GPT-4o) | **REAL** |
+| B2B CV screening (Fine-tuned model) | **REAL - LIVE** |
+| B2C CV analysis (Fine-tuned model) | **REAL - LIVE** |
+| Video Analysis (Claude Vision) | **REAL - LIVE** |
 | Headhunter Search | UI mockup only |
 | Elite Talent Hub | UI mockup only |
 | Reference Check Hub | UI mockup only |
 | AI Interview | Not built yet |
-| Video Analysis | Not built yet |
 
 ---
 
@@ -242,11 +242,37 @@ Deterministic outcomes from non-deterministic processes.
 
 ## CURRENT PRIORITIES
 
-1. **AI Training Data** - Generate 300 jobs, 1000 CVs, run screening
-2. **Authentication** - Supabase Auth for B2B, B2C, B2Recruiter
-3. **Free Tiers** - B2C gets 1 free, B2B gets 10 free
-4. **PDF Upload Fix** - B2C only works with Word currently
-5. **Deploy** - Get to Vercel with hireinbox.co.za domain
+1. **V2 Brain Training** - 10,000 screenings in progress (v1 live with 860 examples)
+2. **Video Analysis** - Claude Vision LIVE, world-class coaching
+3. **B2C Monetization** - Video is paid upsell after free CV scan
+4. **Deploy** - Get to Vercel with hireinbox.co.za domain
+
+---
+
+## AI MODELS IN USE
+
+| Purpose | Model | Status |
+|---------|-------|--------|
+| CV Screening (B2B) | `ft:gpt-4o-mini-2024-07-18:personal:hireinbox-cv-screener:CphiMaZU` | **LIVE** |
+| CV Analysis (B2C) | `ft:gpt-4o-mini-2024-07-18:personal:hireinbox-cv-screener:CphiMaZU` | **LIVE** |
+| Video Analysis | `claude-sonnet-4-20250514` (Claude Vision) | **LIVE** |
+| Transcription | `whisper-1` | **LIVE** |
+| V2 Training | 10,000 examples generating | In progress |
+
+---
+
+## MVP STRUCTURE
+
+| Product | Free | Paid | Purpose |
+|---------|------|------|---------|
+| **B2C** | 1 CV scan | Video analysis (R29-R149) | Revenue driver |
+| **B2B** | - | Dashboard + screening (R299+/mo) | Core product |
+| **B2Recruiter** | - | TBD | Later |
+
+**B2C Funnel:**
+```
+Free CV Scan → Show gaps → Upsell Video → "Your CV gets you considered. Your video gets you interviewed."
+```
 
 ---
 
@@ -254,9 +280,9 @@ Deterministic outcomes from non-deterministic processes.
 
 | Product | Free | Paid |
 |---------|------|------|
-| B2C | 1 CV assessment | R29/additional |
-| B2B | 10 CV assessments | R299+/month |
-| B2Recruiter | None (premium) | R299+/month |
+| B2C | 1 CV assessment | Video: R29 single / R79 practice pack / R149 full |
+| B2B | - | R299+/month |
+| B2Recruiter | - | R299+/month |
 
 ---
 
@@ -282,4 +308,4 @@ Deterministic outcomes from non-deterministic processes.
 
 ---
 
-*Last updated: 20 December 2024*
+*Last updated: 23 December 2024*

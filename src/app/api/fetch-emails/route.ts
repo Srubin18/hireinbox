@@ -721,9 +721,9 @@ Respond with valid JSON only.`;
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       console.log(`[${traceId}][AI] Attempt ${attempt}...`);
-      // Use base gpt-4o-mini for reliability (fine-tuned model has JSON issues)
+      // Use V3 fine-tuned model - trained on 6,000 SA recruitment examples
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ',
         temperature: 0,
         max_tokens: 4000,
         response_format: { type: 'json_object' },
@@ -994,6 +994,54 @@ export async function POST() {
             } catch (ackErr) {
               console.error(`[${traceId}] Auto-acknowledgment error:`, ackErr);
               // Don't fail the whole process if email fails
+            }
+          }
+
+          // AUTO-SCHEDULE: If role has auto-scheduling enabled and candidate meets threshold
+          const autoConfig = activeRole.auto_schedule_config as {
+            enabled?: boolean;
+            min_score_to_schedule?: number;
+            send_invite_email?: boolean;
+          } | null;
+
+          if (autoConfig?.enabled && typeof analysis.overall_score === 'number') {
+            const minScore = autoConfig.min_score_to_schedule ?? 80;
+            if (analysis.overall_score >= minScore && candidateEmail && candidateEmail.includes('@')) {
+              try {
+                console.log(`[${traceId}][AUTO-SCHEDULE] Candidate ${candidateName} qualifies (score: ${analysis.overall_score} >= ${minScore})`);
+
+                // Get the inserted candidate ID
+                const { data: insertedCandidate } = await supabase
+                  .from('candidates')
+                  .select('id')
+                  .eq('email', candidateEmail)
+                  .eq('role_id', activeRole.id)
+                  .order('created_at', { ascending: false })
+                  .limit(1)
+                  .single();
+
+                if (insertedCandidate?.id) {
+                  // Trigger auto-schedule for this candidate
+                  const autoScheduleRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/schedule/auto`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      role_id: activeRole.id,
+                      candidate_ids: [insertedCandidate.id],
+                    }),
+                  });
+
+                  if (autoScheduleRes.ok) {
+                    const scheduleResult = await autoScheduleRes.json();
+                    console.log(`[${traceId}][AUTO-SCHEDULE] Result:`, scheduleResult);
+                  } else {
+                    console.error(`[${traceId}][AUTO-SCHEDULE] Failed:`, await autoScheduleRes.text());
+                  }
+                }
+              } catch (scheduleErr) {
+                console.error(`[${traceId}][AUTO-SCHEDULE] Error:`, scheduleErr);
+                // Don't fail the whole process if auto-schedule fails
+              }
             }
           }
 

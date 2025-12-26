@@ -348,9 +348,9 @@ export async function POST(request: Request) {
     const roleContext = buildRoleContext(role);
     const userPrompt = 'ROLE CONTEXT:\n' + roleContext + '\n\nCV TO EVALUATE:\n' + cvContent + '\n\nINSTRUCTIONS:\n1. Every strength MUST have evidence. No evidence = don\'t include it.\n2. Apply RULE 7 exception for near-miss candidates with 2+ exceptional indicators.\n3. If exception applies: recommendation MUST be CONSIDER, score 60-75, exception_applied=true.\n\nRespond with valid JSON only.';
 
-    // Use base gpt-4o-mini for reliability with JSON mode
+    // Use V3 fine-tuned model - trained on 6,000 SA recruitment examples
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ',
       temperature: 0,
       max_tokens: 4000,
       response_format: { type: 'json_object' },
@@ -362,7 +362,7 @@ export async function POST(request: Request) {
 
     if (!assessment || !validateAnalysis(assessment)) {
       const retry = await openai.chat.completions.create({
-        model: 'gpt-4o-mini', temperature: 0, max_tokens: 4000,
+        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', temperature: 0, max_tokens: 4000,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: TALENT_SCOUT_PROMPT },

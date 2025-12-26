@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mafadi | HireInbox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* Light Mode - Black on White */
+      --bg-page: #ffffff;
+      --bg-surface: #f8f9fa;
+      --bg-surface-hover: #f1f3f4;
+      --border: #e8eaed;
+      --border-light: #dadce0;
+
+      /* Mafadi Teal - Used sparingly */
+      --mafadi-teal: #00a5a5;
+      --mafadi-teal-bg: rgba(0, 165, 165, 0.08);
+
+      /* Text */
+      --text-primary: #1a1a1a;
+      --text-secondary: #5f6368;
+      --text-tertiary: #9aa0a6;
+
+      /* Status - Muted */
+      --status-healthy: #34a853;
+      --status-attention: #ea8600;
+      --status-urgent: #d93025;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ========================================
+       HEADER - Clean, minimal
+    ======================================== */
+    .header {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      background: var(--bg-page);
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Building skyline icon - 4 bars */
+    .logo-icon {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 28px;
+    }
+
+    .logo-bar {
+      width: 4px;
+      background: var(--text-primary);
+    }
+
+    .logo-bar:nth-child(1) { height: 14px; }
+    .logo-bar:nth-child(2) { height: 22px; }
+    .logo-bar:nth-child(3) { height: 28px; }
+    .logo-bar:nth-child(4) { height: 18px; }
+
+    .logo-wordmark {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-left: 2px;
+    }
+
+    .logo-text {
+      font-size: 1.35rem;
+      font-weight: 300;
+      letter-spacing: 0.01em;
+    }
+
+    .logo-dot {
+      width: 4px;
+      height: 4px;
+      background: var(--text-primary);
+      border-radius: 50%;
+    }
+
+    .logo-group {
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    /* Mode Switch */
+    .mode-switch {
+      display: flex;
+      gap: 4px;
+      margin-left: 48px;
+      background: var(--bg-surface);
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .mode-btn {
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .mode-btn.active {
+      background: var(--bg-page);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      width: 200px;
+      transition: border-color 0.15s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--border-light);
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      width: 100%;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .search-icon {
+      width: 14px;
+      height: 14px;
+      color: var(--text-tertiary);
+    }
+
+    /* AI Pill - Quiet */
+    .ai-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .ai-pill:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+    }
+
+    .ai-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--mafadi-teal);
+      border-radius: 50%;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-page);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+    }
+
+    .icon-btn.has-badge .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--status-urgent);
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 600;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .new-role-btn {
+      padding: 8px 16px;
+      background: var(--text-primary);
+      color: var(--bg-page);
+      font-weight: 600;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .new-role-btn:hover { opacity: 0.85; }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--mafadi-teal-bg);
+      border: 1px solid var(--mafadi-teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--mafadi-teal);
+      cursor: pointer;
+    }
+
+    /* ========================================
+       MAIN CONTENT - Breathe
+    ======================================== */
+    .main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 64px 24px 120px;
+    }
+
+    /* Greeting - Personal */
+    .greeting {
+      margin-bottom: 48px;
+    }
+
+    .greeting h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .greeting-sub {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .greeting-sub strong {
+      color: var(--text-primary);
+    }
+
+    /* ========================================
+       PRIORITIES - THE HERO (above the fold)
+    ======================================== */
+    .priorities {
+      margin-bottom: 64px;
+    }
+
+    .priority-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    .priority-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .priority-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .priority-card:hover {
+      border-color: var(--border-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .priority-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .priority-icon.match { background: rgba(52, 168, 83, 0.1); }
+    .priority-icon.interview { background: rgba(66, 133, 244, 0.1); }
+    .priority-icon.inbox { background: var(--bg-surface-hover); }
+
+    .priority-content { flex: 1; }
+
+    .priority-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .priority-meta {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    .priority-action {
+      padding: 10px 18px;
+      background: var(--text-primary);
+      color: var(--bg-page);
+      font-weight: 600;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .priority-action:hover { opacity: 0.85; }
+
+    .priority-action.secondary {
+      background: var(--bg-page);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .priority-action.secondary:hover {
+      background: var(--bg-surface);
+    }
+
+    /* ========================================
+       DISTRICTS - Secondary (collapsed)
+    ======================================== */
+    .districts-section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .section-link {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .section-link:hover { color: var(--text-secondary); }
+
+    .districts-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .district-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .district-chip:hover {
+      border-color: var(--border-light);
+      background: var(--bg-surface-hover);
+    }
+
+    .district-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .district-dot.healthy { background: var(--status-healthy); }
+    .district-dot.attention { background: var(--status-attention); }
+    .district-dot.urgent { background: var(--status-urgent); }
+
+    .district-name {
+      font-weight: 500;
+    }
+
+    .district-count {
+      color: var(--text-tertiary);
+      font-size: 0.8rem;
+    }
+
+    /* ========================================
+       ACTIVITY - Minimal
+    ======================================== */
+    .activity-section {
+      margin-bottom: 48px;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+
+    .activity-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      color: var(--text-secondary);
+    }
+
+    .activity-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .activity-text strong { color: var(--text-primary); }
+
+    .activity-meta {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+    }
+
+    /* ========================================
+       AI SLIDE-OUT
+    ======================================== */
+    .ai-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 998;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .ai-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .ai-panel {
+      position: fixed;
+      top: 0;
+      right: -360px;
+      width: 360px;
+      height: 100%;
+      background: var(--bg-page);
+      border-left: 1px solid var(--border);
+      z-index: 999;
+      transition: right 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ai-panel.show { right: 0; }
+
+    .ai-panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ai-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .ai-panel-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: var(--bg-surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .ai-panel-close:hover { background: var(--bg-surface-hover); }
+
+    .ai-panel-body {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .ai-insight {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ai-insight:last-child { border-bottom: none; }
+
+    .ai-insight-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .ai-insight-value {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .ai-insight-value strong { color: var(--text-primary); }
+
+    .ai-insight-hint {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    /* ========================================
+       CANDIDATE MODAL
+    ======================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      width: 480px;
+      background: var(--bg-page);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      z-index: 1001;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .candidate-info { display: flex; gap: 14px; }
+
+    .candidate-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--mafadi-teal-bg);
+      border: 1px solid var(--mafadi-teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--mafadi-teal);
+    }
+
+    .candidate-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .candidate-title {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .candidate-tags { display: flex; gap: 6px; }
+
+    .candidate-tag {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--bg-surface);
+      color: var(--text-tertiary);
+    }
+
+    .candidate-tag.district {
+      background: var(--mafadi-teal-bg);
+      color: var(--mafadi-teal);
+    }
+
+    .score-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--mafadi-teal-bg);
+      border: 2px solid var(--mafadi-teal);
+    }
+
+    .score-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--mafadi-teal);
+    }
+
+    .score-label {
+      font-size: 0.5rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+    }
+
+    .modal-body { padding: 24px; }
+
+    .evidence-section { margin-bottom: 20px; }
+
+    .evidence-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .evidence-item {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      background: var(--bg-surface);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .evidence-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+
+    .evidence-icon.strength {
+      background: rgba(52, 168, 83, 0.1);
+      color: var(--status-healthy);
+    }
+
+    .evidence-icon.note {
+      background: rgba(234, 134, 0, 0.1);
+      color: var(--status-attention);
+    }
+
+    .evidence-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .evidence-quote {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn:hover { opacity: 0.9; }
+
+    .btn-primary {
+      background: var(--mafadi-teal);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-reject {
+      background: rgba(217, 48, 37, 0.08);
+      color: var(--status-urgent);
+    }
+
+    /* ========================================
+       FOOTER - Subtle HireInbox
+    ======================================== */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 32px;
+      background: var(--bg-page);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+    }
+
+    .powered-by {
+      font-size: 0.7rem;
+      color: var(--text-tertiary);
+    }
+
+    .powered-by a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .powered-by a:hover { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <div class="logo-bar"></div>
+        <div class="logo-bar"></div>
+        <div class="logo-bar"></div>
+        <div class="logo-bar"></div>
+      </div>
+      <div class="logo-wordmark">
+        <span class="logo-text">Mafadi</span>
+        <span class="logo-dot"></span>
+        <span class="logo-group">Group</span>
+      </div>
+    </div>
+
+    <div class="mode-switch">
+      <button class="mode-btn active">Today</button>
+      <button class="mode-btn">Town</button>
+      <button class="mode-btn">Analytics</button>
+    </div>
+
+    <div class="header-right">
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search...">
+      </div>
+      <button class="ai-pill" onclick="toggleAI()">
+        <span class="ai-dot"></span>
+        AI noticed 3 things
+      </button>
+      <button class="icon-btn" title="Help">?</button>
+      <button class="icon-btn has-badge" title="Notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="badge">3</span>
+      </button>
+      <button class="new-role-btn" onclick="showNewRoleModal()">+ New Role</button>
+      <div class="user-avatar">TM</div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- GREETING -->
+    <div class="greeting">
+      <h1>Good morning, Thabo</h1>
+      <p class="greeting-sub">You have <strong>3 actions</strong> waiting.</p>
+    </div>
+
+    <!-- PRIORITIES - THE HERO -->
+    <div class="priorities">
+      <div class="priority-label">Today's Priorities</div>
+      <div class="priority-list">
+        <div class="priority-card" onclick="showModal()">
+          <div class="priority-icon match">&#11088;</div>
+          <div class="priority-content">
+            <div class="priority-title">Sarah Mokoena matches Body Corporate Manager</div>
+            <div class="priority-meta">Score 82 &middot; 8 years sectional title &middot; CSOS registered</div>
+          </div>
+          <button class="priority-action">Review</button>
+        </div>
+
+        <div class="priority-card">
+          <div class="priority-icon interview">&#128249;</div>
+          <div class="priority-content">
+            <div class="priority-title">3 candidates ready for video interview</div>
+            <div class="priority-meta">Finance (1) &middot; Sales (2)</div>
+          </div>
+          <button class="priority-action">Send Invites</button>
+        </div>
+
+        <div class="priority-card">
+          <div class="priority-icon inbox">&#128232;</div>
+          <div class="priority-content">
+            <div class="priority-title">24 unscreened CVs in inbox</div>
+            <div class="priority-meta">8 for Finance, 6 for Maintenance</div>
+          </div>
+          <button class="priority-action secondary">Screen All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTRICTS - Secondary -->
+    <div class="districts-section">
+      <div class="section-header">
+        <div class="section-title">Your Districts</div>
+        <a class="section-link">View Town &rarr;</a>
+      </div>
+      <div class="districts-row">
+        <div class="district-chip">
+          <div class="district-dot healthy"></div>
+          <span class="district-name">Sales</span>
+          <span class="district-count">12 candidates &middot; 3 roles</span>
+        </div>
+        <div class="district-chip">
+          <div class="district-dot healthy"></div>
+          <span class="district-name">Portfolio</span>
+          <span class="district-count">8 candidates &middot; 2 roles</span>
+        </div>
+        <div class="district-chip">
+          <div class="district-dot attention"></div>
+          <span class="district-name">Body Corporate</span>
+          <span class="district-count">5 candidates &middot; 2 roles</span>
+        </div>
+        <div class="district-chip">
+          <div class="district-dot urgent"></div>
+          <span class="district-name">Finance</span>
+          <span class="district-count">3 candidates &middot; 2 roles</span>
+        </div>
+        <div class="district-chip">
+          <div class="district-dot healthy"></div>
+          <span class="district-name">Maintenance</span>
+          <span class="district-count">18 candidates &middot; 4 roles</span>
+        </div>
+        <div class="district-chip">
+          <div class="district-dot healthy"></div>
+          <span class="district-name">Airbnb</span>
+          <span class="district-count">9 candidates &middot; 2 roles</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY - Minimal -->
+    <div class="activity-section">
+      <div class="section-header">
+        <div class="section-title">Recent Activity</div>
+        <a class="section-link">View all</a>
+      </div>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-avatar">SM</div>
+          <div>
+            <div class="activity-text"><strong>Sarah Mokoena</strong> screened for Body Corporate Manager</div>
+            <div class="activity-meta">Score: 82 &middot; 2 hours ago</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-avatar">TK</div>
+          <div>
+            <div class="activity-text"><strong>Thabo Khumalo</strong> shortlisted for Senior Letting Agent</div>
+            <div class="activity-meta">Score: 78 &middot; 4 hours ago</div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-avatar">DL</div>
+          <div>
+            <div class="activity-text"><strong>David Louw</strong> completed video interview</div>
+            <div class="activity-meta">Video score: 85 &middot; Yesterday</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="powered-by">Powered by <a href="#">HireInbox</a> &middot; Less noise. Better hires.</div>
+  </footer>
+
+  <!-- AI SLIDE-OUT -->
+  <div class="ai-overlay" id="aiOverlay" onclick="toggleAI()"></div>
+  <div class="ai-panel" id="aiPanel">
+    <div class="ai-panel-header">
+      <div class="ai-panel-title">
+        <span class="ai-dot"></span>
+        AI Noticed
+      </div>
+      <button class="ai-panel-close" onclick="toggleAI()">&times;</button>
+    </div>
+    <div class="ai-panel-body">
+      <div class="ai-insight">
+        <div class="ai-insight-label">Pattern</div>
+        <div class="ai-insight-value"><strong>Sectional title</strong> experience predicts success in Body Corp</div>
+        <div class="ai-insight-hint">Candidates with this are 3x more likely to be hired</div>
+      </div>
+      <div class="ai-insight">
+        <div class="ai-insight-label">Bottleneck</div>
+        <div class="ai-insight-value"><strong>Finance</strong> has no CA(SA) candidates in 2 weeks</div>
+        <div class="ai-insight-hint">Consider expanding search criteria</div>
+      </div>
+      <div class="ai-insight">
+        <div class="ai-insight-label">Momentum</div>
+        <div class="ai-insight-value"><strong>Maintenance</strong> is hiring 32% faster than last quarter</div>
+        <div class="ai-insight-hint">Pipeline is healthy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANDIDATE MODAL -->
+  <div class="modal-overlay" id="modalOverlay" onclick="hideModal()"></div>
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="candidate-info">
+        <div class="candidate-avatar">SM</div>
+        <div>
+          <div class="candidate-name">Sarah Mokoena</div>
+          <div class="candidate-title">Senior Portfolio Manager &middot; 8 years</div>
+          <div class="candidate-tags">
+            <span class="candidate-tag district">Body Corporate</span>
+            <span class="candidate-tag">Johannesburg</span>
+          </div>
+        </div>
+      </div>
+      <div class="score-badge">
+        <div class="score-value">82</div>
+        <div class="score-label">Score</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="evidence-section">
+        <div class="evidence-label">Strengths</div>
+        <div class="evidence-item">
+          <div class="evidence-icon strength">&#10003;</div>
+          <div>
+            <div class="evidence-title">Sectional Title Expertise</div>
+            <div class="evidence-quote">"Managed 15 sectional title schemes across Gauteng"</div>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="evidence-icon strength">&#10003;</div>
+          <div>
+            <div class="evidence-title">CSOS Registered</div>
+            <div class="evidence-quote">"CSOS registered since 2019, trustees training 2023"</div>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-section">
+        <div class="evidence-label">Notes</div>
+        <div class="evidence-item">
+          <div class="evidence-icon note">!</div>
+          <div>
+            <div class="evidence-title">No HOA experience</div>
+            <div class="evidence-quote">May need onboarding for HOA-specific workflows</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary">Shortlist</button>
+      <button class="btn btn-secondary">Request Interview</button>
+      <button class="btn btn-reject">Reject</button>
+    </div>
+  </div>
+
+  <!-- NEW ROLE MODAL -->
+  <div class="modal-overlay" id="newRoleOverlay" onclick="hideNewRoleModal()"></div>
+  <div class="modal" id="newRoleModal" style="width: 520px;">
+    <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+      <div>
+        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px;">Create New Role</div>
+        <div style="font-size: 0.8rem; color: var(--text-tertiary);">AI will help screen candidates for this role</div>
+      </div>
+      <button class="icon-btn" onclick="hideNewRoleModal()" style="border: none;">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">Role Title</label>
+        <input type="text" placeholder="e.g. Senior Portfolio Manager" style="width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; background: var(--bg-page); color: var(--text-primary);">
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">District</label>
+        <select style="width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; background: var(--bg-page); color: var(--text-primary);">
+          <option>Sales & Letting</option>
+          <option>Portfolio Managers</option>
+          <option>Body Corporate</option>
+          <option>Finance & Collections</option>
+          <option>Maintenance</option>
+          <option>Airbnb & Short-Stay</option>
+        </select>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">Key Requirements</label>
+        <textarea placeholder="e.g. 5+ years property management, CSOS registered, sectional title experience..." style="width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; background: var(--bg-page); color: var(--text-primary); min-height: 100px; resize: vertical; font-family: inherit;"></textarea>
+      </div>
+      <div style="background: var(--bg-surface); border-radius: 8px; padding: 14px; display: flex; gap: 10px; align-items: flex-start;">
+        <span class="ai-dot" style="margin-top: 4px;"></span>
+        <div style="font-size: 0.8rem; color: var(--text-secondary);">AI will automatically screen incoming CVs against these requirements and surface the best matches.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideNewRoleModal()">Cancel</button>
+      <button class="btn btn-primary" style="background: var(--text-primary); color: var(--bg-page);">Create Role</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleAI() {
+      document.getElementById('aiOverlay').classList.toggle('show');
+      document.getElementById('aiPanel').classList.toggle('show');
+    }
+
+    function showModal() {
+      document.getElementById('modalOverlay').classList.add('show');
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function hideModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    function showNewRoleModal() {
+      document.getElementById('newRoleOverlay').classList.add('show');
+      document.getElementById('newRoleModal').classList.add('show');
+    }
+
+    function hideNewRoleModal() {
+      document.getElementById('newRoleOverlay').classList.remove('show');
+      document.getElementById('newRoleModal').classList.remove('show');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideModal();
+        hideNewRoleModal();
+        document.getElementById('aiOverlay').classList.remove('show');
+        document.getElementById('aiPanel').classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>

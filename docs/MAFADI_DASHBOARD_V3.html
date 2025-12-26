@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mafadi | Command Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* MAFADI BRAND - Black, White & Teal */
+      --mafadi-black: #000000;
+      --mafadi-dark: #0a0a0a;
+      --mafadi-surface: #111111;
+      --mafadi-surface-hover: #161616;
+      --mafadi-border: #1f1f1f;
+      --mafadi-border-light: #2a2a2a;
+
+      /* Mafadi Teal - Signature accent (used sparingly) */
+      --mafadi-teal: #00b4b4;
+      --mafadi-teal-dim: rgba(0, 180, 180, 0.12);
+
+      /* Status - Functional only */
+      --status-healthy: #22c55e;
+      --status-attention: #f59e0b;
+      --status-urgent: #ef4444;
+
+      /* Text - Hierarchy matters */
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.6);
+      --text-tertiary: rgba(255, 255, 255, 0.35);
+      --text-muted: rgba(255, 255, 255, 0.2);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--mafadi-black);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ========================================
+       SIDEBAR - Minimal, District-focused
+    ======================================== */
+    .sidebar {
+      width: 240px;
+      background: var(--mafadi-dark);
+      border-right: 1px solid var(--mafadi-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+    }
+
+    .logo-section {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--mafadi-border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Mafadi Logo - Building bars icon */
+    .logo-mark {
+      display: flex;
+      gap: 2px;
+      padding: 8px;
+    }
+
+    .logo-bar {
+      width: 4px;
+      background: var(--text-primary);
+      border-radius: 1px;
+    }
+
+    .logo-bar:nth-child(1) { height: 16px; }
+    .logo-bar:nth-child(2) { height: 22px; }
+    .logo-bar:nth-child(3) { height: 12px; }
+    .logo-bar:nth-child(4) { height: 26px; }
+    .logo-bar:nth-child(5) { height: 18px; }
+
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-group {
+      color: var(--mafadi-teal);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      margin-top: 1px;
+    }
+
+    .nav-section {
+      padding: 16px 12px;
+    }
+
+    .nav-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .district-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-left: auto;
+    }
+
+    .district-dot.healthy { background: var(--status-healthy); }
+    .district-dot.attention { background: var(--status-attention); }
+    .district-dot.urgent { background: var(--status-urgent); }
+
+    .nav-badge {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--mafadi-border);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .user-pill:hover { background: rgba(255, 255, 255, 0.05); }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--mafadi-teal-dim);
+      border: 1px solid var(--mafadi-teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: var(--mafadi-teal);
+    }
+
+    .user-name { font-size: 0.85rem; font-weight: 500; }
+    .user-role { font-size: 0.7rem; color: var(--text-tertiary); }
+
+    /* ========================================
+       MAIN CONTENT - Calm, focused
+    ======================================== */
+    .main {
+      flex: 1;
+      margin-left: 240px;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 56px;
+      background: var(--mafadi-dark);
+      border-bottom: 1px solid var(--mafadi-border);
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .breadcrumb {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    .breadcrumb strong {
+      color: var(--text-secondary);
+    }
+
+    .search-box {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 6px;
+      padding: 7px 14px;
+      width: 220px;
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      width: 100%;
+      outline: none;
+    }
+
+    .search-box input::placeholder { color: var(--text-muted); }
+
+    .search-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.4;
+    }
+
+    .content {
+      padding: 40px 48px;
+      max-width: 1200px;
+    }
+
+    /* ========================================
+       GREETING - Minimal
+    ======================================== */
+    .greeting {
+      margin-bottom: 40px;
+    }
+
+    .greeting h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .greeting-sub {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .greeting-sub strong {
+      color: var(--text-primary);
+    }
+
+    /* ========================================
+       PRIORITY PANEL - THE HERO
+    ======================================== */
+    .priority-panel {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+
+    .priority-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .priority-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .priority-count {
+      font-size: 0.7rem;
+      background: var(--mafadi-teal-dim);
+      color: var(--mafadi-teal);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .priority-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .priority-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--mafadi-dark);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .priority-item:hover {
+      border-color: var(--mafadi-border-light);
+      background: var(--mafadi-surface-hover);
+    }
+
+    .priority-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .priority-icon.review { background: rgba(34, 197, 94, 0.12); }
+    .priority-icon.interview { background: rgba(59, 130, 246, 0.12); }
+    .priority-icon.screen { background: rgba(255, 255, 255, 0.08); }
+
+    .priority-content { flex: 1; }
+
+    .priority-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .priority-meta {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+    }
+
+    .priority-action {
+      padding: 8px 14px;
+      background: var(--text-primary);
+      color: var(--mafadi-black);
+      font-weight: 600;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .priority-action:hover { opacity: 0.9; }
+
+    .priority-action.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    /* ========================================
+       DISTRICTS - Simple tiles (SimCity)
+    ======================================== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .section-link {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .section-link:hover { color: var(--text-secondary); }
+
+    .districts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .district-tile {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .district-tile:hover {
+      border-color: var(--mafadi-border-light);
+      transform: translateY(-2px);
+    }
+
+    .district-tile::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--status-healthy);
+    }
+
+    .district-tile.attention::before { background: var(--status-attention); }
+    .district-tile.urgent::before { background: var(--status-urgent); }
+
+    .district-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .district-summary {
+      display: flex;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    .district-stat strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .district-action {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      color: var(--text-tertiary);
+      font-size: 1.2rem;
+      transition: opacity 0.15s;
+    }
+
+    .district-tile:hover .district-action {
+      opacity: 1;
+    }
+
+    /* ========================================
+       BOTTOM ROW - Activity + Whisper
+    ======================================== */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 24px;
+    }
+
+    .activity-panel {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--mafadi-border);
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+
+    .activity-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .activity-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+
+    .activity-text strong { color: var(--text-primary); }
+
+    .activity-meta {
+      display: flex;
+      gap: 8px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .activity-tag {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    /* ========================================
+       AI WHISPER - Subtle insights
+    ======================================== */
+    .whisper-panel {
+      background: var(--mafadi-surface);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .whisper-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .whisper-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .whisper-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .whisper-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--mafadi-border);
+    }
+
+    .whisper-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .whisper-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .whisper-value {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .whisper-value strong {
+      color: var(--text-primary);
+    }
+
+    .whisper-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ========================================
+       POWERED BY - Ultra subtle
+    ======================================== */
+    .powered-by {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .powered-by span { font-weight: 600; color: var(--text-tertiary); }
+
+    /* ========================================
+       CANDIDATE MODAL - Clean
+    ======================================== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      display: none;
+    }
+
+    .overlay.show { display: block; }
+
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 520px;
+      background: var(--mafadi-dark);
+      border: 1px solid var(--mafadi-border);
+      border-radius: 14px;
+      z-index: 1000;
+      display: none;
+    }
+
+    .modal.show { display: block; }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--mafadi-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .candidate-main { display: flex; gap: 14px; }
+
+    .candidate-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--mafadi-teal-dim);
+      border: 1px solid var(--mafadi-teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--mafadi-teal);
+    }
+
+    .candidate-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .candidate-title {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .candidate-tags { display: flex; gap: 6px; }
+
+    .candidate-tag {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: var(--text-tertiary);
+    }
+
+    .candidate-tag.district {
+      background: var(--mafadi-teal-dim);
+      color: var(--mafadi-teal);
+    }
+
+    .score-ring {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: conic-gradient(var(--mafadi-teal) 82%, var(--mafadi-border) 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-inner {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--mafadi-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .score-label {
+      font-size: 0.5rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .modal-body { padding: 24px; }
+
+    .evidence-section { margin-bottom: 20px; }
+
+    .evidence-header {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .evidence-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--mafadi-surface);
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+
+    .evidence-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .evidence-icon.strength {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--status-healthy);
+    }
+
+    .evidence-icon.note {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--status-attention);
+    }
+
+    .evidence-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .evidence-quote {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--mafadi-border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.9; }
+
+    .btn-primary {
+      background: var(--mafadi-teal);
+      color: var(--mafadi-black);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .btn-reject {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--status-urgent);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo-section">
+        <div class="logo">
+          <div class="logo-mark">
+            <div class="logo-bar"></div>
+            <div class="logo-bar"></div>
+            <div class="logo-bar"></div>
+            <div class="logo-bar"></div>
+            <div class="logo-bar"></div>
+          </div>
+          <div>
+            <div class="logo-text">Mafadi</div>
+            <div class="logo-group">GROUP</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Overview</div>
+        <a href="#" class="nav-item active">Command Center</a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Districts</div>
+        <a href="#" class="nav-item">Sales & Letting <div class="district-dot healthy"></div></a>
+        <a href="#" class="nav-item">Portfolio <div class="district-dot healthy"></div></a>
+        <a href="#" class="nav-item">Body Corporate <div class="district-dot attention"></div></a>
+        <a href="#" class="nav-item">Finance <div class="district-dot urgent"></div></a>
+        <a href="#" class="nav-item">Maintenance <div class="district-dot healthy"></div></a>
+        <a href="#" class="nav-item">Airbnb <div class="district-dot healthy"></div></a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Pipeline</div>
+        <a href="#" class="nav-item">Inbox <span class="nav-badge">24</span></a>
+        <a href="#" class="nav-item">Shortlist <span class="nav-badge">8</span></a>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <div class="user-avatar">TM</div>
+          <div>
+            <div class="user-name">Thabo Molefe</div>
+            <div class="user-role">HR Manager</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb"><strong>Command Center</strong></div>
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search...">
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- GREETING -->
+        <div class="greeting">
+          <h1>Good morning, Thabo</h1>
+          <p class="greeting-sub">You have <strong>3 actions</strong> waiting.</p>
+        </div>
+
+        <!-- PRIORITY PANEL - THE HERO -->
+        <div class="priority-panel">
+          <div class="priority-header">
+            <div class="priority-title">Today's Priorities</div>
+            <div class="priority-count">3 actions</div>
+          </div>
+          <div class="priority-list">
+            <div class="priority-item" onclick="showModal()">
+              <div class="priority-icon review">&#11088;</div>
+              <div class="priority-content">
+                <div class="priority-text">Sarah Mokoena matches Body Corporate Manager</div>
+                <div class="priority-meta">Score 82 &middot; 8 years sectional title &middot; CSOS registered</div>
+              </div>
+              <button class="priority-action">Review</button>
+            </div>
+            <div class="priority-item">
+              <div class="priority-icon interview">&#128249;</div>
+              <div class="priority-content">
+                <div class="priority-text">3 candidates ready for video interview</div>
+                <div class="priority-meta">Finance (1) &middot; Sales (2)</div>
+              </div>
+              <button class="priority-action">Send Invites</button>
+            </div>
+            <div class="priority-item">
+              <div class="priority-icon screen">&#128232;</div>
+              <div class="priority-content">
+                <div class="priority-text">24 unscreened CVs in inbox</div>
+                <div class="priority-meta">8 for Finance, 6 for Maintenance</div>
+              </div>
+              <button class="priority-action secondary">Screen All</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DISTRICTS - Simple tiles -->
+        <div class="section-header">
+          <div class="section-title">Your Districts</div>
+          <a class="section-link">Manage</a>
+        </div>
+
+        <div class="districts-grid">
+          <div class="district-tile">
+            <div class="district-name">Sales & Letting</div>
+            <div class="district-summary">
+              <div class="district-stat"><strong>12</strong> pipeline</div>
+              <div class="district-stat"><strong>3</strong> open roles</div>
+            </div>
+            <div class="district-action">&rarr;</div>
+          </div>
+
+          <div class="district-tile">
+            <div class="district-name">Portfolio Managers</div>
+            <div class="district-summary">
+              <div class="district-stat"><strong>8</strong> pipeline</div>
+              <div class="district-stat"><strong>2</strong> open roles</div>
+            </div>
+            <div class="district-action">&rarr;</div>
+          </div>
+
+          <div class="district-tile attention">
+            <div class="district-name">Body Corporate</div>
+            <div class="district-summary">
+              <div class="district-stat"><strong>5</strong> pipeline</div>
+              <div class="district-stat"><strong>2</strong> open roles</div>
+            </div>
+            <div class="district-action">&rarr;</div>
+          </div>
+
+          <div class="district-tile urgent">
+            <div class="district-name">Finance & Collections</div>
+            <div class="district-summary">
+              <div class="district-stat"><strong>3</strong> pipeline</div>
+              <div class="district-stat"><strong>2</strong> open roles</div>
+            </div>
+            <div class="district-action">&rarr;</div>
+          </div>
+
+          <div class="district-tile">
+            <div class="district-name">Maintenance</div>
+            <div class="district-summary">
+              <div class="district-stat"><strong>18</strong> pipeline</div>
+              <div class="district-stat"><strong>4</strong> open roles</div>
+            </div>
+            <div class="district-action">&rarr;</div>
+          </div>
+
+          <div class="district-tile">
+            <div class="district-name">Airbnb & Short-Stay</div>
+            <div class="district-summary">
+              <div class="district-stat"><strong>9</strong> pipeline</div>
+              <div class="district-stat"><strong>2</strong> open roles</div>
+            </div>
+            <div class="district-action">&rarr;</div>
+          </div>
+        </div>
+
+        <!-- BOTTOM ROW -->
+        <div class="bottom-row">
+          <!-- ACTIVITY -->
+          <div class="activity-panel">
+            <div class="section-header" style="margin-bottom: 8px;">
+              <div class="section-title">Recent Activity</div>
+              <a class="section-link">View all</a>
+            </div>
+            <div class="activity-list">
+              <div class="activity-item">
+                <div class="activity-avatar">SM</div>
+                <div>
+                  <div class="activity-text"><strong>Sarah Mokoena</strong> screened for Body Corporate Manager</div>
+                  <div class="activity-meta"><span class="activity-tag">Body Corporate</span><span>Score: 82</span><span>2h ago</span></div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-avatar">TK</div>
+                <div>
+                  <div class="activity-text"><strong>Thabo Khumalo</strong> shortlisted for Senior Letting Agent</div>
+                  <div class="activity-meta"><span class="activity-tag">Sales</span><span>Score: 78</span><span>4h ago</span></div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-avatar">DL</div>
+                <div>
+                  <div class="activity-text"><strong>David Louw</strong> completed video interview</div>
+                  <div class="activity-meta"><span class="activity-tag">Maintenance</span><span>Video: 85</span><span>Yesterday</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI WHISPER - Subtle -->
+          <div class="whisper-panel">
+            <div class="whisper-header">
+              <div class="whisper-icon">&#10024;</div>
+              <div class="whisper-title">AI Noticed</div>
+            </div>
+            <div class="whisper-item">
+              <div class="whisper-label">Pattern</div>
+              <div class="whisper-value"><strong>Sectional title</strong> experience predicts success in Body Corp</div>
+              <div class="whisper-hint">3x more likely to be hired</div>
+            </div>
+            <div class="whisper-item">
+              <div class="whisper-label">Bottleneck</div>
+              <div class="whisper-value"><strong>Finance</strong> has no CA(SA) candidates in 2 weeks</div>
+              <div class="whisper-hint">Consider expanding criteria</div>
+            </div>
+            <div class="whisper-item">
+              <div class="whisper-label">Momentum</div>
+              <div class="whisper-value"><strong>Maintenance</strong> is hiring 32% faster than last quarter</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="powered-by">Powered by <span>HireInbox</span></div>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay" onclick="hideModal()"></div>
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="candidate-main">
+        <div class="candidate-avatar">SM</div>
+        <div>
+          <div class="candidate-name">Sarah Mokoena</div>
+          <div class="candidate-title">Senior Portfolio Manager &middot; 8 years</div>
+          <div class="candidate-tags">
+            <span class="candidate-tag district">Body Corporate</span>
+            <span class="candidate-tag">Johannesburg</span>
+          </div>
+        </div>
+      </div>
+      <div class="score-ring">
+        <div class="score-inner">
+          <div class="score-value">82</div>
+          <div class="score-label">Score</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="evidence-section">
+        <div class="evidence-header">Strengths</div>
+        <div class="evidence-item">
+          <div class="evidence-icon strength">&#10003;</div>
+          <div>
+            <div class="evidence-label">Sectional Title Expertise</div>
+            <div class="evidence-quote">"Managed 15 sectional title schemes across Gauteng"</div>
+          </div>
+        </div>
+        <div class="evidence-item">
+          <div class="evidence-icon strength">&#10003;</div>
+          <div>
+            <div class="evidence-label">CSOS Registered</div>
+            <div class="evidence-quote">"CSOS registered since 2019, trustees training 2023"</div>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-section">
+        <div class="evidence-header">Notes</div>
+        <div class="evidence-item">
+          <div class="evidence-icon note">&#9888;</div>
+          <div>
+            <div class="evidence-label">No HOA experience</div>
+            <div class="evidence-quote">May need onboarding for HOA-specific workflows</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary">Shortlist</button>
+      <button class="btn btn-secondary">Request Interview</button>
+      <button class="btn btn-reject">Reject</button>
+    </div>
+  </div>
+
+  <script>
+    function showModal() {
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('modal').classList.add('show');
+    }
+    function hideModal() {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('modal').classList.remove('show');
+    }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
+  </script>
+</body>
+</html>

@@ -1,13 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 /* ===========================================
-   HIREINBOX - WORLD CLASS UI
-   All 3 fixes applied:
-   1. DetailRow shows "Not specified" for missing location
-   2. Max 2 highlights locked with comment
-   3. Conservative tone rule in prompt (backend)
+   HIREINBOX - WORLD CLASS B2B DASHBOARD
+   Phase 4 B2B Features Implemented:
+   1. Improved candidate card design (cleaner, scannable)
+   2. Bulk actions (shortlist, reject, move to pool)
+   3. Candidate search functionality
+   4. Advanced filters (score, date, status)
+   5. Candidate notes feature
+   6. Candidate tagging system
+   7. Print-friendly candidate view
+   8. CV download functionality
+   9. Keyboard shortcuts (j/k, s, r, p, n)
+   10. Improved role creation form
    =========================================== */
 
 // Types
@@ -75,6 +82,19 @@ interface ScreeningResult {
   };
 }
 
+interface CandidateNote {
+  id: string;
+  text: string;
+  author: string;
+  created_at: string;
+}
+
+interface CandidateTag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface Candidate {
   id: string;
   name: string | null;
@@ -89,7 +109,31 @@ interface Candidate {
   created_at: string;
   location: string | null;
   screening_result?: ScreeningResult;
+  notes?: CandidateNote[];
+  tags?: CandidateTag[];
 }
+
+// Preset tag colors
+const TAG_COLORS = [
+  { name: 'Blue', bg: '#DBEAFE', text: '#1E40AF' },
+  { name: 'Green', bg: '#D1FAE5', text: '#065F46' },
+  { name: 'Purple', bg: '#EDE9FE', text: '#5B21B6' },
+  { name: 'Yellow', bg: '#FEF3C7', text: '#92400E' },
+  { name: 'Pink', bg: '#FCE7F3', text: '#9D174D' },
+  { name: 'Orange', bg: '#FFEDD5', text: '#9A3412' },
+  { name: 'Red', bg: '#FEE2E2', text: '#991B1B' },
+  { name: 'Teal', bg: '#CCFBF1', text: '#0F766E' },
+];
+
+// Preset tags for quick selection
+const PRESET_TAGS = [
+  { name: 'Priority', color: TAG_COLORS[3] },
+  { name: 'Follow Up', color: TAG_COLORS[0] },
+  { name: 'Great Culture Fit', color: TAG_COLORS[1] },
+  { name: 'Needs Review', color: TAG_COLORS[4] },
+  { name: 'Senior', color: TAG_COLORS[2] },
+  { name: 'Junior', color: TAG_COLORS[7] },
+];
 
 interface Role {
   id: string;
@@ -571,6 +615,29 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [showNewRoleModal, setShowNewRoleModal] = useState(false);
 
+  // B2B Phase 4: New state for advanced features
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [focusedCandidateIndex, setFocusedCandidateIndex] = useState(0);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [candidateNotes, setCandidateNotes] = useState<Record<string, CandidateNote[]>>({});
+  const [candidateTags, setCandidateTags] = useState<Record<string, CandidateTag[]>>({});
+  const [showPrintView, setShowPrintView] = useState(false);
+  const [printCandidate, setPrintCandidate] = useState<Candidate | null>(null);
+
+  // Advanced filters
+  const [filters, setFilters] = useState({
+    scoreMin: 0,
+    scoreMax: 100,
+    dateRange: 'all' as 'all' | 'today' | 'week' | 'month',
+    hasPhone: false,
+    hasEmail: true,
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  const candidatesListRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => { fetchRoles(); fetchCandidates(); }, []);
 
   const fetchRoles = async () => {
@@ -597,7 +664,225 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     setIsFetchingEmails(false);
   };
 
-  const filteredCandidates = candidates.filter(c => activeTab === 'all' ? true : c.status === activeTab);
+  // B2B Phase 4: Advanced filtering with search, date, score
+  const filteredCandidates = useMemo(() => {
+    return candidates.filter(c => {
+      // Status filter
+      if (activeTab !== 'all' && c.status !== activeTab) return false;
+
+      // Search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const name = (c.name || '').toLowerCase();
+        const email = (c.email || '').toLowerCase();
+        const reasoning = (c.ai_reasoning || '').toLowerCase();
+        const skills = (c.screening_result?.hard_requirements?.met || []).join(' ').toLowerCase();
+        if (!name.includes(query) && !email.includes(query) && !reasoning.includes(query) && !skills.includes(query)) {
+          return false;
+        }
+      }
+
+      // Score range filter
+      const score = c.score || c.screening_result?.overall_score || 0;
+      if (score < filters.scoreMin || score > filters.scoreMax) return false;
+
+      // Date range filter
+      if (filters.dateRange !== 'all') {
+        const candidateDate = new Date(c.created_at);
+        const now = new Date();
+        const daysDiff = Math.floor((now.getTime() - candidateDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (filters.dateRange === 'today' && daysDiff > 0) return false;
+        if (filters.dateRange === 'week' && daysDiff > 7) return false;
+        if (filters.dateRange === 'month' && daysDiff > 30) return false;
+      }
+
+      // Contact filters
+      if (filters.hasPhone && !c.phone) return false;
+      if (filters.hasEmail && !c.email) return false;
+
+      return true;
+    });
+  }, [candidates, activeTab, searchQuery, filters]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      const fc = filteredCandidates;
+      const focusedCandidate = fc[focusedCandidateIndex];
+
+      switch (e.key.toLowerCase()) {
+        case 'j': // Next candidate
+          e.preventDefault();
+          setFocusedCandidateIndex(prev => Math.min(prev + 1, fc.length - 1));
+          break;
+        case 'k': // Previous candidate
+          e.preventDefault();
+          setFocusedCandidateIndex(prev => Math.max(prev - 1, 0));
+          break;
+        case 'enter': // Open candidate
+          if (focusedCandidate) {
+            e.preventDefault();
+            setSelectedCandidate(focusedCandidate);
+          }
+          break;
+        case 's': // Shortlist
+          if (focusedCandidate && !selectedCandidate) {
+            e.preventDefault();
+            handleBulkAction('shortlist', new Set([focusedCandidate.id]));
+          }
+          break;
+        case 'r': // Reject
+          if (focusedCandidate && !selectedCandidate) {
+            e.preventDefault();
+            handleBulkAction('reject', new Set([focusedCandidate.id]));
+          }
+          break;
+        case 'p': // Move to pool
+          if (focusedCandidate && !selectedCandidate) {
+            e.preventDefault();
+            handleBulkAction('talent_pool', new Set([focusedCandidate.id]));
+          }
+          break;
+        case 'x': // Toggle selection
+          if (focusedCandidate) {
+            e.preventDefault();
+            toggleCandidateSelection(focusedCandidate.id);
+          }
+          break;
+        case 'escape':
+          if (selectedCandidate) {
+            setSelectedCandidate(null);
+          } else if (selectedCandidates.size > 0) {
+            setSelectedCandidates(new Set());
+          }
+          break;
+        case '/': // Focus search
+          if (!selectedCandidate) {
+            e.preventDefault();
+            document.getElementById('candidate-search')?.focus();
+          }
+          break;
+        case '?': // Show keyboard help
+          if (e.shiftKey) {
+            e.preventDefault();
+            setShowKeyboardHelp(prev => !prev);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredCandidates, focusedCandidateIndex, selectedCandidate, selectedCandidates]);
+
+  // Toggle candidate selection for bulk actions
+  const toggleCandidateSelection = useCallback((id: string) => {
+    setSelectedCandidates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Select all visible candidates
+  const selectAllCandidates = useCallback(() => {
+    setSelectedCandidates(new Set(filteredCandidates.map(c => c.id)));
+  }, [filteredCandidates]);
+
+  // Clear selection
+  const clearSelection = useCallback(() => {
+    setSelectedCandidates(new Set());
+  }, []);
+
+  // Bulk action handler
+  const handleBulkAction = useCallback(async (action: 'shortlist' | 'reject' | 'talent_pool', ids: Set<string>) => {
+    const idsArray = Array.from(ids);
+    try {
+      // Update locally first for instant feedback
+      setCandidates(prev => prev.map(c =>
+        ids.has(c.id) ? { ...c, status: action } : c
+      ));
+
+      // Then persist to backend
+      await Promise.all(idsArray.map(id =>
+        fetch(`/api/candidates/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: action })
+        })
+      ));
+
+      setSelectedCandidates(new Set());
+    } catch (e) {
+      console.error('Bulk action failed:', e);
+      fetchCandidates(); // Refresh on error
+    }
+  }, []);
+
+  // Add note to candidate
+  const addNote = useCallback((candidateId: string, noteText: string) => {
+    const newNote: CandidateNote = {
+      id: Date.now().toString(),
+      text: noteText,
+      author: 'You',
+      created_at: new Date().toISOString()
+    };
+    setCandidateNotes(prev => ({
+      ...prev,
+      [candidateId]: [...(prev[candidateId] || []), newNote]
+    }));
+  }, []);
+
+  // Add tag to candidate
+  const addTag = useCallback((candidateId: string, tagName: string, color: typeof TAG_COLORS[0]) => {
+    const newTag: CandidateTag = {
+      id: Date.now().toString(),
+      name: tagName,
+      color: color.bg
+    };
+    setCandidateTags(prev => ({
+      ...prev,
+      [candidateId]: [...(prev[candidateId] || []), newTag]
+    }));
+  }, []);
+
+  // Remove tag from candidate
+  const removeTag = useCallback((candidateId: string, tagId: string) => {
+    setCandidateTags(prev => ({
+      ...prev,
+      [candidateId]: (prev[candidateId] || []).filter(t => t.id !== tagId)
+    }));
+  }, []);
+
+  // Download CV as text file
+  const downloadCV = useCallback((candidate: Candidate) => {
+    if (!candidate.cv_text) {
+      alert('No CV text available for download');
+      return;
+    }
+    const blob = new Blob([candidate.cv_text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(candidate.name || 'candidate').replace(/\s+/g, '_')}_CV.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+
+  // Open print view
+  const openPrintView = useCallback((candidate: Candidate) => {
+    setPrintCandidate(candidate);
+    setShowPrintView(true);
+  }, []);
   const getInitials = (n: string | null) => n ? n.split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase() : '??';
   const getTimeAgo = (d: string) => { const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000); if (s < 60) return 'Just now'; if (s < 3600) return Math.floor(s/60) + 'm ago'; if (s < 86400) return Math.floor(s/3600) + 'h ago'; return Math.floor(s/86400) + 'd ago'; };
   const formatWhatsApp = (p: string) => p.replace(/[^0-9]/g, '').replace(/^0/, '27');
@@ -692,16 +977,108 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111111' }}>Recruitment Dashboard</h1>
+            {/* Keyboard shortcut hint */}
+            <button
+              onClick={() => setShowKeyboardHelp(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#f1f5f9', border: 'none', borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, color: '#64748b', cursor: 'pointer' }}
+            >
+              <span style={{ padding: '2px 6px', background: '#e2e8f0', borderRadius: 4, fontFamily: 'monospace', fontSize: '0.7rem' }}>?</span>
+              Shortcuts
+            </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Global Search */}
+            <div style={{ position: 'relative' }}>
+              <input
+                id="candidate-search"
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search candidates... (press /)"
+                style={{ width: 280, padding: '10px 14px 10px 40px', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '0.875rem', outline: 'none' }}
+              />
+              <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}>x</button>
+              )}
+            </div>
+            <button onClick={() => setShowFilters(!showFilters)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: showFilters ? '#eef2ff' : 'white', border: `1px solid ${showFilters ? '#4F46E5' : '#e5e7eb'}`, borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, color: showFilters ? '#4F46E5' : '#475569', cursor: 'pointer' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+              Filters
+            </button>
             <button onClick={handleFetchEmails} disabled={isFetchingEmails} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, color: '#111111', cursor: 'pointer' }}>
-              📧 {isFetchingEmails ? 'Checking...' : 'Check Emails'}
+              {isFetchingEmails ? 'Checking...' : 'Check Inbox'}
             </button>
             <button onClick={() => setShowNewRoleModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: '#111111', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
               + New Role
             </button>
           </div>
         </header>
+
+        {/* Advanced Filters Panel */}
+        {showFilters && (
+          <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '16px 32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+              {/* Score Range */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#475569' }}>Score:</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={filters.scoreMin}
+                  onChange={e => setFilters(f => ({ ...f, scoreMin: parseInt(e.target.value) || 0 }))}
+                  style={{ width: 60, padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8125rem' }}
+                />
+                <span style={{ color: '#94a3b8' }}>to</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={filters.scoreMax}
+                  onChange={e => setFilters(f => ({ ...f, scoreMax: parseInt(e.target.value) || 100 }))}
+                  style={{ width: 60, padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8125rem' }}
+                />
+              </div>
+
+              {/* Date Range */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#475569' }}>Date:</span>
+                <select
+                  value={filters.dateRange}
+                  onChange={e => setFilters(f => ({ ...f, dateRange: e.target.value as 'all' | 'today' | 'week' | 'month' }))}
+                  style={{ padding: '6px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8125rem', background: 'white' }}
+                >
+                  <option value="all">All time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This week</option>
+                  <option value="month">This month</option>
+                </select>
+              </div>
+
+              {/* Has Phone */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={filters.hasPhone}
+                  onChange={e => setFilters(f => ({ ...f, hasPhone: e.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: '#4F46E5' }}
+                />
+                <span style={{ fontSize: '0.8125rem', color: '#475569' }}>Has phone</span>
+              </label>
+
+              {/* Clear Filters */}
+              <button
+                onClick={() => setFilters({ scoreMin: 0, scoreMax: 100, dateRange: 'all', hasPhone: false, hasEmail: true })}
+                style={{ padding: '6px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.8125rem', color: '#64748b', cursor: 'pointer' }}
+              >
+                Clear filters
+              </button>
+            </div>
+          </div>
+        )}
 
         <div style={{ padding: 32 }}>
           {/* TODAY CARD */}
@@ -756,10 +1133,45 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 ))}
               </div>
 
-              <div style={{ padding: 16 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#ecfdf5', border: '1px solid rgba(5,150,105,0.2)', borderRadius: 100, fontSize: '0.75rem', fontWeight: 600, color: '#059669', marginBottom: 16 }}>
-                  <span style={{ width: 6, height: 6, background: '#059669', borderRadius: '50%', animation: 'pulse 2s infinite' }}></span>
-                  Live — updates as CVs arrive
+              <div style={{ padding: 16 }} ref={candidatesListRef}>
+                {/* Bulk Actions Bar */}
+                {selectedCandidates.size > 0 && (
+                  <div style={{ background: '#4F46E5', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>
+                        {selectedCandidates.size} selected
+                      </span>
+                      <button onClick={clearSelection} style={{ color: 'rgba(255,255,255,0.8)', background: 'none', border: 'none', fontSize: '0.85rem', cursor: 'pointer' }}>
+                        Clear
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => handleBulkAction('shortlist', selectedCandidates)} style={{ padding: '8px 16px', background: '#22c55e', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>S</span> Shortlist All
+                      </button>
+                      <button onClick={() => handleBulkAction('talent_pool', selectedCandidates)} style={{ padding: '8px 16px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>P</span> Pool All
+                      </button>
+                      <button onClick={() => handleBulkAction('reject', selectedCandidates)} style={{ padding: '8px 16px', background: '#ef4444', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>R</span> Reject All
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#ecfdf5', border: '1px solid rgba(5,150,105,0.2)', borderRadius: 100, fontSize: '0.75rem', fontWeight: 600, color: '#059669' }}>
+                    <span style={{ width: 6, height: 6, background: '#059669', borderRadius: '50%', animation: 'pulse 2s infinite' }}></span>
+                    Live — updates as CVs arrive
+                  </div>
+                  {filteredCandidates.length > 0 && (
+                    <button
+                      onClick={selectedCandidates.size === filteredCandidates.length ? clearSelection : selectAllCandidates}
+                      style={{ padding: '6px 12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, color: '#64748b', cursor: 'pointer' }}
+                    >
+                      {selectedCandidates.size === filteredCandidates.length ? 'Deselect all' : 'Select all'}
+                    </button>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

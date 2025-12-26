@@ -1,0 +1,11 @@
+{
+  "job_id": "ftjob-bRPdM7DBuDUSoM9gzWP8KxAv",
+  "training_file": "file-K2ztcRVPv3x73WMriicMy5",
+  "validation_file": "file-FK9afrXpt7C9QwGpQwLdUX",
+  "model": "gpt-4o-mini-2024-07-18",
+  "status": "validating_files",
+  "created_at": "2025-12-25T19:06:27.681Z",
+  "suffix": "hireinbox-v3",
+  "training_examples": 5400,
+  "validation_examples": 600
+}
