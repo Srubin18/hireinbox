@@ -387,6 +387,13 @@ function UploadPageContent() {
   const [shareableUrl, setShareableUrl] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
 
+  // Get Interview Ready features
+  const [rewrittenCV, setRewrittenCV] = useState<string | null>(null);
+  const [isRewriting, setIsRewriting] = useState(false);
+  const [showRewriteModal, setShowRewriteModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showInterviewCoach, setShowInterviewCoach] = useState(false);
+
   // Drag and drop handlers with visual feedback
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -612,6 +619,56 @@ function UploadPageContent() {
     setTargetRole('');
     setTargetIndustry('');
     setShareableUrl(null);
+    setRewrittenCV(null);
+  };
+
+  // Get Rewritten CV
+  const handleRewriteCV = async () => {
+    if (!analysis || !originalCVText) return;
+
+    setIsRewriting(true);
+    try {
+      const response = await fetch('/api/rewrite-cv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalCV: originalCVText,
+          analysis: analysis
+        })
+      });
+
+      const data = await response.json();
+      if (data.rewrittenCV) {
+        setRewrittenCV(data.rewrittenCV);
+        setShowRewriteModal(true);
+      } else {
+        alert('Failed to rewrite CV. Please try again.');
+      }
+    } catch (err) {
+      console.error('Rewrite error:', err);
+      alert('Failed to rewrite CV. Please try again.');
+    } finally {
+      setIsRewriting(false);
+    }
+  };
+
+  // Download rewritten CV
+  const downloadRewrittenCV = () => {
+    if (!rewrittenCV) return;
+    const blob = new Blob([rewrittenCV], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${analysis?.candidate_name || 'CV'}_Improved.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Copy rewritten CV
+  const copyRewrittenCV = () => {
+    if (!rewrittenCV) return;
+    navigator.clipboard.writeText(rewrittenCV);
+    alert('Rewritten CV copied to clipboard!');
   };
 
   // Sample report for demo
@@ -2063,6 +2120,130 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
             </div>
           )}
 
+          {/* GET INTERVIEW READY - Power tools for job seekers */}
+          <div style={{
+            backgroundColor: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+            background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+            borderRadius: 16,
+            padding: 24,
+            marginBottom: 20,
+            color: 'white'
+          }}>
+            <h3 style={{
+              fontSize: '1.125rem',
+              fontWeight: 700,
+              marginBottom: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}>
+              <span style={{ fontSize: '1.25rem' }}>🚀</span>
+              Get Interview Ready
+            </h3>
+            <p style={{
+              fontSize: '0.875rem',
+              opacity: 0.9,
+              marginBottom: 16,
+              lineHeight: 1.5
+            }}>
+              Give yourself the best chance. Tools that career coaches charge thousands for - free for you.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Get Rewritten CV Button */}
+              <button
+                onClick={handleRewriteCV}
+                disabled={isRewriting}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  backgroundColor: 'white',
+                  color: '#4F46E5',
+                  border: 'none',
+                  borderRadius: 10,
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  cursor: isRewriting ? 'wait' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  opacity: isRewriting ? 0.7 : 1
+                }}
+              >
+                {isRewriting ? (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
+                      <circle cx="12" cy="12" r="10" stroke="#4F46E5" strokeWidth="3" fill="none" strokeDasharray="60" strokeLinecap="round"/>
+                    </svg>
+                    AI Rewriting Your CV...
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Get AI-Rewritten CV
+                  </>
+                )}
+              </button>
+
+              {/* Video Practice Button */}
+              <button
+                onClick={() => setShowVideoModal(true)}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: 10,
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+                Practice Video Interview
+              </button>
+
+              {/* Interview Coach Button */}
+              <button
+                onClick={() => setShowInterviewCoach(true)}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: 10,
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Interview Question Coach
+              </button>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <button
@@ -2337,6 +2518,295 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
               }}
             >
               Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* CV Rewrite Modal */}
+      {showRewriteModal && rewrittenCV && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: 20
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            maxWidth: 700,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>
+                  Your Improved CV
+                </h2>
+                <p style={{ fontSize: '0.875rem', color: '#64748B' }}>
+                  AI-rewritten to maximize your interview chances
+                </p>
+              </div>
+              <button
+                onClick={() => setShowRewriteModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <div style={{
+              backgroundColor: '#F8FAFC',
+              borderRadius: 12,
+              padding: 20,
+              marginBottom: 20,
+              whiteSpace: 'pre-wrap',
+              fontFamily: 'monospace',
+              fontSize: '0.8125rem',
+              lineHeight: 1.6,
+              maxHeight: 400,
+              overflow: 'auto',
+              border: '1px solid #E2E8F0'
+            }}>
+              {rewrittenCV}
+            </div>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={downloadRewrittenCV}
+                style={{
+                  flex: 1,
+                  padding: '14px 20px',
+                  backgroundColor: '#4F46E5',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 10,
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download CV
+              </button>
+              <button
+                onClick={copyRewrittenCV}
+                style={{
+                  flex: 1,
+                  padding: '14px 20px',
+                  backgroundColor: 'white',
+                  color: '#0F172A',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 10,
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copy to Clipboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Video Practice Modal */}
+      {showVideoModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: 20
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: 16,
+            padding: 32,
+            width: '100%',
+            maxWidth: 500,
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: 80,
+              height: 80,
+              backgroundColor: '#EEF2FF',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            </div>
+
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', marginBottom: 12 }}>
+              Video Interview Practice
+            </h2>
+            <p style={{ fontSize: '1rem', color: '#64748B', marginBottom: 24, lineHeight: 1.6 }}>
+              Coming Soon! Practice answering interview questions on video. Our AI will analyze your body language, confidence, and delivery - giving you feedback to improve before the real thing.
+            </p>
+
+            <div style={{
+              backgroundColor: '#F0FDF4',
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 24
+            }}>
+              <p style={{ fontSize: '0.875rem', color: '#059669', fontWeight: 500 }}>
+                This feature will help you:
+              </p>
+              <ul style={{ textAlign: 'left', fontSize: '0.875rem', color: '#064E3B', margin: '12px 0 0', paddingLeft: 20 }}>
+                <li style={{ marginBottom: 8 }}>Build confidence before interviews</li>
+                <li style={{ marginBottom: 8 }}>Improve your body language</li>
+                <li style={{ marginBottom: 8 }}>Practice common questions for your role</li>
+                <li>Get AI feedback on your presentation</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => setShowVideoModal(false)}
+              style={{
+                width: '100%',
+                padding: '14px 20px',
+                backgroundColor: '#4F46E5',
+                color: 'white',
+                border: 'none',
+                borderRadius: 10,
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Got it - Notify me when ready
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Interview Coach Modal */}
+      {showInterviewCoach && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: 20
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            maxWidth: 600,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A' }}>
+                Interview Question Coach
+              </h2>
+              <button
+                onClick={() => setShowInterviewCoach(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.9375rem', color: '#64748B', marginBottom: 20 }}>
+              Based on your CV, here are the questions you should prepare for:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[
+                { q: "Tell me about yourself", tip: "Focus on your professional journey, not personal life. Use: Present → Past → Future structure." },
+                { q: "Why do you want this role?", tip: "Connect your skills and experience to what the company needs. Show you've researched them." },
+                { q: "What's your biggest achievement?", tip: "Use STAR method: Situation, Task, Action, Result. Include numbers if possible." },
+                { q: "Describe a challenge you overcame", tip: "Choose a real work challenge. Focus on what YOU did and what you learned." },
+                { q: "Where do you see yourself in 5 years?", tip: "Show ambition but be realistic. Connect your growth to the company's success." },
+                { q: "Why should we hire you?", tip: "Summarize your unique value. What can you do that others can't?" },
+                { q: "What are your salary expectations?", tip: "Research market rates first. Give a range, not a single number." },
+                { q: "Do you have any questions for us?", tip: "Always say yes! Ask about team culture, growth opportunities, or current challenges." }
+              ].map((item, i) => (
+                <div key={i} style={{
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: 12,
+                  padding: 16,
+                  borderLeft: '4px solid #4F46E5'
+                }}>
+                  <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#0F172A', marginBottom: 8 }}>
+                    {i + 1}. {item.q}
+                  </h4>
+                  <p style={{ fontSize: '0.8125rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>
+                    <strong style={{ color: '#059669' }}>Tip:</strong> {item.tip}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowInterviewCoach(false)}
+              style={{
+                width: '100%',
+                padding: '14px 20px',
+                backgroundColor: '#4F46E5',
+                color: 'white',
+                border: 'none',
+                borderRadius: 10,
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginTop: 20
+              }}
+            >
+              I&apos;m Ready for My Interview!
             </button>
           </div>
         </div>
