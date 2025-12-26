@@ -944,6 +944,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             <NavItem icon="+" label="Add New Role" color="#111111" onClick={() => setShowNewRoleModal(true)} />
           </div>
 
+          {/* Tools */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Tools</div>
+            <NavItem icon="💼" label="Full Talent Pool" onClick={() => window.location.href = '/talent-pool'} />
+            <NavItem icon="📊" label="Diversity Dashboard" onClick={() => window.location.href = '/dashboard/diversity'} />
+            <NavItem icon="📅" label="Interview Schedule" onClick={() => window.location.href = '/schedule'} />
+          </div>
+
           {/* Settings */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Settings</div>

@@ -63,7 +63,19 @@ function getTopRisk(screening: ScreeningResult | undefined): RiskItem | null {
   return sorted[0] || null;
 }
 
-export default function CandidateCard({ candidate, onClick }: { candidate: Candidate; onClick?: () => void }) {
+export default function CandidateCard({
+  candidate,
+  onClick,
+  onSaveToPool,
+  companyId,
+  roleId
+}: {
+  candidate: Candidate;
+  onClick?: () => void;
+  onSaveToPool?: (candidateId: string) => void;
+  companyId?: string;
+  roleId?: string;
+}) {
   const screening = candidate.screening_result;
   const score = candidate.ai_score || 0;
   const recommendation = candidate.ai_recommendation || 'UNKNOWN';
@@ -152,7 +164,7 @@ export default function CandidateCard({ candidate, onClick }: { candidate: Candi
         </div>
       )}
       
-      <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+      <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 flex-wrap">
         <button className="text-xs px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
           💬 WhatsApp
         </button>
@@ -162,6 +174,19 @@ export default function CandidateCard({ candidate, onClick }: { candidate: Candi
         <button className="text-xs px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
           📧 Email
         </button>
+        {/* Save to Pool - shown for rejected candidates */}
+        {recommendation === 'REJECT' && onSaveToPool && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSaveToPool(candidate.id);
+            }}
+            className="text-xs px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600"
+            title="Save to talent pool for future opportunities"
+          >
+            💼 Save to Pool
+          </button>
+        )}
       </div>
     </div>
   );
