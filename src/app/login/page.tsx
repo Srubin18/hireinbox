@@ -41,8 +41,9 @@ function LoginPageContent() {
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [userType, setUserType] = useState<'employer' | 'jobseeker'>('employer');
 
-  const redirectTo = searchParams.get('redirect') || '/';
+  const redirectTo = searchParams.get('redirect') || (userType === 'employer' ? '/' : '/upload');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -142,7 +143,7 @@ function LoginPageContent() {
           maxWidth: 420,
         }}>
           {/* Title */}
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <h1 style={{
               fontSize: '1.875rem',
               fontWeight: 700,
@@ -156,8 +157,56 @@ function LoginPageContent() {
               fontSize: '1rem',
               color: '#64748b'
             }}>
-              Sign in to your employer dashboard
+              {userType === 'employer' ? 'Sign in to your employer dashboard' : 'Sign in to check your CV score'}
             </p>
+          </div>
+
+          {/* User Type Toggle */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: '#f1f5f9',
+            borderRadius: 10,
+            padding: 4,
+            marginBottom: 24
+          }}>
+            <button
+              type="button"
+              onClick={() => setUserType('employer')}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: 8,
+                border: 'none',
+                backgroundColor: userType === 'employer' ? '#ffffff' : 'transparent',
+                color: userType === 'employer' ? '#0f172a' : '#64748b',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                boxShadow: userType === 'employer' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.2s'
+              }}
+            >
+              I&apos;m hiring
+            </button>
+            <button
+              type="button"
+              onClick={() => setUserType('jobseeker')}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                borderRadius: 8,
+                border: 'none',
+                backgroundColor: userType === 'jobseeker' ? '#ffffff' : 'transparent',
+                color: userType === 'jobseeker' ? '#0f172a' : '#64748b',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                boxShadow: userType === 'jobseeker' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.2s'
+              }}
+            >
+              I&apos;m job seeking
+            </button>
           </div>
 
           {/* Magic Link Success */}
@@ -282,7 +331,7 @@ function LoginPageContent() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
+                    placeholder={userType === 'employer' ? 'you@company.com' : 'you@email.com'}
                     required
                     style={{
                       width: '100%',
