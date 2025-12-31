@@ -507,9 +507,16 @@ function SignupPageContent() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         input::placeholder { color: #9CA3AF; }
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
           header { padding: 16px !important; }
+          main { padding: 32px 16px !important; }
+        }
+        @media (max-width: 480px) {
+          header { padding: 12px 16px !important; }
           main { padding: 24px 16px !important; }
+          h1 { font-size: 1.5rem !important; }
+          button { min-height: 48px !important; }
+          input { min-height: 48px !important; font-size: 16px !important; }
         }
       `}</style>
     </div>

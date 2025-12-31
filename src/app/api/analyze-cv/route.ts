@@ -1,14 +1,49 @@
 // app/api/analyze-cv/route.ts
 // B2C API: Analyze CV for job seekers (no role required)
 // Returns general feedback, strengths, weaknesses, and improvement suggestions
+//
+// RATE LIMITING: Should be rate-limited to:
+// - 10 requests per hour per IP (anonymous)
+// - 50 requests per hour per authenticated user
+// - Implement with Vercel KV or Upstash Redis in production
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { SA_CONTEXT_PROMPT, SA_RECRUITER_CONTEXT } from '@/lib/sa-context';
+import { Errors, generateTraceId } from '@/lib/api-error';
+
+// Only log verbose debug info in development
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
+// ============================================
+// INPUT VALIDATION CONSTANTS
+// ============================================
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB max file size
+const MAX_TEXT_LENGTH = 100000; // 100k characters max for pasted text
+const MIN_TEXT_LENGTH = 50; // Minimum meaningful CV content
+const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt'];
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// ============================================
+// VALIDATION HELPERS
+// ============================================
+
+function validateFileType(filename: string): boolean {
+  const lowerName = filename.toLowerCase();
+  return ALLOWED_EXTENSIONS.some(ext => lowerName.endsWith(ext));
+}
+
+function sanitizeFilename(filename: string): string {
+  // Remove any path traversal attempts and limit length
+  return filename
+    .replace(/[/\\]/g, '')
+    .replace(/\.\./g, '')
+    .slice(0, 255);
+}
 
 const CV_COACH_PROMPT = `You are HireInbox's Career Coach — a world-class South African recruitment expert who gives exceptional, personalized CV feedback.
 
@@ -173,63 +208,122 @@ ${SA_RECRUITER_CONTEXT}`;
 async function extractPDFText(buffer: Buffer, filename: string): Promise<string> {
   try {
     const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
-    console.log(`[PDF] Extracting from ${filename}, size: ${buffer.length}, production: ${isProduction}`);
+    if (IS_DEV) console.log(`[PDF] Extracting from ${filename}, size: ${buffer.length}, production: ${isProduction}`);
 
-    if (isProduction && process.env.CONVERTAPI_SECRET) {
-      const base64PDF = buffer.toString('base64');
-      const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          Parameters: [
-            { Name: 'File', FileValue: { Name: filename, Data: base64PDF } },
-            { Name: 'StoreFile', Value: true }
-          ]
-        }),
-      });
-      if (!response.ok) return '';
-      const result = await response.json();
-      if (!result.Files?.[0]?.Url) return '';
-      const textResponse = await fetch(result.Files[0].Url);
-      return await textResponse.text();
-    } else {
-      // Use pdf2json for Node.js/Next.js (no worker issues)
-      console.log('[PDF] Using pdf2json for local extraction');
-      const PDFParser = (await import('pdf2json')).default;
+    let extractedText = '';
 
-      return new Promise((resolve) => {
-        const pdfParser = new PDFParser();
+    // Method 1: ConvertAPI (production with API key)
+    if (process.env.CONVERTAPI_SECRET) {
+      try {
+        if (IS_DEV) console.log('[PDF] Trying ConvertAPI extraction');
+        const base64PDF = buffer.toString('base64');
+        const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            Parameters: [
+              { Name: 'File', FileValue: { Name: filename, Data: base64PDF } },
+              { Name: 'StoreFile', Value: true }
+            ]
+          }),
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.Files?.[0]?.Url) {
+            const textResponse = await fetch(result.Files[0].Url);
+            extractedText = await textResponse.text();
+            if (IS_DEV) console.log(`[PDF] ConvertAPI extracted ${extractedText.length} chars`);
+          }
+        }
+      } catch (e) {
+        console.warn('[PDF] ConvertAPI failed:', e);
+      }
+    }
 
-        pdfParser.on('pdfParser_dataReady', (pdfData: { Pages?: Array<{ Texts?: Array<{ R?: Array<{ T?: string }> }> }> }) => {
-          let text = '';
-          if (pdfData.Pages) {
-            for (const page of pdfData.Pages) {
-              if (page.Texts) {
-                for (const textItem of page.Texts) {
-                  if (textItem.R) {
-                    for (const r of textItem.R) {
-                      if (r.T) {
-                        text += decodeURIComponent(r.T) + ' ';
+    // Method 2: pdf2json (local/fallback)
+    if (!extractedText || extractedText.length < 100) {
+      try {
+        if (IS_DEV) console.log('[PDF] Trying pdf2json extraction');
+        const PDFParser = (await import('pdf2json')).default;
+
+        extractedText = await new Promise((resolve) => {
+          const pdfParser = new PDFParser();
+          const timeout = setTimeout(() => {
+            console.warn('[PDF] pdf2json timeout');
+            resolve('');
+          }, 30000); // 30s timeout
+
+          pdfParser.on('pdfParser_dataReady', (pdfData: { Pages?: Array<{ Texts?: Array<{ R?: Array<{ T?: string }> }> }> }) => {
+            clearTimeout(timeout);
+            let text = '';
+            if (pdfData.Pages) {
+              for (const page of pdfData.Pages) {
+                if (page.Texts) {
+                  for (const textItem of page.Texts) {
+                    if (textItem.R) {
+                      for (const r of textItem.R) {
+                        if (r.T) {
+                          text += decodeURIComponent(r.T) + ' ';
+                        }
                       }
                     }
                   }
                 }
+                text += '\n';
               }
-              text += '\n';
             }
-          }
-          console.log('[PDF] Extracted text length:', text.length);
-          resolve(text.trim());
-        });
+            if (IS_DEV) console.log(`[PDF] pdf2json extracted ${text.length} chars`);
+            resolve(text.trim());
+          });
 
-        pdfParser.on('pdfParser_dataError', (errData: { parserError?: Error }) => {
-          console.error('[PDF] Parser error:', errData.parserError?.message || errData.parserError);
-          resolve('');
-        });
+          pdfParser.on('pdfParser_dataError', (errData: { parserError?: Error }) => {
+            clearTimeout(timeout);
+            console.error('[PDF] Parser error:', errData.parserError?.message || errData.parserError);
+            resolve('');
+          });
 
-        pdfParser.parseBuffer(buffer);
-      });
+          pdfParser.parseBuffer(buffer);
+        });
+      } catch (e) {
+        console.warn('[PDF] pdf2json failed:', e);
+      }
     }
+
+    // Method 3: OpenAI Vision (for scanned/image PDFs)
+    if ((!extractedText || extractedText.length < 100) && process.env.OPENAI_API_KEY) {
+      try {
+        if (IS_DEV) console.log('[PDF] Trying OpenAI Vision for OCR');
+        const base64PDF = buffer.toString('base64');
+        const response = await openai.chat.completions.create({
+          model: 'gpt-4o',
+          max_tokens: 4000,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Extract ALL text from this PDF/document image. Return ONLY the text content, preserving the structure as much as possible. Include all names, dates, job titles, companies, education, skills, and contact information.'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:application/pdf;base64,${base64PDF}`,
+                    detail: 'high'
+                  }
+                }
+              ]
+            }
+          ]
+        });
+        extractedText = response.choices[0]?.message?.content || '';
+        if (IS_DEV) console.log(`[PDF] OpenAI Vision extracted ${extractedText.length} chars`);
+      } catch (e) {
+        console.warn('[PDF] OpenAI Vision failed:', e);
+      }
+    }
+
+    return extractedText;
   } catch (e) {
     console.error('[PDF] Extraction error:', e);
     return '';
@@ -245,62 +339,98 @@ async function extractWordText(buffer: Buffer): Promise<string> {
 }
 
 export async function POST(request: Request) {
-  const traceId = Date.now().toString(36);
-  console.log(`[${traceId}][B2C] CV Analysis request received`);
+  const traceId = generateTraceId();
+  if (IS_DEV) console.log(`[${traceId}][B2C] CV Analysis request received`);
 
   try {
-    const formData = await request.formData();
+    // ============================================
+    // PARSE AND VALIDATE INPUT
+    // ============================================
+
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return Errors.validation('Invalid form data. Please upload a CV file or paste text.').toResponse();
+    }
+
     const file = formData.get('cv') as File | null;
     const pastedText = formData.get('cvText') as string | null;
 
     let cvText = '';
 
     // Handle pasted text (no file upload needed)
-    if (pastedText && pastedText.length > 50) {
+    if (pastedText && pastedText.length > MIN_TEXT_LENGTH) {
+      // Validate text length
+      if (pastedText.length > MAX_TEXT_LENGTH) {
+        return Errors.validation(
+          `Text too long. Maximum ${MAX_TEXT_LENGTH.toLocaleString()} characters allowed.`,
+          `Received ${pastedText.length.toLocaleString()} characters`
+        ).toResponse();
+      }
       cvText = pastedText;
-      console.log(`[${traceId}][B2C] Processing pasted text: ${cvText.length} characters`);
+      if (IS_DEV) console.log(`[${traceId}][B2C] Processing pasted text: ${cvText.length} characters`);
     }
     // Handle file upload
     else if (file) {
-      const filename = file.name.toLowerCase();
-      const buffer = Buffer.from(await file.arrayBuffer());
+      // Validate file name
+      const safeFilename = sanitizeFilename(file.name);
+      if (!safeFilename) {
+        return Errors.validation('Invalid filename').toResponse();
+      }
 
-      console.log(`[${traceId}][B2C] Processing: ${file.name} (${buffer.length} bytes)`);
+      // Validate file type
+      if (!validateFileType(safeFilename)) {
+        return Errors.validation(
+          'Unsupported file type. Please upload a PDF, Word document (.doc, .docx), or text file.',
+          `Allowed types: ${ALLOWED_EXTENSIONS.join(', ')}`
+        ).toResponse();
+      }
+
+      // Validate file size BEFORE reading content
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        return Errors.validation(
+          `File too large. Maximum size is ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB.`,
+          `Received ${(file.size / 1024 / 1024).toFixed(2)}MB`
+        ).toResponse();
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const filename = safeFilename.toLowerCase();
+
+      if (IS_DEV) console.log(`[${traceId}][B2C] Processing: ${safeFilename} (${buffer.length} bytes)`);
 
       if (buffer.length === 0) {
-        return NextResponse.json({
-          error: 'File appears to be empty. Please try uploading again or use paste mode.'
-        }, { status: 400 });
+        return Errors.validation(
+          'File appears to be empty. Please try uploading again or use paste mode.'
+        ).toResponse();
       }
 
       if (filename.endsWith('.pdf')) {
-        cvText = await extractPDFText(buffer, file.name);
+        cvText = await extractPDFText(buffer, safeFilename);
       } else if (filename.endsWith('.doc') || filename.endsWith('.docx')) {
         cvText = await extractWordText(buffer);
       } else if (filename.endsWith('.txt')) {
         cvText = buffer.toString('utf-8');
-      } else {
-        return NextResponse.json({
-          error: 'Unsupported file type. Please upload a PDF, Word document, or text file.'
-        }, { status: 400 });
       }
     }
     // No input provided
     else {
-      return NextResponse.json({ error: 'No CV file or text provided' }, { status: 400 });
+      return Errors.validation('No CV file or text provided').toResponse();
     }
 
-    if (cvText.length < 50) {
-      return NextResponse.json({
-        error: 'Could not extract text from your CV. Please ensure it\'s not an image-only PDF or paste your CV text directly.'
-      }, { status: 400 });
+    if (cvText.length < MIN_TEXT_LENGTH) {
+      return Errors.validation(
+        'Could not extract meaningful text from your CV.',
+        'Please ensure it is not an image-only PDF or paste your CV text directly.'
+      ).toResponse();
     }
 
-    console.log(`[${traceId}][B2C] Extracted ${cvText.length} characters`);
+    if (IS_DEV) console.log(`[${traceId}][B2C] Extracted ${cvText.length} characters`);
 
     // Use base gpt-4o-mini with JSON mode for reliability
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', // V3 BRAIN
       temperature: 0.3,
       max_tokens: 3000,
       response_format: { type: 'json_object' },
@@ -311,7 +441,7 @@ export async function POST(request: Request) {
     });
 
     const responseText = completion.choices[0]?.message?.content || '';
-    console.log(`[${traceId}][B2C] AI response length: ${responseText.length}`);
+    if (IS_DEV) console.log(`[${traceId}][B2C] AI response length: ${responseText.length}`);
 
     // Parse JSON response
     const cleaned = responseText.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
@@ -321,23 +451,25 @@ export async function POST(request: Request) {
       analysis = JSON.parse(cleaned);
     } catch {
       console.error(`[${traceId}][B2C] JSON parse failed`);
-      return NextResponse.json({
-        error: 'Analysis failed. Please try again.'
-      }, { status: 500 });
+      return Errors.ai('Analysis failed due to parsing error. Please try again.', undefined, traceId).toResponse();
     }
 
-    console.log(`[${traceId}][B2C] Analysis complete for: ${analysis.candidate_name}`);
+    if (IS_DEV) console.log(`[${traceId}][B2C] Analysis complete for: ${analysis.candidate_name}`);
 
     return NextResponse.json({
       success: true,
       analysis,
-      originalCV: cvText  // Return for CV rewriting feature
+      originalCV: cvText,  // Return for CV rewriting feature
+      traceId,
     });
 
   } catch (error) {
     console.error(`[${traceId}][B2C] Error:`, error);
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : 'Analysis failed'
-    }, { status: 500 });
+    // SECURITY: Do not expose internal error details to client
+    const isOpenAIError = error instanceof Error && error.message.includes('OpenAI');
+    const userMessage = isOpenAIError
+      ? 'AI service temporarily unavailable. Please try again.'
+      : 'Analysis failed. Please try again.';
+    return Errors.internal(userMessage, traceId).toResponse();
   }
 }

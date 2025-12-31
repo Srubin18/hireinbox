@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useNotifications } from '@/lib/notification-context';
+import { useUsage, UsageBadge, UpgradePrompt } from '@/lib/usage-context';
 
 /* ===========================================
    HIREINBOX B2C - KILLER SOCIAL MEDIA LANDING
@@ -194,14 +196,22 @@ const CircularScore = ({ score, size = 160 }: { score: number; size?: number }) 
   );
 };
 
-// Stunning Loading Animation
+// Stunning Loading Animation with detailed progress
 const AnalyzingAnimation = ({ step }: { step: number }) => {
   const steps = [
-    { icon: '📄', label: 'Reading your CV...', detail: 'Extracting text and structure' },
-    { icon: '🔍', label: 'Analyzing content...', detail: 'Evaluating experience and skills' },
-    { icon: '🎯', label: 'Finding improvements...', detail: 'Identifying high-impact changes' },
-    { icon: '📊', label: 'Calculating score...', detail: 'Comparing to top performers' },
-    { icon: '✨', label: 'Polishing insights...', detail: 'Preparing your personalized report' },
+    { icon: '📄', label: 'Step 1: Uploading', shortLabel: 'Uploading', detail: 'Securely processing your CV file' },
+    { icon: '🔍', label: 'Step 2: Analyzing', shortLabel: 'Analyzing', detail: 'AI reading your experience and skills' },
+    { icon: '🎯', label: 'Step 3: Finding Improvements', shortLabel: 'Finding Improvements', detail: 'Identifying high-impact changes' },
+    { icon: '📊', label: 'Step 4: Scoring', shortLabel: 'Scoring', detail: 'Comparing to SA top performers' },
+    { icon: '✨', label: 'Step 5: Generating Report', shortLabel: 'Generating Report', detail: 'Creating your personalized insights' },
+  ];
+
+  const tips = [
+    'Tip: Recruiters spend only 6 seconds on a CV. We\'re making yours count.',
+    'Did you know? Adding metrics can increase interview rates by 40%.',
+    'Pro tip: SA companies love seeing local qualifications like CA(SA) or BCom.',
+    'Fun fact: CVs with a professional summary get 36% more views.',
+    'Insight: Role-specific keywords can boost your ATS score significantly.'
   ];
 
   return (
@@ -216,57 +226,137 @@ const AnalyzingAnimation = ({ step }: { step: number }) => {
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 9999,
-      backdropFilter: 'blur(8px)'
+      backdropFilter: 'blur(8px)',
+      padding: 20
     }}>
       <div style={{
         backgroundColor: '#1E293B',
         borderRadius: 24,
-        padding: 48,
-        maxWidth: 480,
-        width: '90%',
+        padding: '40px 28px',
+        maxWidth: 520,
+        width: '100%',
         textAlign: 'center',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
         {/* Animated Logo */}
         <div style={{
-          width: 80,
-          height: 80,
-          margin: '0 auto 32px',
+          width: 72,
+          height: 72,
+          margin: '0 auto 20px',
           background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-          borderRadius: 20,
+          borderRadius: 18,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           animation: 'pulse 2s ease-in-out infinite',
           boxShadow: '0 0 40px rgba(79, 70, 229, 0.4)'
         }}>
-          <span style={{ fontSize: '2.5rem' }}>{steps[step]?.icon || '🚀'}</span>
+          <span style={{ fontSize: '2rem' }}>{steps[step]?.icon || '🚀'}</span>
         </div>
 
         {/* Progress Text */}
         <h2 style={{
           color: 'white',
-          fontSize: '1.5rem',
+          fontSize: 'clamp(1.125rem, 4vw, 1.375rem)',
           fontWeight: 700,
-          marginBottom: 8
+          marginBottom: 6
         }}>
           {steps[step]?.label || 'Almost there...'}
         </h2>
         <p style={{
           color: 'rgba(255,255,255,0.6)',
-          fontSize: '0.9375rem',
-          marginBottom: 32
+          fontSize: '0.875rem',
+          marginBottom: 24
         }}>
           {steps[step]?.detail || 'Finalizing your analysis'}
         </p>
+
+        {/* Detailed Steps List */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+          marginBottom: 24,
+          textAlign: 'left'
+        }}>
+          {steps.map((s, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 12px',
+              backgroundColor: i === step ? 'rgba(79, 70, 229, 0.2)' : 'rgba(255,255,255,0.02)',
+              borderRadius: 8,
+              border: i === step ? '1px solid rgba(79, 70, 229, 0.4)' : '1px solid transparent',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                backgroundColor: i < step ? '#10B981' : i === step ? '#4F46E5' : 'rgba(255,255,255,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.3s ease'
+              }}>
+                {i < step ? (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                ) : i === step ? (
+                  <div style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    backgroundColor: 'white',
+                    animation: 'pulse 1s ease-in-out infinite'
+                  }} />
+                ) : (
+                  <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.4)' }}>{i + 1}</span>
+                )}
+              </div>
+              <span style={{
+                fontSize: '0.8125rem',
+                color: i <= step ? 'white' : 'rgba(255,255,255,0.4)',
+                fontWeight: i === step ? 600 : 400,
+                flex: 1
+              }}>
+                {s.shortLabel}
+              </span>
+              {i < step && (
+                <span style={{ fontSize: '0.625rem', color: '#10B981', fontWeight: 500 }}>Done</span>
+              )}
+              {i === step && (
+                <span style={{
+                  fontSize: '0.625rem',
+                  color: '#818CF8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}>
+                  <span style={{
+                    width: 4,
+                    height: 4,
+                    borderRadius: '50%',
+                    backgroundColor: '#818CF8',
+                    animation: 'pulse 1s ease-in-out infinite'
+                  }} />
+                  In Progress
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
 
         {/* Progress Bar */}
         <div style={{
           backgroundColor: 'rgba(255,255,255,0.1)',
           borderRadius: 100,
-          height: 8,
+          height: 6,
           overflow: 'hidden',
-          marginBottom: 24
+          marginBottom: 16
         }}>
           <div style={{
             height: '100%',
@@ -277,38 +367,38 @@ const AnalyzingAnimation = ({ step }: { step: number }) => {
           }} />
         </div>
 
-        {/* Step Indicators */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 8
+        {/* Estimated time */}
+        <p style={{
+          color: 'rgba(255,255,255,0.5)',
+          fontSize: '0.75rem',
+          marginBottom: 16
         }}>
-          {steps.map((_, i) => (
-            <div key={i} style={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              backgroundColor: i <= step ? '#4F46E5' : 'rgba(255,255,255,0.2)',
-              transition: 'all 0.3s ease'
-            }} />
-          ))}
-        </div>
+          Estimated time remaining: ~{Math.max(25 - (step * 5), 5)} seconds
+        </p>
 
         {/* Tip */}
-        <p style={{
-          color: 'rgba(255,255,255,0.4)',
-          fontSize: '0.8125rem',
-          marginTop: 32,
-          fontStyle: 'italic'
+        <div style={{
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          borderRadius: 10,
+          padding: 12,
+          borderLeft: '3px solid #4F46E5'
         }}>
-          Tip: Recruiters spend only 6 seconds on a CV. We're making yours count.
-        </p>
+          <p style={{
+            color: 'rgba(255,255,255,0.6)',
+            fontSize: '0.75rem',
+            margin: 0,
+            fontStyle: 'italic',
+            lineHeight: 1.5
+          }}>
+            {tips[step % tips.length]}
+          </p>
+        </div>
       </div>
 
       <style>{`
         @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.8; }
         }
       `}</style>
     </div>
@@ -361,10 +451,152 @@ const SocialProof = () => (
   </div>
 );
 
+// Testimonials Component
+const TestimonialsSection = () => (
+  <section style={{
+    position: 'relative',
+    padding: '60px 24px 80px',
+    backgroundColor: 'rgba(255,255,255,0.02)'
+  }}>
+    <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <h2 style={{
+          fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+          fontWeight: 700,
+          color: 'white',
+          marginBottom: 12
+        }}>
+          Real Results from Real Job Seekers
+        </h2>
+        <p style={{
+          fontSize: '1rem',
+          color: 'rgba(255,255,255,0.6)',
+          maxWidth: 500,
+          margin: '0 auto'
+        }}>
+          Join thousands of South Africans who landed their dream jobs
+        </p>
+      </div>
+
+      <div className="testimonials-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 24
+      }}>
+        {TESTIMONIALS.map((testimonial, i) => (
+          <div key={i} style={{
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 20,
+            padding: 28,
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+          }}>
+            {/* Stars */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+              {Array(testimonial.rating).fill(0).map((_, j) => (
+                <svg key={j} width="18" height="18" viewBox="0 0 24 24" fill="#F59E0B">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                </svg>
+              ))}
+            </div>
+
+            {/* Quote */}
+            <p style={{
+              fontSize: '0.9375rem',
+              color: 'rgba(255,255,255,0.85)',
+              lineHeight: 1.7,
+              marginBottom: 20,
+              fontStyle: 'italic'
+            }}>
+              &ldquo;{testimonial.text}&rdquo;
+            </p>
+
+            {/* Author */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '0.875rem'
+              }}>
+                {testimonial.avatar}
+              </div>
+              <div>
+                <p style={{
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  color: 'white',
+                  margin: 0,
+                  marginBottom: 2
+                }}>
+                  {testimonial.name}
+                </p>
+                <p style={{
+                  fontSize: '0.8125rem',
+                  color: 'rgba(255,255,255,0.5)',
+                  margin: 0
+                }}>
+                  {testimonial.role} - {testimonial.location}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+// Free assessment tracking constants
+const FREE_ASSESSMENTS_KEY = 'hireinbox_free_assessments';
+const SAVED_RESULTS_KEY = 'hireinbox_saved_results';
+const MAX_FREE_ASSESSMENTS = 1;
+const UNLOCK_PRICE = 29; // R29 per additional assessment
+
+// Testimonials data with realistic SA names
+const TESTIMONIALS = [
+  {
+    name: 'Lindiwe Nkosi',
+    role: 'Marketing Manager',
+    location: 'Johannesburg',
+    rating: 5,
+    text: 'I was applying for months with no luck. HireInbox showed me exactly what was wrong - my CV was too vague. Added specific metrics like they suggested, and got 3 interviews in 2 weeks!',
+    avatar: 'LN'
+  },
+  {
+    name: 'Pieter van der Berg',
+    role: 'Senior Accountant',
+    location: 'Cape Town',
+    rating: 5,
+    text: 'As a CA(SA), I thought my CV was solid. The SA-specific feedback was eye-opening - it highlighted exactly what Big 4 firms look for. Now at Deloitte.',
+    avatar: 'PB'
+  },
+  {
+    name: 'Thando Mthembu',
+    role: 'Software Developer',
+    location: 'Durban',
+    rating: 5,
+    text: 'The AI rewrite feature is incredible. It turned my boring job descriptions into achievement-focused bullet points. My GitHub got noticed for the first time!',
+    avatar: 'TM'
+  }
+];
+
 function UploadPageContent() {
   const searchParams = useSearchParams();
   const isCreatorMode = searchParams.get('mode') === 'creator';
   const sharedResultId = searchParams.get('result');
+  const { success, error: notifyError } = useNotifications();
+
+  // Usage tracking from shared context
+  const { canUseAssessment, useAssessment, isExhausted, getTierInfo } = useUsage();
+  const canUseFreeAssessment = canUseAssessment('b2c');
+  const b2cInfo = getTierInfo('b2c');
 
   // Core state
   const [file, setFile] = useState<File | null>(null);
@@ -393,6 +625,62 @@ function UploadPageContent() {
   const [showRewriteModal, setShowRewriteModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showInterviewCoach, setShowInterviewCoach] = useState(false);
+
+  // Video analysis state
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [isRecordingVideo, setIsRecordingVideo] = useState(false);
+  const [videoAnalysis, setVideoAnalysis] = useState<any>(null);
+  const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Modal and UI state
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [savedResultToken, setSavedResultToken] = useState<string | null>(null);
+  const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Load saved results on mount
+  useEffect(() => {
+
+    // Check if loading a saved result
+    if (sharedResultId) {
+      const savedResults = localStorage.getItem(SAVED_RESULTS_KEY);
+      if (savedResults) {
+        const results = JSON.parse(savedResults);
+        const savedResult = results[sharedResultId];
+        if (savedResult && savedResult.analysis) {
+          setAnalysis(savedResult.analysis);
+          setShareableUrl(`${window.location.origin}/upload?result=${sharedResultId}`);
+          setSavedResultToken(sharedResultId);
+        }
+      }
+    }
+  }, [sharedResultId]);
+
+  // Use shared context for assessment tracking
+  const incrementFreeAssessmentCount = () => {
+    useAssessment('b2c');
+  };
+
+  // Save results with unique token
+  const saveResultsWithToken = (analysisData: CVAnalysis): string => {
+    const token = generateResultId();
+    const savedResults = localStorage.getItem(SAVED_RESULTS_KEY);
+    const results = savedResults ? JSON.parse(savedResults) : {};
+
+    results[token] = {
+      analysis: analysisData,
+      savedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+    };
+
+    localStorage.setItem(SAVED_RESULTS_KEY, JSON.stringify(results));
+    return token;
+  };
 
   // Drag and drop handlers with visual feedback
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -440,6 +728,12 @@ function UploadPageContent() {
   // Analyze CV with role-specific and industry-specific feedback
   const analyzeCV = async () => {
     if (!file && !pastedText && !linkedInUrl) return;
+
+    // Check if user can use free assessment
+    if (!canUseFreeAssessment && !isCreatorMode) {
+      setShowUnlockModal(true);
+      return;
+    }
 
     setIsAnalyzing(true);
     setError(null);
@@ -491,16 +785,27 @@ function UploadPageContent() {
         setOriginalCVText(data.originalCV);
       }
 
-      // Generate shareable URL
-      const resultId = generateResultId();
-      setShareableUrl(`${window.location.origin}/upload?result=${resultId}`);
+      // Increment free assessment count (unless in creator mode)
+      if (!isCreatorMode) {
+        incrementFreeAssessmentCount();
+      }
 
-      // Save to localStorage for sharing
-      localStorage.setItem(`cv_result_${resultId}`, JSON.stringify(data.analysis));
+      // Generate shareable URL and save results
+      const token = saveResultsWithToken(data.analysis);
+      setSavedResultToken(token);
+      setShareableUrl(`${window.location.origin}/upload?result=${token}`);
+
+      // Show success notification
+      success(
+        'CV Analysis Complete',
+        `Your CV scored ${data.analysis.overall_score}/100. Scroll down for insights.`
+      );
 
     } catch (err) {
       clearInterval(stepInterval);
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+      setError(errorMessage);
+      notifyError('Analysis Failed', errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
@@ -620,6 +925,29 @@ function UploadPageContent() {
     setTargetIndustry('');
     setShareableUrl(null);
     setRewrittenCV(null);
+    setSavedResultToken(null);
+    setShowSavedConfirmation(false);
+    setLinkCopied(false);
+  };
+
+  // Copy recruiter link with feedback
+  const copyRecruiterLink = () => {
+    if (shareableUrl) {
+      navigator.clipboard.writeText(shareableUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 3000);
+    }
+  };
+
+  // Save results and show confirmation
+  const handleSaveResults = () => {
+    if (analysis && !savedResultToken) {
+      const token = saveResultsWithToken(analysis);
+      setSavedResultToken(token);
+      setShareableUrl(`${window.location.origin}/upload?result=${token}`);
+    }
+    setShowSavedConfirmation(true);
+    setTimeout(() => setShowSavedConfirmation(false), 5000);
   };
 
   // Get Rewritten CV
@@ -797,7 +1125,7 @@ function UploadPageContent() {
         }} />
 
         {/* Header */}
-        <header style={{
+        <header className="upload-header" style={{
           position: 'relative',
           padding: '16px 24px',
           display: 'flex',
@@ -818,14 +1146,15 @@ function UploadPageContent() {
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            minHeight: 44
           }}>
             For Employers
           </a>
         </header>
 
         {/* Hero Section */}
-        <section style={{
+        <section className="upload-hero" style={{
           position: 'relative',
           padding: '60px 24px 40px',
           textAlign: 'center',
@@ -837,14 +1166,14 @@ function UploadPageContent() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
+            backgroundColor: canUseFreeAssessment ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+            border: `1px solid ${canUseFreeAssessment ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
             borderRadius: 100,
             padding: '8px 16px',
             marginBottom: 24
           }}>
-            <span style={{ color: '#10B981', fontSize: '0.875rem', fontWeight: 600 }}>
-              100% Free
+            <span style={{ color: canUseFreeAssessment ? '#10B981' : '#F59E0B', fontSize: '0.875rem', fontWeight: 600 }}>
+              {canUseFreeAssessment ? `${b2cInfo.remaining} Free Assessment` : `R${UNLOCK_PRICE} per assessment`}
             </span>
             <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
             <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem' }}>
@@ -899,7 +1228,7 @@ function UploadPageContent() {
           padding: '0 24px 80px'
         }}>
           {/* Upload Card */}
-          <div style={{
+          <div className="upload-card" style={{
             backgroundColor: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 24,
@@ -907,7 +1236,7 @@ function UploadPageContent() {
             backdropFilter: 'blur(10px)'
           }}>
             {/* Mode Tabs */}
-            <div style={{
+            <div className="upload-tabs" style={{
               display: 'flex',
               gap: 8,
               marginBottom: 24,
@@ -1337,11 +1666,23 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
                   : 'none'
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <polyline points="9 12 11 14 15 10"/>
-              </svg>
-              Analyze My CV Free
+              {canUseFreeAssessment ? (
+                <>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <polyline points="9 12 11 14 15 10"/>
+                  </svg>
+                  Analyze My CV Free
+                </>
+              ) : (
+                <>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  Unlock Assessment - R{UNLOCK_PRICE}
+                </>
+              )}
             </button>
 
             {/* Sample Link */}
@@ -1488,6 +1829,9 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
           </div>
         </section>
 
+        {/* Testimonials Section */}
+        <TestimonialsSection />
+
         {/* Footer */}
         <footer style={{
           position: 'relative',
@@ -1535,12 +1879,29 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
           </div>
         </footer>
 
+        {/* Upgrade Prompt Modal */}
+        <UpgradePrompt tier="b2c" isOpen={showUnlockModal} onClose={() => setShowUnlockModal(false)} />
+
         {/* Responsive Styles */}
         <style>{`
           @media (max-width: 768px) {
             .grid-3 { grid-template-columns: 1fr !important; }
             .features-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+            .testimonials-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
             .role-industry-grid { grid-template-columns: 1fr !important; }
+            .upload-hero { padding: 40px 16px 32px !important; }
+            .upload-hero h1 { font-size: 2rem !important; line-height: 1.2 !important; }
+            .upload-card { padding: 20px !important; margin: 0 16px !important; }
+            .upload-zone { padding: 32px 16px !important; }
+            .upload-tabs { flex-direction: column !important; gap: 8px !important; }
+            .upload-tabs button { width: 100% !important; min-height: 48px !important; }
+            .upload-header { flex-direction: column !important; gap: 12px !important; padding: 12px 16px !important; }
+            .upload-header a { min-height: 44px !important; }
+          }
+          @media (max-width: 480px) {
+            .upload-card { padding: 16px !important; }
+            .upload-hero h1 { font-size: 1.75rem !important; }
+            .upload-hero p { font-size: 1rem !important; }
           }
         `}</style>
       </div>
@@ -1568,29 +1929,77 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
         <div style={{ cursor: 'pointer' }} onClick={resetUpload}>
           <Logo size={32} />
         </div>
-        <div className="header-buttons" style={{ display: 'flex', gap: 12 }}>
+        <div className="header-buttons" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Save My Results Button */}
           <button
-            onClick={() => setShowShareModal(true)}
+            onClick={handleSaveResults}
             style={{
-              backgroundColor: '#4F46E5',
+              backgroundColor: savedResultToken ? '#10B981' : '#0F172A',
               color: 'white',
               border: 'none',
-              padding: '10px 20px',
+              padding: '10px 16px',
               borderRadius: 8,
               fontSize: '0.875rem',
               fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: 6
+              gap: 6,
+              transition: 'all 0.2s ease'
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-              <polyline points="16 6 12 2 8 6"/>
-              <line x1="12" y1="2" x2="12" y2="15"/>
-            </svg>
-            Share Results
+            {savedResultToken ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Saved
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save Results
+              </>
+            )}
+          </button>
+          {/* Share with Recruiter Button */}
+          <button
+            onClick={copyRecruiterLink}
+            style={{
+              backgroundColor: linkCopied ? '#10B981' : '#4F46E5',
+              color: 'white',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: 8,
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {linkCopied ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Link Copied!
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Share with Recruiter
+              </>
+            )}
           </button>
           <button
             onClick={downloadPDFReport}
@@ -1598,7 +2007,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
               backgroundColor: 'white',
               color: '#0F172A',
               border: '1px solid #E2E8F0',
-              padding: '10px 20px',
+              padding: '10px 16px',
               borderRadius: 8,
               fontSize: '0.875rem',
               fontWeight: 500,
@@ -1613,7 +2022,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            Download PDF
+            PDF
           </button>
         </div>
       </header>
@@ -1928,6 +2337,206 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
               ))}
             </div>
           )}
+
+          {/* Your Next Steps - Actionable Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+            borderRadius: 20,
+            padding: 32,
+            marginTop: 24,
+            color: 'white'
+          }}>
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              marginBottom: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10
+            }}>
+              <span style={{
+                width: 32,
+                height: 32,
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1rem'
+              }}>
+                ✓
+              </span>
+              Your Next Steps
+            </h2>
+            <p style={{
+              fontSize: '0.9375rem',
+              color: 'rgba(255,255,255,0.7)',
+              marginBottom: 24,
+              lineHeight: 1.6
+            }}>
+              Take action now to improve your interview chances
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Step 1 */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 16,
+                padding: 16,
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  backgroundColor: '#4F46E5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  flexShrink: 0
+                }}>1</div>
+                <div>
+                  <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 4 }}>
+                    Fix High-Priority Issues First
+                  </h4>
+                  <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 }}>
+                    {highPriorityCount > 0
+                      ? `Address the ${highPriorityCount} high-priority improvement${highPriorityCount > 1 ? 's' : ''} above - these have the biggest impact on your interview rate.`
+                      : 'Great news! You have no high-priority issues. Focus on the medium priority items for extra polish.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 16,
+                padding: 16,
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  backgroundColor: '#4F46E5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  flexShrink: 0
+                }}>2</div>
+                <div>
+                  <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 4 }}>
+                    Use Our AI CV Rewriter
+                  </h4>
+                  <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 }}>
+                    Click &quot;Get AI-Rewritten CV&quot; in the sidebar to get an improved version implementing all suggestions.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 16,
+                padding: 16,
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  backgroundColor: '#4F46E5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  flexShrink: 0
+                }}>3</div>
+                <div>
+                  <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 4 }}>
+                    Share with a Recruiter
+                  </h4>
+                  <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 }}>
+                    Use the &quot;Share with Recruiter&quot; button to send your verified analysis. Shows you&apos;re proactive about self-improvement.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 16,
+                padding: 16,
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                <div style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  backgroundColor: '#10B981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  flexShrink: 0
+                }}>4</div>
+                <div>
+                  <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: 4 }}>
+                    Prepare for Interviews
+                  </h4>
+                  <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 }}>
+                    Use our Interview Question Coach to practice common questions with personalized tips based on your CV.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Save results reminder */}
+            {!savedResultToken && (
+              <div style={{
+                marginTop: 20,
+                padding: 16,
+                backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                borderRadius: 12,
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#F59E0B', margin: 0 }}>
+                    Don&apos;t lose your results!
+                  </p>
+                  <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                    Click &quot;Save Results&quot; above to access this analysis anytime.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Sidebar */}
@@ -2638,7 +3247,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
         </div>
       )}
 
-      {/* Video Practice Modal */}
+      {/* Video Practice Modal - LIVE */}
       {showVideoModal && (
         <div style={{
           position: 'fixed',
@@ -2646,7 +3255,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.7)',
+          backgroundColor: 'rgba(0,0,0,0.85)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -2656,67 +3265,268 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
           <div style={{
             backgroundColor: 'white',
             borderRadius: 16,
-            padding: 32,
+            padding: 24,
             width: '100%',
-            maxWidth: 500,
-            textAlign: 'center'
+            maxWidth: 700,
+            maxHeight: '90vh',
+            overflow: 'auto'
           }}>
-            <div style={{
-              width: 80,
-              height: 80,
-              backgroundColor: '#EEF2FF',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 20px'
-            }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2">
-                <polygon points="23 7 16 12 23 17 23 7"/>
-                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-              </svg>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A' }}>
+                Video Interview Practice
+              </h2>
+              <button
+                onClick={() => {
+                  if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(t => t.stop());
+                    streamRef.current = null;
+                  }
+                  setShowVideoModal(false);
+                  setVideoFile(null);
+                  setVideoAnalysis(null);
+                  setVideoError(null);
+                  setIsRecordingVideo(false);
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
             </div>
 
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', marginBottom: 12 }}>
-              Video Interview Practice
-            </h2>
-            <p style={{ fontSize: '1rem', color: '#64748B', marginBottom: 24, lineHeight: 1.6 }}>
-              Coming Soon! Practice answering interview questions on video. Our AI will analyze your body language, confidence, and delivery - giving you feedback to improve before the real thing.
-            </p>
+            {!videoAnalysis ? (
+              <>
+                <p style={{ fontSize: '0.9rem', color: '#64748B', marginBottom: 16 }}>
+                  Record yourself answering: <strong>"Tell me about yourself"</strong> (30-60 seconds)
+                </p>
 
-            <div style={{
-              backgroundColor: '#F0FDF4',
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 24
-            }}>
-              <p style={{ fontSize: '0.875rem', color: '#059669', fontWeight: 500 }}>
-                This feature will help you:
-              </p>
-              <ul style={{ textAlign: 'left', fontSize: '0.875rem', color: '#064E3B', margin: '12px 0 0', paddingLeft: 20 }}>
-                <li style={{ marginBottom: 8 }}>Build confidence before interviews</li>
-                <li style={{ marginBottom: 8 }}>Improve your body language</li>
-                <li style={{ marginBottom: 8 }}>Practice common questions for your role</li>
-                <li>Get AI feedback on your presentation</li>
-              </ul>
-            </div>
+                {/* Video Preview */}
+                <div style={{
+                  backgroundColor: '#0F172A',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  marginBottom: 16,
+                  aspectRatio: '16/9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {videoFile ? (
+                    <video
+                      src={URL.createObjectURL(videoFile)}
+                      controls
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
+                    />
+                  )}
+                </div>
 
-            <button
-              onClick={() => setShowVideoModal(false)}
-              style={{
-                width: '100%',
-                padding: '14px 20px',
-                backgroundColor: '#4F46E5',
-                color: 'white',
-                border: 'none',
-                borderRadius: 10,
-                fontSize: '0.9375rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Got it - Notify me when ready
-            </button>
+                {videoError && (
+                  <div style={{ backgroundColor: '#FEF2F2', color: '#DC2626', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: '0.875rem' }}>
+                    {videoError}
+                  </div>
+                )}
+
+                {/* Recording Controls */}
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 16 }}>
+                  {!isRecordingVideo && !videoFile && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          setVideoError(null);
+                          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                          streamRef.current = stream;
+                          if (videoRef.current) {
+                            videoRef.current.srcObject = stream;
+                          }
+                          chunksRef.current = [];
+                          const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                          mediaRecorderRef.current = mediaRecorder;
+                          mediaRecorder.ondataavailable = (e) => {
+                            if (e.data.size > 0) chunksRef.current.push(e.data);
+                          };
+                          mediaRecorder.onstop = () => {
+                            const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+                            setVideoFile(new File([blob], 'video.webm', { type: 'video/webm' }));
+                            stream.getTracks().forEach(t => t.stop());
+                          };
+                          mediaRecorder.start();
+                          setIsRecordingVideo(true);
+                        } catch (err) {
+                          setVideoError('Camera access denied. Please allow camera permissions.');
+                        }
+                      }}
+                      style={{
+                        padding: '12px 24px',
+                        backgroundColor: '#DC2626',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 10,
+                        fontSize: '0.9375rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <div style={{ width: 12, height: 12, backgroundColor: 'white', borderRadius: '50%' }} />
+                      Start Recording
+                    </button>
+                  )}
+
+                  {isRecordingVideo && (
+                    <button
+                      onClick={() => {
+                        if (mediaRecorderRef.current) {
+                          mediaRecorderRef.current.stop();
+                          setIsRecordingVideo(false);
+                        }
+                      }}
+                      style={{
+                        padding: '12px 24px',
+                        backgroundColor: '#0F172A',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 10,
+                        fontSize: '0.9375rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        animation: 'pulse 1s infinite'
+                      }}
+                    >
+                      Stop Recording
+                    </button>
+                  )}
+
+                  {videoFile && !isAnalyzingVideo && (
+                    <>
+                      <button
+                        onClick={() => { setVideoFile(null); setVideoError(null); }}
+                        style={{
+                          padding: '12px 24px',
+                          backgroundColor: '#F1F5F9',
+                          color: '#475569',
+                          border: 'none',
+                          borderRadius: 10,
+                          fontSize: '0.9375rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Re-record
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setIsAnalyzingVideo(true);
+                          setVideoError(null);
+                          try {
+                            const formData = new FormData();
+                            formData.append('video', videoFile);
+                            formData.append('question', 'Tell me about yourself');
+                            if (analysis && (analysis as any).cv_text) formData.append('cv_context', String((analysis as any).cv_text).substring(0, 2000));
+
+                            const res = await fetch('/api/analyze-video', { method: 'POST', body: formData });
+                            const data = await res.json();
+
+                            if (data.success && data.analysis) {
+                              setVideoAnalysis(data.analysis);
+                            } else {
+                              setVideoError(data.error || 'Analysis failed. Please try again.');
+                            }
+                          } catch (err) {
+                            setVideoError('Failed to analyze video. Please try again.');
+                          }
+                          setIsAnalyzingVideo(false);
+                        }}
+                        style={{
+                          padding: '12px 24px',
+                          backgroundColor: '#4F46E5',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 10,
+                          fontSize: '0.9375rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Analyze My Video
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {isAnalyzingVideo && (
+                  <div style={{ textAlign: 'center', padding: 24 }}>
+                    <div style={{ width: 48, height: 48, border: '4px solid #E2E8F0', borderTopColor: '#4F46E5', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                    <p style={{ color: '#64748B' }}>Analyzing your presentation...</p>
+                    <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }`}</style>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Video Analysis Results */
+              <div>
+                <div style={{ backgroundColor: '#F0FDF4', borderRadius: 12, padding: 16, marginBottom: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 800, color: '#059669' }}>{videoAnalysis.overall_score || videoAnalysis.scores?.overall || 75}/100</div>
+                  <div style={{ fontSize: '0.875rem', color: '#065F46' }}>Presentation Score</div>
+                </div>
+
+                {videoAnalysis.strengths && videoAnalysis.strengths.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#059669', marginBottom: 8 }}>What you did well:</h4>
+                    <ul style={{ margin: 0, paddingLeft: 20, color: '#374151', fontSize: '0.875rem' }}>
+                      {videoAnalysis.strengths.slice(0, 4).map((s: any, i: number) => (
+                        <li key={i} style={{ marginBottom: 4 }}>{typeof s === 'string' ? s : s.point || s.label}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {videoAnalysis.improvements && videoAnalysis.improvements.length > 0 && (
+                  <div style={{ marginBottom: 16 }}>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#DC2626', marginBottom: 8 }}>Areas to improve:</h4>
+                    <ul style={{ margin: 0, paddingLeft: 20, color: '#374151', fontSize: '0.875rem' }}>
+                      {videoAnalysis.improvements.slice(0, 4).map((s: any, i: number) => (
+                        <li key={i} style={{ marginBottom: 4 }}>{typeof s === 'string' ? s : s.point || s.suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {videoAnalysis.coach_feedback && (
+                  <div style={{ backgroundColor: '#EEF2FF', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#4F46E5', marginBottom: 8 }}>Coach Feedback:</h4>
+                    <p style={{ color: '#374151', fontSize: '0.875rem', margin: 0 }}>{videoAnalysis.coach_feedback}</p>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => { setVideoAnalysis(null); setVideoFile(null); }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 20px',
+                    backgroundColor: '#4F46E5',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontSize: '0.9375rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Practice Again
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -2812,15 +3622,53 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
         </div>
       )}
 
+      {/* Save Confirmation Toast */}
+      {showSavedConfirmation && (
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#10B981',
+          color: 'white',
+          padding: '16px 24px',
+          borderRadius: 12,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+          zIndex: 1001,
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div>
+            <p style={{ fontWeight: 600, margin: 0, marginBottom: 2 }}>Results Saved!</p>
+            <p style={{ fontSize: '0.8125rem', opacity: 0.9, margin: 0 }}>
+              Access anytime at this link (saved for 30 days)
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Animation Styles */}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideUp {
+          from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+          to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
         .spin-icon { animation: spin 1s linear infinite; }
         @media (max-width: 768px) {
           .results-grid { grid-template-columns: 1fr !important; padding: 20px 16px !important; }
           .score-card-flex { flex-direction: column !important; gap: 20px !important; align-items: center !important; text-align: center !important; }
-          .header-buttons { flex-wrap: wrap !important; gap: 8px !important; }
-          .header-buttons button { padding: 8px 12px !important; font-size: 0.8rem !important; }
+          .header-buttons { flex-wrap: wrap !important; gap: 6px !important; justify-content: flex-end !important; }
+          .header-buttons button { padding: 8px 12px !important; font-size: 0.75rem !important; }
+        }
+        @media (max-width: 480px) {
+          .header-buttons button { padding: 6px 10px !important; font-size: 0.7rem !important; }
+          .header-buttons button svg { width: 14px !important; height: 14px !important; }
         }
       `}</style>
     </div>

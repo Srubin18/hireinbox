@@ -13,6 +13,9 @@ interface InterviewSlot {
   duration: number;
   location_type: 'video' | 'phone' | 'in-person';
   recruiter_name: string;
+  recruiter_email?: string;
+  meeting_link?: string;
+  address?: string;
   is_booked: boolean;
 }
 
@@ -25,6 +28,16 @@ interface BookingInfo {
   expiresAt: string;
   isExpired: boolean;
   isUsed: boolean;
+}
+
+interface BookedInterview {
+  date: string;
+  duration: number;
+  location_type: string;
+  meeting_link?: string;
+  address?: string;
+  recruiter_name?: string;
+  recruiter_email?: string;
 }
 
 // ============================================
@@ -243,6 +256,62 @@ const styles = {
     fontSize: '0.75rem',
     color: '#94a3b8',
   },
+  // Calendar buttons
+  calendarButtons: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    marginTop: '20px',
+  },
+  calendarButtonsTitle: {
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: '#0f172a',
+    marginBottom: '8px',
+  },
+  calendarButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    border: '1px solid #e2e8f0',
+    background: 'white',
+    color: '#0f172a',
+    width: '100%',
+  },
+  calendarButtonPrimary: {
+    background: '#4F46E5',
+    color: 'white',
+    border: 'none',
+  },
+  calendarButtonGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '8px',
+  },
+  meetingLinkBox: {
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '12px',
+    marginTop: '16px',
+  },
+  meetingLinkLabel: {
+    fontSize: '0.75rem',
+    color: '#64748b',
+    marginBottom: '4px',
+  },
+  meetingLinkValue: {
+    fontSize: '0.875rem',
+    color: '#4F46E5',
+    wordBreak: 'break-all' as const,
+  },
 };
 
 // ============================================
@@ -259,6 +328,165 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [bookedInterview, setBookedInterview] = useState<BookedInterview | null>(null);
+
+  // Generate .ics file content
+  const generateICS = (slot: InterviewSlot) => {
+    const startDate = new Date(slot.start_time);
+    const endDate = new Date(slot.end_time);
+
+    const formatICSDate = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    };
+
+    // Generate a unique ID
+    const uid = `hireinbox-${slot.id}-${Date.now()}@hireinbox.co.za`;
+
+    // Determine location
+    let location = '';
+    if (slot.location_type === 'video' && slot.meeting_link) {
+      location = slot.meeting_link;
+    } else if (slot.location_type === 'in-person' && slot.address) {
+      location = slot.address;
+    } else if (slot.location_type === 'phone') {
+      location = 'Phone Call';
+    } else {
+      location = 'Video Call';
+    }
+
+    // Create description
+    let description = `Interview for ${bookingInfo?.roleTitle} at ${bookingInfo?.companyName}\\n\\n`;
+    description += `Interviewer: ${slot.recruiter_name}\\n`;
+    if (slot.meeting_link) {
+      description += `Meeting Link: ${slot.meeting_link}\\n`;
+    }
+    if (slot.address) {
+      description += `Address: ${slot.address}\\n`;
+    }
+    description += `\\nBooked via HireInbox`;
+
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//HireInbox//Interview Booking//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:REQUEST',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${formatICSDate(new Date())}`,
+      `DTSTART:${formatICSDate(startDate)}`,
+      `DTEND:${formatICSDate(endDate)}`,
+      `SUMMARY:Interview - ${bookingInfo?.roleTitle} at ${bookingInfo?.companyName}`,
+      `DESCRIPTION:${description}`,
+      `LOCATION:${location}`,
+      'STATUS:CONFIRMED',
+      'SEQUENCE:0',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT1H',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Interview reminder - 1 hour',
+      'END:VALARM',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT15M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Interview reminder - 15 minutes',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    return icsContent;
+  };
+
+  // Download .ics file
+  const downloadCalendarFile = () => {
+    if (!selectedSlot || !bookingInfo) return;
+
+    const slot = bookingInfo.slots.find(s => s.id === selectedSlot);
+    if (!slot) return;
+
+    const icsContent = generateICS(slot);
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `interview-${bookingInfo.companyName.replace(/\s+/g, '-').toLowerCase()}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
+  // Add to Google Calendar
+  const addToGoogleCalendar = () => {
+    if (!selectedSlot || !bookingInfo) return;
+
+    const slot = bookingInfo.slots.find(s => s.id === selectedSlot);
+    if (!slot) return;
+
+    const startDate = new Date(slot.start_time);
+    const endDate = new Date(slot.end_time);
+
+    const formatGoogleDate = (date: Date) => {
+      return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z/, 'Z');
+    };
+
+    let location = '';
+    if (slot.location_type === 'video' && slot.meeting_link) {
+      location = slot.meeting_link;
+    } else if (slot.address) {
+      location = slot.address;
+    }
+
+    let details = `Interview for ${bookingInfo.roleTitle} at ${bookingInfo.companyName}\n\n`;
+    details += `Interviewer: ${slot.recruiter_name}\n`;
+    if (slot.meeting_link) {
+      details += `Meeting Link: ${slot.meeting_link}\n`;
+    }
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: `Interview - ${bookingInfo.roleTitle} at ${bookingInfo.companyName}`,
+      dates: `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`,
+      details: details,
+      location: location,
+    });
+
+    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, '_blank');
+  };
+
+  // Add to Outlook Calendar
+  const addToOutlookCalendar = () => {
+    if (!selectedSlot || !bookingInfo) return;
+
+    const slot = bookingInfo.slots.find(s => s.id === selectedSlot);
+    if (!slot) return;
+
+    const startDate = new Date(slot.start_time);
+    const endDate = new Date(slot.end_time);
+
+    let location = '';
+    if (slot.location_type === 'video' && slot.meeting_link) {
+      location = slot.meeting_link;
+    } else if (slot.address) {
+      location = slot.address;
+    }
+
+    let body = `Interview for ${bookingInfo.roleTitle} at ${bookingInfo.companyName}%0A%0A`;
+    body += `Interviewer: ${slot.recruiter_name}%0A`;
+    if (slot.meeting_link) {
+      body += `Meeting Link: ${slot.meeting_link}%0A`;
+    }
+
+    const params = new URLSearchParams({
+      subject: `Interview - ${bookingInfo.roleTitle} at ${bookingInfo.companyName}`,
+      startdt: startDate.toISOString(),
+      enddt: endDate.toISOString(),
+      body: body,
+      location: location,
+    });
+
+    window.open(`https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`, '_blank');
+  };
 
   useEffect(() => {
     fetchBookingInfo();
@@ -304,6 +532,11 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
       if (!res.ok) {
         setError(data.error || 'Failed to book interview');
         return;
+      }
+
+      // Store the booked interview data
+      if (data.interview) {
+        setBookedInterview(data.interview);
       }
 
       setSuccess(true);
@@ -384,34 +617,89 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
                 <strong>{bookingInfo?.companyName}</strong> has been confirmed.
               </p>
               {bookedSlot && (
-                <div style={{ ...styles.infoBox, marginTop: '24px', textAlign: 'left' }}>
-                  <div style={styles.infoRow}>
-                    <span style={styles.infoLabel}>Date</span>
-                    <span style={styles.infoValue}>{formatSlotDate(bookedSlot.start_time)}</span>
+                <>
+                  <div style={{ ...styles.infoBox, marginTop: '24px', textAlign: 'left' }}>
+                    <div style={styles.infoRow}>
+                      <span style={styles.infoLabel}>Date</span>
+                      <span style={styles.infoValue}>{formatSlotDate(bookedSlot.start_time)}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.infoLabel}>Time</span>
+                      <span style={styles.infoValue}>
+                        {formatSlotTime(bookedSlot.start_time)} - {formatSlotTime(bookedSlot.end_time)}
+                      </span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.infoLabel}>Format</span>
+                      <span style={styles.infoValue}>
+                        {bookedSlot.location_type === 'video' ? 'Video Call' :
+                         bookedSlot.location_type === 'phone' ? 'Phone Call' : 'In Person'}
+                      </span>
+                    </div>
+                    <div style={{ ...styles.infoRow, marginBottom: 0 }}>
+                      <span style={styles.infoLabel}>With</span>
+                      <span style={styles.infoValue}>{bookedSlot.recruiter_name}</span>
+                    </div>
                   </div>
-                  <div style={styles.infoRow}>
-                    <span style={styles.infoLabel}>Time</span>
-                    <span style={styles.infoValue}>
-                      {formatSlotTime(bookedSlot.start_time)} - {formatSlotTime(bookedSlot.end_time)}
-                    </span>
+
+                  {/* Meeting Link */}
+                  {bookedSlot.location_type === 'video' && bookedSlot.meeting_link && (
+                    <div style={styles.meetingLinkBox}>
+                      <div style={styles.meetingLinkLabel}>Meeting Link</div>
+                      <a
+                        href={bookedSlot.meeting_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.meetingLinkValue}
+                      >
+                        {bookedSlot.meeting_link}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Address for in-person */}
+                  {bookedSlot.location_type === 'in-person' && bookedSlot.address && (
+                    <div style={styles.meetingLinkBox}>
+                      <div style={styles.meetingLinkLabel}>Interview Location</div>
+                      <div style={{ fontSize: '0.875rem', color: '#0f172a' }}>
+                        {bookedSlot.address}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add to Calendar Buttons */}
+                  <div style={styles.calendarButtons}>
+                    <div style={styles.calendarButtonsTitle}>Add to Your Calendar</div>
+                    <button
+                      style={{ ...styles.calendarButton, ...styles.calendarButtonPrimary }}
+                      onClick={downloadCalendarFile}
+                    >
+                      Download Calendar File (.ics)
+                    </button>
+                    <div style={styles.calendarButtonGrid}>
+                      <button
+                        style={styles.calendarButton}
+                        onClick={addToGoogleCalendar}
+                      >
+                        Google Calendar
+                      </button>
+                      <button
+                        style={styles.calendarButton}
+                        onClick={addToOutlookCalendar}
+                      >
+                        Outlook Calendar
+                      </button>
+                    </div>
                   </div>
-                  <div style={styles.infoRow}>
-                    <span style={styles.infoLabel}>Format</span>
-                    <span style={styles.infoValue}>
-                      {bookedSlot.location_type === 'video' ? 'Video Call' :
-                       bookedSlot.location_type === 'phone' ? 'Phone Call' : 'In Person'}
-                    </span>
-                  </div>
-                </div>
+                </>
               )}
-              <p style={{ ...styles.successText, marginTop: '16px' }}>
+              <p style={{ ...styles.successText, marginTop: '20px' }}>
                 A confirmation email has been sent to <strong>{bookingInfo?.candidateEmail}</strong>.
-                Please add this to your calendar.
               </p>
             </div>
             <div style={styles.footer}>
               <p style={styles.footerText}>
-                Powered by HireInbox
+                Powered by HireInbox - POPIA Compliant
               </p>
             </div>
           </div>

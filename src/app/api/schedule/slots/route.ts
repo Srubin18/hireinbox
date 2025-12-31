@@ -427,9 +427,85 @@ export async function PATCH(request: Request) {
       }
 
       // Create calendar event if calendar is connected
-      // TODO: Implement calendar event creation here
+      let calendarEventId: string | undefined;
+      let meetingLink: string | undefined;
 
-      return NextResponse.json({ slot: bookedSlot, traceId });
+      // Get candidate and role info for calendar event
+      const { data: candidate } = await supabase
+        .from('candidates')
+        .select('name, email')
+        .eq('id', candidate_id)
+        .single();
+
+      const { data: role } = await supabase
+        .from('roles')
+        .select('title, companies(name)')
+        .eq('id', bookedSlot.role_id)
+        .single();
+
+      // Try to create calendar event (optional - fails silently if not configured)
+      try {
+        const calendarClient = getCalendarClient();
+
+        // Check if recruiter has calendar credentials stored
+        const { data: recruiterSettings } = await supabase
+          .from('user_settings')
+          .select('calendar_credentials')
+          .eq('user_id', bookedSlot.recruiter_id)
+          .single();
+
+        if (recruiterSettings?.calendar_credentials) {
+          calendarClient.setCredentials(recruiterSettings.calendar_credentials);
+
+          const companyName = ((role?.companies as unknown) as { name: string } | null)?.name || 'HireInbox';
+
+          const eventResult = await calendarClient.createEvent('primary', {
+            summary: `Interview: ${candidate?.name || 'Candidate'} - ${role?.title || 'Position'}`,
+            description: `Interview for ${role?.title || 'Position'} at ${companyName}.
+
+Candidate: ${candidate?.name || 'Unknown'}
+Email: ${candidate?.email || 'N/A'}
+
+Scheduled via HireInbox.`,
+            start: new Date(bookedSlot.start_time),
+            end: new Date(bookedSlot.end_time),
+            attendees: [
+              { email: candidate?.email || '', name: candidate?.name },
+              { email: bookedSlot.recruiter_email, name: bookedSlot.recruiter_name },
+            ],
+            conferenceData: bookedSlot.location_type === 'video',
+            location: bookedSlot.location_type === 'in-person' ? bookedSlot.address : undefined,
+          });
+
+          if (eventResult.success) {
+            calendarEventId = eventResult.eventId;
+            meetingLink = eventResult.meetingLink;
+
+            // Update slot with calendar event ID and meeting link
+            await supabase
+              .from('interview_slots')
+              .update({
+                calendar_event_id: calendarEventId,
+                meeting_link: meetingLink || bookedSlot.meeting_link,
+              })
+              .eq('id', id);
+
+            console.log(`[${traceId}] Calendar event created: ${calendarEventId}`);
+          }
+        }
+      } catch (calendarError) {
+        // Calendar integration is optional - log but don't fail
+        console.warn(`[${traceId}] Calendar event creation skipped:`, calendarError);
+      }
+
+      return NextResponse.json({
+        slot: {
+          ...bookedSlot,
+          calendar_event_id: calendarEventId,
+          meeting_link: meetingLink || bookedSlot.meeting_link,
+        },
+        traceId
+      });
     }
 
     if (action === 'unbook') {

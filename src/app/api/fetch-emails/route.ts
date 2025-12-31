@@ -6,6 +6,12 @@ import OpenAI from 'openai';
 import { SA_CONTEXT_PROMPT, SA_RECRUITER_CONTEXT } from '@/lib/sa-context';
 import { sendAcknowledgmentEmail } from '@/lib/email';
 
+// V3 BRAIN - Fine-tuned on 6,000 SA recruitment examples
+const HIREINBOX_V3_MODEL = 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ';
+
+// Only log verbose debug info in development
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -268,13 +274,11 @@ function isSystemEmail(subject: string, from: string, body?: string): boolean {
   const lowerFrom = (from || '').toLowerCase();
   const lowerBody = (body || '').toLowerCase();
 
-  // Only block definite system senders - be conservative to avoid blocking real applicants
   const systemFromPatterns = [
     'mailer-daemon', 'postmaster', 'no-reply@', 'noreply@', 'do-not-reply@',
     'donotreply@', 'auto-reply@', 'autoreply@', 'mailerdaemon', 'mail-daemon',
     'bounce@', 'notifications@google.com', 'notifications@github.com'
   ];
-  // NOTE: Removed 'notification' (too broad) and 'googlemail.com' (legitimate Gmail users)
 
   const systemSubjectPatterns = [
     'delivery status', 'undeliverable', 'mail delivery failed', 'returned mail',
@@ -288,14 +292,14 @@ function isSystemEmail(subject: string, from: string, body?: string): boolean {
 
   for (const pattern of systemFromPatterns) {
     if (lowerFrom.includes(pattern)) {
-      console.log(`[FILTER] Skipping system email from: ${from} (matched: ${pattern})`);
+      if (IS_DEV) console.log(`[FILTER] Skipping system email from: ${from} (matched: ${pattern})`);
       return true;
     }
   }
 
   for (const pattern of systemSubjectPatterns) {
     if (lowerSubject.includes(pattern)) {
-      console.log(`[FILTER] Skipping system email subject: ${subject} (matched: ${pattern})`);
+      if (IS_DEV) console.log(`[FILTER] Skipping system email subject: ${subject} (matched: ${pattern})`);
       return true;
     }
   }
@@ -303,21 +307,19 @@ function isSystemEmail(subject: string, from: string, body?: string): boolean {
   if (lowerBody.includes('this is an automatically generated') ||
       lowerBody.includes('delivery to the following recipient failed') ||
       lowerBody.includes('the email account that you tried to reach does not exist')) {
-    console.log(`[FILTER] Skipping bounce email detected in body`);
+    if (IS_DEV) console.log(`[FILTER] Skipping bounce email detected in body`);
     return true;
   }
 
   return false;
 }
 
-// SPAM FILTER: Detect non-CV content (news, newsletters, marketing, etc.)
 function isSpamContent(subject: string, from: string, body?: string, hasAttachments?: boolean): { isSpam: boolean; reason: string } {
   const lowerSubject = (subject || '').toLowerCase();
   const lowerFrom = (from || '').toLowerCase();
   const lowerBody = (body || '').toLowerCase();
   const combinedText = `${lowerSubject} ${lowerBody}`;
 
-  // NEWS ARTICLE PATTERNS - block news/current events content
   const newsPatterns = [
     /breaking\s*news/i,
     /\b(shooting|gunman|shooter|killed|murder|arrested|suspect|crime|criminal)\b/i,
@@ -336,7 +338,6 @@ function isSpamContent(subject: string, from: string, body?: string, hasAttachme
     }
   }
 
-  // NEWSLETTER/MARKETING PATTERNS
   const newsletterPatterns = [
     /\bunsubscribe\b/i,
     /\bview\s+in\s+browser\b/i,
@@ -359,12 +360,10 @@ function isSpamContent(subject: string, from: string, body?: string, hasAttachme
     }
   }
 
-  // If 2+ newsletter signals AND no attachments, it's likely spam
   if (newsletterSignals >= 2 && !hasAttachments) {
     return { isSpam: true, reason: `Newsletter/marketing content (${newsletterSignals} signals)` };
   }
 
-  // KNOWN SPAM SENDERS
   const spamSenderPatterns = [
     /newsletter@/i,
     /marketing@/i,
@@ -386,7 +385,6 @@ function isSpamContent(subject: string, from: string, body?: string, hasAttachme
     }
   }
 
-  // SUBJECT LINE RED FLAGS (without attachments)
   const spamSubjectPatterns = [
     /^(fw|fwd):\s*(breaking|news|alert)/i,
     /you\s+won\b/i,
@@ -407,7 +405,6 @@ function isSpamContent(subject: string, from: string, body?: string, hasAttachme
     }
   }
 
-  // CV INDICATOR CHECK - if no attachments and no CV-like content, likely not a job application
   if (!hasAttachments) {
     const cvIndicators = [
       /\b(cv|resume|curriculum\s*vitae)\b/i,
@@ -430,7 +427,6 @@ function isSpamContent(subject: string, from: string, body?: string, hasAttachme
       }
     }
 
-    // No attachments and no CV indicators = probably not a job application
     if (cvSignals === 0 && lowerBody.length > 100) {
       return { isSpam: true, reason: 'No CV indicators and no attachments' };
     }
@@ -507,7 +503,7 @@ async function extractPDFText(buffer: Buffer, traceId: string, filename: string)
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes) - Attempt ${attempt}`);
+      if (IS_DEV) console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes) - Attempt ${attempt}`);
       const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
 
       if (isProduction && process.env.CONVERTAPI_SECRET) {
@@ -536,19 +532,18 @@ async function extractPDFText(buffer: Buffer, traceId: string, filename: string)
         const textResponse = await fetch(result.Files[0].Url);
         const pdfText = await textResponse.text();
 
-        // Validate we got meaningful content
         if (pdfText.length < 100) {
           console.error(`[${traceId}][PDF] ConvertAPI returned too little text: ${pdfText.length} chars`);
           if (attempt < maxRetries) continue;
         }
 
-        console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
+        if (IS_DEV) console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
         return pdfText;
       } else {
         const pdfParseModule = await import('pdf-parse');
         const pdfParse = pdfParseModule.default || pdfParseModule;
         const data = await pdfParse(buffer);
-        console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
+        if (IS_DEV) console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
         return data.text || '';
       }
     } catch (e) {
@@ -561,16 +556,14 @@ async function extractPDFText(buffer: Buffer, traceId: string, filename: string)
 
 async function extractWordText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
   try {
-    console.log(`[${traceId}][DOC] Processing: ${filename} (${buffer.length} bytes)`);
+    if (IS_DEV) console.log(`[${traceId}][DOC] Processing: ${filename} (${buffer.length} bytes)`);
     const mammoth = (await import('mammoth')).default;
     const result = await mammoth.extractRawText({ buffer });
-    console.log(`[${traceId}][DOC] Extracted ${result.value?.length || 0} chars`);
+    if (IS_DEV) console.log(`[${traceId}][DOC] Extracted ${result.value?.length || 0} chars`);
     return result.value || '';
   } catch (e) { console.error(`[${traceId}][DOC] ERROR:`, e); return ''; }
 }
 
-// LAYER 4: Server-side heuristic exception detection
-// This catches near-miss candidates even when the model forgets to set exception_applied=true
 function detectServerSideException(
   analysis: Record<string, unknown>,
   role: Record<string, unknown>,
@@ -579,7 +572,6 @@ function detectServerSideException(
   const rec = String(analysis.recommendation || '').toUpperCase();
   if (rec !== 'REJECT') return { shouldUpgrade: false, reason: '' };
 
-  // Check experience gap
   const candidateYears = analysis.years_experience as number | null;
   const criteria = role.criteria as Record<string, unknown> | undefined;
   const facts = role.facts as Record<string, unknown> | undefined;
@@ -588,28 +580,23 @@ function detectServerSideException(
   if (!candidateYears || !requiredYears) return { shouldUpgrade: false, reason: '' };
 
   const gap = requiredYears - candidateYears;
-  // Only apply if within 6-12 months (0.5 to 1.0 years) of requirement
   if (gap <= 0 || gap > 1.0) return { shouldUpgrade: false, reason: '' };
 
-  console.log(`[${traceId}][LAYER4] Near-miss detected: ${candidateYears} years vs ${requiredYears} required (gap: ${gap})`);
+  if (IS_DEV) console.log(`[${traceId}][LAYER4] Near-miss detected: ${candidateYears} years vs ${requiredYears} required (gap: ${gap})`);
 
-  // Count exceptional indicators from the analysis
   let indicators = 0;
   const indicatorReasons: string[] = [];
 
-  // Check ALL text fields for exceptional signals
   const reasonText = String(analysis.recommendation_reason || '').toLowerCase();
   const summary = analysis.summary as Record<string, unknown> | undefined;
   const fitText = String(summary?.fit_assessment || '').toLowerCase();
 
-  // Also check strengths array - this is where "High-performing", "Exceptional trajectory" often appear
   const strengths = summary?.strengths as Array<{ label: string; evidence: string }> | undefined;
   let strengthsText = '';
   if (strengths) {
     strengthsText = strengths.map(s => `${s.label} ${s.evidence}`).join(' ').toLowerCase();
   }
 
-  // Check evidence_highlights text too
   const highlights = analysis.evidence_highlights as Array<{ claim: string; evidence: string }> | undefined;
   let highlightsText = '';
   if (highlights) {
@@ -618,7 +605,6 @@ function detectServerSideException(
 
   const fullText = [reasonText, fitText, strengthsText, highlightsText].join(' ');
 
-  // Check for >120% targets or overachievement in highlights
   if (highlights) {
     for (const h of highlights) {
       const text = (h.claim + ' ' + h.evidence).toLowerCase();
@@ -630,43 +616,37 @@ function detectServerSideException(
     }
   }
 
-  // Check for awards/top performer/high-performing
   if (/award|top.?perform|high.?perform|best|outstanding|excellence|recognition/i.test(fullText)) {
     indicators++;
     indicatorReasons.push('Awards/high-performance recognition');
   }
 
-  // Check for exceptional signals (Lerato case: "exceptional growth trajectory")
   if (/exceptional|extraordinary|remarkable|standout/i.test(fullText)) {
     indicators++;
     indicatorReasons.push('Exceptional performance noted');
   }
 
-  // Check for rapid promotion
   if (/promot|advanc|elevated|moved up|progression/i.test(fullText)) {
     indicators++;
     indicatorReasons.push('Career progression');
   }
 
-  // Check for leadership signals
   if (/manag|led|lead|supervis|mentor|team of|direct report/i.test(fullText)) {
     indicators++;
     indicatorReasons.push('Leadership signals');
   }
 
-  // Check for major deals/achievements with metrics
   if (/million|€|£|\$|R\d|major deal|closed|revenue|grew|increased by/i.test(fullText)) {
     indicators++;
     indicatorReasons.push('Major achievements with metrics');
   }
 
-  // Check for trajectory keywords
   if (/trajectory|growth|potential|promising|strong candidate/i.test(fullText)) {
     indicators++;
     indicatorReasons.push('Growth trajectory noted');
   }
 
-  console.log(`[${traceId}][LAYER4] Exceptional indicators found: ${indicators} (${indicatorReasons.join(', ')})`);
+  if (IS_DEV) console.log(`[${traceId}][LAYER4] Exceptional indicators found: ${indicators} (${indicatorReasons.join(', ')})`);
 
   if (indicators >= 2) {
     return {
@@ -678,7 +658,6 @@ function detectServerSideException(
   return { shouldUpgrade: false, reason: '' };
 }
 
-// Validation synced with screen/route.ts - enforces Rule 7 dominance
 function validateAnalysis(analysis: Record<string, unknown>): boolean {
   const score = analysis.overall_score;
   const rec = String(analysis.recommendation || '').toUpperCase();
@@ -688,7 +667,6 @@ function validateAnalysis(analysis: Record<string, unknown>): boolean {
   if (!['SHORTLIST', 'CONSIDER', 'REJECT'].includes(rec)) return false;
   if (rec === 'SHORTLIST' && score < 80) return false;
   if (rec === 'CONSIDER' && score < 60) return false;
-  // CRITICAL: If exception applied, REJECT is forbidden
   if (exceptionApplied && rec === 'REJECT') return false;
   if (!Array.isArray(analysis.risk_register)) return false;
   if (!analysis.confidence || !(analysis.confidence as Record<string, unknown>).level) return false;
@@ -720,17 +698,16 @@ Respond with valid JSON only.`;
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      console.log(`[${traceId}][AI] Attempt ${attempt}...`);
-      // Use V3 fine-tuned model - trained on 6,000 SA recruitment examples
+      if (IS_DEV) console.log(`[${traceId}][AI] Attempt ${attempt} using V3 brain...`);
       const completion = await openai.chat.completions.create({
-        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ',
+        model: HIREINBOX_V3_MODEL,
         temperature: 0,
         max_tokens: 4000,
         response_format: { type: 'json_object' },
         messages,
       });
       const text = completion.choices[0]?.message?.content || '';
-      console.log(`[${traceId}][AI] Response length: ${text.length}`);
+      if (IS_DEV) console.log(`[${traceId}][AI] Response length: ${text.length}`);
       const cleaned = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
 
       let parsed: Record<string, unknown>;
@@ -753,9 +730,8 @@ Respond with valid JSON only.`;
           continue;
         }
 
-        // Layer 3: Runtime enforcement - force CONSIDER if exception applied but model returned REJECT
         if (parsed.exception_applied === true && String(parsed.recommendation).toUpperCase() === 'REJECT') {
-          console.log(`[${traceId}][AI] LAYER 3: Forcing CONSIDER (exception was applied but model said REJECT)`);
+          if (IS_DEV) console.log(`[${traceId}][AI] LAYER 3: Forcing CONSIDER (exception was applied but model said REJECT)`);
           parsed.recommendation = 'CONSIDER';
           if (typeof parsed.overall_score === 'number' && parsed.overall_score < 60) {
             parsed.overall_score = 65;
@@ -780,7 +756,7 @@ Respond with valid JSON only.`;
 
 export async function POST() {
   const traceId = Date.now().toString(36);
-  console.log(`[${traceId}] === FETCH START ===`);
+  if (IS_DEV) console.log(`[${traceId}] === FETCH START (V3 BRAIN) ===`);
 
   const results = {
     traceId, listedCount: 0, processedCount: 0, storedCount: 0,
@@ -792,10 +768,10 @@ export async function POST() {
     const { data: roles } = await supabase.from('roles').select('*').eq('status', 'active').limit(1);
     const activeRole = roles?.[0];
     if (!activeRole) {
-      console.log(`[${traceId}] No active role found`);
+      if (IS_DEV) console.log(`[${traceId}] No active role found`);
       return NextResponse.json({ error: 'No active role found', ...results }, { status: 400 });
     }
-    console.log(`[${traceId}] Role: ${activeRole.title}`);
+    if (IS_DEV) console.log(`[${traceId}] Role: ${activeRole.title}`);
 
     const connection = await Imap.connect({
       imap: {
@@ -809,30 +785,27 @@ export async function POST() {
       }
     });
 
-    // Try Hireinbox folder first, fall back to INBOX
     let folderName = 'Hireinbox';
     try {
       await connection.openBox('Hireinbox');
-      console.log(`[${traceId}] Connected to Hireinbox folder`);
+      if (IS_DEV) console.log(`[${traceId}] Connected to Hireinbox folder`);
     } catch {
-      console.log(`[${traceId}] Hireinbox folder not found, trying INBOX`);
+      if (IS_DEV) console.log(`[${traceId}] Hireinbox folder not found, trying INBOX`);
       await connection.openBox('INBOX');
       folderName = 'INBOX';
-      console.log(`[${traceId}] Connected to INBOX folder`);
+      if (IS_DEV) console.log(`[${traceId}] Connected to INBOX folder`);
     }
 
-    // CRITICAL: markSeen: false - only mark as read AFTER successful processing
     const messages = await connection.search(['UNSEEN'], {
       bodies: ['HEADER', 'TEXT', ''],
-      markSeen: false,  // Don't mark as read until we successfully process
+      markSeen: false,
       struct: true
     });
 
     results.listedCount = messages.length;
-    console.log(`[${traceId}] Found ${messages.length} unread emails`);
+    if (IS_DEV) console.log(`[${traceId}] Found ${messages.length} unread emails`);
 
     for (const message of messages.slice(0, 10)) {
-      // Get message UID for marking as read later
       const messageUid = message.attributes?.uid;
 
       try {
@@ -844,40 +817,37 @@ export async function POST() {
         const subject = parsed.subject || '(no subject)';
         const textBody = parsed.text || '';
 
-        // Skip our own acknowledgment emails
         if (fromEmail === process.env.GMAIL_USER?.toLowerCase()) continue;
         if (subject.includes('Application Received')) continue;
 
         if (isSystemEmail(subject, fromEmail, textBody)) {
           results.skippedSystem++;
-          console.log(`[${traceId}] SKIPPED SYSTEM: ${subject} from ${fromEmail}`);
+          if (IS_DEV) console.log(`[${traceId}] SKIPPED SYSTEM: ${subject} from ${fromEmail}`);
           if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
           continue;
         }
 
-        // SPAM FILTER: Block non-CV content (news, newsletters, marketing)
         const hasAttachments = (parsed.attachments?.length || 0) > 0;
         const spamCheck = isSpamContent(subject, fromEmail, textBody, hasAttachments);
         if (spamCheck.isSpam) {
           results.skippedSpam++;
-          console.log(`[${traceId}] SKIPPED SPAM: ${subject} from ${fromEmail} (${spamCheck.reason})`);
+          if (IS_DEV) console.log(`[${traceId}] SKIPPED SPAM: ${subject} from ${fromEmail} (${spamCheck.reason})`);
           if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
           continue;
         }
 
-        // 24-hour duplicate check - only skip if previous was successfully processed
         const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
         const { data: existing } = await supabase.from('candidates').select('id, status')
           .eq('email', fromEmail).eq('role_id', activeRole.id).gte('created_at', oneDayAgo).limit(1);
         if (existing?.length && existing[0].status !== 'unprocessed') {
           results.skippedDuplicates++;
-          console.log(`[${traceId}] SKIPPED DUPLICATE: ${fromEmail} (already processed as ${existing[0].status})`);
+          if (IS_DEV) console.log(`[${traceId}] SKIPPED DUPLICATE: ${fromEmail} (already processed as ${existing[0].status})`);
           if (messageUid) await connection.addFlags(messageUid, ['\\Seen']).catch(() => {});
           continue;
         }
 
         results.processedCount++;
-        console.log(`[${traceId}] Processing: ${fromEmail} - ${subject}`);
+        if (IS_DEV) console.log(`[${traceId}] Processing: ${fromEmail} - ${subject}`);
 
         let cvText = '';
         const attachmentInfo: string[] = [];
@@ -900,7 +870,7 @@ export async function POST() {
         }
 
         if (cvText.length < 50) {
-          console.log(`[${traceId}] CV too short (${cvText.length} chars), storing as unprocessed`);
+          if (IS_DEV) console.log(`[${traceId}] CV too short (${cvText.length} chars), storing as unprocessed`);
           const { error: unprocessedErr } = await supabase.from('candidates').insert({
             company_id: activeRole.company_id, role_id: activeRole.id,
             name: subject, email: fromEmail,
@@ -918,18 +888,16 @@ export async function POST() {
         const analysis = await screenCV(cvText, activeRole, traceId);
         if (!analysis) {
           results.errors.push(`AI screening failed: ${fromEmail}`);
-          console.log(`[${traceId}] AI screening failed for ${fromEmail}`);
+          if (IS_DEV) console.log(`[${traceId}] AI screening failed for ${fromEmail}`);
           continue;
         }
 
-        console.log(`[${traceId}] AI result: ${analysis.candidate_name} - Score:${analysis.overall_score} - ${analysis.recommendation} - Exception:${analysis.exception_applied || false}`);
+        if (IS_DEV) console.log(`[${traceId}] AI result: ${analysis.candidate_name} - Score:${analysis.overall_score} - ${analysis.recommendation} - Exception:${analysis.exception_applied || false}`);
 
-        // LAYER 4: Server-side heuristic exception detection
-        // Catches near-miss candidates even when model forgot to set exception_applied
         if (!analysis.exception_applied && String(analysis.recommendation).toUpperCase() === 'REJECT') {
           const layer4 = detectServerSideException(analysis, activeRole, traceId);
           if (layer4.shouldUpgrade) {
-            console.log(`[${traceId}][LAYER4] UPGRADING to CONSIDER: ${layer4.reason}`);
+            if (IS_DEV) console.log(`[${traceId}][LAYER4] UPGRADING to CONSIDER: ${layer4.reason}`);
             analysis.recommendation = 'CONSIDER';
             analysis.exception_applied = true;
             analysis.exception_reason = layer4.reason;
@@ -970,13 +938,11 @@ export async function POST() {
         if (insertErr) {
           results.errors.push(`DB insert failed: ${candidateName} - ${insertErr.message}`);
           console.error(`[${traceId}] DB error:`, insertErr);
-          // Don't mark as read - allow retry on next fetch
         }
         else {
           results.storedCount++;
           results.candidates.push(`${candidateName} (${analysis.overall_score})`);
 
-          // AUTO-ACKNOWLEDGMENT: Send email to candidate confirming receipt
           const candidateEmail = String(analysis.candidate_email || fromEmail);
           if (candidateEmail && candidateEmail.includes('@')) {
             try {
@@ -984,20 +950,18 @@ export async function POST() {
                 candidateEmail,
                 candidateName,
                 activeRole.title,
-                'Mafadi Group' // Company name - TODO: get from company config
+                'Mafadi Group'
               );
               if (ackResult.success) {
-                console.log(`[${traceId}] Auto-acknowledgment sent to: ${candidateEmail}`);
+                if (IS_DEV) console.log(`[${traceId}] Auto-acknowledgment sent to: ${candidateEmail}`);
               } else {
                 console.error(`[${traceId}] Auto-acknowledgment failed:`, ackResult.error);
               }
             } catch (ackErr) {
               console.error(`[${traceId}] Auto-acknowledgment error:`, ackErr);
-              // Don't fail the whole process if email fails
             }
           }
 
-          // AUTO-SCHEDULE: If role has auto-scheduling enabled and candidate meets threshold
           const autoConfig = activeRole.auto_schedule_config as {
             enabled?: boolean;
             min_score_to_schedule?: number;
@@ -1008,9 +972,8 @@ export async function POST() {
             const minScore = autoConfig.min_score_to_schedule ?? 80;
             if (analysis.overall_score >= minScore && candidateEmail && candidateEmail.includes('@')) {
               try {
-                console.log(`[${traceId}][AUTO-SCHEDULE] Candidate ${candidateName} qualifies (score: ${analysis.overall_score} >= ${minScore})`);
+                if (IS_DEV) console.log(`[${traceId}][AUTO-SCHEDULE] Candidate ${candidateName} qualifies (score: ${analysis.overall_score} >= ${minScore})`);
 
-                // Get the inserted candidate ID
                 const { data: insertedCandidate } = await supabase
                   .from('candidates')
                   .select('id')
@@ -1021,7 +984,6 @@ export async function POST() {
                   .single();
 
                 if (insertedCandidate?.id) {
-                  // Trigger auto-schedule for this candidate
                   const autoScheduleRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/schedule/auto`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1033,23 +995,21 @@ export async function POST() {
 
                   if (autoScheduleRes.ok) {
                     const scheduleResult = await autoScheduleRes.json();
-                    console.log(`[${traceId}][AUTO-SCHEDULE] Result:`, scheduleResult);
+                    if (IS_DEV) console.log(`[${traceId}][AUTO-SCHEDULE] Result:`, scheduleResult);
                   } else {
                     console.error(`[${traceId}][AUTO-SCHEDULE] Failed:`, await autoScheduleRes.text());
                   }
                 }
               } catch (scheduleErr) {
                 console.error(`[${traceId}][AUTO-SCHEDULE] Error:`, scheduleErr);
-                // Don't fail the whole process if auto-schedule fails
               }
             }
           }
 
-          // SUCCESS: Now mark email as read so it's not processed again
           if (messageUid) {
             try {
               await connection.addFlags(messageUid, ['\\Seen']);
-              console.log(`[${traceId}] Marked email as read: UID ${messageUid}`);
+              if (IS_DEV) console.log(`[${traceId}] Marked email as read: UID ${messageUid}`);
             } catch (flagErr) {
               console.error(`[${traceId}] Failed to mark as read:`, flagErr);
             }
@@ -1064,7 +1024,7 @@ export async function POST() {
     }
 
     connection.end();
-    console.log(`[${traceId}] === FETCH END === Listed:${results.listedCount} Processed:${results.processedCount} Stored:${results.storedCount} SkippedSystem:${results.skippedSystem} SkippedSpam:${results.skippedSpam} SkippedDupes:${results.skippedDuplicates}`);
+    if (IS_DEV) console.log(`[${traceId}] === FETCH END === Listed:${results.listedCount} Processed:${results.processedCount} Stored:${results.storedCount} SkippedSystem:${results.skippedSystem} SkippedSpam:${results.skippedSpam} SkippedDupes:${results.skippedDuplicates}`);
 
     return NextResponse.json({
       success: true,

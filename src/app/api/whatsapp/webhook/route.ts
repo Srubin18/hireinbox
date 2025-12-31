@@ -13,9 +13,13 @@
 // 2. Set to HTTP POST
 // 3. Enable signature validation in production
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import crypto from 'crypto';
+
+// Only log verbose debug info in development
+const IS_DEV = process.env.NODE_ENV !== 'production';
 import {
   parseIncomingMessage,
   getConversationState,
@@ -49,6 +53,51 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Twilio Auth Token for signature validation
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || '';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// ============================================
+// TWILIO SIGNATURE VALIDATION
+// ============================================
+
+/**
+ * Validates Twilio webhook signature to ensure requests are from Twilio
+ * https://www.twilio.com/docs/usage/security#validating-requests
+ */
+function validateTwilioSignature(
+  signature: string,
+  url: string,
+  params: Record<string, string>
+): boolean {
+  if (!TWILIO_AUTH_TOKEN) {
+    console.warn('[TWILIO] Auth token not configured, skipping validation');
+    return true; // Allow in dev if not configured
+  }
+
+  // Sort params alphabetically and concatenate
+  const sortedKeys = Object.keys(params).sort();
+  let data = url;
+  for (const key of sortedKeys) {
+    data += key + params[key];
+  }
+
+  // Create HMAC-SHA1 signature
+  const hmac = crypto.createHmac('sha1', TWILIO_AUTH_TOKEN);
+  hmac.update(data);
+  const expectedSignature = hmac.digest('base64');
+
+  // Compare signatures using timing-safe comparison
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature)
+    );
+  } catch {
+    return false;
+  }
+}
+
 // ============================================
 // CV EXTRACTION (from incoming media)
 // ============================================
@@ -61,7 +110,7 @@ async function extractTextFromMedia(
   try {
     // PDF extraction
     if (contentType.includes('pdf')) {
-      console.log(`[${traceId}][EXTRACT] Processing PDF...`);
+      if (IS_DEV) console.log(`[${traceId}][EXTRACT] Processing PDF...`);
       const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
 
       if (isProduction && process.env.CONVERTAPI_SECRET) {
@@ -91,7 +140,7 @@ async function extractTextFromMedia(
 
     // Word document extraction
     if (contentType.includes('word') || contentType.includes('document')) {
-      console.log(`[${traceId}][EXTRACT] Processing Word document...`);
+      if (IS_DEV) console.log(`[${traceId}][EXTRACT] Processing Word document...`);
       const mammoth = (await import('mammoth')).default;
       const result = await mammoth.extractRawText({ buffer });
       return result.value || '';
@@ -99,7 +148,7 @@ async function extractTextFromMedia(
 
     // Image OCR (for photos of CVs)
     if (contentType.includes('image')) {
-      console.log(`[${traceId}][EXTRACT] Processing image with OCR...`);
+      if (IS_DEV) console.log(`[${traceId}][EXTRACT] Processing image with OCR...`);
       // Use GPT-4o vision for OCR
       const base64Image = buffer.toString('base64');
       const mimeType = contentType.includes('jpeg') ? 'image/jpeg' :
@@ -286,22 +335,22 @@ async function handleCVUpload(
   }
 
   // Download media
-  console.log(`[${traceId}][CV] Downloading media: ${contentType}`);
+  if (IS_DEV) console.log(`[${traceId}][CV] Downloading media: ${contentType}`);
   const media = await downloadMedia(mediaUrl);
   if (!media) {
     return MESSAGES.CV_FAILED;
   }
 
   // Extract text
-  console.log(`[${traceId}][CV] Extracting text...`);
+  if (IS_DEV) console.log(`[${traceId}][CV] Extracting text...`);
   const cvText = await extractTextFromMedia(media.buffer, contentType, traceId);
 
   if (cvText.length < 50) {
-    console.log(`[${traceId}][CV] Extraction failed or too short: ${cvText.length} chars`);
+    if (IS_DEV) console.log(`[${traceId}][CV] Extraction failed or too short: ${cvText.length} chars`);
     return MESSAGES.CV_FAILED;
   }
 
-  console.log(`[${traceId}][CV] Extracted ${cvText.length} characters`);
+  if (IS_DEV) console.log(`[${traceId}][CV] Extracted ${cvText.length} characters`);
 
   // Store CV and move to knockout questions
   const state: Partial<ConversationState> & { candidatePhone: string } = {
@@ -415,7 +464,7 @@ async function completeApplication(
   role: Record<string, unknown>,
   traceId: string
 ): Promise<string> {
-  console.log(`[${traceId}][COMPLETE] Processing complete application`);
+  if (IS_DEV) console.log(`[${traceId}][COMPLETE] Processing complete application`);
 
   // Get cached CV text
   const { data: cvCache } = await supabase
@@ -430,7 +479,7 @@ async function completeApplication(
   }
 
   // Screen the CV
-  console.log(`[${traceId}][COMPLETE] Running AI screening...`);
+  if (IS_DEV) console.log(`[${traceId}][COMPLETE] Running AI screening...`);
   const screening = await screenCVForWhatsApp(cvCache.cv_text, role, state.responses, traceId);
 
   if (!screening) {
@@ -438,7 +487,7 @@ async function completeApplication(
     return MESSAGES.APPLICATION_COMPLETE(message.profileName);
   }
 
-  console.log(`[${traceId}][COMPLETE] Screening result: ${screening.recommendation} (${screening.overall_score})`);
+  if (IS_DEV) console.log(`[${traceId}][COMPLETE] Screening result: ${screening.recommendation} (${screening.overall_score})`);
 
   // Map recommendation to status
   const status = {
@@ -526,7 +575,7 @@ async function completeApplication(
 
 export async function POST(request: Request) {
   const traceId = Date.now().toString(36);
-  console.log(`[${traceId}][WHATSAPP-WEBHOOK] Incoming message`);
+  if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] Incoming message`);
 
   try {
     // Parse form data from Twilio
@@ -536,20 +585,23 @@ export async function POST(request: Request) {
       body[key] = String(value);
     });
 
-    // TODO: Validate Twilio signature in production
-    // const signature = request.headers.get('X-Twilio-Signature') || '';
-    // const url = request.url;
-    // if (!await validateTwilioSignature(signature, url, body)) {
-    //   return new NextResponse('Unauthorized', { status: 401 });
-    // }
+    // Validate Twilio signature in production
+    if (IS_PRODUCTION) {
+      const signature = request.headers.get('X-Twilio-Signature') || '';
+      const url = request.url;
+      if (!validateTwilioSignature(signature, url, body)) {
+        console.error(`[${traceId}][WHATSAPP-WEBHOOK] Invalid Twilio signature`);
+        return new NextResponse('Unauthorized', { status: 401 });
+      }
+    }
 
     // Parse message
     const message = parseIncomingMessage(body);
-    console.log(`[${traceId}][WHATSAPP-WEBHOOK] From: ${message.from}, Body: "${message.body.substring(0, 50)}...", Media: ${message.numMedia}`);
+    if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] From: ${message.from}, Body: "${message.body.substring(0, 50)}...", Media: ${message.numMedia}`);
 
     // Get conversation state
     const state = await getConversationState(supabase, message.from);
-    console.log(`[${traceId}][WHATSAPP-WEBHOOK] State: ${state?.stage || 'new'}`);
+    if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] State: ${state?.stage || 'new'}`);
 
     let responseMessage: string;
 
@@ -599,7 +651,7 @@ export async function POST(request: Request) {
     }
 
     // Return TwiML response
-    console.log(`[${traceId}][WHATSAPP-WEBHOOK] Responding: "${responseMessage.substring(0, 50)}..."`);
+    if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] Responding: "${responseMessage.substring(0, 50)}..."`);
     const twiml = generateTwiMLResponse(responseMessage);
 
     return new NextResponse(twiml, {

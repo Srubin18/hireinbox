@@ -87,13 +87,16 @@ export async function GET(
       duration: number;
       location_type: string;
       recruiter_name: string;
+      recruiter_email: string;
+      meeting_link: string | null;
+      address: string | null;
       is_booked: boolean;
     }> = [];
 
     if (!isExpired && !isUsed) {
       const { data: availableSlots, error: slotsError } = await supabase
         .from('interview_slots')
-        .select('id, start_time, end_time, duration, location_type, recruiter_name, is_booked')
+        .select('id, start_time, end_time, duration, location_type, recruiter_name, recruiter_email, meeting_link, address, is_booked')
         .eq('role_id', bookingLink.role_id)
         .eq('is_booked', false)
         .gte('start_time', new Date().toISOString())
@@ -326,9 +329,13 @@ export async function POST(
       message: 'Interview booked successfully',
       interview: {
         date: slot.start_time,
+        end_time: slot.end_time,
         duration: slot.duration,
         location_type: slot.location_type,
         meeting_link: slot.meeting_link,
+        address: slot.address,
+        recruiter_name: slot.recruiter_name,
+        recruiter_email: slot.recruiter_email,
       },
       traceId,
     });

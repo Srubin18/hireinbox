@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendTemplatedEmail } from '@/lib/email';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -100,9 +101,48 @@ export async function POST(
       timestamp: new Date().toISOString()
     });
 
-    // TODO: Send notification email to hiring team
-    // This would use sendTemplatedEmail with a new 'review_request' template
-    // For now, we just log and store it
+    // Send notification email to hiring team
+    const role = (candidate.roles as unknown) as { id: string; title: string; company_id: string } | null;
+    const roleTitle = role?.title || 'Unknown Role';
+
+    // Get company/hiring team email
+    let notificationEmail = process.env.HIRING_TEAM_EMAIL || process.env.GMAIL_USER;
+
+    // If there's a company_id, try to get the company's email
+    if (role?.company_id) {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('email, name')
+        .eq('id', role.company_id)
+        .single();
+
+      if (company?.email) {
+        notificationEmail = company.email;
+      }
+    }
+
+    if (notificationEmail) {
+      const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://hireinbox.co.za'}/?candidate=${candidate.id}`;
+
+      const emailResult = await sendTemplatedEmail(
+        'review_request',
+        notificationEmail,
+        {
+          candidateName: candidate.name || 'Unknown Candidate',
+          candidateEmail: candidate.email || '',
+          roleTitle,
+          customMessage: sanitizedMessage,
+          feedbackLink: dashboardUrl,
+        }
+      );
+
+      if (!emailResult.success) {
+        console.error('[REVIEW] Failed to send notification email:', emailResult.error);
+        // Don't fail the request if email fails - the review is still stored
+      } else {
+        console.log(`[REVIEW] Notification sent to: ${notificationEmail}`);
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -8,6 +8,9 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { SA_CONTEXT_PROMPT, SA_CREATOR_CONTEXT } from '@/lib/sa-context';
 
+// Only log verbose debug info in development
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   timeout: 120000,
@@ -41,7 +44,7 @@ async function withRetry<T>(
       }
 
       const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`[RETRY] Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+      if (IS_DEV) console.log(`[RETRY] Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -356,7 +359,7 @@ ${SA_CREATOR_CONTEXT}`;
 
 export async function POST(request: Request) {
   const traceId = Date.now().toString(36);
-  console.log(`[${traceId}][VIDEO-FERRARI] Analysis request received`);
+  if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Analysis request received`);
 
   try {
     const formData = await request.formData();
@@ -371,11 +374,11 @@ export async function POST(request: Request) {
 
     const isCreatorMode = mode === 'creator';
     const isDemoMode = formData.get('demo') === 'true';
-    console.log(`[${traceId}][VIDEO] Mode: ${isCreatorMode ? 'CREATOR' : 'JOB_SEEKER'}${isDemoMode ? ' (DEMO)' : ''}`);
+    if (IS_DEV) console.log(`[${traceId}][VIDEO] Mode: ${isCreatorMode ? 'CREATOR' : 'JOB_SEEKER'}${isDemoMode ? ' (DEMO)' : ''}`);
 
     // DEMO MODE - Return realistic mock data for investor demos
     if (isDemoMode) {
-      console.log(`[${traceId}][VIDEO] Returning demo data`);
+      if (IS_DEV) console.log(`[${traceId}][VIDEO] Returning demo data`);
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing
 
       const demoAnalysis = isCreatorMode ? {
@@ -436,9 +439,9 @@ export async function POST(request: Request) {
     if (cvContextJson) {
       try {
         cvContext = JSON.parse(cvContextJson);
-        console.log(`[${traceId}][VIDEO-FERRARI] CV context provided - tailoring for: ${cvContext?.roles?.join(', ') || 'general'}`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] CV context provided - tailoring for: ${cvContext?.roles?.join(', ') || 'general'}`);
       } catch {
-        console.log(`[${traceId}][VIDEO-FERRARI] Could not parse CV context`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Could not parse CV context`);
       }
     }
 
@@ -446,9 +449,9 @@ export async function POST(request: Request) {
     if (voiceMetricsJson) {
       try {
         voiceMetrics = JSON.parse(voiceMetricsJson);
-        console.log(`[${traceId}][VIDEO-FERRARI] Voice metrics received - pitch: ${voiceMetrics?.avgPitch}Hz, variation: ${voiceMetrics?.pitchVariation}`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Voice metrics received - pitch: ${voiceMetrics?.avgPitch}Hz, variation: ${voiceMetrics?.pitchVariation}`);
       } catch {
-        console.log(`[${traceId}][VIDEO-FERRARI] Could not parse voice metrics`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Could not parse voice metrics`);
       }
     }
 
@@ -456,9 +459,9 @@ export async function POST(request: Request) {
     if (framesJson) {
       try {
         frames = JSON.parse(framesJson);
-        console.log(`[${traceId}][VIDEO-FERRARI] Received ${frames.length} frames for analysis`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Received ${frames.length} frames for analysis`);
       } catch {
-        console.log(`[${traceId}][VIDEO-FERRARI] Could not parse frames`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Could not parse frames`);
       }
     }
 
@@ -466,16 +469,16 @@ export async function POST(request: Request) {
     if (frameTimestampsJson) {
       try {
         frameTimestamps = JSON.parse(frameTimestampsJson);
-        console.log(`[${traceId}][VIDEO-FERRARI] Frame timestamps: ${frameTimestamps.map(t => `${t}s`).join(', ')}`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Frame timestamps: ${frameTimestamps.map(t => `${t}s`).join(', ')}`);
       } catch {
-        console.log(`[${traceId}][VIDEO-FERRARI] Could not parse frame timestamps`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Could not parse frame timestamps`);
       }
     }
 
     // Transcribe audio from video file
     const fileToTranscribe = videoFile || audioFile;
     if (fileToTranscribe && !transcript) {
-      console.log(`[${traceId}][VIDEO-FERRARI] Transcribing: ${fileToTranscribe.name} (${fileToTranscribe.size} bytes)`);
+      if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Transcribing: ${fileToTranscribe.name} (${fileToTranscribe.size} bytes)`);
 
       try {
         const transcription = await openai.audio.transcriptions.create({
@@ -486,7 +489,7 @@ export async function POST(request: Request) {
         });
 
         transcript = transcription;
-        console.log(`[${traceId}][VIDEO-FERRARI] Transcription complete: ${transcript.length} chars`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Transcription complete: ${transcript.length} chars`);
       } catch (transcriptError) {
         console.error(`[${traceId}][VIDEO-FERRARI] Transcription error:`, transcriptError);
         if (frames.length === 0) {
@@ -505,7 +508,7 @@ export async function POST(request: Request) {
     }
 
     // Build messages for GPT-4o Vision coaching analysis
-    console.log(`[${traceId}][VIDEO-FERRARI] Starting video coaching analysis with GPT-4o Vision...`);
+    if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Starting video coaching analysis with GPT-4o Vision...`);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userContent: any[] = [];
@@ -593,17 +596,17 @@ Provide encouraging, actionable coaching feedback in the JSON format specified. 
       }
     }
 
-    console.log(`[${traceId}][VIDEO-FERRARI] Sending ${maxFrames} presentation stills for analysis`);
+    if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Sending ${maxFrames} presentation stills for analysis`);
 
     // Select prompt based on mode
     const systemPrompt = isCreatorMode ? CREATOR_VIDEO_ANALYST_PROMPT : FERRARI_VIDEO_ANALYST_PROMPT_FULL;
-    console.log(`[${traceId}][VIDEO] Using ${isCreatorMode ? 'Creator' : 'Job Seeker'} prompt`);
+    if (IS_DEV) console.log(`[${traceId}][VIDEO] Using ${isCreatorMode ? 'Creator' : 'Job Seeker'} prompt`);
 
     let responseText = '';
 
     // Try Claude Vision first (better at presentation coaching), fallback to GPT-4o
     if (anthropic) {
-      console.log(`[${traceId}][VIDEO] Calling Claude Vision (primary)...`);
+      if (IS_DEV) console.log(`[${traceId}][VIDEO] Calling Claude Vision (primary)...`);
       try {
         // Build Claude Vision content
         const claudeContent: Anthropic.MessageParam['content'] = [];
@@ -641,7 +644,7 @@ Provide encouraging, actionable coaching feedback in the JSON format specified. 
         });
 
         responseText = claudeResponse.content[0].type === 'text' ? claudeResponse.content[0].text : '';
-        console.log(`[${traceId}][VIDEO-FERRARI] Claude Vision response length: ${responseText.length}`);
+        if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Claude Vision response length: ${responseText.length}`);
       } catch (claudeError) {
         console.error(`[${traceId}][VIDEO] Claude Vision failed:`, claudeError);
         // Fall through to GPT-4o
@@ -650,7 +653,7 @@ Provide encouraging, actionable coaching feedback in the JSON format specified. 
 
     // Fallback to GPT-4o if Claude failed or not available
     if (!responseText || responseText.includes("I can't") || responseText.includes("I cannot")) {
-      console.log(`[${traceId}][VIDEO] Calling GPT-4o Vision (fallback)...`);
+      if (IS_DEV) console.log(`[${traceId}][VIDEO] Calling GPT-4o Vision (fallback)...`);
       const completion = await withRetry(async () => {
         return openai.chat.completions.create({
           model: 'gpt-4o',
@@ -664,7 +667,7 @@ Provide encouraging, actionable coaching feedback in the JSON format specified. 
       }, 3, 2000);
 
       responseText = completion.choices[0]?.message?.content || '';
-      console.log(`[${traceId}][VIDEO-FERRARI] GPT-4o response length: ${responseText.length}`);
+      if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] GPT-4o response length: ${responseText.length}`);
     }
 
     // Parse JSON response
@@ -680,17 +683,17 @@ Provide encouraging, actionable coaching feedback in the JSON format specified. 
       }, { status: 500 });
     }
 
-    console.log(`[${traceId}][VIDEO-FERRARI] Analysis complete. Score: ${analysis.overall_score}`);
-    console.log(`[${traceId}][VIDEO-FERRARI] Score breakdown: ${analysis.overall_score_breakdown}`);
+    if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Analysis complete. Score: ${analysis.overall_score}`);
+    if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Score breakdown: ${analysis.overall_score_breakdown}`);
 
     // Log expression analysis
-    if (analysis.expression_analysis) {
+    if (IS_DEV && analysis.expression_analysis) {
       console.log(`[${traceId}][EXPRESSION] Positive: ${analysis.expression_analysis.positive_expressions?.join(', ')}`);
       console.log(`[${traceId}][EXPRESSION] Warmth: ${analysis.expression_analysis.warmth_indicators?.overall_warmth}`);
     }
 
     // Log timeline
-    if (analysis.timeline) {
+    if (IS_DEV && analysis.timeline) {
       console.log(`[${traceId}][TIMELINE] Journey: ${analysis.timeline.journey_summary}`);
       console.log(`[${traceId}][TIMELINE] Trajectory: ${analysis.timeline.trajectory}`);
       console.log(`[${traceId}][TIMELINE] Peak: ${analysis.timeline.peak_moment?.timestamp} - ${analysis.timeline.peak_moment?.description}`);
@@ -698,7 +701,7 @@ Provide encouraging, actionable coaching feedback in the JSON format specified. 
     }
 
     // Log visual analysis
-    if (analysis.visual_analysis) {
+    if (IS_DEV && analysis.visual_analysis) {
       console.log(`[${traceId}][VISUAL] Eye contact: ${analysis.visual_analysis.eye_contact_percentage}% - ${analysis.visual_analysis.eye_contact_detail}`);
       console.log(`[${traceId}][VISUAL] Posture: ${analysis.visual_analysis.posture} - ${analysis.visual_analysis.posture_detail}`);
       console.log(`[${traceId}][VISUAL] Facial mobility: ${analysis.visual_analysis.facial_mobility}`);

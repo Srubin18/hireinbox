@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import { UsageProvider } from "@/lib/usage-context";
+import { NotificationProvider, NotificationToastContainer } from "@/lib/notification-context";
+import CookieConsent from "@/components/CookieConsent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,28 +17,71 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HireInbox - Less noise. Better hires.",
-  description: "AI-powered CV screening for SMEs. Screen candidates in seconds, not hours.",
-  keywords: ["CV screening", "AI recruiting", "hiring", "SME", "South Africa", "talent acquisition"],
-  authors: [{ name: "HireInbox" }],
+  title: {
+    default: "HireInbox - AI CV Screening for South African SMEs",
+    template: "%s | HireInbox",
+  },
+  description: "Screen CVs in seconds with explainable AI. Less noise. Better hires. Built for South African businesses with POPIA-compliant evidence-based decisions.",
+  keywords: [
+    "CV screening",
+    "AI recruiting",
+    "hiring",
+    "SME",
+    "South Africa",
+    "talent acquisition",
+    "recruitment software",
+    "applicant tracking",
+    "HR technology",
+    "automated screening",
+    "POPIA compliant",
+    "explainable AI",
+  ],
+  authors: [{ name: "HireInbox", url: "https://hireinbox.co.za" }],
   creator: "HireInbox",
+  publisher: "HireInbox",
+  metadataBase: new URL("https://hireinbox.co.za"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "HireInbox - Less noise. Better hires.",
-    description: "AI-powered CV screening for SMEs. Screen candidates in seconds, not hours.",
+    title: "HireInbox - AI CV Screening for South African SMEs",
+    description: "Screen CVs in seconds with explainable AI. Less noise. Better hires. Built for South African businesses.",
     type: "website",
     locale: "en_ZA",
     siteName: "HireInbox",
+    url: "https://hireinbox.co.za",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "HireInbox - AI CV Screening",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HireInbox - Less noise. Better hires.",
-    description: "AI-powered CV screening for SMEs. Screen candidates in seconds, not hours.",
+    title: "HireInbox - AI CV Screening for South African SMEs",
+    description: "Screen CVs in seconds with explainable AI. Less noise. Better hires.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
-  themeColor: "#4F46E5",
+  verification: {
+    // Add these when you have them
+    // google: "your-google-verification-code",
+    // yandex: "your-yandex-verification-code",
+  },
+  category: "technology",
 };
 
 export default function RootLayout({
@@ -47,12 +93,24 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <meta name="theme-color" content="#4f46e5" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="format-detection" content="telephone=no" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {children}
+          <UsageProvider>
+            <NotificationProvider>
+              {children}
+              <NotificationToastContainer />
+              <CookieConsent />
+            </NotificationProvider>
+          </UsageProvider>
         </AuthProvider>
       </body>
     </html>

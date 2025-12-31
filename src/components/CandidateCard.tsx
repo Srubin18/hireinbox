@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import EmailModal from './EmailModal';
 
 interface StrengthItem {
   label: string;
@@ -68,18 +69,93 @@ export default function CandidateCard({
   onClick,
   onSaveToPool,
   companyId,
-  roleId
+  roleId,
+  roleTitle,
+  companyName,
 }: {
   candidate: Candidate;
   onClick?: () => void;
   onSaveToPool?: (candidateId: string) => void;
   companyId?: string;
   roleId?: string;
+  roleTitle?: string;
+  companyName?: string;
 }) {
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [isInPool, setIsInPool] = useState(false);
+  const [isCheckingPool, setIsCheckingPool] = useState(true);
+  const [isSavingPool, setIsSavingPool] = useState(false);
+
   const screening = candidate.screening_result;
   const score = candidate.ai_score || 0;
   const recommendation = candidate.ai_recommendation || 'UNKNOWN';
   const reason = candidate.ai_reasoning || '';
+
+  // Check if candidate is already in talent pool
+  useEffect(() => {
+    const checkPoolStatus = async () => {
+      try {
+        const response = await fetch(`/api/talent-pool?candidate_id=${candidate.id}`);
+        const data = await response.json();
+        setIsInPool(data.inPool || false);
+      } catch (error) {
+        console.error('Failed to check pool status:', error);
+      } finally {
+        setIsCheckingPool(false);
+      }
+    };
+
+    checkPoolStatus();
+  }, [candidate.id]);
+
+  // Handle star click - add/remove from talent pool
+  const handleStarClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (isSavingPool) return;
+    setIsSavingPool(true);
+
+    try {
+      if (isInPool) {
+        // Remove from pool - need to get the pool entry ID first
+        const checkResponse = await fetch(`/api/talent-pool?candidate_id=${candidate.id}`);
+        const checkData = await checkResponse.json();
+
+        if (checkData.poolEntry?.id) {
+          await fetch(`/api/talent-pool?id=${checkData.poolEntry.id}`, {
+            method: 'DELETE'
+          });
+          setIsInPool(false);
+        }
+      } else {
+        // Add to pool
+        const response = await fetch('/api/talent-pool', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            company_id: companyId || 'default',
+            candidate_id: candidate.id,
+            original_role_id: roleId,
+            folder: recommendation === 'SHORTLIST' ? 'Hot Leads' : 'Future Potential',
+            tags: [],
+            notes: '',
+            ai_talent_notes: reason
+          })
+        });
+
+        if (response.ok) {
+          setIsInPool(true);
+        } else if (response.status === 409) {
+          // Already in pool
+          setIsInPool(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle pool status:', error);
+    } finally {
+      setIsSavingPool(false);
+    }
+  };
   
   const strengths = screening?.summary?.strengths || candidate.strengths || [];
   const topStrengths = strengths.slice(0, 2);
@@ -102,11 +178,37 @@ export default function CandidateCard({
   const badge = getRecommendationBadge();
 
   return (
-    <div 
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+    <div
+      className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer relative"
       onClick={onClick}
     >
-      <div className="flex justify-between items-start mb-3">
+      {/* Star Button - Save to Talent Pool */}
+      <button
+        onClick={handleStarClick}
+        disabled={isCheckingPool || isSavingPool}
+        className={`absolute top-3 right-3 p-1 transition-all ${
+          isCheckingPool || isSavingPool ? 'opacity-30' : 'hover:scale-110'
+        }`}
+        title={isInPool ? 'Remove from Talent Pool' : 'Save to Talent Pool'}
+      >
+        {isSavingPool ? (
+          <svg className="w-5 h-5 animate-spin text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeDasharray="40" strokeDashoffset="10" />
+          </svg>
+        ) : (
+          <svg
+            className="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill={isInPool ? '#F59E0B' : 'none'}
+            stroke={isInPool ? '#F59E0B' : '#9CA3AF'}
+            strokeWidth="2"
+          >
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+          </svg>
+        )}
+      </button>
+
+      <div className="flex justify-between items-start mb-3 pr-8">
         <div>
           <h3 className="font-semibold text-gray-900">{candidate.name}</h3>
           <p className="text-sm text-gray-500">{candidate.email}</p>
@@ -171,11 +273,17 @@ export default function CandidateCard({
         <button className="text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
           📞 Call
         </button>
-        <button className="text-xs px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
-          📧 Email
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowEmailModal(true);
+          }}
+          className="text-xs px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Email
         </button>
-        {/* Save to Pool - shown for rejected candidates */}
-        {recommendation === 'REJECT' && onSaveToPool && (
+        {/* Save to Pool - shown for rejected candidates if not already in pool */}
+        {recommendation === 'REJECT' && onSaveToPool && !isInPool && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -184,10 +292,31 @@ export default function CandidateCard({
             className="text-xs px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600"
             title="Save to talent pool for future opportunities"
           >
-            💼 Save to Pool
+            Save to Pool
           </button>
         )}
+        {/* In Pool indicator */}
+        {isInPool && (
+          <span className="text-xs px-3 py-1 bg-amber-100 text-amber-800 rounded">
+            In Pool
+          </span>
+        )}
       </div>
+
+      {/* Email Modal */}
+      <EmailModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        candidate={{
+          id: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          ai_recommendation: candidate.ai_recommendation,
+          strengths: candidate.strengths,
+        }}
+        roleTitle={roleTitle}
+        companyName={companyName}
+      />
     </div>
   );
 }

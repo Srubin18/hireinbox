@@ -38,7 +38,7 @@ export interface CompanyBranding {
 
 export interface EmailTemplate {
   id: string;
-  type: 'acknowledgment' | 'shortlist' | 'rejection' | 'talent_pool' | 'interview_invite' | 'interview_confirmation' | 'interview_reminder' | 'candidate_feedback';
+  type: 'acknowledgment' | 'shortlist' | 'rejection' | 'talent_pool' | 'interview_invite' | 'interview_confirmation' | 'interview_reminder' | 'candidate_feedback' | 'review_request';
   subject: string;
   bodyHtml: string;
   bodyText: string;
@@ -720,6 +720,77 @@ This feedback link is unique to you and will remain accessible for 30 days. If y
 We appreciate your interest and wish you success in your job search.
 
 The {{companyName}} Hiring Team`
+  },
+
+  review_request: {
+    subject: 'Human Review Requested - {{candidateName}} for {{roleTitle}}',
+    bodyHtml: `
+      <p style="margin: 0 0 24px 0; font-size: 16px; color: ${COLORS.primary};">
+        Hi Team,
+      </p>
+
+      <p style="margin: 0 0 20px 0; font-size: 16px; color: ${COLORS.primary};">
+        A candidate has requested a human review of their application.
+      </p>
+
+      <div style="background-color: #FEF3C7; border: 1px solid #F59E0B; border-radius: 12px; padding: 24px; margin: 0 0 24px 0;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+          <tr>
+            <td style="padding: 0 0 12px 0;">
+              <p style="margin: 0; font-size: 13px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.5px;">Candidate</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: ${COLORS.primary}; font-weight: 600;">
+                {{candidateName}}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0 0 12px 0;">
+              <p style="margin: 0; font-size: 13px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.5px;">Role</p>
+              <p style="margin: 4px 0 0 0; font-size: 16px; color: ${COLORS.primary};">
+                {{roleTitle}}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0;">
+              <p style="margin: 0; font-size: 13px; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.5px;">Their Message</p>
+              <p style="margin: 4px 0 0 0; font-size: 15px; color: ${COLORS.primary}; white-space: pre-wrap;">
+                {{customMessage}}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="margin: 0 0 24px 0; font-size: 15px; color: ${COLORS.secondary};">
+        Please review this application in the dashboard and respond to the candidate.
+      </p>
+
+      <div style="text-align: center; margin: 0 0 24px 0;">
+        <a href="{{feedbackLink}}" style="display: inline-block; background-color: ${COLORS.brand}; color: white; font-size: 16px; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none;">
+          Review in Dashboard
+        </a>
+      </div>
+
+      <p style="margin: 0; font-size: 14px; color: ${COLORS.muted};">
+        This notification was triggered by the candidate via the feedback page.
+      </p>
+    `,
+    bodyText: `Hi Team,
+
+A candidate has requested a human review of their application.
+
+CANDIDATE: {{candidateName}}
+ROLE: {{roleTitle}}
+
+THEIR MESSAGE:
+{{customMessage}}
+
+Please review this application in the dashboard and respond to the candidate.
+
+Dashboard: {{feedbackLink}}
+
+This notification was triggered by the candidate via the feedback page.`
   }
 };
 

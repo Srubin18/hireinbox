@@ -1023,3 +1023,436 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================
+   DASHBOARD MOBILE RESPONSIVENESS
+   ============================================ */
+
+/* Tablet Layout (768px - 1024px) */
+@media (max-width: 1024px) {
+  .dashboard-sidebar {
+    width: 220px !important;
+  }
+
+  .dashboard-main {
+    margin-left: 220px !important;
+  }
+
+  .dashboard-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-content-sidebar {
+    display: none !important;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Mobile Layout (< 768px) */
+@media (max-width: 767px) {
+  /* Sidebar - Slide out from left */
+  .dashboard-sidebar {
+    position: fixed !important;
+    left: -280px !important;
+    width: 280px !important;
+    transition: left 0.3s ease !important;
+    z-index: 150 !important;
+  }
+
+  .dashboard-sidebar.open {
+    left: 0 !important;
+  }
+
+  /* Main content - Full width */
+  .dashboard-main {
+    margin-left: 0 !important;
+  }
+
+  .dashboard-main-content {
+    padding: 16px !important;
+  }
+
+  /* Header - Stack vertically */
+  .dashboard-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    align-items: stretch !important;
+  }
+
+  .dashboard-header-left {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    align-items: center !important;
+  }
+
+  .dashboard-header-right {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-header-right > * {
+    flex: 1 !important;
+    min-width: 100px !important;
+  }
+
+  .dashboard-header-search {
+    width: 100% !important;
+    order: -1 !important;
+  }
+
+  .dashboard-header-search input {
+    width: 100% !important;
+  }
+
+  /* Stats - 2 column on mobile */
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Content grid - Single column */
+  .dashboard-content-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .dashboard-content-sidebar {
+    display: none !important;
+  }
+
+  /* Candidate tabs - Horizontal scroll */
+  .candidate-tabs {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .candidate-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Bulk actions - Stack on mobile */
+  .bulk-actions-bar {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .bulk-actions-buttons {
+    flex-wrap: wrap !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+  }
+
+  .bulk-actions-buttons button {
+    flex: 1 !important;
+    min-width: 80px !important;
+    padding: 10px 8px !important;
+  }
+
+  /* Mobile menu button */
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  /* Mobile overlay */
+  .mobile-overlay {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,0.5) !important;
+    z-index: 140 !important;
+  }
+
+  .mobile-overlay.hidden {
+    display: none !important;
+  }
+
+  /* Today card - Stack */
+  .today-card-inner {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .today-card-inner > div {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  /* Hide keyboard hints on mobile */
+  .keyboard-hint {
+    display: none !important;
+  }
+
+  /* Filters panel - Stack */
+  .filters-panel {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .filters-panel > * {
+    width: 100% !important;
+  }
+
+  /* Modal - Full screen on mobile */
+  .modal-backdrop {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .modal {
+    max-width: 100% !important;
+    max-height: 95vh !important;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+    width: 100% !important;
+  }
+
+  .modal-lg {
+    max-width: 100% !important;
+  }
+
+  /* Candidate modal - Full screen layout */
+  .candidate-modal-panels {
+    flex-direction: column !important;
+  }
+
+  .candidate-modal-left {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--color-gray-200) !important;
+  }
+
+  .candidate-modal-right {
+    width: 100% !important;
+  }
+}
+
+/* Small phones (< 480px) */
+@media (max-width: 480px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-main-content {
+    padding: 12px !important;
+  }
+
+  .dashboard-header {
+    padding: 12px !important;
+  }
+
+  .stat-card {
+    padding: 16px !important;
+  }
+
+  .stat-card-value {
+    font-size: 1.5rem !important;
+  }
+
+  /* Buttons - Full width */
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Forms - Larger touch targets */
+  .input {
+    padding: var(--space-4);
+    font-size: var(--text-base);
+    min-height: 48px;
+  }
+
+  /* Cards - Reduced padding */
+  .card-body {
+    padding: var(--space-4);
+  }
+}
+
+/* Mobile menu button - Hidden by default */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--color-gray-100);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mobile-menu-btn:hover {
+  background: var(--color-gray-200);
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.95);
+}
+
+/* Mobile overlay - Hidden by default */
+.mobile-overlay {
+  display: none;
+}
+
+/* Touch-friendly button sizes */
+@media (max-width: 767px) {
+  .btn,
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+
+  /* Ensure adequate tap targets */
+  a,
+  button,
+  input[type="submit"],
+  input[type="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Prevent zoom on double-tap */
+  * {
+    touch-action: manipulation;
+  }
+}
+
+/* ============================================
+   B2C UPLOAD PAGE MOBILE STYLES
+   ============================================ */
+@media (max-width: 767px) {
+  .upload-hero {
+    padding: 40px 16px 32px !important;
+  }
+
+  .upload-hero h1 {
+    font-size: 2rem !important;
+  }
+
+  .upload-card {
+    padding: 20px !important;
+    margin: 0 16px !important;
+  }
+
+  .upload-zone {
+    padding: 32px 16px !important;
+  }
+
+  .upload-tabs {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .upload-tabs button {
+    width: 100% !important;
+  }
+
+  .results-card {
+    margin: 16px !important;
+    padding: 20px !important;
+  }
+
+  .score-circle {
+    width: 100px !important;
+    height: 100px !important;
+    font-size: 2.5rem !important;
+  }
+
+  .strength-card,
+  .improvement-card {
+    padding: 16px !important;
+  }
+}
+
+/* ============================================
+   LOGIN/SIGNUP PAGE MOBILE STYLES
+   ============================================ */
+@media (max-width: 767px) {
+  .auth-container {
+    padding: 24px 16px !important;
+  }
+
+  .auth-card {
+    padding: 24px !important;
+    margin: 0 !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .auth-form input {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 14px 16px !important;
+  }
+
+  .auth-form button {
+    padding: 14px !important;
+    font-size: 1rem !important;
+  }
+
+  .auth-divider {
+    margin: 24px 0 !important;
+  }
+
+  .social-login-buttons {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .social-login-buttons button {
+    width: 100% !important;
+  }
+}
+
+/* ============================================
+   INTERVIEW/BOOK PAGE MOBILE STYLES
+   ============================================ */
+@media (max-width: 767px) {
+  .book-container {
+    padding: 16px !important;
+  }
+
+  .calendar-grid {
+    font-size: 0.875rem !important;
+  }
+
+  .time-slots {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .time-slot-btn {
+    padding: 12px 8px !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+/* ============================================
+   FEEDBACK PAGE MOBILE STYLES
+   ============================================ */
+@media (max-width: 767px) {
+  .feedback-container {
+    padding: 16px !important;
+  }
+
+  .feedback-card {
+    padding: 20px !important;
+  }
+
+  .rating-buttons {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .rating-buttons button {
+    flex: 1 !important;
+    min-width: 44px !important;
+  }
+}

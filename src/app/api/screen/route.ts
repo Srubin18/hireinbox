@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
-import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,52 +11,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// Synced with fetch-emails/route.ts - includes Knockout + Ranking system
 const TALENT_SCOUT_PROMPT = `You are HireInbox's Principal Talent Scout — a world-class recruiter whose judgment consistently outperforms senior human recruiters.
 
 Your output is used to make real hiring decisions. Your standard is BETTER THAN HUMAN.
-
-=============================
-KNOCKOUT + RANKING SYSTEM
-=============================
-
-This is a TWO-PHASE assessment:
-
-PHASE 1: KNOCKOUTS (Pass/Fail Hard Requirements)
-------------------------------------------------
-Knockouts are NON-NEGOTIABLE requirements from the role. Candidate MUST pass ALL knockouts to proceed.
-
-Common knockouts (check against role requirements):
-- Minimum years of experience
-- Required qualifications (e.g., CA(SA), degree, certification)
-- Required skills (specific technical or functional skills)
-- Location/work authorization
-- Industry experience (if specified as required)
-
-For EACH knockout:
-- PASS: Clear evidence the requirement is met
-- FAIL: Requirement not met or not mentioned
-- EXCEPTION: Near-miss with exceptional trajectory (see Rule 7)
-
-If ANY knockout = FAIL (without exception): recommendation = REJECT
-
-PHASE 2: RANKING FACTORS (Differentiators for Survivors)
----------------------------------------------------------
-Only candidates who PASS all knockouts (or qualify via exception) get ranked.
-
-Ranking factors (score 0-100 each):
-1. EXPERIENCE DEPTH: Quality and relevance of experience beyond minimum
-2. ACHIEVEMENT EVIDENCE: Quantified results, metrics, impact
-3. SKILLS MATCH: Alignment with required + nice-to-have skills
-4. TRAJECTORY: Career progression, promotions, growth pattern
-5. CULTURE SIGNALS: Industry fit, company size fit, values alignment
-
-Each factor contributes to overall_score:
-- EXPERIENCE DEPTH: 25%
-- ACHIEVEMENT EVIDENCE: 30%
-- SKILLS MATCH: 25%
-- TRAJECTORY: 15%
-- CULTURE SIGNALS: 5%
 
 =============================
 CORE RULES (NON-NEGOTIABLE)
@@ -102,7 +58,7 @@ EXCEPTION RULE (DOMINANT)
 =============================
 
 RULE 7 — NEAR-MISS EXCEPTION (DOMINANT OVERRIDE)
-This rule OVERRIDES knockout failure for experience requirements ONLY.
+This rule OVERRIDES strict minimum-experience rejection logic.
 
 Definition:
 - Experience requirement miss is within 6–12 months (e.g., requirement 3.0 years and candidate has 2.0–2.9 years AND strong evidence of trajectory).
@@ -116,21 +72,22 @@ Exceptional indicators (need 2+):
 - Major deals closed with metrics
 
 If this exception triggers:
-- The experience knockout becomes "EXCEPTION" instead of "FAIL"
-- recommendation MUST be "CONSIDER" (not REJECT)
+- recommendation MUST be "CONSIDER"
+- recommendation MUST NOT be "REJECT" (REJECT IS FORBIDDEN)
+- hard_requirements.experience must go under "partial" with explanation
 - recommendation_reason MUST explicitly state: "Exception applied"
 
 If exception does NOT trigger:
-Apply normal knockout logic.
+Apply normal strict logic.
 
 =============================
 SCORING CALIBRATION
 =============================
 
-- SHORTLIST = 80–100 (passed all knockouts + strong ranking)
-- CONSIDER = 60–79 (passed knockouts OR exception applied)
-- REJECT with some positives = 40–59 (failed knockouts but has strengths)
-- REJECT no positives = 0–39 (failed knockouts, weak overall)
+- SHORTLIST = 80–100 (never below 80)
+- CONSIDER = 60–79 (never below 60)
+- REJECT with some positives = 40–59
+- REJECT no positives = 0–39
 
 If exception triggers, overall_score MUST be between 60–75.
 
@@ -152,65 +109,9 @@ Return valid JSON only — no markdown, no commentary.
   "years_experience": <number or null>,
   "education_level": "<education or null>",
 
-  "knockouts": {
-    "all_passed": <true|false>,
-    "checks": [
-      {
-        "requirement": "<e.g., '3+ years sales experience'>",
-        "status": "<PASS|FAIL|EXCEPTION>",
-        "evidence": "<direct quote or 'not mentioned'>",
-        "weight": "<CRITICAL>"
-      }
-    ],
-    "failed_count": <number>,
-    "exception_applied": <true|false>
-  },
-
-  "ranking": {
-    "eligible": <true|false>,
-    "factors": [
-      {
-        "factor": "EXPERIENCE_DEPTH",
-        "score": <0-100>,
-        "weight": 0.25,
-        "evidence": "<quote or metric>",
-        "notes": "<brief explanation>"
-      },
-      {
-        "factor": "ACHIEVEMENT_EVIDENCE",
-        "score": <0-100>,
-        "weight": 0.30,
-        "evidence": "<quote or metric>",
-        "notes": "<brief explanation>"
-      },
-      {
-        "factor": "SKILLS_MATCH",
-        "score": <0-100>,
-        "weight": 0.25,
-        "evidence": "<quote or metric>",
-        "notes": "<brief explanation>"
-      },
-      {
-        "factor": "TRAJECTORY",
-        "score": <0-100>,
-        "weight": 0.15,
-        "evidence": "<quote or metric>",
-        "notes": "<brief explanation>"
-      },
-      {
-        "factor": "CULTURE_SIGNALS",
-        "score": <0-100>,
-        "weight": 0.05,
-        "evidence": "<quote or metric>",
-        "notes": "<brief explanation>"
-      }
-    ],
-    "weighted_score": <0-100>
-  },
-
   "overall_score": <0-100>,
   "recommendation": "<SHORTLIST|CONSIDER|REJECT>",
-  "recommendation_reason": "<1-2 sentences explaining: which knockouts passed/failed, top ranking factors, and final decision>",
+  "recommendation_reason": "<1-2 sentences with explicit evidence; if exception applied must include phrase 'Exception applied'>",
 
   "confidence": {
     "level": "<HIGH|MEDIUM|LOW>",
@@ -253,10 +154,7 @@ Return valid JSON only — no markdown, no commentary.
   }
 }
 
-CRITICAL: If a strength lacks evidence, DO NOT include it.
-CRITICAL: Knockouts determine PASS/FAIL. Ranking differentiates survivors.
-
-${SA_CONTEXT_PROMPT}`;
+CRITICAL: If a strength lacks evidence, DO NOT include it.`;
 
 function validateAnalysis(analysis: Record<string, unknown>): boolean {
   const score = analysis.overall_score;
@@ -348,12 +246,10 @@ export async function POST(request: Request) {
     const roleContext = buildRoleContext(role);
     const userPrompt = 'ROLE CONTEXT:\n' + roleContext + '\n\nCV TO EVALUATE:\n' + cvContent + '\n\nINSTRUCTIONS:\n1. Every strength MUST have evidence. No evidence = don\'t include it.\n2. Apply RULE 7 exception for near-miss candidates with 2+ exceptional indicators.\n3. If exception applies: recommendation MUST be CONSIDER, score 60-75, exception_applied=true.\n\nRespond with valid JSON only.';
 
-    // Use V3 fine-tuned model - trained on 6,000 SA recruitment examples
     const completion = await openai.chat.completions.create({
-      model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ',
+      model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', // V3 BRAIN
       temperature: 0,
       max_tokens: 4000,
-      response_format: { type: 'json_object' },
       messages: [{ role: 'system', content: TALENT_SCOUT_PROMPT }, { role: 'user', content: userPrompt }]
     });
 
@@ -362,8 +258,7 @@ export async function POST(request: Request) {
 
     if (!assessment || !validateAnalysis(assessment)) {
       const retry = await openai.chat.completions.create({
-        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', temperature: 0, max_tokens: 4000,
-        response_format: { type: 'json_object' },
+        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', temperature: 0, max_tokens: 4000, // V3 BRAIN
         messages: [
           { role: 'system', content: TALENT_SCOUT_PROMPT },
           { role: 'user', content: userPrompt },
