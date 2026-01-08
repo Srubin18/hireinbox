@@ -207,15 +207,14 @@ ${SA_RECRUITER_CONTEXT}`;
 
 async function extractPDFText(buffer: Buffer, filename: string): Promise<string> {
   try {
-    const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
-    if (IS_DEV) console.log(`[PDF] Extracting from ${filename}, size: ${buffer.length}, production: ${isProduction}`);
+    console.log(`[PDF] Extracting from ${filename}, size: ${buffer.length} bytes`);
 
     let extractedText = '';
 
-    // Method 1: ConvertAPI (production with API key)
+    // Method 1: ConvertAPI (most reliable for production)
     if (process.env.CONVERTAPI_SECRET) {
       try {
-        if (IS_DEV) console.log('[PDF] Trying ConvertAPI extraction');
+        console.log('[PDF] Method 1: Trying ConvertAPI...');
         const base64PDF = buffer.toString('base64');
         const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
           method: 'POST',
@@ -227,105 +226,57 @@ async function extractPDFText(buffer: Buffer, filename: string): Promise<string>
             ]
           }),
         });
+
         if (response.ok) {
           const result = await response.json();
+          console.log('[PDF] ConvertAPI response:', JSON.stringify(result).substring(0, 200));
           if (result.Files?.[0]?.Url) {
             const textResponse = await fetch(result.Files[0].Url);
             extractedText = await textResponse.text();
-            if (IS_DEV) console.log(`[PDF] ConvertAPI extracted ${extractedText.length} chars`);
+            console.log(`[PDF] ConvertAPI SUCCESS: ${extractedText.length} chars`);
           }
+        } else {
+          const errorText = await response.text();
+          console.warn(`[PDF] ConvertAPI HTTP ${response.status}: ${errorText.substring(0, 200)}`);
         }
       } catch (e) {
-        console.warn('[PDF] ConvertAPI failed:', e);
+        console.warn('[PDF] ConvertAPI error:', e instanceof Error ? e.message : e);
       }
+    } else {
+      console.log('[PDF] ConvertAPI: SKIPPED (no API key)');
     }
 
-    // Method 2: pdf2json (local/fallback)
+    // Method 2: unpdf (Vercel-optimized, pure JS)
     if (!extractedText || extractedText.length < 100) {
       try {
-        if (IS_DEV) console.log('[PDF] Trying pdf2json extraction');
-        const PDFParser = (await import('pdf2json')).default;
-
-        extractedText = await new Promise((resolve) => {
-          const pdfParser = new PDFParser();
-          const timeout = setTimeout(() => {
-            console.warn('[PDF] pdf2json timeout');
-            resolve('');
-          }, 30000); // 30s timeout
-
-          pdfParser.on('pdfParser_dataReady', (pdfData: { Pages?: Array<{ Texts?: Array<{ R?: Array<{ T?: string }> }> }> }) => {
-            clearTimeout(timeout);
-            let text = '';
-            if (pdfData.Pages) {
-              for (const page of pdfData.Pages) {
-                if (page.Texts) {
-                  for (const textItem of page.Texts) {
-                    if (textItem.R) {
-                      for (const r of textItem.R) {
-                        if (r.T) {
-                          text += decodeURIComponent(r.T) + ' ';
-                        }
-                      }
-                    }
-                  }
-                }
-                text += '\n';
-              }
-            }
-            if (IS_DEV) console.log(`[PDF] pdf2json extracted ${text.length} chars`);
-            resolve(text.trim());
-          });
-
-          pdfParser.on('pdfParser_dataError', (errData: { parserError?: Error }) => {
-            clearTimeout(timeout);
-            console.error('[PDF] Parser error:', errData.parserError?.message || errData.parserError);
-            resolve('');
-          });
-
-          pdfParser.parseBuffer(buffer);
-        });
+        console.log('[PDF] Method 2: Trying unpdf...');
+        const { extractText } = await import('unpdf');
+        const uint8Array = new Uint8Array(buffer);
+        const { text } = await extractText(uint8Array, { mergePages: true });
+        extractedText = text || '';
+        console.log(`[PDF] unpdf SUCCESS: ${extractedText.length} chars`);
       } catch (e) {
-        console.warn('[PDF] pdf2json failed:', e);
+        console.warn('[PDF] unpdf error:', e instanceof Error ? e.message : e);
       }
     }
 
-    // Method 3: OpenAI Vision (for scanned/image PDFs)
-    if ((!extractedText || extractedText.length < 100) && process.env.OPENAI_API_KEY) {
+    // Method 3: pdf-parse (fallback)
+    if (!extractedText || extractedText.length < 100) {
       try {
-        if (IS_DEV) console.log('[PDF] Trying OpenAI Vision for OCR');
-        const base64PDF = buffer.toString('base64');
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          max_tokens: 4000,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Extract ALL text from this PDF/document image. Return ONLY the text content, preserving the structure as much as possible. Include all names, dates, job titles, companies, education, skills, and contact information.'
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:application/pdf;base64,${base64PDF}`,
-                    detail: 'high'
-                  }
-                }
-              ]
-            }
-          ]
-        });
-        extractedText = response.choices[0]?.message?.content || '';
-        if (IS_DEV) console.log(`[PDF] OpenAI Vision extracted ${extractedText.length} chars`);
+        console.log('[PDF] Method 3: Trying pdf-parse...');
+        const pdfParse = (await import('pdf-parse')).default;
+        const data = await pdfParse(buffer);
+        extractedText = data.text || '';
+        console.log(`[PDF] pdf-parse SUCCESS: ${extractedText.length} chars`);
       } catch (e) {
-        console.warn('[PDF] OpenAI Vision failed:', e);
+        console.warn('[PDF] pdf-parse error:', e instanceof Error ? e.message : e);
       }
     }
 
+    console.log(`[PDF] FINAL RESULT: ${extractedText.length} chars from ${filename}`);
     return extractedText;
   } catch (e) {
-    console.error('[PDF] Extraction error:', e);
+    console.error('[PDF] Extraction fatal error:', e);
     return '';
   }
 }

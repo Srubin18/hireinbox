@@ -632,16 +632,21 @@ function UploadPageContent() {
   const [videoAnalysis, setVideoAnalysis] = useState<any>(null);
   const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Modal and UI state
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [savedResultToken, setSavedResultToken] = useState<string | null>(null);
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+
+  // Check for sample parameter to auto-show demo
+  const showSample = searchParams.get('sample') === 'true';
 
   // Load saved results on mount
   useEffect(() => {
@@ -660,6 +665,18 @@ function UploadPageContent() {
       }
     }
   }, [sharedResultId]);
+
+  // Auto-show sample report if ?sample=true
+  useEffect(() => {
+    if (showSample && !analysis) {
+      // Trigger sample report after short delay for smooth UX
+      const timer = setTimeout(() => {
+        const sampleBtn = document.querySelector('[data-sample-btn]') as HTMLButtonElement;
+        if (sampleBtn) sampleBtn.click();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSample, analysis]);
 
   // Use shared context for assessment tracking
   const incrementFreeAssessmentCount = () => {
@@ -1692,6 +1709,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
             }}>
               <button
                 onClick={showSampleReport}
+                data-sample-btn
                 style={{
                   background: 'none',
                   border: 'none',
@@ -3342,6 +3360,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
                       onClick={async () => {
                         try {
                           setVideoError(null);
+                          setRecordingTime(0);
                           const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                           streamRef.current = stream;
                           if (videoRef.current) {
@@ -3357,9 +3376,17 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
                             const blob = new Blob(chunksRef.current, { type: 'video/webm' });
                             setVideoFile(new File([blob], 'video.webm', { type: 'video/webm' }));
                             stream.getTracks().forEach(t => t.stop());
+                            if (recordingTimerRef.current) {
+                              clearInterval(recordingTimerRef.current);
+                              recordingTimerRef.current = null;
+                            }
                           };
                           mediaRecorder.start();
                           setIsRecordingVideo(true);
+                          // Start timer
+                          recordingTimerRef.current = setInterval(() => {
+                            setRecordingTime(t => t + 1);
+                          }, 1000);
                         } catch (err) {
                           setVideoError('Camera access denied. Please allow camera permissions.');
                         }
@@ -3384,27 +3411,48 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
                   )}
 
                   {isRecordingVideo && (
-                    <button
-                      onClick={() => {
-                        if (mediaRecorderRef.current) {
-                          mediaRecorderRef.current.stop();
-                          setIsRecordingVideo(false);
-                        }
-                      }}
-                      style={{
-                        padding: '12px 24px',
-                        backgroundColor: '#0F172A',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 10,
-                        fontSize: '0.9375rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        animation: 'pulse 1s infinite'
-                      }}
-                    >
-                      Stop Recording
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                      {/* Recording Timer */}
+                      <div style={{
+                        fontSize: '2rem',
+                        fontWeight: 700,
+                        color: recordingTime >= 30 && recordingTime <= 60 ? '#059669' : recordingTime > 60 ? '#DC2626' : '#0F172A',
+                        fontFamily: 'monospace',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
+                      }}>
+                        <div style={{ width: 12, height: 12, backgroundColor: '#DC2626', borderRadius: '50%', animation: 'pulse 1s infinite' }} />
+                        {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: recordingTime >= 30 && recordingTime <= 60 ? '#059669' : '#64748B' }}>
+                        {recordingTime < 30 ? `${30 - recordingTime}s until minimum` : recordingTime <= 60 ? '✓ Good length! Stop when ready' : 'Consider stopping soon'}
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (mediaRecorderRef.current) {
+                            mediaRecorderRef.current.stop();
+                            setIsRecordingVideo(false);
+                            if (recordingTimerRef.current) {
+                              clearInterval(recordingTimerRef.current);
+                              recordingTimerRef.current = null;
+                            }
+                          }
+                        }}
+                        style={{
+                          padding: '12px 24px',
+                          backgroundColor: '#0F172A',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 10,
+                          fontSize: '0.9375rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ■ Stop Recording
+                      </button>
+                    </div>
                   )}
 
                   {videoFile && !isAnalyzingVideo && (

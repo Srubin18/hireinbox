@@ -362,7 +362,14 @@ export async function POST(request: Request) {
   if (IS_DEV) console.log(`[${traceId}][VIDEO-FERRARI] Analysis request received`);
 
   try {
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({
+        error: 'Invalid request. Please record a video and try again.'
+      }, { status: 400 });
+    }
     const videoFile = formData.get('video') as File | null;
     const audioFile = formData.get('audio') as File | null;
     const framesJson = formData.get('frames') as string | null;
