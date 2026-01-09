@@ -16,7 +16,7 @@ export const TIER_LIMITS = {
     upgradeUrl: '/pricing?plan=b2b-starter'
   },
   b2c: {
-    free: 1,
+    free: 5, // TEMP: Increased for testing (was 1)
     name: 'Job Seeker',
     upgradePrice: 'R29 per CV',
     upgradeUrl: '/pricing?plan=b2c-single'
