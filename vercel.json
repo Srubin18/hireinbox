@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "src/app/api/analyze-video/route.ts": {
+      "maxDuration": 120
+    },
+    "src/app/api/analyze-cv/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/fetch-emails/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
