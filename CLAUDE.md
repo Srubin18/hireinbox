@@ -308,4 +308,41 @@ Free CV Scan → Show gaps → Upsell Video → "Your CV gets you considered. Yo
 
 ---
 
-*Last updated: 23 December 2024*
+---
+
+## RALPH - Autonomous Feature Agent
+
+> **RALPH** = Relentless Autonomous Launch & Progress Handler
+> Ships features by breaking them into atomic, testable tasks.
+
+### Commands
+
+```
+RALPH, build [description]    → Start new feature
+RALPH, status                 → Check progress
+RALPH, next                   → Get next task
+RALPH, done [task-id]         → Complete task
+RALPH, fail [task-id]         → Mark failed
+RALPH, clear                  → Start fresh
+```
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/agents/ralph/index.ts` | Main agent logic |
+| `src/agents/ralph/prd-generator.ts` | Feature → PRD |
+| `src/agents/ralph/story-splitter.ts` | PRD → atomic tasks |
+| `src/agents/ralph/progress.ts` | Persistence |
+| `.claude/memory/agents.md` | Long-term memory |
+| `.claude/memory/ralph-progress.json` | Current session |
+
+### Workflow
+
+```
+Feature Description → PRD → Atomic Tasks → Execute → Commit → Ship
+```
+
+---
+
+*Last updated: 16 January 2026*
