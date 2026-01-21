@@ -77,13 +77,24 @@ Traditional job boards face a chicken-and-egg problem:
 
 #### B2B (Employers)
 
-| Stream | Price | Phase |
-|--------|-------|-------|
-| CV Screening | R1,750/role (unlimited CVs) | 1 |
-| Job Listing | R2,500/listing | 2 |
-| Subscription | R5,000-15,000/mo | 3 |
-| AI Interviews | R500/interview | 2+ |
-| Boutique AI Agent | R20,000/month | 1+ |
+| Stream | Description | Price | Phase |
+|--------|-------------|-------|-------|
+| CV Screening | Per role, unlimited CVs | R1,750/role | 1 |
+| Talent Pool Opt-in | Employer permits unused CVs to join talent pool | Free (value exchange) | 1 |
+| ID Verification | Verify candidate identity | TBD | 1 |
+| Criminal Check | Background/criminal verification | TBD | 1 |
+| AI Interview | Avatar conducts first interview + rating + psychometric testing | TBD | 1 |
+| Job Listing | Post job publicly to attract candidates | R2,500/listing | 2 |
+| Subscription | Unlimited roles + full talent pool access | R5,000-15,000/mo | 3 |
+| Boutique AI Agent | Custom-trained AI for specific company | R20,000/month | 1+ |
+
+**Talent Pool Growth Strategy:**
+- Employer screens 200 CVs, shortlists 10
+- We ask: "Add the other 190 CVs to HireInbox Talent Pool?"
+- Employer agrees → CVs join marketplace (with consent)
+- Employer owns their CVs, but can donate unused ones
+- This builds our talent pool WITHOUT cold-start problem
+- POPIA compliant: employer consent + candidate can opt-out later
 
 #### B2C (Job Seekers)
 
