@@ -659,8 +659,41 @@ function detectServerSideException(
 }
 
 function validateAnalysis(analysis: Record<string, unknown>): boolean {
-  const score = analysis.overall_score;
-  const rec = String(analysis.recommendation || '').toUpperCase();
+  // Try to extract score from multiple possible locations
+  let score = analysis.overall_score;
+
+  // Fallback: check ranking.weighted_score or other common locations (V3 model structure)
+  if (typeof score !== 'number' && analysis.ranking && typeof analysis.ranking === 'object') {
+    const ranking = analysis.ranking as Record<string, unknown>;
+    score = ranking.weighted_score ?? ranking.overall_score ?? ranking.total_score;
+  }
+
+  // Fallback: check for score/total_score at top level
+  if (typeof score !== 'number') {
+    score = analysis.score ?? analysis.total_score ?? analysis.weighted_score;
+  }
+
+  // If we found a score in an alternate location, copy it to overall_score
+  if (typeof score === 'number' && typeof analysis.overall_score !== 'number') {
+    analysis.overall_score = score;
+  }
+
+  // V3 MODEL FIX: Generate recommendation from score if missing
+  let rec = String(analysis.recommendation || '').toUpperCase();
+  if (!rec || !['SHORTLIST', 'CONSIDER', 'REJECT'].includes(rec)) {
+    if (typeof score === 'number') {
+      if (score >= 80) rec = 'SHORTLIST';
+      else if (score >= 60) rec = 'CONSIDER';
+      else rec = 'REJECT';
+      analysis.recommendation = rec;
+    }
+  }
+
+  // V3 MODEL FIX: Create empty risk_register if missing
+  if (!Array.isArray(analysis.risk_register)) {
+    analysis.risk_register = [];
+  }
+
   const exceptionApplied = analysis.exception_applied === true;
 
   if (typeof score !== 'number' || score < 0 || score > 100) return false;
@@ -668,7 +701,6 @@ function validateAnalysis(analysis: Record<string, unknown>): boolean {
   if (rec === 'SHORTLIST' && score < 80) return false;
   if (rec === 'CONSIDER' && score < 60) return false;
   if (exceptionApplied && rec === 'REJECT') return false;
-  if (!Array.isArray(analysis.risk_register)) return false;
   if (!analysis.confidence || !(analysis.confidence as Record<string, unknown>).level) return false;
 
   return true;
@@ -711,7 +743,15 @@ Respond with valid JSON only.`;
       const cleaned = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
 
       let parsed: Record<string, unknown>;
-      try { parsed = JSON.parse(cleaned); }
+      try {
+        parsed = JSON.parse(cleaned);
+        // DEV: Log actual response structure
+        if (IS_DEV) {
+          const keys = Object.keys(parsed);
+          console.log(`[${traceId}][AI] Response keys: ${keys.join(', ')}`);
+          console.log(`[${traceId}][AI] overall_score value: ${parsed.overall_score} (type: ${typeof parsed.overall_score})`);
+        }
+      }
       catch {
         console.error(`[${traceId}][AI] JSON parse failed`);
         if (attempt === 1) {
@@ -724,6 +764,7 @@ Respond with valid JSON only.`;
 
       if (!validateAnalysis(parsed)) {
         console.error(`[${traceId}][AI] Validation failed - attempting retry`);
+        if (IS_DEV) console.log(`[${traceId}][AI] Failed response:`, JSON.stringify({ overall_score: parsed.overall_score, recommendation: parsed.recommendation, exception_applied: parsed.exception_applied, risk_register: parsed.risk_register?.length || 'missing' }));
         if (attempt === 1) {
           messages.push({ role: 'assistant', content: text });
           messages.push({ role: 'user', content: 'Invalid. Rules: 1) Valid JSON. 2) If exception_applied=true, recommendation MUST be CONSIDER. 3) SHORTLIST>=80, CONSIDER>=60. Try again.' });
@@ -796,7 +837,9 @@ export async function POST() {
       if (IS_DEV) console.log(`[${traceId}] Connected to INBOX folder`);
     }
 
-    const messages = await connection.search(['UNSEEN'], {
+    // DEV: Search ALL emails to debug, not just UNSEEN
+    const searchCriteria = IS_DEV ? ['ALL'] : ['UNSEEN'];
+    const messages = await connection.search(searchCriteria, {
       bodies: ['HEADER', 'TEXT', ''],
       markSeen: false,
       struct: true
@@ -816,6 +859,11 @@ export async function POST() {
         const fromEmail = parsed.from?.value?.[0]?.address?.toLowerCase() || '';
         const subject = parsed.subject || '(no subject)';
         const textBody = parsed.text || '';
+
+        // DEV: Log mafadi emails for debugging
+        if (IS_DEV && (fromEmail.includes('mafadi') || subject.toLowerCase().includes('lerato'))) {
+          console.log(`[${traceId}] FOUND MAFADI/LERATO EMAIL: "${subject}" from ${fromEmail}`);
+        }
 
         if (fromEmail === process.env.GMAIL_USER?.toLowerCase()) continue;
         if (subject.includes('Application Received')) continue;

@@ -1,0 +1,61 @@
+# CodeRabbit Configuration for HIREINBOX
+# https://docs.coderabbit.ai/configuration/
+
+language: en
+
+# Review settings
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+  # Path-specific instructions
+  path_instructions:
+    - path: "src/**/*.ts"
+      instructions: |
+        Focus on TypeScript best practices, security vulnerabilities.
+        Check for proper error handling.
+        Ensure POPIA compliance for any data handling.
+
+    - path: "src/**/*.tsx"
+      instructions: |
+        Review React component best practices.
+        Check for accessibility issues.
+        Ensure proper state management.
+
+    - path: "src/app/api/**"
+      instructions: |
+        Critical: Check for security vulnerabilities (injection, XSS, auth bypass).
+        Validate input sanitization.
+        Ensure proper error responses.
+        Check rate limiting is applied.
+
+    - path: "scripts/training-data/**"
+      instructions: |
+        Ensure no PII (personally identifiable information) in training data.
+        Check data quality and formatting.
+        Validate JSON structure.
+
+    - path: "src/lib/sa-context.ts"
+      instructions: |
+        This is the SA context intelligence layer - the company's moat.
+        Any changes must be SA-specific and accurate.
+        Verify South African qualification names, universities, and companies.
+
+# Chat settings
+chat:
+  auto_reply: true
+
+# Review profile
+profile: assertive
+
+# Early access features
+early_access: true
+
+# Knowledge base
+knowledge_base:
+  learnings:
+    scope: auto

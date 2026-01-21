@@ -1155,18 +1155,18 @@ function UploadPageContent() {
           <a href="/" style={{
             color: 'rgba(255,255,255,0.7)',
             textDecoration: 'none',
-            fontSize: '0.875rem',
+            fontSize: '0.8rem',
             fontWeight: 500,
-            padding: '8px 16px',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: 8,
+            padding: '8px 14px',
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: 6,
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            transition: 'all 0.2s ease',
-            minHeight: 44
+            transition: 'all 0.2s ease'
           }}>
-            For Employers
+            For Employers →
           </a>
         </header>
 
