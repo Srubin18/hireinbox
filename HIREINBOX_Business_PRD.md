@@ -724,170 +724,217 @@ For businesses with infrequent hiring needs:
 
 ---
 
-## Part 5: 12-Month Financial Forecast
+## Part 5: 18-Month Financial Forecast (Feb 2026 - Jul 2027)
 
-### 5.1 Expense Breakdown
+### 5.1 Timeline Overview
 
-#### Month 0: MVP Development (One-Time)
+| Phase | Months | Dates | Focus |
+|-------|--------|-------|-------|
+| **BUILD** | 1-3 | Feb - Apr 2026 | Development, no revenue |
+| **LAUNCH** | 4 | May 2026 | Go live, first customers |
+| **GROW** | 5-18 | Jun 2026 - Jul 2027 | Scale revenue |
 
-| Item | Cost |
-|------|------|
-| MVP Development (contract/agency) | R800,000 |
-| Infrastructure Setup | R100,000 |
-| Legal & Company Setup | R100,000 |
-| Initial Marketing Collateral | R100,000 |
-| Contingency | R100,000 |
-| **Total Month 0** | **R1,200,000** |
+**Key Milestones:**
+- **1 Feb 2026:** Development begins
+- **1 Apr 2026:** Hire team (1 month before launch)
+- **1 May 2026:** LAUNCH (target) - or 1 Jun if needed
+- **1 Jul 2027:** End of 18-month projection
 
-#### Monthly Operating Expenses (Months 1-12)
+---
+
+### 5.2 Development Investment (Months 1-3)
+
+| Item | Total | Monthly Spread |
+|------|-------|----------------|
+| Development (MVP Build) | R1,000,000 | R333,333/month |
+| Infrastructure & Tools | R50,000 | Once-off |
+| Legal & Company Setup | R30,000 | Once-off |
+| **Total Build Phase** | **R1,080,000** | |
+
+---
+
+### 5.3 Team & Salaries (Cape Town Startup - Competitive)
+
+**Hiring Timeline:** 1 April 2026 (1 month before launch)
+
+| Role | Monthly Salary | Notes |
+|------|----------------|-------|
+| Marketing Manager | R45,000 | Mid-senior, growth-focused |
+| Full-Stack Developer | R60,000 | Senior, Cape Town market rate |
+| Success Manager | R38,000 | Mid-level, customer-focused |
+| **Total Team Salaries** | **R143,000/month** | Excluding founders |
+
+**Founder Salaries (Optional - Month 6+):**
+| Role | Monthly Salary | Notes |
+|------|----------------|-------|
+| CEO (Simon Rubin) | R40,000 | Below market, starts Month 6 |
+| Co-CEO (Shay Sinbeti) | R40,000 | Below market, starts Month 6 |
+
+*Founders defer salary during build and early launch phases*
+
+---
+
+### 5.4 Monthly Operating Expenses
+
+#### Build Phase (Months 1-3: Feb-Apr 2026)
+
+| Category | Month 1 | Month 2 | Month 3 |
+|----------|---------|---------|---------|
+| Development | R333,333 | R333,333 | R333,333 |
+| Infrastructure Setup | R50,000 | R0 | R0 |
+| Legal/Company Setup | R30,000 | R0 | R0 |
+| Marketing Prep | R0 | R25,000 | R50,000 |
+| Office/Co-working | R10,000 | R10,000 | R10,000 |
+| Team Salaries | R0 | R0 | R143,000 |
+| Misc/Contingency | R10,000 | R10,000 | R10,000 |
+| **Total** | **R433,333** | **R378,333** | **R546,333** |
+
+**Build Phase Total: R1,358,000**
+
+#### Operating Phase (Months 4+: May 2026 onwards)
 
 | Category | Monthly Cost | Notes |
 |----------|--------------|-------|
-| **Salaries** | | |
-| CEO (Simon Rubin) | R60,000 | Below market, founder salary |
-| Co-CEO (Shay Sinbeti) | R60,000 | Below market, founder salary |
-| Full-Stack Developer | R55,000 | Mid-level SA developer |
-| Success Manager | R35,000 | Entry-mid level |
-| Marketing Manager | R40,000 | Mid-level |
-| **Subtotal Salaries** | **R250,000** | |
-| | | |
-| **Marketing** | R150,000 | As per marketing strategy |
-| | | |
-| **Technology & Infrastructure** | | |
-| Cloud Hosting (AWS/Azure) | R15,000 | Scales with usage |
-| AI API Costs (OpenAI) | R25,000 | GPT-4o-mini for screening |
-| Supabase/Database | R3,000 | PostgreSQL hosting |
-| Domain & Email | R500 | hireinbox.co.za |
-| Development Tools | R2,500 | GitHub, testing tools, etc. |
-| **Subtotal Tech** | **R46,000** | |
-| | | |
+| **Team Salaries** | R143,000 | Marketing, Dev, Success |
+| **Founder Salaries** | R80,000 | Starts Month 6 |
+| **Marketing** | R100,000 | Ramps up post-launch |
+| **Technology** | | |
+| - Cloud Hosting (Vercel/AWS) | R10,000 | Scales with usage |
+| - AI API (OpenAI) | R20,000 | GPT-4o-mini screening |
+| - Supabase | R3,000 | Database |
+| - Tools & Services | R5,000 | GitHub, monitoring, etc. |
 | **Operations** | | |
-| Office/Co-working | R15,000 | Flexible workspace |
-| Insurance | R5,000 | Professional indemnity, cyber |
-| Accounting & Bookkeeping | R8,000 | Monthly financial management |
-| Legal Retainer | R5,000 | Contract reviews, compliance |
-| Miscellaneous | R5,000 | Travel, supplies, etc. |
-| **Subtotal Operations** | **R38,000** | |
-| | | |
-| **Total Monthly Opex** | **R484,000** | |
+| - Office/Co-working | R15,000 | Cape Town |
+| - Insurance | R5,000 | Professional indemnity |
+| - Accounting | R8,000 | Bookkeeping, tax |
+| - Legal | R5,000 | Contracts, compliance |
+| - Miscellaneous | R10,000 | Travel, supplies |
+| **Total (Months 4-5)** | **R324,000** | Before founder salary |
+| **Total (Month 6+)** | **R404,000** | With founder salary |
 
-### 5.2 Revenue Projections (Conservative)
+---
 
-#### Assumptions
+### 5.5 Revenue Model
 
-- B2B conversion rate: 5% of trials convert
-- B2B churn rate: 5% monthly
-- B2C conversion rate: 3% of free users pay for video
-- Average B2B deal: R750/month (mix of tiers)
-- Average B2C transaction: R80 (mix of products)
+#### B2B Revenue Streams
 
-#### B2B Revenue Build-Up
+| Product | Price | Expected Volume (Month 6) | Monthly Revenue |
+|---------|-------|---------------------------|-----------------|
+| CV Screening | R1,750/role | 15 roles | R26,250 |
+| ID Verification | R50/candidate | 50 candidates | R2,500 |
+| Credit Check | R100/candidate | 30 candidates | R3,000 |
+| Criminal Check | R150/candidate | 30 candidates | R4,500 |
+| AI Interview + Psychometric | R750/candidate | 10 candidates | R7,500 |
+| Boutique AI Agent | R20,000/month | 0 (target Month 9+) | R0 |
+| **B2B Total (Month 6)** | | | **R43,750** |
 
-| Month | New Trials | Conversions | Total Paying | MRR (B2B) |
-|-------|------------|-------------|--------------|-----------|
-| 1 | 20 | 1 | 1 | R750 |
-| 2 | 30 | 2 | 3 | R2,250 |
-| 3 | 40 | 2 | 5 | R3,750 |
-| 4 | 50 | 3 | 8 | R6,000 |
-| 5 | 60 | 3 | 11 | R8,250 |
-| 6 | 80 | 4 | 15 | R11,250 |
-| 7 | 100 | 5 | 19 | R14,250 |
-| 8 | 120 | 6 | 25 | R18,750 |
-| 9 | 140 | 7 | 31 | R23,250 |
-| 10 | 160 | 8 | 38 | R28,500 |
-| 11 | 180 | 9 | 46 | R34,500 |
-| 12 | 200 | 10 | 55 | R41,250 |
+#### B2C Revenue Streams
 
-#### B2C Revenue Build-Up
+| Product | Price | Expected Volume (Month 6) | Monthly Revenue |
+|---------|-------|---------------------------|-----------------|
+| Video Analysis | R149 | 40 sales | R5,960 |
+| AI Avatar Coaching | R199 | 20 sales | R3,980 |
+| Position-Specific Prep | R199 | 15 sales | R2,985 |
+| Video Pitch Package | R149 | 10 sales | R1,490 |
+| **B2C Total (Month 6)** | | | **R14,415** |
 
-| Month | Free CV Scans | Video Conversions | B2C Revenue |
-|-------|---------------|-------------------|-------------|
-| 1 | 500 | 15 | R1,200 |
-| 2 | 800 | 24 | R1,920 |
-| 3 | 1,200 | 36 | R2,880 |
-| 4 | 1,500 | 45 | R3,600 |
-| 5 | 2,000 | 60 | R4,800 |
-| 6 | 2,500 | 75 | R6,000 |
-| 7 | 3,000 | 90 | R7,200 |
-| 8 | 4,000 | 120 | R9,600 |
-| 9 | 5,000 | 150 | R12,000 |
-| 10 | 6,000 | 180 | R14,400 |
-| 11 | 7,000 | 210 | R16,800 |
-| 12 | 8,000 | 240 | R19,200 |
+---
 
-### 5.3 12-Month Financial Summary
+### 5.6 18-Month Financial Projection
 
-| Month | B2B Revenue | B2C Revenue | Total Revenue | Expenses | Net | Cumulative |
-|-------|-------------|-------------|---------------|----------|-----|------------|
-| 0 | R0 | R0 | R0 | R1,200,000 | -R1,200,000 | -R1,200,000 |
-| 1 | R750 | R1,200 | R1,950 | R484,000 | -R482,050 | -R1,682,050 |
-| 2 | R2,250 | R1,920 | R4,170 | R484,000 | -R479,830 | -R2,161,880 |
-| 3 | R3,750 | R2,880 | R6,630 | R484,000 | -R477,370 | -R2,639,250 |
-| 4 | R6,000 | R3,600 | R9,600 | R484,000 | -R474,400 | -R3,113,650 |
-| 5 | R8,250 | R4,800 | R13,050 | R484,000 | -R470,950 | -R3,584,600 |
-| 6 | R11,250 | R6,000 | R17,250 | R484,000 | -R466,750 | -R4,051,350 |
-| 7 | R14,250 | R7,200 | R21,450 | R484,000 | -R462,550 | -R4,513,900 |
-| 8 | R18,750 | R9,600 | R28,350 | R484,000 | -R455,650 | -R4,969,550 |
-| 9 | R23,250 | R12,000 | R35,250 | R484,000 | -R448,750 | -R5,418,300 |
-| 10 | R28,500 | R14,400 | R42,900 | R484,000 | -R441,100 | -R5,859,400 |
-| 11 | R34,500 | R16,800 | R51,300 | R484,000 | -R432,700 | -R6,292,100 |
-| 12 | R41,250 | R19,200 | R60,450 | R484,000 | -R423,550 | -R6,715,650 |
+#### Monthly Summary
 
-### 5.4 Key Financial Metrics
+| Month | Date | Phase | Expenses | B2B Revenue | B2C Revenue | Total Revenue | Net | Cumulative |
+|-------|------|-------|----------|-------------|-------------|---------------|-----|------------|
+| 1 | Feb 26 | Build | R433,333 | R0 | R0 | R0 | -R433,333 | -R433,333 |
+| 2 | Mar 26 | Build | R378,333 | R0 | R0 | R0 | -R378,333 | -R811,666 |
+| 3 | Apr 26 | Build | R546,333 | R0 | R0 | R0 | -R546,333 | -R1,358,000 |
+| 4 | May 26 | Launch | R324,000 | R8,750 | R3,000 | R11,750 | -R312,250 | -R1,670,250 |
+| 5 | Jun 26 | Grow | R324,000 | R17,500 | R6,000 | R23,500 | -R300,500 | -R1,970,750 |
+| 6 | Jul 26 | Grow | R404,000 | R43,750 | R14,415 | R58,165 | -R345,835 | -R2,316,585 |
+| 7 | Aug 26 | Grow | R404,000 | R61,250 | R18,000 | R79,250 | -R324,750 | -R2,641,335 |
+| 8 | Sep 26 | Grow | R404,000 | R78,750 | R22,000 | R100,750 | -R303,250 | -R2,944,585 |
+| 9 | Oct 26 | Grow | R404,000 | R105,000 | R28,000 | R133,000 | -R271,000 | -R3,215,585 |
+| 10 | Nov 26 | Grow | R404,000 | R131,250 | R35,000 | R166,250 | -R237,750 | -R3,453,335 |
+| 11 | Dec 26 | Grow | R404,000 | R148,750 | R40,000 | R188,750 | -R215,250 | -R3,668,585 |
+| 12 | Jan 27 | Grow | R404,000 | R175,000 | R48,000 | R223,000 | -R181,000 | -R3,849,585 |
+| 13 | Feb 27 | Grow | R404,000 | R201,250 | R55,000 | R256,250 | -R147,750 | -R3,997,335 |
+| 14 | Mar 27 | Grow | R404,000 | R227,500 | R62,000 | R289,500 | -R114,500 | -R4,111,835 |
+| 15 | Apr 27 | Grow | R404,000 | R262,500 | R70,000 | R332,500 | -R71,500 | -R4,183,335 |
+| 16 | May 27 | Grow | R404,000 | R297,500 | R78,000 | R375,500 | -R28,500 | -R4,211,835 |
+| 17 | Jun 27 | Grow | R404,000 | R341,250 | R88,000 | R429,250 | R25,250 | -R4,186,585 |
+| 18 | Jul 27 | Grow | R404,000 | R385,000 | R100,000 | R485,000 | R81,000 | -R4,105,585 |
 
-| Metric | Month 6 | Month 12 | Target Month 18* |
-|--------|---------|----------|------------------|
-| Monthly Recurring Revenue (MRR) | R17,250 | R60,450 | R200,000+ |
-| Paying B2B Customers | 15 | 55 | 150 |
-| Monthly B2C Transactions | 75 | 240 | 500 |
-| Customer Acquisition Cost (B2B) | R9,000 | R2,727 | R1,000 |
-| Lifetime Value (B2B, 12 mo) | R9,000 | R9,000 | R12,000 |
-| LTV:CAC Ratio | 1.0 | 3.3 | 12.0 |
+---
 
-*Projections beyond 12 months assume continued growth trajectory
+### 5.7 Revenue Growth Assumptions
 
-### 5.5 Break-Even Analysis
+#### B2B Growth Drivers
+| Month | Roles Screened | Avg Revenue/Role | Verification Upsells | AI Interviews | Boutique Agents |
+|-------|----------------|------------------|---------------------|---------------|-----------------|
+| 4 (Launch) | 5 | R1,750 | R0 | R0 | 0 |
+| 6 | 15 | R1,750 | R10,000 | R7,500 | 0 |
+| 9 | 40 | R1,750 | R25,000 | R15,000 | 1 (R20k) |
+| 12 | 70 | R1,750 | R40,000 | R25,000 | 2 (R40k) |
+| 15 | 100 | R1,750 | R60,000 | R35,000 | 3 (R60k) |
+| 18 | 140 | R1,750 | R85,000 | R50,000 | 5 (R100k) |
 
-**Current Trajectory Break-Even:** Month 24-30
+#### B2C Growth Drivers
+| Month | Free CV Scans | Conversion Rate | Paid Users | Avg Transaction |
+|-------|---------------|-----------------|------------|-----------------|
+| 4 (Launch) | 500 | 3% | 15 | R200 |
+| 6 | 1,500 | 5% | 75 | R192 |
+| 9 | 3,500 | 6% | 210 | R133 |
+| 12 | 6,000 | 7% | 420 | R114 |
+| 15 | 8,500 | 7% | 595 | R118 |
+| 18 | 12,000 | 8% | 960 | R104 |
 
-To reach break-even faster, we need:
-- R484,000 monthly expenses
-- At target mix: 65% B2B, 35% B2C
-- Required: ~500 paying B2B customers at R750 average = R375,000
-- Required: ~1,350 B2C transactions/month at R80 average = R108,000
+---
 
-**Accelerated Path to Break-Even (Month 18):**
-- Aggressive enterprise sales (10 companies at R2,499 = R24,990/month)
-- Partnership deals with recruitment agencies
-- Referral program driving organic growth
-- Reduced marketing spend as organic traffic grows
+### 5.8 Key Metrics
 
-### 5.6 Funding Requirements
+| Metric | Month 6 | Month 12 | Month 18 |
+|--------|---------|----------|----------|
+| Monthly Revenue | R58,165 | R223,000 | R485,000 |
+| Monthly Expenses | R404,000 | R404,000 | R404,000 |
+| Monthly Profit/Loss | -R345,835 | -R181,000 | +R81,000 |
+| B2B Customers (cumulative) | 15 | 70 | 140 |
+| B2C Paid Users (monthly) | 75 | 420 | 960 |
+| Boutique Agents | 0 | 2 | 5 |
+| **Break-Even** | - | - | **Month 17** |
 
-| Phase | Amount | Purpose |
-|-------|--------|---------|
-| Seed Round | R7,000,000 | 18-month runway to break-even |
-| Use of Funds | | |
-| - MVP & Operations (12 mo) | R5,800,000 | As per financial model |
-| - Buffer & Contingency | R700,000 | Market uncertainties |
-| - Growth Acceleration | R500,000 | Opportunistic expansion |
+---
 
-### 5.7 Scenario Analysis
+### 5.9 Funding Requirements
 
-#### Optimistic Scenario (2x Growth)
-- Month 12 MRR: R120,000
-- Break-even: Month 18
-- Requires: Viral B2C growth, strong referrals
+| Item | Amount |
+|------|--------|
+| Build Phase (Months 1-3) | R1,358,000 |
+| Operating Losses (Months 4-16) | R2,854,000 |
+| Contingency (20%) | R842,000 |
+| **Total Required** | **R5,054,000** |
 
-#### Conservative Scenario (Base Case)
-- Month 12 MRR: R60,450
-- Break-even: Month 24-30
-- Requires: Steady execution, no major setbacks
+**Recommended Raise: R5,500,000** (includes buffer for opportunistic growth)
 
-#### Pessimistic Scenario (0.5x Growth)
-- Month 12 MRR: R30,000
-- Break-even: Month 36+
-- Requires: Additional funding round
+---
+
+### 5.10 Scenario Analysis
+
+#### Optimistic (1.5x Revenue)
+- Break-even: Month 14
+- Month 18 Revenue: R727,500
+- Month 18 Profit: +R323,500
+
+#### Base Case (as projected)
+- Break-even: Month 17
+- Month 18 Revenue: R485,000
+- Month 18 Profit: +R81,000
+
+#### Conservative (0.7x Revenue)
+- Break-even: Month 22+
+- Month 18 Revenue: R339,500
+- Month 18 Loss: -R64,500
+- Requires: Additional R400k runway
 
 ---
 
