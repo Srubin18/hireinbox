@@ -75,22 +75,48 @@ Traditional job boards face a chicken-and-egg problem:
 
 ### Revenue Streams
 
+#### B2B (Employers)
+
 | Stream | Price | Phase |
 |--------|-------|-------|
-| CV Screening | R1,750/role | 1 |
+| CV Screening | R1,750/role (unlimited CVs) | 1 |
 | Job Listing | R2,500/listing | 2 |
 | Subscription | R5,000-15,000/mo | 3 |
 | AI Interviews | R500/interview | 2+ |
 | Boutique AI Agent | R20,000/month | 1+ |
 
-### Boutique AI Agent (JobsAI Partnership)
+#### B2C (Job Seekers)
+
+| Stream | Price | Phase |
+|--------|-------|-------|
+| CV Scan | FREE (1x) | 1 |
+| CV Redo/Rewrite | FREE (1x) | 1 |
+| Video Analysis | R99-R199 | 1 |
+| AI Avatar Interview Coaching | R149-R299 | 1 |
+| Position-Specific Prep | R199 | 1 |
+| Video Pitch (for employers) | R149 | 1 |
+
+**B2C Funnel:**
+```
+Free CV Scan → Free CV Redo → Upsell Video Analysis → Upsell AI Coaching
+```
+
+**B2C Value Proposition:**
+- Get AI feedback on your CV (free)
+- AI rewrites your CV professionally (free, 1x)
+- Video analysis: "How do I come across on camera?"
+- AI Avatar coaching: Prep for specific roles
+- Create video pitch to attach to job applications (Pnet, LinkedIn, HireInbox)
+- Position-specific guidance: "What does this employer want?"
+
+### Boutique AI Agent (JOBIXAI Partnership)
 
 For larger companies, we offer custom-trained AI agents:
 - R20,000/month per company
 - AI trained on company's specific culture, policies, tone
 - Dedicated model for that company
 - Knows the company like a 5-year employee
-- Powered by JobsAI (Shay's Cape Town-based agent company)
+- Powered by JOBIXAI (Shay's Cape Town-based AI agent company)
 
 ---
 
@@ -101,7 +127,7 @@ For larger companies, we offer custom-trained AI agents:
 | Role | Name | Responsibilities |
 |------|------|------------------|
 | CEO | Simon Rubin | Vision, strategy, operations, investor relations, go-to-market |
-| Co-CEO | Shay Sinbeti | Technology, AI architecture, JobsAI integration, product development |
+| Co-CEO | Shay Sinbeti | Technology, AI architecture, JOBIXAI integration, product development |
 
 ### Core Team (Full-Time)
 

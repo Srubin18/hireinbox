@@ -22,7 +22,7 @@
 6. [Frontend Specifications](#6-frontend-specifications)
 7. [Mobile Strategy](#7-mobile-strategy)
 8. [AI Architecture](#8-ai-architecture)
-9. [JobsAI Agent Platform](#9-jobsai-agent-platform)
+9. [JOBIXAI Agent Platform](#9-jobixai-agent-platform)
 10. [Authentication & Security](#10-authentication--security)
 11. [Payment Processing](#11-payment-processing)
 12. [File Handling](#12-file-handling)
@@ -1503,11 +1503,11 @@ Exception rule: Candidates scoring 75-79 with strong trajectory or unique skills
 
 ---
 
-# 9. JOBSAI AGENT PLATFORM
+# 9. JOBIXAI AGENT PLATFORM
 
 ## 9.1 Overview
 
-JobsAI is HireInbox's AI Agent technology partner, founded by Shay Sinbeti and based in Cape Town, South Africa. JobsAI specializes in building and deploying AI agents for companies.
+JOBIXAI is HireInbox's AI Agent technology partner, founded by Shay Sinbeti and based in Cape Town, South Africa. JOBIXAI specializes in building and deploying AI agents and agentic systems for companies.
 
 Through this partnership, HireInbox provides employers with autonomous "AI Staff Members" - intelligent agents that work alongside human HR teams to automate recruitment tasks. These agents operate 24/7, handling routine tasks while escalating complex decisions to human reviewers.
 
@@ -1522,7 +1522,7 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                        JOBSAI ORCHESTRATOR                            │
+│                        JOBIXAI ORCHESTRATOR                           │
 │                    (Central Agent Management)                         │
 └───────────────────────────────┬──────────────────────────────────────┘
                                 │

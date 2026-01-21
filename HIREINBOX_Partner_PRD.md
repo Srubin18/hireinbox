@@ -13,7 +13,7 @@ This document provides a technical overview of the HireInbox platform for partne
 
 1. Platform Overview
 2. Key Features
-3. JobsAI Agent Platform
+3. JOBIXAI Agent Platform
 4. User Experience
 5. Security & Compliance
 6. Integrations
@@ -158,13 +158,13 @@ This document provides a technical overview of the HireInbox platform for partne
 
 ---
 
-# 3. JOBSAI AGENT PLATFORM
+# 3. JOBIXAI AGENT PLATFORM
 
-## What is JobsAI?
+## What is JOBIXAI?
 
-JobsAI is our AI Agent technology partner, founded by Shay Sinbeti and based in Cape Town, South Africa. JobsAI specializes in building and deploying AI agents for companies.
+JOBIXAI is our AI Agent technology partner, founded by Shay Sinbeti and based in Cape Town, South Africa. JOBIXAI specializes in building and deploying AI agents and agentic systems for companies.
 
-HireInbox partners with JobsAI to provide employers with "virtual staff members" - autonomous AI agents that handle recruitment tasks 24/7. This partnership also enables our **Boutique AI Agent offering** (R20,000/month) - custom-trained AI agents that understand a specific company's culture, processes, and needs.
+HireInbox partners with JOBIXAI to provide employers with "virtual staff members" - autonomous AI agents that handle recruitment tasks 24/7. This partnership also enables our **Boutique AI Agent offering** (R20,000/month) - custom-trained AI agents that understand a specific company's culture, processes, and needs.
 
 ## Available Agents
 
