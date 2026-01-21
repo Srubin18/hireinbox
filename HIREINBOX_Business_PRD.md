@@ -81,9 +81,10 @@ Traditional job boards face a chicken-and-egg problem:
 |--------|-------------|-------|-------|
 | CV Screening | Per role, unlimited CVs | R1,750/role | 1 |
 | Talent Pool Opt-in | Employer permits unused CVs to join talent pool | Free (value exchange) | 1 |
-| ID Verification | Verify candidate identity | TBD | 1 |
-| Criminal Check | Background/criminal verification | TBD | 1 |
-| AI Interview | Avatar conducts first interview + rating + psychometric testing | TBD | 1 |
+| ID Verification | Verify candidate identity | R50/candidate | 1 |
+| Credit Check | Financial background check | R100/candidate | 1 |
+| Criminal Check | Background/criminal verification | R150/candidate | 1 |
+| AI Interview + Psychometric | Avatar conducts first interview + rating + psychometric testing | R750/candidate | 1 |
 | Job Listing | Post job publicly to attract candidates | R2,500/listing | 2 |
 | Subscription | Unlimited roles + full talent pool access | R5,000-15,000/mo | 3 |
 | Boutique AI Agent | Custom-trained AI for specific company | R20,000/month | 1+ |
