@@ -145,10 +145,11 @@ export default function HomePage() {
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+            {/* Per-Role Pricing Model (Jan 2026) */}
             {[
-              { name: 'Starter', price: 'R399', period: '/month', cvs: 'Up to 50 CVs', emoji: '👤' },
-              { name: 'Growth', price: 'R1,999', period: '/month', cvs: 'Up to 250 CVs', emoji: '👥', popular: true },
-              { name: 'Business', price: 'R4,999', period: '/month', cvs: 'Unlimited', emoji: '🚀' }
+              { name: 'AI CV Screening', price: 'R1,750', period: '/role', cvs: 'Unlimited CVs', emoji: '📋', popular: true },
+              { name: '+ AI Interview', price: 'R1,250', period: '/role', cvs: 'Avatar interviews', emoji: '🎥' },
+              { name: '+ Verification', price: 'R800', period: '/role', cvs: 'ID, criminal, refs', emoji: '✓' }
             ].map((plan, i) => (
               <div
                 key={i}

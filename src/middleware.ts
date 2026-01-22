@@ -70,7 +70,49 @@ const SECURITY_HEADERS: Record<string, string> = {
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=(), payment=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://api.anthropic.com;",
 };
+
+// CORS Configuration
+const CORS_CONFIG = {
+  allowedOrigins: [
+    'https://hireinbox.co.za',
+    'https://www.hireinbox.co.za',
+    'https://hireinbox.vercel.app',
+    // Development origins
+    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://127.0.0.1:3000'] : []),
+  ],
+  allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Feedback-Token'],
+  exposedHeaders: ['X-RateLimit-Remaining', 'X-RateLimit-Reset', 'Retry-After'],
+  maxAge: 86400, // 24 hours
+  credentials: true,
+};
+
+/**
+ * Get CORS headers for a request
+ */
+function getCorsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin') || '';
+  const isAllowedOrigin = CORS_CONFIG.allowedOrigins.includes(origin) ||
+    CORS_CONFIG.allowedOrigins.some(allowed => origin.endsWith(allowed.replace('https://', '')));
+
+  // For same-origin requests or allowed origins
+  if (!origin || isAllowedOrigin) {
+    return {
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : CORS_CONFIG.allowedOrigins[0],
+      'Access-Control-Allow-Methods': CORS_CONFIG.allowedMethods.join(', '),
+      'Access-Control-Allow-Headers': CORS_CONFIG.allowedHeaders.join(', '),
+      'Access-Control-Expose-Headers': CORS_CONFIG.exposedHeaders.join(', '),
+      'Access-Control-Max-Age': CORS_CONFIG.maxAge.toString(),
+      'Access-Control-Allow-Credentials': 'true',
+    };
+  }
+
+  // For disallowed origins, don't include Access-Control-Allow-Origin
+  return {};
+}
 
 // ===== IN-MEMORY STORES =====
 // Note: For multi-instance deployments, use Redis instead
@@ -333,6 +375,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Get CORS headers for this request
+  const corsHeaders = getCorsHeaders(request);
+
+  // Handle CORS preflight requests (OPTIONS)
+  if (method === 'OPTIONS' && pathname.startsWith('/api/')) {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        ...corsHeaders,
+        ...SECURITY_HEADERS,
+      },
+    });
+  }
+
   // ===== SECURITY CHECKS (run on all requests) =====
 
   // 1. Check for suspicious patterns (potential attacks)
@@ -353,6 +409,7 @@ export async function middleware(request: NextRequest) {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
+          ...corsHeaders,
           ...SECURITY_HEADERS,
         },
       }
@@ -375,6 +432,7 @@ export async function middleware(request: NextRequest) {
         status: 403,
         headers: {
           'Content-Type': 'application/json',
+          ...corsHeaders,
           ...SECURITY_HEADERS,
         },
       }
@@ -427,6 +485,7 @@ export async function middleware(request: NextRequest) {
             'Retry-After': retryAfter.toString(),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': Math.ceil(Date.now() / 1000 + retryAfter).toString(),
+            ...corsHeaders,
             ...SECURITY_HEADERS,
           },
         }
@@ -452,6 +511,7 @@ export async function middleware(request: NextRequest) {
             status: 429,
             headers: {
               'Content-Type': 'application/json',
+              ...corsHeaders,
               ...SECURITY_HEADERS,
             },
           }
@@ -465,8 +525,11 @@ export async function middleware(request: NextRequest) {
   // Skip auth for public routes
   if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
     const response = NextResponse.next();
-    // Add security headers
+    // Add security and CORS headers
     for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
+      response.headers.set(header, value);
+    }
+    for (const [header, value] of Object.entries(corsHeaders)) {
       response.headers.set(header, value);
     }
     return response;
@@ -477,8 +540,11 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  // Add security headers
+  // Add security and CORS headers
   for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(header, value);
+  }
+  for (const [header, value] of Object.entries(corsHeaders)) {
     response.headers.set(header, value);
   }
 
@@ -498,8 +564,11 @@ export async function middleware(request: NextRequest) {
           response = NextResponse.next({
             request: { headers: request.headers },
           });
-          // Re-add security headers after creating new response
+          // Re-add security and CORS headers after creating new response
           for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
+            response.headers.set(header, value);
+          }
+          for (const [header, value] of Object.entries(corsHeaders)) {
             response.headers.set(header, value);
           }
           cookiesToSet.forEach(({ name, value, options }) => {

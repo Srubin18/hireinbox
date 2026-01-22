@@ -8,18 +8,22 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 // ============================================
 
 // Tier configurations
+// NOTE: B2B now uses per-role pricing (Jan 2026)
+// R1,750/role for unlimited CV screening
 export const TIER_LIMITS = {
   b2b: {
     free: 10,
     name: 'B2B Employer',
-    upgradePrice: 'R299/month',
-    upgradeUrl: '/pricing?plan=b2b-starter'
+    upgradePrice: 'R1,750/role', // NEW: Per-role pricing
+    upgradeUrl: '/pricing?plan=b2b-cv-screening',
+    description: 'Unlimited CV screening per role'
   },
   b2c: {
     free: 5, // TEMP: Increased for testing (was 1)
     name: 'Job Seeker',
-    upgradePrice: 'R29 per CV',
-    upgradeUrl: '/pricing?plan=b2c-single'
+    upgradePrice: 'R99-R299',
+    upgradeUrl: '/pricing',
+    description: 'Video analysis & coaching'
   }
 } as const;
 

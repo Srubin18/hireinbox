@@ -201,6 +201,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [showNewRoleModal, setShowNewRoleModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAIAgentModal, setShowAIAgentModal] = useState(false);
+  const [dashboardView, setDashboardView] = useState<'overview' | 'jobs' | 'inbox'>('overview');
 
   useEffect(() => { fetchRoles(); fetchCandidates(); }, []);
   const fetchRoles = async () => { try { const res = await fetch('/api/roles'); if (res.ok) { const d = await res.json(); setRoles(d.roles || []); if (d.roles?.length > 0 && !selectedRole) setSelectedRole(d.roles[0].id); } } catch (e) { console.error(e); } };
@@ -235,7 +237,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const topScorers = [...candidates].filter(c => c.score && c.score >= 70).sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 3);
 
   // Role stats
-  const getRoleCandidateCount = (roleId: string) => candidates.filter(c => c.screening_result && (c as Record<string, unknown>).role_id === roleId).length;
+  const getRoleCandidateCount = (roleId: string) => candidates.filter(c => c.screening_result && ((c as unknown) as { role_id?: string }).role_id === roleId).length;
   const activeRoles = roles.filter(r => r.status === 'active' || !r.status);
 
   return (
@@ -244,17 +246,28 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       <aside className="dashboard-sidebar" style={{ width: 260, background: 'white', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }} onClick={onLogout}><Logo size={36} /></div>
         <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
-          <div style={{ marginBottom: 24 }}><div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Overview</div><NavItem icon="📊" label="Dashboard" active /><NavItem icon="📧" label="Live Inbox" badge={candidates.filter(c => !c.score).length || undefined} badgeColor="#f97316" onClick={handleFetchEmails} /></div>
-          <div style={{ marginBottom: 24 }}><div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Candidates</div><NavItem icon="✓" label="Shortlisted" badge={shortlistCount || undefined} onClick={() => setActiveTab('shortlist')} /><NavItem icon="🧠" label="Talent Pool" badge={poolCount || undefined} onClick={() => setActiveTab('talent_pool')} /><NavItem icon="✗" label="Rejected" onClick={() => setActiveTab('reject')} /></div>
-          <div style={{ marginBottom: 24 }}><div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Roles</div>{roles.map(r => <NavItem key={r.id} icon="💼" label={r.title} active={selectedRole === r.id} onClick={() => setSelectedRole(r.id)} />)}<NavItem icon="+" label="Add New Role" color="#4F46E5" onClick={() => setShowNewRoleModal(true)} /></div>
+          <div style={{ marginBottom: 24 }}><div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Overview</div><NavItem icon="📊" label="Dashboard" active={dashboardView === 'overview'} onClick={() => setDashboardView('overview')} /><NavItem icon="💼" label="Live Jobs" active={dashboardView === 'jobs'} onClick={() => setDashboardView('jobs')} /><NavItem icon="📬" label="CV Inbox" active={dashboardView === 'inbox'} badge={candidates.length || undefined} badgeColor="#4F46E5" onClick={() => setDashboardView('inbox')} /></div>
+          <div style={{ marginBottom: 24 }}><div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Candidates</div><NavItem icon="✓" label="Shortlisted" badge={shortlistCount || undefined} onClick={() => { setDashboardView('overview'); setActiveTab('shortlist'); }} /><NavItem icon="🧠" label="Talent Pool" badge={poolCount || undefined} onClick={() => { setDashboardView('overview'); setActiveTab('talent_pool'); }} /><NavItem icon="✗" label="Rejected" onClick={() => { setDashboardView('overview'); setActiveTab('reject'); }} /></div>
+          <div style={{ marginBottom: 24 }}><div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 12px', marginBottom: 8 }}>Roles</div>{roles.map(r => <NavItem key={r.id} icon="💼" label={r.title} active={selectedRole === r.id} onClick={() => { setSelectedRole(r.id); setDashboardView('jobs'); }} />)}<NavItem icon="+" label="Add New Role" color="#4F46E5" onClick={() => setShowNewRoleModal(true)} /></div>
+          {/* AI Agent CTA */}
+          <div style={{ padding: '16px 12px', marginTop: 'auto' }}>
+            <button onClick={() => setShowAIAgentModal(true)} style={{ width: '100%', padding: '14px 16px', background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%)', color: 'white', border: 'none', borderRadius: 12, fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', boxShadow: '0 4px 16px rgba(79,70,229,0.4)' }}>
+              <span style={{ fontSize: '1.1rem' }}>🤖</span>
+              Activate AI Agent
+            </button>
+          </div>
         </nav>
         <div style={{ padding: 16, borderTop: '1px solid #e2e8f0' }}><div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, background: '#f8fafc' }}><div style={{ width: 36, height: 36, borderRadius: '50%', background: '#4F46E5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>SM</div><div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Simon M.</div><div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>simon@acme.co.za</div></div></div></div>
       </aside>
       <main className="dashboard-main" style={{ flex: 1, marginLeft: 260 }}>
         <header style={{ background: 'linear-gradient(135deg, #fafafa 0%, #ffffff 100%)', borderBottom: '1px solid #e2e8f0', padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>Dashboard</h1>
-            <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>AI-powered CV screening at your fingertips</p>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>
+              {dashboardView === 'overview' ? 'Dashboard' : dashboardView === 'jobs' ? 'Live Jobs' : 'CV Inbox'}
+            </h1>
+            <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>
+              {dashboardView === 'overview' ? 'AI-powered CV screening at your fingertips' : dashboardView === 'jobs' ? 'View CV pipeline for each role' : 'All incoming CVs, color-coded by AI'}
+            </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ position: 'relative' }}>
@@ -279,11 +292,40 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               <span style={{ fontSize: '1.25rem' }}>+</span>
               Create New Role
             </button>
-            <a href="/recruiter/search" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 24px', background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: 12, fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'none' }}>
-              <span style={{ fontSize: '1.25rem' }}>🔍</span>
-              Search Talent Pool
-            </a>
+            <button onClick={() => setShowAIAgentModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 24px', background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)', color: 'white', border: 'none', borderRadius: 12, fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 16px rgba(139,92,246,0.3)' }}>
+              <span style={{ fontSize: '1.25rem' }}>🤖</span>
+              Get AI Staff Member
+            </button>
           </div>
+
+          {/* View Tabs */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 24, padding: 4, background: '#f1f5f9', borderRadius: 12, width: 'fit-content' }}>
+            <button onClick={() => setDashboardView('overview')} style={{ padding: '10px 20px', background: dashboardView === 'overview' ? 'white' : 'transparent', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, color: dashboardView === 'overview' ? '#0f172a' : '#64748b', cursor: 'pointer', boxShadow: dashboardView === 'overview' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>Overview</button>
+            <button onClick={() => setDashboardView('jobs')} style={{ padding: '10px 20px', background: dashboardView === 'jobs' ? 'white' : 'transparent', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, color: dashboardView === 'jobs' ? '#0f172a' : '#64748b', cursor: 'pointer', boxShadow: dashboardView === 'jobs' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>Live Jobs</button>
+            <button onClick={() => setDashboardView('inbox')} style={{ padding: '10px 20px', background: dashboardView === 'inbox' ? 'white' : 'transparent', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, color: dashboardView === 'inbox' ? '#0f172a' : '#64748b', cursor: 'pointer', boxShadow: dashboardView === 'inbox' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>CV Inbox</button>
+          </div>
+
+          {/* Conditional Views */}
+          {dashboardView === 'jobs' && (
+            <LiveJobsView
+              roles={roles}
+              candidates={candidates}
+              onSelectRole={setSelectedRole}
+              selectedRole={selectedRole}
+              onViewCandidate={setSelectedCandidate}
+            />
+          )}
+
+          {dashboardView === 'inbox' && (
+            <CVInboxView
+              candidates={candidates}
+              onViewCandidate={setSelectedCandidate}
+            />
+          )}
+
+          {dashboardView === 'overview' && (
+            <>
+            {/* Original Dashboard Content */}
 
           {/* Today's Actions - Enhanced */}
           <div style={{ background: 'linear-gradient(135deg, #f8fafc, #ffffff)', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
@@ -493,10 +535,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
           </div>
+            </>
+          )}
         </div>
       </main>
       {selectedCandidate && <CandidateModal candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} getInitials={getInitials} formatWhatsApp={formatWhatsApp} />}
       {showNewRoleModal && <NewRoleModal onClose={() => setShowNewRoleModal(false)} onCreated={() => { fetchRoles(); setShowNewRoleModal(false); }} />}
+      {showAIAgentModal && <AIAgentModal onClose={() => setShowAIAgentModal(false)} />}
     </div>
   );
 }
@@ -736,6 +781,278 @@ function CollapsibleSection({ title, icon, expanded, onToggle, count, highlight,
   );
 }
 
+// Live Jobs View Component
+function LiveJobsView({ roles, candidates, onSelectRole, selectedRole, onViewCandidate }: {
+  roles: Role[];
+  candidates: Candidate[];
+  onSelectRole: (id: string) => void;
+  selectedRole: string | null;
+  onViewCandidate: (c: Candidate) => void;
+}) {
+  const getInitials = (n: string | null) => n ? n.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase() : '??';
+
+  // Get candidates for selected role (in real app, would filter by role_id)
+  const roleCandidates = candidates;
+  const shortlisted = roleCandidates.filter(c => c.status === 'shortlist');
+  const considering = roleCandidates.filter(c => c.status === 'talent_pool');
+  const rejected = roleCandidates.filter(c => c.status === 'reject');
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 24, minHeight: 600 }}>
+      {/* Roles List */}
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #e2e8f0' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>Active Roles</h3>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>{roles.length} open positions</p>
+        </div>
+        <div style={{ padding: 12 }}>
+          {roles.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+              <div style={{ fontSize: '2rem', marginBottom: 8 }}>💼</div>
+              <p style={{ color: '#64748b', fontSize: '0.85rem' }}>No active roles yet</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {roles.map(role => {
+                const roleShortlist = shortlisted.length;
+                const roleTotal = roleCandidates.length;
+                const isSelected = selectedRole === role.id;
+                return (
+                  <button
+                    key={role.id}
+                    onClick={() => onSelectRole(role.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '14px 16px',
+                      background: isSelected ? 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)' : '#f8fafc',
+                      border: isSelected ? '2px solid #4F46E5' : '1px solid transparent',
+                      borderRadius: 12,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      width: '100%',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: isSelected ? '#4F46E5' : '#e0e7ff', color: isSelected ? 'white' : '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.9rem' }}>💼</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{role.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{roleTotal} candidates</div>
+                    </div>
+                    {roleShortlist > 0 && (
+                      <div style={{ background: '#dcfce7', color: '#166534', fontSize: '0.75rem', fontWeight: 700, padding: '4px 10px', borderRadius: 100 }}>{roleShortlist}</div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* CV Pipeline for Selected Role */}
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        {selectedRole && roles.find(r => r.id === selectedRole) ? (
+          <>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>{roles.find(r => r.id === selectedRole)?.title}</h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>CV Pipeline Overview</p>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ padding: '6px 12px', background: '#dcfce7', color: '#166534', borderRadius: 100, fontSize: '0.8rem', fontWeight: 600 }}>{shortlisted.length} Shortlisted</span>
+                <span style={{ padding: '6px 12px', background: '#fef3c7', color: '#92400e', borderRadius: 100, fontSize: '0.8rem', fontWeight: 600 }}>{considering.length} Considering</span>
+                <span style={{ padding: '6px 12px', background: '#fee2e2', color: '#991b1b', borderRadius: 100, fontSize: '0.8rem', fontWeight: 600 }}>{rejected.length} Rejected</span>
+              </div>
+            </div>
+
+            {/* Kanban-style Pipeline */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, padding: 20 }}>
+              {/* Shortlisted Column */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', background: '#dcfce7', borderRadius: 8 }}>
+                  <span style={{ color: '#166534' }}>✓</span>
+                  <span style={{ fontWeight: 600, color: '#166534', fontSize: '0.85rem' }}>Shortlisted</span>
+                  <span style={{ marginLeft: 'auto', fontWeight: 700, color: '#166534' }}>{shortlisted.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {shortlisted.slice(0, 5).map(c => (
+                    <div key={c.id} onClick={() => onViewCandidate(c)} style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: 12, cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: '#dcfce7', color: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem' }}>{getInitials(c.name)}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>{c.name || 'Unknown'}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Score: {c.score}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {shortlisted.length === 0 && <p style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: 16 }}>No candidates yet</p>}
+                </div>
+              </div>
+
+              {/* Considering Column */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', background: '#fef3c7', borderRadius: 8 }}>
+                  <span style={{ color: '#92400e' }}>◐</span>
+                  <span style={{ fontWeight: 600, color: '#92400e', fontSize: '0.85rem' }}>Considering</span>
+                  <span style={{ marginLeft: 'auto', fontWeight: 700, color: '#92400e' }}>{considering.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {considering.slice(0, 5).map(c => (
+                    <div key={c.id} onClick={() => onViewCandidate(c)} style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: 12, cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem' }}>{getInitials(c.name)}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>{c.name || 'Unknown'}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Score: {c.score}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {considering.length === 0 && <p style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: 16 }}>No candidates yet</p>}
+                </div>
+              </div>
+
+              {/* Rejected Column */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 12px', background: '#fee2e2', borderRadius: 8 }}>
+                  <span style={{ color: '#991b1b' }}>✗</span>
+                  <span style={{ fontWeight: 600, color: '#991b1b', fontSize: '0.85rem' }}>Not a Fit</span>
+                  <span style={{ marginLeft: 'auto', fontWeight: 700, color: '#991b1b' }}>{rejected.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.7 }}>
+                  {rejected.slice(0, 5).map(c => (
+                    <div key={c.id} onClick={() => onViewCandidate(c)} style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: 12, cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: '#fee2e2', color: '#991b1b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem' }}>{getInitials(c.name)}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>{c.name || 'Unknown'}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Score: {c.score}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {rejected.length === 0 && <p style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: 16 }}>No candidates yet</p>}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 48 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: 16 }}>👈</div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>Select a Role</h3>
+              <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Choose a role from the left to view its CV pipeline</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// CV Inbox View Component
+function CVInboxView({ candidates, onViewCandidate }: { candidates: Candidate[]; onViewCandidate: (c: Candidate) => void }) {
+  const [filter, setFilter] = useState<'all' | 'good' | 'maybe' | 'notgood'>('all');
+  const getInitials = (n: string | null) => n ? n.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase() : '??';
+  const getTimeAgo = (d: string) => { const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000); if (s < 60) return 'Just now'; if (s < 3600) return Math.floor(s/60) + 'm ago'; if (s < 86400) return Math.floor(s/3600) + 'h ago'; return Math.floor(s/86400) + 'd ago'; };
+
+  // Color-coded candidates: Good (green/shortlist), Maybe (yellow/talent_pool), Not good (red/reject)
+  const categorized = candidates.map(c => ({
+    ...c,
+    category: c.status === 'shortlist' ? 'good' : c.status === 'talent_pool' ? 'maybe' : 'notgood'
+  }));
+
+  const filtered = filter === 'all' ? categorized : categorized.filter(c => c.category === filter);
+  const goodCount = categorized.filter(c => c.category === 'good').length;
+  const maybeCount = categorized.filter(c => c.category === 'maybe').length;
+  const notgoodCount = categorized.filter(c => c.category === 'notgood').length;
+
+  const getCategoryStyle = (cat: string) => {
+    switch(cat) {
+      case 'good': return { bg: '#dcfce7', border: '#86efac', text: '#166534', label: 'Good Fit' };
+      case 'maybe': return { bg: '#fef3c7', border: '#fde68a', text: '#92400e', label: 'Maybe' };
+      default: return { bg: '#fee2e2', border: '#fecaca', text: '#991b1b', label: 'Not a Fit' };
+    }
+  };
+
+  return (
+    <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      {/* Header with filters */}
+      <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>CV Inbox</h3>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>All incoming CVs, color-coded by AI assessment</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setFilter('all')} style={{ padding: '8px 16px', background: filter === 'all' ? '#0f172a' : '#f1f5f9', color: filter === 'all' ? 'white' : '#64748b', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>All ({candidates.length})</button>
+          <button onClick={() => setFilter('good')} style={{ padding: '8px 16px', background: filter === 'good' ? '#166534' : '#dcfce7', color: filter === 'good' ? 'white' : '#166534', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>Good ({goodCount})</button>
+          <button onClick={() => setFilter('maybe')} style={{ padding: '8px 16px', background: filter === 'maybe' ? '#92400e' : '#fef3c7', color: filter === 'maybe' ? 'white' : '#92400e', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>Maybe ({maybeCount})</button>
+          <button onClick={() => setFilter('notgood')} style={{ padding: '8px 16px', background: filter === 'notgood' ? '#991b1b' : '#fee2e2', color: filter === 'notgood' ? 'white' : '#991b1b', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>Not Good ({notgoodCount})</button>
+        </div>
+      </div>
+
+      {/* CV List */}
+      <div style={{ padding: 20 }}>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: '3rem', marginBottom: 16 }}>📭</div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>No CVs in this category</h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Check other filters or wait for new applications</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {filtered.map(c => {
+              const style = getCategoryStyle(c.category);
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => onViewCandidate(c)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    padding: 16,
+                    background: style.bg,
+                    border: `2px solid ${style.border}`,
+                    borderRadius: 12,
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s, box-shadow 0.2s'
+                  }}
+                >
+                  <div style={{ width: 52, height: 52, borderRadius: 12, background: 'white', color: style.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem', border: `2px solid ${style.border}` }}>
+                    {getInitials(c.name)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>{c.name || 'Unknown'}</span>
+                      <span style={{ padding: '2px 8px', background: 'white', color: style.text, fontSize: '0.7rem', fontWeight: 700, borderRadius: 100 }}>{style.label}</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: 4 }}>{c.email}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.ai_reasoning || 'Processing...'}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: style.text }}>{c.score || '--'}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{getTimeAgo(c.created_at)}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button onClick={e => { e.stopPropagation(); onViewCandidate(c); }} style={{ padding: '8px 16px', background: 'white', border: `1px solid ${style.border}`, borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, color: style.text, cursor: 'pointer' }}>View Details</button>
+                    {c.category === 'good' && (
+                      <button onClick={e => { e.stopPropagation(); }} style={{ padding: '8px 16px', background: style.text, border: 'none', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600, color: 'white', cursor: 'pointer' }}>Shortlist</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function NewRoleModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('');
@@ -944,6 +1261,114 @@ function NewRoleModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
           ) : (
             <button onClick={handleCreate} disabled={isCreating || !title} style={{ padding: '12px 24px', background: '#059669', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', opacity: isCreating || !title ? 0.5 : 1 }}>{isCreating ? 'Creating...' : 'Create Role'}</button>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// AI Agent Modal Component
+function AIAgentModal({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = () => {
+    if (email) {
+      setSubmitted(true);
+      // In production, this would send to an API
+    }
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, width: '100%', maxWidth: 560, overflow: 'hidden', boxShadow: '0 25px 80px rgba(0,0,0,0.3)' }}>
+        {/* Header with gradient */}
+        <div style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%)', padding: '32px 32px 48px', textAlign: 'center', position: 'relative' }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '1.25rem', cursor: 'pointer' }}>x</button>
+          <div style={{ width: 80, height: 80, background: 'rgba(255,255,255,0.2)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '2.5rem' }}>
+            <span>🤖</span>
+          </div>
+          <h2 style={{ color: 'white', fontSize: '1.75rem', fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.02em' }}>Activate Your AI Staff Member</h2>
+          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1rem', margin: 0 }}>Meet JobixAI - Your 24/7 Recruitment Assistant</p>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: '32px', marginTop: -24 }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
+            {submitted ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ width: 64, height: 64, background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '1.75rem' }}>✓</div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#166534', marginBottom: 8 }}>Request Received!</h3>
+                <p style={{ color: '#64748b', fontSize: '0.95rem' }}>Our team will contact you within 24 hours to set up your AI agent.</p>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
+                  {[
+                    { icon: '📧', title: 'Auto-Screen CVs', desc: '24/7 inbox monitoring' },
+                    { icon: '📞', title: 'Schedule Interviews', desc: 'Automated booking' },
+                    { icon: '💬', title: 'Candidate Comms', desc: 'Smart follow-ups' },
+                    { icon: '📊', title: 'Weekly Reports', desc: 'Pipeline insights' },
+                  ].map((f, i) => (
+                    <div key={i} style={{ background: '#f8fafc', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>{f.icon}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f172a', marginBottom: 2 }}>{f.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{f.desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: 12, padding: 16, marginBottom: 24, border: '1px solid #fde68a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: '1rem' }}>⚡</span>
+                    <span style={{ fontWeight: 700, color: '#92400e', fontSize: '0.9rem' }}>Per-Role Pricing</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                    <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#78350f' }}>R1,750</span>
+                    <span style={{ fontSize: '0.85rem', color: '#92400e' }}>/role</span>
+                    <span style={{ marginLeft: 'auto', padding: '4px 10px', background: 'white', borderRadius: 100, fontSize: '0.7rem', fontWeight: 600, color: '#166534' }}>Unlimited CVs</span>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: 8, color: '#374151' }}>Your Work Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="you@company.co.za"
+                    style={{ width: '100%', padding: '14px 16px', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1rem', outline: 'none', transition: 'border-color 0.2s' }}
+                    onFocus={e => e.target.style.borderColor = '#4F46E5'}
+                    onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                  />
+                </div>
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={!email}
+                  style={{
+                    width: '100%',
+                    padding: '16px 24px',
+                    background: email ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : '#e2e8f0',
+                    color: email ? 'white' : '#94a3b8',
+                    border: 'none',
+                    borderRadius: 12,
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    cursor: email ? 'pointer' : 'not-allowed',
+                    boxShadow: email ? '0 4px 16px rgba(79,70,229,0.4)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Request AI Agent Setup
+                </button>
+
+                <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#94a3b8', marginTop: 12 }}>
+                  Free setup • Cancel anytime • No credit card required
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

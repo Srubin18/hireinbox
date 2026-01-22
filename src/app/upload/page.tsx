@@ -557,7 +557,9 @@ const TestimonialsSection = () => (
 const FREE_ASSESSMENTS_KEY = 'hireinbox_free_assessments';
 const SAVED_RESULTS_KEY = 'hireinbox_saved_results';
 const MAX_FREE_ASSESSMENTS = 1;
-const UNLOCK_PRICE = 29; // R29 per additional assessment
+// B2C upsell pricing (video analysis, coaching, etc.)
+// See /src/lib/pricing.ts for full B2C pricing details
+const UNLOCK_PRICE = 99; // Minimum B2C paid feature (Video Analysis)
 
 // Testimonials data with realistic SA names
 const TESTIMONIALS = [

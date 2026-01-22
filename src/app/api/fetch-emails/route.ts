@@ -764,7 +764,7 @@ Respond with valid JSON only.`;
 
       if (!validateAnalysis(parsed)) {
         console.error(`[${traceId}][AI] Validation failed - attempting retry`);
-        if (IS_DEV) console.log(`[${traceId}][AI] Failed response:`, JSON.stringify({ overall_score: parsed.overall_score, recommendation: parsed.recommendation, exception_applied: parsed.exception_applied, risk_register: parsed.risk_register?.length || 'missing' }));
+        if (IS_DEV) console.log(`[${traceId}][AI] Failed response:`, JSON.stringify({ overall_score: parsed.overall_score, recommendation: parsed.recommendation, exception_applied: parsed.exception_applied, risk_register: Array.isArray(parsed.risk_register) ? parsed.risk_register.length : 'missing' }));
         if (attempt === 1) {
           messages.push({ role: 'assistant', content: text });
           messages.push({ role: 'user', content: 'Invalid. Rules: 1) Valid JSON. 2) If exception_applied=true, recommendation MUST be CONSIDER. 3) SHORTLIST>=80, CONSIDER>=60. Try again.' });

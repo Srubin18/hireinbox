@@ -75,18 +75,21 @@ Traditional job boards face a chicken-and-egg problem:
 
 ### Revenue Streams
 
-#### B2B (Employers)
+#### B2B (Employers) - Per-Role Model
 
 | Stream | Description | Price | Phase |
 |--------|-------------|-------|-------|
-| CV Screening | Per role, unlimited CVs | R1,750/role | 1 |
+| **AI CV Screening** | Per role, unlimited CVs, AI ranking, shortlist, ack emails | R1,750/role | 1 |
+| **AI Interview Add-On** | Avatar screening interview, transcript, psychometric | R1,250/role | 1 |
+| **Verification Bundle** | ID check, criminal check, reference verification | R800/role | 1 |
 | Talent Pool Opt-in | Employer permits unused CVs to join talent pool | Free (value exchange) | 1 |
-| ID Verification | Verify candidate identity | R50/candidate | 1 |
-| Credit Check | Financial background check | R100/candidate | 1 |
-| Criminal Check | Background/criminal verification | R150/candidate | 1 |
-| AI Interview + Psychometric | Avatar conducts first interview + rating + psychometric testing | R750/candidate | 1 |
+| A-la-carte ID Verification | Verify candidate identity | R50/candidate | 1 |
+| A-la-carte Credit Check | Financial background check | R100/candidate | 1 |
+| A-la-carte Criminal Check | Background/criminal verification | R150/candidate | 1 |
 | Job Listing | Post job publicly to attract candidates | R2,500/listing | 2 |
-| Subscription | Unlimited roles + full talent pool access | R5,000-15,000/mo | 3 |
+| Subscription (Starter) | 3 active roles + all add-ons | R5,000/mo | 3 |
+| Subscription (Growth) | 10 active roles + all add-ons + priority support | R10,000/mo | 3 |
+| Subscription (Enterprise) | Unlimited roles + dedicated manager + API | R15,000/mo | 3 |
 | Boutique AI Agent | Custom-trained AI for specific company | R20,000/month | 1+ |
 
 **Talent Pool Growth Strategy:**
@@ -628,99 +631,140 @@ The South African online recruitment market is dominated by a few major players,
 
 ## Part 4: Pricing Strategy
 
-### 4.1 B2B Pricing (Employers)
+> **CORE PRINCIPLE:** HireInbox is an AI Hiring Utility, NOT a marketplace.
+> We charge **per role**, NOT per CV, because employers don't control CV volume.
+> Per-role pricing feels fair and predictable.
 
-#### Subscription Tiers
+### 4.1 B2B Pricing Philosophy
 
-| Tier | Monthly Price | Annual Price | Best For |
-|------|---------------|--------------|----------|
-| **Starter** | R499/month | R4,990/year (17% off) | Small businesses, 1-5 hires/year |
-| **Growth** | R999/month | R9,990/year (17% off) | Growing SMEs, 6-20 hires/year |
-| **Professional** | R2,499/month | R24,990/year (17% off) | Active hiring teams, 21-50 hires/year |
-| **Enterprise** | Custom | Custom | Large organizations, 50+ hires/year |
+**Why Per-Role Pricing?**
+1. **Fairness:** Employers can't control how many CVs they receive for a role
+2. **Predictability:** Fixed cost per hire, easy to budget
+3. **Simplicity:** No usage anxiety or "CV counting"
+4. **Value-aligned:** Price matches the hiring outcome, not arbitrary volume
 
-#### Tier Features
+### 4.2 B2B Per-Role Pricing (Phase 1: AI Hiring Utility)
 
-| Feature | Starter | Growth | Professional | Enterprise |
-|---------|---------|--------|--------------|------------|
-| CV Screenings/month | 50 | 200 | 500 | Unlimited |
-| Active Job Roles | 2 | 5 | 15 | Unlimited |
-| Users | 1 | 3 | 10 | Unlimited |
-| AI Evidence Reports | Yes | Yes | Yes | Yes |
-| Email Integration | Yes | Yes | Yes | Yes |
-| POPIA Audit Trail | Yes | Yes | Yes | Yes |
-| Priority Support | No | Yes | Yes | Yes |
-| Custom Integration | No | No | Yes | Yes |
-| Dedicated Account Manager | No | No | No | Yes |
-| API Access | No | No | Yes | Yes |
+#### Base Product: AI CV Screening
 
-#### Per-Job Pricing (Pay-As-You-Go)
+| Product | Price | What's Included |
+|---------|-------|-----------------|
+| **AI CV Screening** | R1,750/role | Unlimited CVs for one role, AI ranking & scoring, shortlist generation, acknowledgment emails |
 
-For businesses with infrequent hiring needs:
+**How it works:**
+1. Employer creates a role (form or AI avatar interview)
+2. Employer forwards CVs to their HireInbox email
+3. AI screens ALL CVs - no limit
+4. Shortlist delivered in dashboard
+5. Acknowledgment emails sent automatically
 
-| Package | Price | Screenings | Price/Screening |
-|---------|-------|------------|-----------------|
-| Single Job | R299 | 25 CVs | R12/CV |
-| Job Pack (3) | R749 | 75 CVs | R10/CV |
-| Job Pack (10) | R1,999 | 250 CVs | R8/CV |
+#### Add-On Services (Per Role)
 
-#### Add-On Services
+| Add-On | Price | What's Included |
+|--------|-------|-----------------|
+| **AI Interview** | R1,250/role | Avatar conducts screening interview for shortlisted candidates, transcript & scoring, psychometric assessment |
+| **Verification Bundle** | R800/role | ID check, criminal check, reference verification for top candidates |
+
+#### Package Examples
+
+| Hiring Scenario | Products | Total Cost |
+|-----------------|----------|------------|
+| Basic screening | AI CV Screening | R1,750 |
+| Screening + Interviews | AI CV Screening + AI Interview | R3,000 |
+| Full package | AI CV Screening + AI Interview + Verification | R3,800 |
+
+#### Bulk Discounts (For Agencies & High-Volume Hirers)
+
+| Roles/Month | Discount | Base Price |
+|-------------|----------|------------|
+| 1-4 roles | 0% | R1,750/role |
+| 5-9 roles | 10% | R1,575/role |
+| 10-19 roles | 15% | R1,488/role |
+| 20+ roles | 20% | R1,400/role |
+
+#### A-La-Carte Verification (If Not Using Bundle)
 
 | Service | Price | Description |
 |---------|-------|-------------|
-| Additional Screenings | R10/CV | Beyond plan limits |
-| Video Interview Analysis | R99/candidate | AI analysis of candidate videos |
-| Background Check Integration | R250/check | Third-party verification |
-| Custom AI Training | R5,000 once-off | Train AI on company-specific criteria |
+| ID Verification | R50/candidate | Verify candidate identity |
+| Credit Check | R100/candidate | Financial background check |
+| Criminal Check | R150/candidate | Background/criminal verification |
+| Reference Check | R200/candidate | Contact and verify references |
 
-### 4.2 B2C Pricing (Job Seekers)
+### 4.3 B2B Future Pricing (Phase 2 & 3)
+
+#### Phase 2: Job Listings (Month 4+)
+| Product | Price | What's Included |
+|---------|-------|-----------------|
+| Job Listing | R2,500/listing | Post job publicly on HireInbox + all Phase 1 features |
+
+#### Phase 3: Subscriptions (Month 7+)
+| Tier | Price | What's Included |
+|------|-------|-----------------|
+| Starter | R5,000/month | 3 active roles, all add-ons included |
+| Growth | R10,000/month | 10 active roles, all add-ons included, priority support |
+| Enterprise | R15,000/month | Unlimited roles, dedicated account manager, API access |
+
+### 4.4 B2C Pricing (Job Seekers)
 
 #### Free Tier
-- 1 free CV assessment per user
+- 1 free CV scan per user
+- 1 free CV rewrite/redo
 - Basic AI feedback on CV strengths/gaps
-- Career recommendations
 - Purpose: Lead generation and viral growth
 
 #### Paid Features
 
 | Product | Price | Description |
 |---------|-------|-------------|
-| **CV Analysis** | FREE | One comprehensive AI review |
-| **Video Interview Analysis** (Single) | R29 | AI coaching on one video interview |
-| **Video Practice Pack** | R79 | 3 video analyses for interview practice |
-| **Full Career Pack** | R149 | 5 video analyses + priority CV review + career roadmap |
-| **Premium CV Rewrite** | R299 | AI-powered CV optimization with human review |
+| **CV Scan** | FREE (1x) | AI-powered CV analysis |
+| **CV Rewrite** | FREE (1x) | AI rewrites your CV professionally |
+| **Video Analysis** | R99-R199 | How do I come across on camera? |
+| **AI Avatar Coaching** | R149-R299 | Practice interviews with AI |
+| **Position-Specific Prep** | R199 | What does this employer want? |
+| **Video Pitch** | R149 | Create video pitch for applications |
 
-### 4.3 Pricing Justification
+**B2C Funnel:**
+```
+Free CV Scan --> Free CV Redo --> Upsell Video Analysis --> Upsell AI Coaching
+```
 
-#### Why HireInbox Can Charge This
+### 4.5 Boutique AI Agent (Premium Enterprise)
 
-1. **Cost Savings for Employers**
-   - Traditional screening: 10-15 minutes per CV x 50 CVs = 8-12 hours
-   - HireInbox: 50 CVs screened in seconds
-   - HR time saved: R500-R1,500 per job posting
-   - ROI: Positive from first use
+| Product | Price | Description |
+|---------|-------|-------------|
+| Boutique AI Agent | R20,000/month | Custom-trained AI for specific company, knows company culture like a 5-year employee |
 
-2. **Quality Improvement**
-   - Evidence-based screening reduces bias
-   - Consistent application of criteria
-   - No "Friday afternoon fatigue" decisions
-   - Better shortlists = better hires
+### 4.6 Pricing Justification
 
-3. **Competitive Positioning**
-   - Cheaper than Pnet/Careers24 premium features
-   - More AI than traditional job boards
-   - More SME-friendly than Talent Genie
-   - Better technology than Job Crystal's manual elements
+#### Why This Pricing Works
 
-4. **Market Comparisons**
+1. **Per-Role is Fair**
+   - Employer posts 1 role, gets 5 or 500 CVs - same price
+   - No punishment for being popular/well-known
+   - Predictable budgeting for HR
 
-| Competitor | Comparable Service | Their Price | HireInbox |
-|------------|-------------------|-------------|-----------|
-| Pnet | Job posting + database | R3,000+/month | R999/month |
-| Talent Genie | ATS with AI | R5,000+/month | R999/month |
-| Job Crystal | AI sourcing | 15-20% of salary | R499/month |
-| Indeed | Sponsored posts | R150/day (R4,500/month) | R999/month |
+2. **Value-Based Pricing**
+   - R1,750 for a role that might receive 200 CVs = R8.75/CV (hidden value)
+   - Traditional: 10 min/CV x 200 CVs = 33 hours of HR time saved
+   - At R100/hour HR cost = R3,300 saved per role
+   - ROI: 2x on first use
+
+3. **Add-Ons are Optional, Not Gates**
+   - Base product (screening) is complete on its own
+   - Add-ons enhance, don't unlock essential features
+   - Feels fair, not exploitative
+
+4. **Competitive Positioning**
+
+| Competitor | Model | Cost for 100 CVs | HireInbox |
+|------------|-------|------------------|-----------|
+| Talent Genie | Per-CV | R1,000+ | R1,750 (unlimited) |
+| Job Crystal | % of salary | R15,000+ (15% of R100k) | R1,750 |
+| Pnet | Job post + extras | R3,000+ | R1,750 |
+| Indeed | Per-click/application | Variable (R2,000-5,000+) | R1,750 |
+
+**Key insight:** For roles with high CV volume (100+), HireInbox becomes extremely cost-effective.
 
 ---
 
@@ -760,9 +804,11 @@ For businesses with infrequent hiring needs:
 | Role | Monthly Salary | Notes |
 |------|----------------|-------|
 | Marketing Manager | R45,000 | Mid-senior, growth-focused |
-| Full-Stack Developer | R60,000 | Senior, Cape Town market rate |
+| Full-Stack Developer | R82,000 | Senior, Cape Town market rate |
 | Success Manager | R38,000 | Mid-level, customer-focused |
-| **Total Team Salaries** | **R143,000/month** | Excluding founders |
+| **Total Team Salaries** | **R165,000/month** | Excluding founders |
+
+*Note: Salaries are cost-to-company. All other expenses shown include VAT (15%) where applicable.*
 
 **Founder Salaries (Optional - Month 6+):**
 | Role | Monthly Salary | Notes |
@@ -778,39 +824,43 @@ For businesses with infrequent hiring needs:
 
 #### Build Phase (Months 1-3: Feb-Apr 2026)
 
+*All costs include VAT (15%) where applicable.*
+
 | Category | Month 1 | Month 2 | Month 3 |
 |----------|---------|---------|---------|
-| Development | R333,333 | R333,333 | R333,333 |
-| Infrastructure Setup | R50,000 | R0 | R0 |
-| Legal/Company Setup | R30,000 | R0 | R0 |
-| Marketing Prep | R0 | R25,000 | R50,000 |
-| Office/Co-working | R10,000 | R10,000 | R10,000 |
-| Team Salaries | R0 | R0 | R143,000 |
-| Misc/Contingency | R10,000 | R10,000 | R10,000 |
-| **Total** | **R433,333** | **R378,333** | **R546,333** |
+| Development (outsourced MVP) | R383,333 | R383,333 | R383,333 |
+| Infrastructure Setup | R57,500 | R0 | R0 |
+| Legal/Company Setup | R34,500 | R0 | R0 |
+| Marketing Prep | R0 | R28,750 | R57,500 |
+| Office/Co-working | R11,500 | R11,500 | R11,500 |
+| Team Salaries | R0 | R0 | R165,000 |
+| Misc/Contingency | R11,500 | R11,500 | R11,500 |
+| **Total** | **R498,333** | **R435,083** | **R628,833** |
 
-**Build Phase Total: R1,358,000**
+**Build Phase Total (incl VAT): R1,562,249**
 
 #### Operating Phase (Months 4+: May 2026 onwards)
 
+*All costs shown include VAT (15%) where applicable. Salaries are cost-to-company (no VAT).*
+
 | Category | Monthly Cost | Notes |
 |----------|--------------|-------|
-| **Team Salaries** | R143,000 | Marketing, Dev, Success |
+| **Team Salaries** | R165,000 | Marketing, Dev (R82k), Success |
 | **Founder Salaries** | R80,000 | Starts Month 6 |
-| **Marketing** | R100,000 | Ramps up post-launch |
+| **Marketing** | R150,000 | Aggressive growth spend |
 | **Technology** | | |
-| - Cloud Hosting (Vercel/AWS) | R10,000 | Scales with usage |
-| - AI API (OpenAI) | R20,000 | GPT-4o-mini screening |
-| - Supabase | R3,000 | Database |
-| - Tools & Services | R5,000 | GitHub, monitoring, etc. |
+| - Cloud Hosting (Vercel/AWS) | R11,500 | Incl VAT |
+| - AI API (OpenAI/Anthropic) | R23,000 | Incl VAT |
+| - Supabase | R3,450 | Incl VAT |
+| - Tools & Services | R5,750 | Incl VAT |
 | **Operations** | | |
-| - Office/Co-working | R15,000 | Cape Town |
-| - Insurance | R5,000 | Professional indemnity |
-| - Accounting | R8,000 | Bookkeeping, tax |
-| - Legal | R5,000 | Contracts, compliance |
-| - Miscellaneous | R10,000 | Travel, supplies |
-| **Total (Months 4-5)** | **R324,000** | Before founder salary |
-| **Total (Month 6+)** | **R404,000** | With founder salary |
+| - Office/Co-working | R17,250 | Cape Town, incl VAT |
+| - Insurance | R5,000 | No VAT on insurance |
+| - Accounting | R9,200 | Incl VAT |
+| - Legal | R5,750 | Incl VAT |
+| - Miscellaneous | R11,500 | Incl VAT |
+| **Total (Months 4-5)** | **R407,400** | Before founder salary |
+| **Total (Month 6+)** | **R487,400** | With founder salary |
 
 ---
 
@@ -842,28 +892,30 @@ For businesses with infrequent hiring needs:
 
 ### 5.6 18-Month Financial Projection
 
+*All expenses include VAT (15%) where applicable.*
+
 #### Monthly Summary
 
 | Month | Date | Phase | Expenses | B2B Revenue | B2C Revenue | Total Revenue | Net | Cumulative |
 |-------|------|-------|----------|-------------|-------------|---------------|-----|------------|
-| 1 | Feb 26 | Build | R433,333 | R0 | R0 | R0 | -R433,333 | -R433,333 |
-| 2 | Mar 26 | Build | R378,333 | R0 | R0 | R0 | -R378,333 | -R811,666 |
-| 3 | Apr 26 | Build | R546,333 | R0 | R0 | R0 | -R546,333 | -R1,358,000 |
-| 4 | May 26 | Launch | R324,000 | R8,750 | R3,000 | R11,750 | -R312,250 | -R1,670,250 |
-| 5 | Jun 26 | Grow | R324,000 | R17,500 | R6,000 | R23,500 | -R300,500 | -R1,970,750 |
-| 6 | Jul 26 | Grow | R404,000 | R43,750 | R14,415 | R58,165 | -R345,835 | -R2,316,585 |
-| 7 | Aug 26 | Grow | R404,000 | R61,250 | R18,000 | R79,250 | -R324,750 | -R2,641,335 |
-| 8 | Sep 26 | Grow | R404,000 | R78,750 | R22,000 | R100,750 | -R303,250 | -R2,944,585 |
-| 9 | Oct 26 | Grow | R404,000 | R105,000 | R28,000 | R133,000 | -R271,000 | -R3,215,585 |
-| 10 | Nov 26 | Grow | R404,000 | R131,250 | R35,000 | R166,250 | -R237,750 | -R3,453,335 |
-| 11 | Dec 26 | Grow | R404,000 | R148,750 | R40,000 | R188,750 | -R215,250 | -R3,668,585 |
-| 12 | Jan 27 | Grow | R404,000 | R175,000 | R48,000 | R223,000 | -R181,000 | -R3,849,585 |
-| 13 | Feb 27 | Grow | R404,000 | R201,250 | R55,000 | R256,250 | -R147,750 | -R3,997,335 |
-| 14 | Mar 27 | Grow | R404,000 | R227,500 | R62,000 | R289,500 | -R114,500 | -R4,111,835 |
-| 15 | Apr 27 | Grow | R404,000 | R262,500 | R70,000 | R332,500 | -R71,500 | -R4,183,335 |
-| 16 | May 27 | Grow | R404,000 | R297,500 | R78,000 | R375,500 | -R28,500 | -R4,211,835 |
-| 17 | Jun 27 | Grow | R404,000 | R341,250 | R88,000 | R429,250 | R25,250 | -R4,186,585 |
-| 18 | Jul 27 | Grow | R404,000 | R385,000 | R100,000 | R485,000 | R81,000 | -R4,105,585 |
+| 1 | Feb 26 | Build | R498,333 | R0 | R0 | R0 | -R498,333 | -R498,333 |
+| 2 | Mar 26 | Build | R435,083 | R0 | R0 | R0 | -R435,083 | -R933,416 |
+| 3 | Apr 26 | Build | R628,833 | R0 | R0 | R0 | -R628,833 | -R1,562,249 |
+| 4 | May 26 | Launch | R407,400 | R8,750 | R3,000 | R11,750 | -R395,650 | -R1,957,899 |
+| 5 | Jun 26 | Grow | R407,400 | R17,500 | R6,000 | R23,500 | -R383,900 | -R2,341,799 |
+| 6 | Jul 26 | Grow | R487,400 | R43,750 | R14,415 | R58,165 | -R429,235 | -R2,771,034 |
+| 7 | Aug 26 | Grow | R487,400 | R61,250 | R18,000 | R79,250 | -R408,150 | -R3,179,184 |
+| 8 | Sep 26 | Grow | R487,400 | R78,750 | R22,000 | R100,750 | -R386,650 | -R3,565,834 |
+| 9 | Oct 26 | Grow | R487,400 | R105,000 | R28,000 | R133,000 | -R354,400 | -R3,920,234 |
+| 10 | Nov 26 | Grow | R487,400 | R131,250 | R35,000 | R166,250 | -R321,150 | -R4,241,384 |
+| 11 | Dec 26 | Grow | R487,400 | R148,750 | R40,000 | R188,750 | -R298,650 | -R4,540,034 |
+| 12 | Jan 27 | Grow | R487,400 | R175,000 | R48,000 | R223,000 | -R264,400 | -R4,804,434 |
+| 13 | Feb 27 | Grow | R487,400 | R201,250 | R55,000 | R256,250 | -R231,150 | -R5,035,584 |
+| 14 | Mar 27 | Grow | R487,400 | R227,500 | R62,000 | R289,500 | -R197,900 | -R5,233,484 |
+| 15 | Apr 27 | Grow | R487,400 | R262,500 | R70,000 | R332,500 | -R154,900 | -R5,388,384 |
+| 16 | May 27 | Grow | R487,400 | R297,500 | R78,000 | R375,500 | -R111,900 | -R5,500,284 |
+| 17 | Jun 27 | Grow | R487,400 | R341,250 | R88,000 | R429,250 | -R58,150 | -R5,558,434 |
+| 18 | Jul 27 | Grow | R487,400 | R385,000 | R100,000 | R485,000 | -R2,400 | -R5,560,834 |
 
 ---
 
@@ -896,23 +948,27 @@ For businesses with infrequent hiring needs:
 | Metric | Month 6 | Month 12 | Month 18 |
 |--------|---------|----------|----------|
 | Monthly Revenue | R58,165 | R223,000 | R485,000 |
-| Monthly Expenses | R404,000 | R404,000 | R404,000 |
-| Monthly Profit/Loss | -R345,835 | -R181,000 | +R81,000 |
+| Monthly Expenses (incl VAT) | R487,400 | R487,400 | R487,400 |
+| Monthly Profit/Loss | -R429,235 | -R264,400 | -R2,400 |
 | B2B Customers (cumulative) | 15 | 70 | 140 |
 | B2C Paid Users (monthly) | 75 | 420 | 960 |
 | Boutique Agents | 0 | 2 | 5 |
-| **Break-Even** | - | - | **Month 17** |
+| **Break-Even** | - | - | **Month 18-19** |
 
 ---
 
 ### 5.9 Funding Requirements
 
+*All amounts include VAT where applicable.*
+
 | Item | Amount |
 |------|--------|
-| Build Phase (Months 1-3) | R1,358,000 |
-| Operating Losses (Months 4-16) | R2,854,000 |
-| Contingency (20%) | R842,000 |
-| **Total Required** | **R5,054,000** |
+| Build Phase (Months 1-3) | R1,562,249 |
+| Operating Losses (Months 4-18) | R3,998,585 |
+| Contingency (10%) | R556,083 |
+| **Total Required** | **R6,116,917** |
+
+**Rounded: ~R6.1 million including VAT**
 
 **Recommended Raise: R5,500,000** (includes buffer for opportunistic growth)
 

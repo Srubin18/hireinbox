@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 /* ===========================================
    HIREINBOX B2C - CANDIDATE DASHBOARD
    Personal dashboard for job seekers
+   Phase 2: Full feature implementation
    =========================================== */
 
 // Types
@@ -22,6 +23,29 @@ interface CVAnalysis {
   target_role?: string;
 }
 
+interface VideoAnalysis {
+  id: string;
+  overall_score: number;
+  communication_score: number;
+  confidence_score: number;
+  clarity_score: number;
+  professionalism_score: number;
+  feedback: string;
+  strengths: string[];
+  improvements: string[];
+  created_at: string;
+}
+
+interface Application {
+  id: string;
+  company_name: string;
+  role_title: string;
+  status: 'applied' | 'viewed' | 'shortlisted' | 'interview' | 'rejected' | 'offer';
+  applied_at: string;
+  last_updated: string;
+  company_logo_color?: string;
+}
+
 interface UserProfile {
   name: string;
   email: string;
@@ -29,6 +53,8 @@ interface UserProfile {
   cv_analyses_count: number;
   video_analyses_count: number;
   profile_completion: number;
+  talent_pool_opted_in: boolean;
+  talent_pool_visibility: 'public' | 'anonymous' | 'hidden';
 }
 
 // Logo Component
@@ -221,6 +247,547 @@ const AnalysisHistoryItem = ({ analysis, onClick }: { analysis: CVAnalysis; onCl
   );
 };
 
+// Video Analysis Results Card
+const VideoAnalysisCard = ({ videoAnalysis }: { videoAnalysis: VideoAnalysis | null }) => {
+  if (!videoAnalysis) {
+    return (
+      <div style={{ background: 'linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%)', borderRadius: 16, border: '1px solid #f5d0fe', padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: 'linear-gradient(135deg, #a855f7, #9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
+            <span style={{ color: 'white' }}>🎥</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: '1.1rem', fontWeight: 700, color: '#581c87' }}>Video Analysis Not Done Yet</h3>
+            <p style={{ margin: '0 0 16px', fontSize: '0.9rem', color: '#7e22ce', lineHeight: 1.5 }}>
+              Stand out from the crowd! Record a 60-second video intro and get AI coaching on your presentation skills.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'white', borderRadius: 100, fontSize: '0.8rem', color: '#7e22ce' }}>
+                <span>✓</span> Communication coaching
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'white', borderRadius: 100, fontSize: '0.8rem', color: '#7e22ce' }}>
+                <span>✓</span> Confidence analysis
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'white', borderRadius: 100, fontSize: '0.8rem', color: '#7e22ce' }}>
+                <span>✓</span> Body language tips
+              </span>
+            </div>
+            <a href="/upload?tab=video" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: 'white', padding: '12px 24px', borderRadius: 10, fontSize: '0.95rem', fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 12px rgba(168,85,247,0.3)' }}>
+              Record Video - R29
+              <span>→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return '#10B981';
+    if (score >= 60) return '#8B5CF6';
+    if (score >= 40) return '#F59E0B';
+    return '#EF4444';
+  };
+
+  const scoreCategories = [
+    { label: 'Communication', score: videoAnalysis.communication_score, icon: '💬' },
+    { label: 'Confidence', score: videoAnalysis.confidence_score, icon: '💪' },
+    { label: 'Clarity', score: videoAnalysis.clarity_score, icon: '🎯' },
+    { label: 'Professionalism', score: videoAnalysis.professionalism_score, icon: '👔' },
+  ];
+
+  return (
+    <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #a855f7, #9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ color: 'white', fontSize: '1.25rem' }}>🎥</span>
+        </div>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Video Analysis</h3>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Your presentation skills breakdown</p>
+        </div>
+        <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: getScoreColor(videoAnalysis.overall_score) }}>{videoAnalysis.overall_score}</div>
+          <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Overall</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        {scoreCategories.map((cat, i) => (
+          <div key={i} style={{ textAlign: 'center', padding: 12, background: '#f8fafc', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.25rem', marginBottom: 4 }}>{cat.icon}</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: getScoreColor(cat.score) }}>{cat.score}</div>
+            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{cat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, marginBottom: 16 }}>
+        <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569', lineHeight: 1.6 }}>{videoAnalysis.feedback}</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div>
+          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#10B981', marginBottom: 8 }}>What You Did Well</h4>
+          {videoAnalysis.strengths.slice(0, 2).map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+              <span style={{ color: '#10B981', fontSize: '0.8rem' }}>✓</span>
+              <span style={{ fontSize: '0.8rem', color: '#475569' }}>{s}</span>
+            </div>
+          ))}
+        </div>
+        <div>
+          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#F59E0B', marginBottom: 8 }}>To Improve</h4>
+          {videoAnalysis.improvements.slice(0, 2).map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+              <span style={{ color: '#F59E0B', fontSize: '0.8rem' }}>→</span>
+              <span style={{ fontSize: '0.8rem', color: '#475569' }}>{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <a href="/upload?tab=video" style={{ color: '#a855f7', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none' }}>Record New Video →</a>
+        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Last updated: {new Date(videoAnalysis.created_at).toLocaleDateString('en-ZA')}</span>
+      </div>
+    </div>
+  );
+};
+
+// Application Tracking Section
+const ApplicationTracker = ({ applications }: { applications: Application[] }) => {
+  const statusConfig: Record<string, { color: string; bg: string; label: string; icon: string }> = {
+    applied: { color: '#64748b', bg: '#f1f5f9', label: 'Applied', icon: '📤' },
+    viewed: { color: '#3b82f6', bg: '#dbeafe', label: 'Viewed', icon: '👁️' },
+    shortlisted: { color: '#8b5cf6', bg: '#ede9fe', label: 'Shortlisted', icon: '⭐' },
+    interview: { color: '#10b981', bg: '#d1fae5', label: 'Interview', icon: '📞' },
+    rejected: { color: '#ef4444', bg: '#fee2e2', label: 'Not Selected', icon: '✗' },
+    offer: { color: '#059669', bg: '#a7f3d0', label: 'Offer!', icon: '🎉' },
+  };
+
+  const getTimeAgo = (dateStr: string) => {
+    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+    return Math.floor(seconds / 86400) + 'd ago';
+  };
+
+  if (applications.length === 0) {
+    return (
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 32, textAlign: 'center' }}>
+        <div style={{ width: 64, height: 64, background: '#f1f5f9', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+          <span style={{ fontSize: '1.75rem' }}>📋</span>
+        </div>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>No Applications Yet</h3>
+        <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 16, maxWidth: 320, margin: '0 auto 16px' }}>
+          When you apply to jobs through HireInbox partner companies, you'll be able to track your application status here.
+        </p>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#f8fafc', borderRadius: 8, fontSize: '0.85rem', color: '#64748b' }}>
+          <span>💡</span> Tip: Join the Talent Pool to get discovered by employers
+        </div>
+      </div>
+    );
+  }
+
+  // Group by status for summary
+  const statusCounts = applications.reduce((acc, app) => {
+    acc[app.status] = (acc[app.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return (
+    <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Application Tracker</h3>
+          <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#64748b' }}>{applications.length} total applications</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <div key={status} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: statusConfig[status]?.bg || '#f1f5f9', borderRadius: 100 }}>
+              <span style={{ fontSize: '0.7rem' }}>{statusConfig[status]?.icon}</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: statusConfig[status]?.color }}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {applications.slice(0, 5).map((app) => {
+          const config = statusConfig[app.status] || statusConfig.applied;
+          return (
+            <div key={app.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 14, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: app.company_logo_color || '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.9rem', color: '#4F46E5' }}>
+                {app.company_name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.95rem', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.role_title}</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{app.company_name}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: config.bg, borderRadius: 100, marginBottom: 4 }}>
+                  <span style={{ fontSize: '0.7rem' }}>{config.icon}</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: config.color }}>{config.label}</span>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{getTimeAgo(app.last_updated)}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {applications.length > 5 && (
+        <button style={{ width: '100%', marginTop: 12, padding: '10px', background: 'none', border: '1px dashed #e2e8f0', borderRadius: 8, color: '#64748b', fontSize: '0.85rem', cursor: 'pointer' }}>
+          View all {applications.length} applications
+        </button>
+      )}
+    </div>
+  );
+};
+
+// Talent Pool Opt-In Component
+const TalentPoolOptIn = ({
+  isOptedIn,
+  visibility,
+  onToggle,
+  onVisibilityChange
+}: {
+  isOptedIn: boolean;
+  visibility: 'public' | 'anonymous' | 'hidden';
+  onToggle: () => void;
+  onVisibilityChange: (v: 'public' | 'anonymous' | 'hidden') => void;
+}) => {
+  const [showSettings, setShowSettings] = useState(false);
+
+  return (
+    <div style={{ background: isOptedIn ? 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)' : 'white', borderRadius: 16, border: `1px solid ${isOptedIn ? '#86efac' : '#e2e8f0'}`, padding: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+        <div style={{ width: 52, height: 52, borderRadius: 14, background: isOptedIn ? '#10B981' : '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0, transition: 'all 0.3s' }}>
+          <span style={{ color: isOptedIn ? 'white' : '#64748b' }}>{isOptedIn ? '✓' : '👥'}</span>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: isOptedIn ? '#166534' : '#0f172a' }}>
+              {isOptedIn ? 'In the Talent Pool' : 'Join the Talent Pool'}
+            </h3>
+            {isOptedIn && (
+              <span style={{ padding: '3px 10px', background: '#10B981', color: 'white', borderRadius: 100, fontSize: '0.7rem', fontWeight: 600 }}>ACTIVE</span>
+            )}
+          </div>
+          <p style={{ margin: '0 0 16px', fontSize: '0.9rem', color: isOptedIn ? '#15803d' : '#64748b', lineHeight: 1.5 }}>
+            {isOptedIn
+              ? 'Employers can now discover you based on your skills and experience. Update your profile to improve visibility.'
+              : 'Get discovered by top South African employers. Your profile will be visible to recruiters looking for talent like you.'
+            }
+          </p>
+
+          {!isOptedIn && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#f8fafc', borderRadius: 100, fontSize: '0.8rem', color: '#475569' }}>
+                <span style={{ color: '#10B981' }}>✓</span> Get matched to relevant jobs
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#f8fafc', borderRadius: 100, fontSize: '0.8rem', color: '#475569' }}>
+                <span style={{ color: '#10B981' }}>✓</span> Control your visibility
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#f8fafc', borderRadius: 100, fontSize: '0.8rem', color: '#475569' }}>
+                <span style={{ color: '#10B981' }}>✓</span> POPIA compliant
+              </span>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={onToggle}
+              style={{
+                padding: '12px 24px',
+                background: isOptedIn ? 'white' : 'linear-gradient(135deg, #10B981, #059669)',
+                color: isOptedIn ? '#dc2626' : 'white',
+                border: isOptedIn ? '1px solid #fca5a5' : 'none',
+                borderRadius: 10,
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              {isOptedIn ? 'Leave Pool' : 'Join Talent Pool'}
+            </button>
+
+            {isOptedIn && (
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'white',
+                  color: '#0f172a',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 10,
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                <span>⚙️</span> Settings
+              </button>
+            )}
+          </div>
+
+          {isOptedIn && showSettings && (
+            <div style={{ marginTop: 16, padding: 16, background: 'white', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <h4 style={{ margin: '0 0 12px', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' }}>Visibility Settings</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { value: 'public' as const, label: 'Full Profile', desc: 'Name, contact, and full CV visible' },
+                  { value: 'anonymous' as const, label: 'Anonymous', desc: 'Skills visible, name hidden until you accept' },
+                  { value: 'hidden' as const, label: 'Hidden', desc: 'Temporarily hide from search results' },
+                ].map(option => (
+                  <label key={option.value} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 12, background: visibility === option.value ? '#f0fdf4' : '#f8fafc', borderRadius: 8, cursor: 'pointer', border: visibility === option.value ? '1px solid #86efac' : '1px solid transparent' }}>
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={visibility === option.value}
+                      onChange={() => onVisibilityChange(option.value)}
+                      style={{ marginTop: 2 }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f172a' }}>{option.label}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{option.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Upsell Section Component
+const UpsellSection = () => {
+  const packages = [
+    {
+      id: 'video-single',
+      icon: '🎥',
+      title: 'Video Analysis',
+      subtitle: 'Single session',
+      price: 'R29',
+      priceNote: 'once-off',
+      features: ['60-second video review', 'AI coaching feedback', 'Communication tips', 'Confidence score'],
+      gradient: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+      popular: false,
+      cta: 'Record Now',
+      href: '/upload?tab=video'
+    },
+    {
+      id: 'video-practice',
+      icon: '🎯',
+      title: 'Practice Pack',
+      subtitle: '5 video sessions',
+      price: 'R79',
+      priceNote: 'save R66',
+      features: ['5 video analyses', 'Track improvement', 'Detailed feedback', 'Compare sessions'],
+      gradient: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+      popular: true,
+      cta: 'Get Practice Pack',
+      href: '/upload?tab=video&package=practice'
+    },
+    {
+      id: 'avatar-interview',
+      icon: '🤖',
+      title: 'AI Avatar Interview',
+      subtitle: 'Mock interview practice',
+      price: 'R149',
+      priceNote: 'per session',
+      features: ['AI interviewer simulation', 'Industry-specific Qs', 'Real-time feedback', 'Body language analysis'],
+      gradient: 'linear-gradient(135deg, #EC4899 0%, #F43F5E 100%)',
+      popular: false,
+      cta: 'Try Interview',
+      href: '/upload?tab=interview',
+      comingSoon: true
+    }
+  ];
+
+  const industryInsights = [
+    { industry: 'Tech & Software', roles: 234, avgSalary: 'R45k-R85k', growth: '+15%' },
+    { industry: 'Finance', roles: 156, avgSalary: 'R50k-R120k', growth: '+8%' },
+    { industry: 'Marketing', roles: 98, avgSalary: 'R25k-R55k', growth: '+12%' },
+    { industry: 'Engineering', roles: 112, avgSalary: 'R40k-R95k', growth: '+10%' },
+  ];
+
+  return (
+    <div>
+      {/* Premium Packages */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+          <span style={{ fontSize: '1.5rem' }}>⭐</span>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Level Up Your Job Search</h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          {packages.map(pkg => (
+            <div key={pkg.id} style={{ background: 'white', borderRadius: 16, border: pkg.popular ? '2px solid #4F46E5' : '1px solid #e2e8f0', overflow: 'hidden', position: 'relative' }}>
+              {pkg.popular && (
+                <div style={{ position: 'absolute', top: 12, right: 12, padding: '4px 12px', background: '#4F46E5', color: 'white', borderRadius: 100, fontSize: '0.7rem', fontWeight: 700 }}>BEST VALUE</div>
+              )}
+              {pkg.comingSoon && (
+                <div style={{ position: 'absolute', top: 12, right: 12, padding: '4px 12px', background: '#f59e0b', color: 'white', borderRadius: 100, fontSize: '0.7rem', fontWeight: 700 }}>COMING SOON</div>
+              )}
+              <div style={{ background: pkg.gradient, padding: '24px 20px', textAlign: 'center' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>{pkg.icon}</div>
+                <h3 style={{ color: 'white', fontSize: '1.1rem', fontWeight: 700, margin: '0 0 4px' }}>{pkg.title}</h3>
+                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', margin: 0 }}>{pkg.subtitle}</p>
+              </div>
+              <div style={{ padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 16 }}>
+                  <span style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{pkg.price}</span>
+                  <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{pkg.priceNote}</span>
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px' }}>
+                  {pkg.features.map((f, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem', color: '#475569', marginBottom: 8 }}>
+                      <span style={{ color: '#10B981' }}>✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={pkg.comingSoon ? '#' : pkg.href}
+                  style={{
+                    display: 'block',
+                    textAlign: 'center',
+                    padding: '12px 20px',
+                    background: pkg.comingSoon ? '#e2e8f0' : pkg.gradient,
+                    color: pkg.comingSoon ? '#94a3b8' : 'white',
+                    borderRadius: 10,
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    cursor: pkg.comingSoon ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {pkg.comingSoon ? 'Coming Soon' : pkg.cta}
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Industry Insights */}
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>Industry Insights</h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>SA job market trends to help your search</p>
+          </div>
+          <span style={{ padding: '6px 14px', background: '#eef2ff', color: '#4F46E5', borderRadius: 100, fontSize: '0.75rem', fontWeight: 600 }}>Updated Weekly</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          {industryInsights.map((ind, i) => (
+            <div key={i} style={{ background: '#f8fafc', borderRadius: 12, padding: 16 }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0f172a', margin: '0 0 12px' }}>{ind.industry}</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Open roles</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>{ind.roles}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Salary range</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>{ind.avgSalary}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>YoY growth</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#10B981' }}>{ind.growth}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Position-Specific Prep */}
+      <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: 16, padding: 24, color: 'white' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 8px' }}>Position-Specific Interview Prep</h3>
+            <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 20px', lineHeight: 1.6 }}>
+              Get tailored interview questions and preparation guides based on the specific roles you're applying for.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              {['Software Developer', 'Accountant', 'Marketing Manager', 'Data Analyst', 'Project Manager'].map((role, i) => (
+                <span key={i} style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.1)', borderRadius: 100, fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)' }}>{role}</span>
+              ))}
+            </div>
+            <a href="/upload?tab=prep" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: 'white', color: '#0f172a', borderRadius: 10, fontWeight: 600, textDecoration: 'none' }}>
+              Get Prep Guide - R49
+              <span>→</span>
+            </a>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, minWidth: 200 }}>
+            {[
+              { label: 'Industry Questions', value: '500+' },
+              { label: 'Role Templates', value: '50+' },
+              { label: 'STAR Examples', value: '100+' },
+              { label: 'SA Specific', value: '100%' },
+            ].map((stat, i) => (
+              <div key={i} style={{ textAlign: 'center', padding: 16, background: 'rgba(255,255,255,0.1)', borderRadius: 10 }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#a5b4fc' }}>{stat.value}</div>
+                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)' }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Dashboard Navigation Tabs
+const DashboardTabs = ({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) => {
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: '📊' },
+    { id: 'cv', label: 'CV Analysis', icon: '📄' },
+    { id: 'video', label: 'Video', icon: '🎥' },
+    { id: 'applications', label: 'Applications', icon: '📋' },
+    { id: 'talent-pool', label: 'Talent Pool', icon: '👥' },
+    { id: 'upsell', label: 'Boost Career', icon: '⭐' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: 4, padding: 4, background: '#f1f5f9', borderRadius: 12, marginBottom: 24, overflowX: 'auto' }}>
+      {tabs.map(tab => (
+        <button
+          key={tab.id}
+          onClick={() => onTabChange(tab.id)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 16px',
+            background: activeTab === tab.id ? 'white' : 'transparent',
+            border: 'none',
+            borderRadius: 8,
+            fontSize: '0.875rem',
+            fontWeight: activeTab === tab.id ? 600 : 500,
+            color: activeTab === tab.id ? '#0f172a' : '#64748b',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.2s',
+            boxShadow: activeTab === tab.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+          }}
+        >
+          <span>{tab.icon}</span>
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 // Upgrade Prompt Component
 const UpgradePrompt = ({ plan }: { plan: string }) => {
   if (plan !== 'free') return null;
@@ -248,6 +815,9 @@ export default function CandidateDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analyses, setAnalyses] = useState<CVAnalysis[]>([]);
+  const [videoAnalysis, setVideoAnalysis] = useState<VideoAnalysis | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [activeTab, setActiveTab] = useState('overview');
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: 'Job Seeker',
     email: 'user@example.com',
@@ -255,6 +825,8 @@ export default function CandidateDashboard() {
     cv_analyses_count: 0,
     video_analyses_count: 0,
     profile_completion: 25,
+    talent_pool_opted_in: false,
+    talent_pool_visibility: 'public',
   });
   const [selectedAnalysis, setSelectedAnalysis] = useState<CVAnalysis | null>(null);
 
@@ -269,7 +841,7 @@ export default function CandidateDashboard() {
       // For now, using mock data to demonstrate the UI
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Mock data - replace with actual API call
+      // Mock CV analyses data
       const mockAnalyses: CVAnalysis[] = [
         {
           id: '1',
@@ -281,10 +853,12 @@ export default function CandidateDashboard() {
           strengths: [
             { strength: 'Technical Skills', evidence: '4 years Python, Django, React experience', impact: 'Matches most SA tech job requirements' },
             { strength: 'Education', evidence: 'BSc Computer Science from Wits', impact: 'Strong academic foundation' },
+            { strength: 'Project Experience', evidence: 'Led development of 3 production applications', impact: 'Demonstrates leadership potential' },
           ],
           improvements: [
             { area: 'Quantify Achievements', suggestion: 'Add metrics to your achievements. Instead of "improved performance", say "improved API response time by 40%"', priority: 'HIGH' },
             { area: 'ATS Keywords', suggestion: 'Add more industry keywords like "agile", "CI/CD", "cloud infrastructure"', priority: 'MEDIUM' },
+            { area: 'LinkedIn Profile', suggestion: 'Add your LinkedIn URL to increase credibility', priority: 'LOW' },
           ],
           quick_wins: ['Add a professional summary', 'Include GitHub profile link', 'Quantify at least 3 achievements'],
           created_at: new Date().toISOString(),
@@ -309,7 +883,81 @@ export default function CandidateDashboard() {
         },
       ];
 
+      // Mock video analysis data (set to null to show upsell, or provide data to show results)
+      const mockVideoAnalysis: VideoAnalysis | null = {
+        id: 'v1',
+        overall_score: 82,
+        communication_score: 85,
+        confidence_score: 78,
+        clarity_score: 84,
+        professionalism_score: 81,
+        feedback: 'You present yourself confidently with good eye contact. Your explanation of your skills was clear and engaging. Consider slowing down slightly when explaining technical concepts.',
+        strengths: [
+          'Strong eye contact throughout the video',
+          'Clear articulation of career goals',
+          'Professional appearance and background',
+          'Enthusiastic tone without being over-the-top',
+        ],
+        improvements: [
+          'Slow down when explaining technical skills',
+          'Add specific examples of achievements',
+          'Practice a stronger opening statement',
+        ],
+        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+
+      // Mock applications data
+      const mockApplications: Application[] = [
+        {
+          id: 'a1',
+          company_name: 'Standard Bank',
+          role_title: 'Senior Software Engineer',
+          status: 'shortlisted',
+          applied_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          last_updated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          company_logo_color: '#0033A0',
+        },
+        {
+          id: 'a2',
+          company_name: 'Discovery Health',
+          role_title: 'Full Stack Developer',
+          status: 'interview',
+          applied_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+          last_updated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          company_logo_color: '#006E51',
+        },
+        {
+          id: 'a3',
+          company_name: 'Takealot',
+          role_title: 'Backend Developer',
+          status: 'viewed',
+          applied_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          last_updated: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+          company_logo_color: '#0066CC',
+        },
+        {
+          id: 'a4',
+          company_name: 'Capitec Bank',
+          role_title: 'Software Developer',
+          status: 'applied',
+          applied_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          last_updated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          company_logo_color: '#ED1C24',
+        },
+        {
+          id: 'a5',
+          company_name: 'FNB',
+          role_title: 'Cloud Engineer',
+          status: 'rejected',
+          applied_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+          last_updated: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          company_logo_color: '#009FDA',
+        },
+      ];
+
       setAnalyses(mockAnalyses);
+      setVideoAnalysis(mockVideoAnalysis);
+      setApplications(mockApplications);
       if (mockAnalyses.length > 0) {
         setSelectedAnalysis(mockAnalyses[0]);
       }
@@ -319,8 +967,10 @@ export default function CandidateDashboard() {
         email: 'thabo@example.com',
         plan: 'free',
         cv_analyses_count: mockAnalyses.length,
-        video_analyses_count: 0,
-        profile_completion: 50,
+        video_analyses_count: mockVideoAnalysis ? 1 : 0,
+        profile_completion: mockVideoAnalysis ? 75 : 50,
+        talent_pool_opted_in: true,
+        talent_pool_visibility: 'public',
       });
 
     } catch (err) {
@@ -328,6 +978,22 @@ export default function CandidateDashboard() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTalentPoolToggle = () => {
+    setUserProfile(prev => ({
+      ...prev,
+      talent_pool_opted_in: !prev.talent_pool_opted_in
+    }));
+    // In production, this would call an API to update the user's talent pool status
+  };
+
+  const handleVisibilityChange = (visibility: 'public' | 'anonymous' | 'hidden') => {
+    setUserProfile(prev => ({
+      ...prev,
+      talent_pool_visibility: visibility
+    }));
+    // In production, this would call an API to update visibility settings
   };
 
   const latestAnalysis = analyses[0];
@@ -387,22 +1053,43 @@ export default function CandidateDashboard() {
       {/* Main Content */}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
         {/* Welcome Section */}
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
-            Welcome back, {userProfile.name.split(' ')[0]}! 👋
+            Welcome back, {userProfile.name.split(' ')[0]}!
           </h1>
           <p style={{ color: '#64748b', fontSize: '1rem' }}>
             {analyses.length === 0
               ? "Upload your CV to get started with AI-powered analysis."
-              : `You have ${analyses.length} CV ${analyses.length === 1 ? 'analysis' : 'analyses'}. Keep improving!`
+              : `You have ${analyses.length} CV ${analyses.length === 1 ? 'analysis' : 'analyses'} and ${applications.length} active applications.`
             }
           </p>
         </div>
 
-        {/* Upgrade Prompt */}
-        <UpgradePrompt plan={userProfile.plan} />
+        {/* Dashboard Navigation Tabs */}
+        <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {analyses.length === 0 ? (
+        {/* Upgrade Prompt - Only show on overview */}
+        {activeTab === 'overview' && <UpgradePrompt plan={userProfile.plan} />}
+
+        {/* Tab Content */}
+        {activeTab === 'upsell' ? (
+          /* Upsell Tab */
+          <UpsellSection />
+        ) : activeTab === 'applications' ? (
+          /* Applications Tab */
+          <ApplicationTracker applications={applications} />
+        ) : activeTab === 'video' ? (
+          /* Video Tab */
+          <VideoAnalysisCard videoAnalysis={videoAnalysis} />
+        ) : activeTab === 'talent-pool' ? (
+          /* Talent Pool Tab */
+          <TalentPoolOptIn
+            isOptedIn={userProfile.talent_pool_opted_in}
+            visibility={userProfile.talent_pool_visibility}
+            onToggle={handleTalentPoolToggle}
+            onVisibilityChange={handleVisibilityChange}
+          />
+        ) : analyses.length === 0 ? (
           /* Empty State */
           <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '64px 32px', textAlign: 'center' }}>
             <div style={{ width: 80, height: 80, background: '#eef2ff', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
@@ -416,37 +1103,117 @@ export default function CandidateDashboard() {
               <span>📤</span> Upload Your CV
             </a>
           </div>
+        ) : activeTab === 'cv' ? (
+          /* CV Analysis Tab - Full width single column */
+          <div>
+            {/* Latest Score Card */}
+            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
+                <div>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Latest CV Score</h2>
+                  <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 16 }}>{latestAnalysis.target_role || 'General Analysis'}</p>
+                  <CircularScore score={latestAnalysis.overall_score} size={140} />
+                  {analyses.length > 1 && <ScoreHistoryChart analyses={analyses} />}
+                </div>
+                <div style={{ flex: 1, minWidth: 280 }}>
+                  <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16 }}>
+                    <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>Score Breakdown</h3>
+                    <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>{latestAnalysis.score_explanation}</p>
+                  </div>
+                  <div style={{ marginTop: 16 }}>
+                    <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: 10 }}>Top Strengths</h3>
+                    {latestAnalysis.strengths.map((s, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.75rem' }}>✓</div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>{s.strength}</div>
+                          <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{s.evidence}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Wins */}
+            {latestAnalysis.quick_wins.length > 0 && (
+              <div style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: 16, padding: 20, marginBottom: 24, border: '1px solid #fde68a' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: '1.25rem' }}>⚡</span>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#92400e', margin: 0 }}>Quick Wins - Do These Today!</h3>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {latestAnalysis.quick_wins.map((win, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'white', borderRadius: 8 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f59e0b', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem' }}>{i + 1}</div>
+                      <span style={{ fontSize: '0.9rem', color: '#78350f' }}>{win}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Improvement Tips */}
+            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 24 }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>Improvement Suggestions</h3>
+              {latestAnalysis.improvements.map((tip, i) => (
+                <ImprovementTipCard key={i} tip={tip} />
+              ))}
+            </div>
+
+            {/* Analysis History */}
+            {analyses.length > 1 && (
+              <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24 }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>Previous Analyses</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {analyses.slice(1).map((analysis) => (
+                    <AnalysisHistoryItem
+                      key={analysis.id}
+                      analysis={analysis}
+                      onClick={() => setSelectedAnalysis(analysis)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
-          /* Dashboard Grid */
+          /* Overview Dashboard Grid */
           <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
             {/* Main Column */}
             <div>
+              {/* Quick Stats Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+                <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#4F46E5' }}>{latestAnalysis.overall_score}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>CV Score</div>
+                </div>
+                <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#a855f7' }}>{videoAnalysis?.overall_score || '--'}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Video Score</div>
+                </div>
+                <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10B981' }}>{applications.filter(a => a.status === 'shortlisted' || a.status === 'interview').length}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Shortlisted</div>
+                </div>
+                <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f59e0b' }}>{applications.length}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Applications</div>
+                </div>
+              </div>
+
               {/* Latest Score Card */}
               <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 24 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
-                  <div>
-                    <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>Latest CV Score</h2>
-                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 16 }}>{latestAnalysis.target_role || 'General Analysis'}</p>
-                    <CircularScore score={latestAnalysis.overall_score} size={140} />
-                    {analyses.length > 1 && <ScoreHistoryChart analyses={analyses} />}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 280 }}>
-                    <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16 }}>
-                      <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>Score Breakdown</h3>
-                      <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>{latestAnalysis.score_explanation}</p>
-                    </div>
-                    <div style={{ marginTop: 16 }}>
-                      <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', marginBottom: 10 }}>Top Strengths</h3>
-                      {latestAnalysis.strengths.slice(0, 2).map((s, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
-                          <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.75rem' }}>✓</div>
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a' }}>{s.strength}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{s.evidence}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Latest CV Score</h2>
+                  <button onClick={() => setActiveTab('cv')} style={{ background: 'none', border: 'none', color: '#4F46E5', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>View Details →</button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                  <CircularScore score={latestAnalysis.overall_score} size={120} />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 12 }}>{latestAnalysis.target_role || 'General Analysis'}</p>
+                    <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>{latestAnalysis.score_explanation}</p>
                   </div>
                 </div>
               </div>
@@ -459,7 +1226,7 @@ export default function CandidateDashboard() {
                     <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#92400e', margin: 0 }}>Quick Wins - Do These Today!</h3>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {latestAnalysis.quick_wins.map((win, i) => (
+                    {latestAnalysis.quick_wins.slice(0, 3).map((win, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'white', borderRadius: 8 }}>
                         <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f59e0b', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem' }}>{i + 1}</div>
                         <span style={{ fontSize: '0.9rem', color: '#78350f' }}>{win}</span>
@@ -469,12 +1236,73 @@ export default function CandidateDashboard() {
                 </div>
               )}
 
-              {/* Improvement Tips */}
+              {/* Recent Applications */}
+              {applications.length > 0 && (
+                <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, marginBottom: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Recent Applications</h3>
+                    <button onClick={() => setActiveTab('applications')} style={{ background: 'none', border: 'none', color: '#4F46E5', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>View All →</button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {applications.slice(0, 3).map((app) => {
+                      const statusColors: Record<string, { color: string; bg: string }> = {
+                        applied: { color: '#64748b', bg: '#f1f5f9' },
+                        viewed: { color: '#3b82f6', bg: '#dbeafe' },
+                        shortlisted: { color: '#8b5cf6', bg: '#ede9fe' },
+                        interview: { color: '#10b981', bg: '#d1fae5' },
+                        rejected: { color: '#ef4444', bg: '#fee2e2' },
+                        offer: { color: '#059669', bg: '#a7f3d0' },
+                      };
+                      const colors = statusColors[app.status] || statusColors.applied;
+                      return (
+                        <div key={app.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: '#f8fafc', borderRadius: 10 }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 8, background: app.company_logo_color || '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.8rem', color: 'white' }}>
+                            {app.company_name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.9rem' }}>{app.role_title}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{app.company_name}</div>
+                          </div>
+                          <span style={{ padding: '4px 10px', background: colors.bg, color: colors.color, borderRadius: 100, fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize' }}>{app.status}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Video Analysis Preview */}
               <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24 }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>Improvement Suggestions</h3>
-                {latestAnalysis.improvements.map((tip, i) => (
-                  <ImprovementTipCard key={i} tip={tip} />
-                ))}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Video Analysis</h3>
+                  <button onClick={() => setActiveTab('video')} style={{ background: 'none', border: 'none', color: '#a855f7', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>View Details →</button>
+                </div>
+                {videoAnalysis ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{ width: 80, height: 80, borderRadius: 12, background: 'linear-gradient(135deg, #a855f7, #9333ea)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                      <span style={{ color: 'white', fontSize: '1.5rem', fontWeight: 800 }}>{videoAnalysis.overall_score}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.65rem' }}>Score</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.9rem', color: '#475569', margin: '0 0 8px', lineHeight: 1.5 }}>{videoAnalysis.feedback.slice(0, 120)}...</p>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <span style={{ padding: '4px 10px', background: '#d1fae5', color: '#059669', borderRadius: 100, fontSize: '0.75rem', fontWeight: 500 }}>+{videoAnalysis.strengths.length} strengths</span>
+                        <span style={{ padding: '4px 10px', background: '#fef3c7', color: '#b45309', borderRadius: 100, fontSize: '0.75rem', fontWeight: 500 }}>{videoAnalysis.improvements.length} to improve</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#fdf4ff', borderRadius: 12 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ color: 'white', fontSize: '1.25rem' }}>🎥</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: '#7e22ce', fontWeight: 500 }}>Stand out with a video intro</p>
+                      <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#9333ea' }}>Employers are 3x more likely to shortlist candidates with video profiles</p>
+                    </div>
+                    <a href="/upload?tab=video" style={{ padding: '10px 16px', background: '#a855f7', color: 'white', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none' }}>Record</a>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -505,24 +1333,27 @@ export default function CandidateDashboard() {
                 </div>
               </div>
 
+              {/* Talent Pool Status */}
+              <div style={{ background: userProfile.talent_pool_opted_in ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)' : 'white', borderRadius: 12, border: `1px solid ${userProfile.talent_pool_opted_in ? '#86efac' : '#e2e8f0'}`, padding: 20, marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: '1.25rem' }}>{userProfile.talent_pool_opted_in ? '✓' : '👥'}</span>
+                  <span style={{ fontWeight: 600, color: userProfile.talent_pool_opted_in ? '#166534' : '#0f172a' }}>Talent Pool</span>
+                  {userProfile.talent_pool_opted_in && (
+                    <span style={{ padding: '2px 8px', background: '#10B981', color: 'white', borderRadius: 100, fontSize: '0.65rem', fontWeight: 600 }}>ACTIVE</span>
+                  )}
+                </div>
+                <p style={{ fontSize: '0.85rem', color: userProfile.talent_pool_opted_in ? '#15803d' : '#64748b', margin: '0 0 12px', lineHeight: 1.5 }}>
+                  {userProfile.talent_pool_opted_in
+                    ? 'You are visible to employers. Update your profile to improve matches.'
+                    : 'Join to get discovered by top SA employers.'}
+                </p>
+                <button onClick={() => setActiveTab('talent-pool')} style={{ width: '100%', padding: '10px', background: userProfile.talent_pool_opted_in ? 'white' : '#10B981', color: userProfile.talent_pool_opted_in ? '#166534' : 'white', border: userProfile.talent_pool_opted_in ? '1px solid #86efac' : 'none', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+                  {userProfile.talent_pool_opted_in ? 'Manage Settings' : 'Join Now'}
+                </button>
+              </div>
+
               {/* Profile Completion */}
               <ProfileCompletionMeter completion={userProfile.profile_completion} />
-
-              {/* Analysis History */}
-              {analyses.length > 1 && (
-                <div style={{ marginTop: 20 }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>Analysis History</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {analyses.map((analysis) => (
-                      <AnalysisHistoryItem
-                        key={analysis.id}
-                        analysis={analysis}
-                        onClick={() => setSelectedAnalysis(analysis)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Stats Summary */}
               <div style={{ marginTop: 20, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
@@ -536,6 +1367,33 @@ export default function CandidateDashboard() {
                     <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Video Analyses</div>
                   </div>
                 </div>
+              </div>
+
+              {/* Upsell Teaser */}
+              <div style={{ marginTop: 20, background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%)', borderRadius: 12, padding: 20, color: 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <span style={{ fontSize: '1.25rem' }}>⭐</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Boost Your Career</span>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.9)', margin: '0 0 14px', lineHeight: 1.5 }}>
+                  Get video coaching, AI interview practice, and industry insights.
+                </p>
+                <button
+                  onClick={() => setActiveTab('upsell')}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'white',
+                    color: '#4F46E5',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Explore Premium Features →
+                </button>
               </div>
             </div>
           </div>

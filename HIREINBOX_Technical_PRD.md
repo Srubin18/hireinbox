@@ -1518,7 +1518,7 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
   - Understands company's unique requirements
   - Dedicated model per company
 
-## 11.2 Agent Architecture
+## 9.2 Agent Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -1548,9 +1548,9 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
    └─────────┘            └─────────┘             └─────────┘
 ```
 
-## 11.3 Available Agents
+## 9.3 Available Agents
 
-### 12.3.1 SCOUT Agent (CV Sourcing & Screening)
+### 9.3.1 SCOUT Agent (CV Sourcing & Screening)
 
 | Attribute | Value |
 |-----------|-------|
@@ -1579,7 +1579,7 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
 - VIP referral source
 - Unusual candidate profile
 
-### 12.3.2 SCHEDULER Agent (Interview Coordination)
+### 9.3.2 SCHEDULER Agent (Interview Coordination)
 
 | Attribute | Value |
 |-----------|-------|
@@ -1609,7 +1609,7 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
 - Technical issues with booking
 - VIP candidate
 
-### 12.3.3 INTERVIEWER Agent (AI Interviews)
+### 9.3.3 INTERVIEWER Agent (AI Interviews)
 
 | Attribute | Value |
 |-----------|-------|
@@ -1645,7 +1645,7 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
 - Suspicious behavior detected
 - Exceptional candidate
 
-### 12.3.4 OUTREACH Agent (Candidate Communication)
+### 9.3.4 OUTREACH Agent (Candidate Communication)
 
 | Attribute | Value |
 |-----------|-------|
@@ -1683,7 +1683,7 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
 - Complaints
 - Legal queries
 
-### 12.3.5 CHECKER Agent (Background Verification)
+### 9.3.5 CHECKER Agent (Background Verification)
 
 | Attribute | Value |
 |-----------|-------|
@@ -1718,7 +1718,7 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
 - Unable to verify
 - Candidate dispute
 
-### 12.3.6 ONBOARD Agent (New Hire Onboarding)
+### 9.3.6 ONBOARD Agent (New Hire Onboarding)
 
 | Attribute | Value |
 |-----------|-------|
@@ -1743,9 +1743,9 @@ Through this partnership, HireInbox provides employers with autonomous "AI Staff
 - Schedule orientation
 - Assign onboarding buddy
 
-## 11.4 Agent Configuration
+## 9.4 Agent Configuration
 
-### 12.4.1 Per-Company Settings
+### 9.4.1 Per-Company Settings
 
 ```typescript
 interface AgentConfig {
@@ -1782,7 +1782,7 @@ interface AgentConfig {
 }
 ```
 
-### 12.4.2 Agent Permissions
+### 9.4.2 Agent Permissions
 
 | Permission | Scout | Scheduler | Interviewer | Outreach | Checker |
 |------------|:-----:|:---------:|:-----------:|:--------:|:-------:|
@@ -1796,9 +1796,9 @@ interface AgentConfig {
 | Initiate verification | - | - | - | - | Y |
 | Create reports | Y | Y | Y | Y | Y |
 
-## 11.5 Agent Activity Logging
+## 9.5 Agent Activity Logging
 
-### 12.5.1 Activity Log Table
+### 9.5.1 Activity Log Table
 
 ```sql
 CREATE TABLE agent_activities (
@@ -1837,7 +1837,7 @@ CREATE INDEX idx_agent_activities_candidate ON agent_activities(candidate_id);
 CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 ```
 
-### 12.5.2 Activity Types
+### 9.5.2 Activity Types
 
 | Agent | Activity | Description |
 |-------|----------|-------------|
@@ -1855,9 +1855,9 @@ CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 | Checker | verification_initiated | Started background check |
 | Checker | verification_completed | Check completed |
 
-## 11.6 Agent Billing
+## 9.6 Agent Billing
 
-### 12.6.1 Pricing Model
+### 9.6.1 Pricing Model
 
 | Agent | Unit | Price (ZAR) |
 |-------|------|-------------|
@@ -1869,7 +1869,7 @@ CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 | Checker (Criminal) | Per check | R300 |
 | Checker (Reference) | Per reference | R150 |
 
-### 12.6.2 Subscription Bundles
+### 9.6.2 Subscription Bundles
 
 | Bundle | Monthly (ZAR) | Includes |
 |--------|---------------|----------|
@@ -1878,9 +1878,9 @@ CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 | Business | R1,999 | All agents (500 CVs) |
 | Enterprise | Custom | Unlimited + Custom agents |
 
-## 11.7 Human-Agent Collaboration
+## 9.7 Human-Agent Collaboration
 
-### 12.7.1 Escalation Flow
+### 9.7.1 Escalation Flow
 
 ```
 Agent encounters trigger
@@ -1910,7 +1910,7 @@ Agent encounters trigger
 └───────────────┘
 ```
 
-### 12.7.2 Override Controls
+### 9.7.2 Override Controls
 
 Humans can always:
 - Pause any agent
@@ -1921,30 +1921,30 @@ Humans can always:
 - Set agent working hours
 - Define escalation triggers
 
-## 11.8 Agent Performance Metrics
+## 9.8 Agent Performance Metrics
 
-### 12.8.1 Scout Metrics
+### 9.8.1 Scout Metrics
 - CVs processed per day
 - Accuracy (vs human decisions)
 - Time savings (hours saved)
 - False positive rate
 - False negative rate
 
-### 12.8.2 Scheduler Metrics
+### 9.8.2 Scheduler Metrics
 - Interviews scheduled
 - Reschedule rate
 - No-show rate
 - Candidate satisfaction
 - Time to schedule
 
-### 12.8.3 Interviewer Metrics
+### 9.8.3 Interviewer Metrics
 - Interviews conducted
 - Completion rate
 - Score correlation (vs human)
 - Candidate feedback
 - Technical issues
 
-## 11.9 Future Roadmap
+## 9.9 Future Roadmap
 
 | Phase | Agents | Timeline |
 |-------|--------|----------|
@@ -1958,7 +1958,7 @@ Humans can always:
 
 # 10. AUTHENTICATION & SECURITY
 
-## 11.1 Authentication Methods
+## 10.1 Authentication Methods
 
 | Method | Use Case | Implementation |
 |--------|----------|----------------|
@@ -1968,7 +1968,7 @@ Humans can always:
 | LinkedIn OAuth | Professional login | Supabase Auth |
 | API Key | Machine-to-machine | Custom |
 
-## 11.2 Password Policy
+## 10.2 Password Policy
 
 | Requirement | Value |
 |-------------|-------|
@@ -1982,19 +1982,19 @@ Humans can always:
 | Lockout threshold | 5 failed attempts |
 | Lockout duration | 30 minutes |
 
-## 11.3 Multi-Factor Authentication (MFA)
+## 10.3 Multi-Factor Authentication (MFA)
 
-### 12.3.1 Supported Methods
+### 10.3.1 Supported Methods
 - Time-based One-Time Password (TOTP)
 - SMS OTP (backup)
 - Recovery codes (10 single-use codes)
 
-### 12.3.2 MFA Requirements
+### 10.3.2 MFA Requirements
 - Optional for all users
 - Required for: Super Admins, Company Owners
 - Prompted after suspicious activity
 
-## 11.4 Session Security
+## 10.4 Session Security
 
 | Parameter | Value |
 |-----------|-------|
@@ -2006,21 +2006,21 @@ Humans can always:
 | HttpOnly cookie | Yes |
 | SameSite | Strict |
 
-## 11.5 API Security
+## 10.5 API Security
 
-### 12.5.1 API Key Format
+### 10.5.1 API Key Format
 ```
 hi_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 hi_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### 12.5.2 API Key Storage
+### 10.5.2 API Key Storage
 - Keys hashed with SHA-256 before storage
 - Only prefix shown in UI
 - Full key shown once on creation
 - Keys can be rotated without downtime
 
-## 11.6 Data Encryption
+## 10.6 Data Encryption
 
 | Data Type | At Rest | In Transit |
 |-----------|---------|------------|
@@ -2030,13 +2030,13 @@ hi_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | Backups | AES-256 | TLS 1.3 |
 | Sensitive fields | Application-level encryption | TLS 1.3 |
 
-### 12.6.1 Sensitive Fields (Application-Level Encryption)
+### 10.6.1 Sensitive Fields (Application-Level Encryption)
 - API secrets
 - OAuth tokens
 - Payment card tokens
 - MFA secrets
 
-## 11.7 Security Headers
+## 10.7 Security Headers
 
 ```
 Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
@@ -2048,9 +2048,9 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com https://api.anthropic.com https://*.supabase.co; frame-src https://js.stripe.com;
 ```
 
-## 11.8 Input Validation
+## 10.8 Input Validation
 
-### 12.8.1 Validation Rules
+### 10.8.1 Validation Rules
 - All inputs validated with Zod schemas
 - Maximum input lengths enforced
 - File type validation (magic bytes, not just extension)
@@ -2058,7 +2058,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' h
 - XSS prevention (output encoding, CSP)
 - CSRF protection (SameSite cookies + tokens)
 
-### 12.8.2 File Upload Validation
+### 10.8.2 File Upload Validation
 ```typescript
 const ALLOWED_CV_TYPES = {
   'application/pdf': ['.pdf'],
@@ -2069,7 +2069,7 @@ const ALLOWED_CV_TYPES = {
 const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 ```
 
-## 11.9 DDoS Protection
+## 10.9 DDoS Protection
 
 | Layer | Protection |
 |-------|------------|
@@ -2078,9 +2078,9 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 | API | Per-endpoint limits |
 | AI | Request queuing |
 
-## 11.10 Security Monitoring
+## 10.10 Security Monitoring
 
-### 12.10.1 Monitored Events
+### 10.10.1 Monitored Events
 - Failed login attempts
 - Password changes
 - MFA changes
@@ -2089,7 +2089,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 - Data exports
 - Admin actions
 
-### 12.10.2 Alert Thresholds
+### 10.10.2 Alert Thresholds
 | Event | Threshold | Action |
 |-------|-----------|--------|
 | Failed logins (same IP) | 10 in 5 min | Block IP, alert |
@@ -2098,7 +2098,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 | Bulk data export | Any | Log + notify admin |
 | API key usage spike | 5x normal | Alert |
 
-## 11.11 Penetration Testing
+## 10.11 Penetration Testing
 
 | Type | Frequency | Provider |
 |------|-----------|----------|
@@ -2112,25 +2112,25 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 
 ## 11.1 Payment Providers
 
-### 12.1.1 Yoco (Primary - South Africa)
+### 11.1.1 Yoco (Primary - South Africa)
 - Card payments (Visa, Mastercard)
 - QR code payments
 - Instant EFT
 - Settlement: T+2
 
-### 12.1.2 Stripe (International)
+### 11.1.2 Stripe (International)
 - Card payments (all major)
 - Bank transfers
 - Settlement: T+2
 
-### 12.1.3 PayFast (Backup - SA)
+### 11.1.3 PayFast (Backup - SA)
 - EFT payments
 - Instant EFT
 - Settlement: T+1
 
 ## 11.2 Pricing Structure
 
-### 12.2.1 B2B Pricing (Employers)
+### 11.2.1 B2B Pricing (Employers)
 
 | Product | Price (ZAR) | Price (USD) |
 |---------|-------------|-------------|
@@ -2143,7 +2143,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 | AI Interview Add-on | R500 | $28 |
 | Bulk CV Screening (100) | R1,000 | $55 |
 
-### 12.2.2 B2B Subscriptions
+### 11.2.2 B2B Subscriptions
 
 | Plan | Monthly (ZAR) | Annual (ZAR) | Features |
 |------|---------------|--------------|----------|
@@ -2152,7 +2152,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 | Business | R1,999 | R19,990 | 500 CVs/mo, unlimited roles |
 | Enterprise | Custom | Custom | Custom limits, SLA |
 
-### 12.2.3 B2C Pricing (Job Seekers)
+### 11.2.3 B2C Pricing (Job Seekers)
 
 | Product | Price (ZAR) | Description |
 |---------|-------------|-------------|
@@ -2164,7 +2164,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 
 ## 11.3 Payment Flow
 
-### 12.3.1 One-Time Payment
+### 11.3.1 One-Time Payment
 ```
 1. User selects product
 2. Create payment intent (server)
@@ -2176,7 +2176,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 8. Send receipt email
 ```
 
-### 12.3.2 Subscription Flow
+### 11.3.2 Subscription Flow
 ```
 1. User selects plan
 2. Create subscription (server)
@@ -2187,7 +2187,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 7. Schedule renewal
 ```
 
-### 12.3.3 Invoice Flow (B2B)
+### 11.3.3 Invoice Flow (B2B)
 ```
 1. Admin creates invoice
 2. Email sent to company
@@ -2210,13 +2210,13 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 
 ## 11.5 Tax Handling
 
-### 12.5.1 South Africa (VAT)
+### 11.5.1 South Africa (VAT)
 - VAT Rate: 15%
 - VAT Number: Required for invoices
 - B2B: VAT inclusive pricing
 - B2C: VAT inclusive pricing
 
-### 12.5.2 International
+### 11.5.2 International
 - No VAT charged
 - Customer responsible for local taxes
 
@@ -2231,14 +2231,14 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 
 ## 11.7 Failed Payment Handling
 
-### 12.7.1 One-Time Payments
+### 11.7.1 One-Time Payments
 ```
 Attempt 1: Immediate
 → Failure: Show error, suggest retry
 → Log failure reason
 ```
 
-### 12.7.2 Subscriptions
+### 11.7.2 Subscriptions
 ```
 Attempt 1: Due date
 Attempt 2: Due + 3 days (email warning)
@@ -2251,7 +2251,7 @@ Attempt 4: Due + 14 days (email warning)
 
 ---
 
-# 11. FILE HANDLING
+# 12. FILE HANDLING
 
 ## 12.1 Supported File Types
 
@@ -2358,7 +2358,7 @@ Infected files are:
 
 ---
 
-# 12. NOTIFICATIONS & MESSAGING
+# 13. NOTIFICATIONS & MESSAGING
 
 ## 13.1 Notification Types
 
@@ -2379,7 +2379,7 @@ Infected files are:
 
 ## 13.2 Channel Configuration
 
-### 14.2.1 Email (SendGrid)
+### 13.2.1 Email (SendGrid)
 ```typescript
 {
   provider: 'sendgrid',
@@ -2393,7 +2393,7 @@ Infected files are:
 }
 ```
 
-### 14.2.2 WhatsApp (360Dialog)
+### 13.2.2 WhatsApp (360Dialog)
 ```typescript
 {
   provider: '360dialog',
@@ -2407,7 +2407,7 @@ Infected files are:
 }
 ```
 
-### 14.2.3 SMS (Twilio)
+### 13.2.3 SMS (Twilio)
 ```typescript
 {
   provider: 'twilio',
@@ -2446,7 +2446,7 @@ All notifications logged with:
 
 ---
 
-# 13. BACKGROUND JOBS & QUEUES
+# 14. BACKGROUND JOBS & QUEUES
 
 ## 14.1 Job Types
 
@@ -2465,7 +2465,7 @@ All notifications logged with:
 
 ## 14.2 Implementation
 
-### 15.2.1 Vercel Cron Jobs (MVP)
+### 14.2.1 Vercel Cron Jobs (MVP)
 ```typescript
 // vercel.json
 {
@@ -2490,7 +2490,7 @@ All notifications logged with:
 }
 ```
 
-### 15.2.2 Future: BullMQ
+### 14.2.2 Future: BullMQ
 For scale, migrate to proper queue:
 - Redis-backed
 - Retry with backoff
@@ -2535,11 +2535,11 @@ const RETRY_CONFIG = {
 
 ---
 
-# 14. SEARCH & FILTERING
+# 15. SEARCH & FILTERING
 
 ## 15.1 Candidate Search
 
-### 16.1.1 Full-Text Search
+### 15.1.1 Full-Text Search
 ```sql
 SELECT * FROM candidates
 WHERE
@@ -2554,7 +2554,7 @@ ORDER BY
   score DESC;
 ```
 
-### 16.1.2 Filter Options
+### 15.1.2 Filter Options
 
 | Filter | Type | Options |
 |--------|------|---------|
@@ -2568,7 +2568,7 @@ ORDER BY
 | Location | Text | Free text |
 | Skills | Multi-select | From CV analysis |
 
-### 16.1.3 Sort Options
+### 15.1.3 Sort Options
 - Score (highest first)
 - Date applied (newest first)
 - Name (alphabetical)
@@ -2587,7 +2587,7 @@ ORDER BY
 
 ## 15.3 Talent Pool Search (Future)
 
-### 16.3.1 Semantic Search with pgvector
+### 15.3.1 Semantic Search with pgvector
 ```sql
 -- Generate embedding for search query
 -- Search by vector similarity
@@ -2604,11 +2604,11 @@ LIMIT 20;
 
 ---
 
-# 15. ANALYTICS & REPORTING
+# 16. ANALYTICS & REPORTING
 
 ## 16.1 Business Metrics
 
-### 17.1.1 Platform Metrics (Admin)
+### 16.1.1 Platform Metrics (Admin)
 - Total users (by type)
 - New signups (daily, weekly, monthly)
 - Active users (DAU, WAU, MAU)
@@ -2617,7 +2617,7 @@ LIMIT 20;
 - Churn rate
 - Conversion rate
 
-### 17.1.2 Company Metrics (B2B)
+### 16.1.2 Company Metrics (B2B)
 - CVs screened
 - Shortlist rate
 - Time to hire
@@ -2625,7 +2625,7 @@ LIMIT 20;
 - Pipeline velocity
 - Source effectiveness
 
-### 17.1.3 Candidate Metrics (B2C)
+### 16.1.3 Candidate Metrics (B2C)
 - Analyses completed
 - Score improvement
 - Video analyses
@@ -2633,13 +2633,13 @@ LIMIT 20;
 
 ## 16.2 Dashboards
 
-### 17.2.1 Employer Dashboard
+### 16.2.1 Employer Dashboard
 - Today's stats (new CVs, shortlisted, interviews)
 - Weekly trend chart
 - Role performance
 - Recent activity
 
-### 17.2.2 Admin Dashboard
+### 16.2.2 Admin Dashboard
 - Platform overview
 - Revenue chart
 - User growth
@@ -2677,7 +2677,7 @@ LIMIT 20;
 
 ---
 
-# 16. THIRD-PARTY INTEGRATIONS
+# 17. THIRD-PARTY INTEGRATIONS
 
 ## 17.1 Current Integrations
 
@@ -2707,7 +2707,7 @@ LIMIT 20;
 
 ## 17.3 Webhook System
 
-### 18.3.1 Outgoing Webhooks
+### 17.3.1 Outgoing Webhooks
 
 Events companies can subscribe to:
 ```
@@ -2738,13 +2738,13 @@ Webhook payload:
 }
 ```
 
-### 18.3.2 Webhook Security
+### 17.3.2 Webhook Security
 - HMAC-SHA256 signature
 - Timestamp validation (< 5 minutes)
 - Retry with exponential backoff
 - Dead letter queue
 
-### 18.3.3 Incoming Webhooks
+### 17.3.3 Incoming Webhooks
 
 | Source | Events |
 |--------|--------|
@@ -2765,21 +2765,21 @@ For companies integrating with HireInbox:
 
 ---
 
-# 17. MULTI-TENANCY
+# 18. MULTI-TENANCY
 
 ## 18.1 Tenant Isolation
 
-### 19.1.1 Database Level
+### 18.1.1 Database Level
 - All tables include `company_id`
 - Row-Level Security (RLS) enforced
 - No cross-tenant queries possible
 
-### 19.1.2 Application Level
+### 18.1.2 Application Level
 - Company context loaded on auth
 - All queries scoped to company
 - Middleware validates tenant access
 
-### 19.1.3 Storage Level
+### 18.1.3 Storage Level
 - Files organized by company_id
 - Access policies per company
 - No cross-company file access
@@ -2833,7 +2833,7 @@ async function checkQuota(companyId: string, resource: string): Promise<boolean>
 
 ---
 
-# 18. INTERNATIONALIZATION & LOCALIZATION
+# 19. INTERNATIONALIZATION & LOCALIZATION
 
 ## 19.1 Supported Languages
 
@@ -2856,7 +2856,7 @@ async function checkQuota(companyId: string, resource: string): Promise<boolean>
 
 ## 19.3 Content Translation
 
-### 20.3.1 UI Strings
+### 19.3.1 UI Strings
 ```typescript
 // lib/i18n/en-ZA.ts
 export const messages = {
@@ -2873,11 +2873,11 @@ export const messages = {
 };
 ```
 
-### 20.3.2 Email Templates
+### 19.3.2 Email Templates
 - Separate templates per language
 - Fallback to English
 
-### 20.3.3 AI Responses
+### 19.3.3 AI Responses
 - English only (training data)
 - Clear, professional language
 - SA-specific terminology
@@ -2893,7 +2893,7 @@ export const messages = {
 
 ---
 
-# 19. ACCESSIBILITY
+# 20. ACCESSIBILITY
 
 ## 20.1 Standards
 
@@ -2904,7 +2904,7 @@ export const messages = {
 
 ## 20.2 Implementation
 
-### 21.2.1 Semantic HTML
+### 20.2.1 Semantic HTML
 ```html
 <main role="main">
   <nav aria-label="Main navigation">...</nav>
@@ -2915,21 +2915,21 @@ export const messages = {
 </main>
 ```
 
-### 21.2.2 ARIA Labels
+### 20.2.2 ARIA Labels
 ```html
 <button aria-label="Close modal" aria-pressed="false">
   <span aria-hidden="true">&times;</span>
 </button>
 ```
 
-### 21.2.3 Keyboard Navigation
+### 20.2.3 Keyboard Navigation
 - All interactive elements focusable
 - Logical tab order
 - Focus indicators visible
 - Escape to close modals
 - Enter to submit forms
 
-### 21.2.4 Color Contrast
+### 20.2.4 Color Contrast
 - Minimum 4.5:1 for normal text
 - Minimum 3:1 for large text
 - Don't rely on color alone
@@ -2954,7 +2954,7 @@ Published at `/accessibility` with:
 
 ---
 
-# 20. NON-FUNCTIONAL REQUIREMENTS
+# 21. NON-FUNCTIONAL REQUIREMENTS
 
 ## 21.1 Performance
 
@@ -3006,7 +3006,7 @@ Published at `/accessibility` with:
 
 ---
 
-# 21. TESTING STRATEGY
+# 22. TESTING STRATEGY
 
 ## 22.1 Testing Pyramid
 
@@ -3084,7 +3084,7 @@ Published at `/accessibility` with:
 
 ---
 
-# 22. DEPLOYMENT & DEVOPS
+# 23. DEPLOYMENT & DEVOPS
 
 ## 23.1 Environments
 
@@ -3186,11 +3186,11 @@ Post-deployment:
 
 ---
 
-# 23. MONITORING & OBSERVABILITY
+# 24. MONITORING & OBSERVABILITY
 
 ## 24.1 Metrics
 
-### 25.1.1 Business Metrics
+### 24.1.1 Business Metrics
 - Daily Active Users (DAU)
 - CVs uploaded
 - CVs analyzed
@@ -3198,7 +3198,7 @@ Post-deployment:
 - Revenue (daily, monthly)
 - Churn rate
 
-### 25.1.2 Technical Metrics
+### 24.1.2 Technical Metrics
 - Request rate
 - Error rate
 - Response time (p50, p95, p99)
@@ -3210,13 +3210,13 @@ Post-deployment:
 
 ## 24.2 Logging
 
-### 25.2.1 Log Levels
+### 24.2.1 Log Levels
 - ERROR: System errors, failures
 - WARN: Potential issues, deprecations
 - INFO: Important events, milestones
 - DEBUG: Detailed debugging (dev only)
 
-### 25.2.2 Log Format
+### 24.2.2 Log Format
 ```json
 {
   "timestamp": "2026-01-15T10:00:00.000Z",
@@ -3234,7 +3234,7 @@ Post-deployment:
 }
 ```
 
-### 25.2.3 Structured Logging
+### 24.2.3 Structured Logging
 ```typescript
 logger.info('CV analysis completed', {
   candidateId: candidate.id,
@@ -3267,14 +3267,14 @@ logger.info('CV analysis completed', {
 
 ## 24.5 Dashboards
 
-### 25.5.1 Operations Dashboard
+### 24.5.1 Operations Dashboard
 - System health
 - Error rates
 - Response times
 - Active users
 - Queue depths
 
-### 25.5.2 Business Dashboard
+### 24.5.2 Business Dashboard
 - Revenue
 - Signups
 - Conversions
@@ -3282,7 +3282,7 @@ logger.info('CV analysis completed', {
 
 ---
 
-# 24. ERROR HANDLING
+# 25. ERROR HANDLING
 
 ## 25.1 Error Categories
 
@@ -3361,7 +3361,7 @@ const circuitBreaker = {
 
 ---
 
-# 25. DISASTER RECOVERY & BUSINESS CONTINUITY
+# 26. DISASTER RECOVERY & BUSINESS CONTINUITY
 
 ## 26.1 Backup Strategy
 
@@ -3375,7 +3375,7 @@ const circuitBreaker = {
 
 ## 26.2 Recovery Procedures
 
-### 27.2.1 Database Recovery
+### 26.2.1 Database Recovery
 ```
 1. Identify point of failure
 2. Stop writes to affected tables
@@ -3385,7 +3385,7 @@ const circuitBreaker = {
 6. Post-mortem
 ```
 
-### 27.2.2 Application Recovery
+### 26.2.2 Application Recovery
 ```
 1. Identify failing deployment
 2. Rollback to previous version (Vercel)
@@ -3394,7 +3394,7 @@ const circuitBreaker = {
 5. Fix and redeploy
 ```
 
-### 27.2.3 Complete Outage Recovery
+### 26.2.3 Complete Outage Recovery
 ```
 1. Activate incident response
 2. Communicate to users (status page)
@@ -3416,13 +3416,13 @@ const circuitBreaker = {
 
 ## 26.4 Business Continuity
 
-### 27.4.1 Critical Functions
+### 26.4.1 Critical Functions
 1. CV screening (B2B)
 2. Payment processing
 3. User authentication
 4. Data access
 
-### 27.4.2 Continuity Measures
+### 26.4.2 Continuity Measures
 - Multi-region database (Supabase)
 - CDN for static assets
 - Cached AI responses
@@ -3430,7 +3430,7 @@ const circuitBreaker = {
 
 ## 26.5 Incident Response
 
-### 27.5.1 Severity Levels
+### 26.5.1 Severity Levels
 
 | Level | Description | Response Time | Escalation |
 |-------|-------------|---------------|------------|
@@ -3439,7 +3439,7 @@ const circuitBreaker = {
 | P3 | Minor feature affected | 4 hours | 2 hours |
 | P4 | Cosmetic/low impact | 24 hours | 8 hours |
 
-### 27.5.2 Communication
+### 26.5.2 Communication
 - Status page: status.hireinbox.co.za
 - Email to affected users
 - Twitter updates
@@ -3447,16 +3447,16 @@ const circuitBreaker = {
 
 ---
 
-# 26. DATA MIGRATION & VERSIONING
+# 27. DATA MIGRATION & VERSIONING
 
 ## 27.1 Database Migrations
 
-### 29.1.1 Migration Tools
+### 27.1.1 Migration Tools
 - Supabase CLI
 - Version-controlled migrations
 - Rollback support
 
-### 29.1.2 Migration Process
+### 27.1.2 Migration Process
 ```bash
 # Create migration
 supabase migration new add_feature_x
@@ -3471,7 +3471,7 @@ supabase db reset
 supabase db push
 ```
 
-### 29.1.3 Migration Best Practices
+### 27.1.3 Migration Best Practices
 - Always include rollback
 - Test on staging first
 - Schedule during low traffic
@@ -3480,13 +3480,13 @@ supabase db push
 
 ## 27.2 API Versioning
 
-### 29.2.1 Strategy
+### 27.2.1 Strategy
 - Version in URL path: `/api/v1/`, `/api/v2/`
 - Support current and previous version (N-1)
 - 6-month deprecation notice
 - Sunset dates clearly communicated
 
-### 29.2.2 Version Lifecycle
+### 27.2.2 Version Lifecycle
 ```
 v1 Released → v2 Released → v1 Deprecated → v1 Sunset
     |             |              |              |
@@ -3520,11 +3520,11 @@ const FEATURE_FLAGS = {
 
 ---
 
-# 27. COMPLIANCE & LEGAL
+# 28. COMPLIANCE & LEGAL
 
-## 29.1 POPIA Compliance (South Africa)
+## 28.1 POPIA Compliance (South Africa)
 
-### 29.1.1 Requirements
+### 28.1.1 Requirements
 
 | Requirement | Implementation |
 |-------------|----------------|
@@ -3537,7 +3537,7 @@ const FEATURE_FLAGS = {
 | Data Subject Participation | Export, delete features |
 | Accountability | DPO appointed, audits |
 
-### 29.1.2 Consent Management
+### 28.1.2 Consent Management
 ```typescript
 interface Consent {
   type: 'terms' | 'privacy' | 'marketing' | 'talent_pool';
@@ -3548,14 +3548,14 @@ interface Consent {
 }
 ```
 
-### 29.1.3 Data Subject Rights
+### 28.1.3 Data Subject Rights
 - Right to access: Export all personal data
 - Right to correction: Edit profile
 - Right to deletion: Delete account
 - Right to object: Opt-out of processing
 - Right to portability: Download in standard format
 
-### 29.1.4 Data Breach Response
+### 28.1.4 Data Breach Response
 ```
 1. Detect breach (automated monitoring)
 2. Contain breach (< 1 hour)
@@ -3565,7 +3565,7 @@ interface Consent {
 6. Document and learn
 ```
 
-## 29.2 Data Retention
+## 28.2 Data Retention
 
 | Data Type | Retention | Legal Basis |
 |-----------|-----------|-------------|
@@ -3577,7 +3577,7 @@ interface Consent {
 | Backups | 90 days | Business continuity |
 | Marketing preferences | Until withdrawn | Consent |
 
-## 29.3 Data Processing Agreements
+## 28.3 Data Processing Agreements
 
 | Processor | Data Processed | DPA Status |
 |-----------|----------------|------------|
@@ -3587,20 +3587,20 @@ interface Consent {
 | SendGrid | Email addresses | Signed |
 | Yoco | Payment data | Signed |
 
-## 29.4 International Considerations
+## 28.4 International Considerations
 
-### 29.4.1 GDPR (if EU expansion)
+### 28.4.1 GDPR (if EU expansion)
 - Additional consent requirements
 - DPO appointment
 - EU representative
 - 72-hour breach notification
 
-### 29.4.2 Data Localization
+### 28.4.2 Data Localization
 - Primary data in EU (Supabase)
 - AI processing via API (data not stored)
 - Backups in same region
 
-## 29.5 Employment Law Considerations
+## 28.5 Employment Law Considerations
 
 - No automated decision-making only (human review required)
 - No discriminatory criteria in AI
@@ -3608,7 +3608,7 @@ interface Consent {
 - Audit trail for all decisions
 - Equal opportunity compliance
 
-## 29.6 Terms of Service
+## 28.6 Terms of Service
 
 Key provisions:
 - Acceptable use policy
@@ -3617,7 +3617,7 @@ Key provisions:
 - Dispute resolution (SA jurisdiction)
 - Termination rights
 
-## 29.7 Privacy Policy
+## 28.7 Privacy Policy
 
 Required disclosures:
 - Data collected
