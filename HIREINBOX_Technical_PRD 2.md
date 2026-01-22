@@ -1782,7 +1782,7 @@ interface AgentConfig {
 }
 ```
 
-### 9.4.2 Agent Permissions
+### 12.4.2 Agent Permissions
 
 | Permission | Scout | Scheduler | Interviewer | Outreach | Checker |
 |------------|:-----:|:---------:|:-----------:|:--------:|:-------:|
@@ -1796,9 +1796,9 @@ interface AgentConfig {
 | Initiate verification | - | - | - | - | Y |
 | Create reports | Y | Y | Y | Y | Y |
 
-## 9.5 Agent Activity Logging
+## 11.5 Agent Activity Logging
 
-### 9.5.1 Activity Log Table
+### 12.5.1 Activity Log Table
 
 ```sql
 CREATE TABLE agent_activities (
@@ -1837,7 +1837,7 @@ CREATE INDEX idx_agent_activities_candidate ON agent_activities(candidate_id);
 CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 ```
 
-### 9.5.2 Activity Types
+### 12.5.2 Activity Types
 
 | Agent | Activity | Description |
 |-------|----------|-------------|
@@ -1855,9 +1855,9 @@ CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 | Checker | verification_initiated | Started background check |
 | Checker | verification_completed | Check completed |
 
-## 9.6 Agent Billing
+## 11.6 Agent Billing
 
-### 9.6.1 Pricing Model
+### 12.6.1 Pricing Model
 
 | Agent | Unit | Price (ZAR) |
 |-------|------|-------------|
@@ -1869,7 +1869,7 @@ CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 | Checker (Criminal) | Per check | R300 |
 | Checker (Reference) | Per reference | R150 |
 
-### 9.6.2 Subscription Bundles
+### 12.6.2 Subscription Bundles
 
 | Bundle | Monthly (ZAR) | Includes |
 |--------|---------------|----------|
@@ -1878,9 +1878,9 @@ CREATE INDEX idx_agent_activities_status ON agent_activities(status);
 | Business | R1,999 | All agents (500 CVs) |
 | Enterprise | Custom | Unlimited + Custom agents |
 
-## 9.7 Human-Agent Collaboration
+## 11.7 Human-Agent Collaboration
 
-### 9.7.1 Escalation Flow
+### 12.7.1 Escalation Flow
 
 ```
 Agent encounters trigger
@@ -1910,7 +1910,7 @@ Agent encounters trigger
 └───────────────┘
 ```
 
-### 9.7.2 Override Controls
+### 12.7.2 Override Controls
 
 Humans can always:
 - Pause any agent
@@ -1921,30 +1921,30 @@ Humans can always:
 - Set agent working hours
 - Define escalation triggers
 
-## 9.8 Agent Performance Metrics
+## 11.8 Agent Performance Metrics
 
-### 9.8.1 Scout Metrics
+### 12.8.1 Scout Metrics
 - CVs processed per day
 - Accuracy (vs human decisions)
 - Time savings (hours saved)
 - False positive rate
 - False negative rate
 
-### 9.8.2 Scheduler Metrics
+### 12.8.2 Scheduler Metrics
 - Interviews scheduled
 - Reschedule rate
 - No-show rate
 - Candidate satisfaction
 - Time to schedule
 
-### 9.8.3 Interviewer Metrics
+### 12.8.3 Interviewer Metrics
 - Interviews conducted
 - Completion rate
 - Score correlation (vs human)
 - Candidate feedback
 - Technical issues
 
-## 9.9 Future Roadmap
+## 11.9 Future Roadmap
 
 | Phase | Agents | Timeline |
 |-------|--------|----------|
@@ -1958,7 +1958,7 @@ Humans can always:
 
 # 10. AUTHENTICATION & SECURITY
 
-## 10.1 Authentication Methods
+## 11.1 Authentication Methods
 
 | Method | Use Case | Implementation |
 |--------|----------|----------------|
@@ -1968,7 +1968,7 @@ Humans can always:
 | LinkedIn OAuth | Professional login | Supabase Auth |
 | API Key | Machine-to-machine | Custom |
 
-## 10.2 Password Policy
+## 11.2 Password Policy
 
 | Requirement | Value |
 |-------------|-------|
@@ -1982,19 +1982,19 @@ Humans can always:
 | Lockout threshold | 5 failed attempts |
 | Lockout duration | 30 minutes |
 
-## 10.3 Multi-Factor Authentication (MFA)
+## 11.3 Multi-Factor Authentication (MFA)
 
-### 10.3.1 Supported Methods
+### 12.3.1 Supported Methods
 - Time-based One-Time Password (TOTP)
 - SMS OTP (backup)
 - Recovery codes (10 single-use codes)
 
-### 10.3.2 MFA Requirements
+### 12.3.2 MFA Requirements
 - Optional for all users
 - Required for: Super Admins, Company Owners
 - Prompted after suspicious activity
 
-## 10.4 Session Security
+## 11.4 Session Security
 
 | Parameter | Value |
 |-----------|-------|
@@ -2006,21 +2006,21 @@ Humans can always:
 | HttpOnly cookie | Yes |
 | SameSite | Strict |
 
-## 10.5 API Security
+## 11.5 API Security
 
-### 10.5.1 API Key Format
+### 12.5.1 API Key Format
 ```
 hi_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 hi_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### 10.5.2 API Key Storage
+### 12.5.2 API Key Storage
 - Keys hashed with SHA-256 before storage
 - Only prefix shown in UI
 - Full key shown once on creation
 - Keys can be rotated without downtime
 
-## 10.6 Data Encryption
+## 11.6 Data Encryption
 
 | Data Type | At Rest | In Transit |
 |-----------|---------|------------|
@@ -2030,13 +2030,13 @@ hi_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | Backups | AES-256 | TLS 1.3 |
 | Sensitive fields | Application-level encryption | TLS 1.3 |
 
-### 10.6.1 Sensitive Fields (Application-Level Encryption)
+### 12.6.1 Sensitive Fields (Application-Level Encryption)
 - API secrets
 - OAuth tokens
 - Payment card tokens
 - MFA secrets
 
-## 10.7 Security Headers
+## 11.7 Security Headers
 
 ```
 Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
@@ -2048,9 +2048,9 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com https://api.anthropic.com https://*.supabase.co; frame-src https://js.stripe.com;
 ```
 
-## 10.8 Input Validation
+## 11.8 Input Validation
 
-### 10.8.1 Validation Rules
+### 12.8.1 Validation Rules
 - All inputs validated with Zod schemas
 - Maximum input lengths enforced
 - File type validation (magic bytes, not just extension)
@@ -2058,7 +2058,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' h
 - XSS prevention (output encoding, CSP)
 - CSRF protection (SameSite cookies + tokens)
 
-### 10.8.2 File Upload Validation
+### 12.8.2 File Upload Validation
 ```typescript
 const ALLOWED_CV_TYPES = {
   'application/pdf': ['.pdf'],
@@ -2069,7 +2069,7 @@ const ALLOWED_CV_TYPES = {
 const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 ```
 
-## 10.9 DDoS Protection
+## 11.9 DDoS Protection
 
 | Layer | Protection |
 |-------|------------|
@@ -2078,9 +2078,9 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 | API | Per-endpoint limits |
 | AI | Request queuing |
 
-## 10.10 Security Monitoring
+## 11.10 Security Monitoring
 
-### 10.10.1 Monitored Events
+### 12.10.1 Monitored Events
 - Failed login attempts
 - Password changes
 - MFA changes
@@ -2089,7 +2089,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 - Data exports
 - Admin actions
 
-### 10.10.2 Alert Thresholds
+### 12.10.2 Alert Thresholds
 | Event | Threshold | Action |
 |-------|-----------|--------|
 | Failed logins (same IP) | 10 in 5 min | Block IP, alert |
@@ -2098,7 +2098,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 | Bulk data export | Any | Log + notify admin |
 | API key usage spike | 5x normal | Alert |
 
-## 10.11 Penetration Testing
+## 11.11 Penetration Testing
 
 | Type | Frequency | Provider |
 |------|-----------|----------|
@@ -2112,66 +2112,59 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 
 ## 11.1 Payment Providers
 
-### 11.1.1 Yoco (Primary - South Africa)
+### 12.1.1 Yoco (Primary - South Africa)
 - Card payments (Visa, Mastercard)
 - QR code payments
 - Instant EFT
 - Settlement: T+2
 
-### 11.1.2 Stripe (International)
+### 12.1.2 Stripe (International)
 - Card payments (all major)
 - Bank transfers
 - Settlement: T+2
 
-### 11.1.3 PayFast (Backup - SA)
+### 12.1.3 PayFast (Backup - SA)
 - EFT payments
 - Instant EFT
 - Settlement: T+1
 
 ## 11.2 Pricing Structure
 
-> **PRICING PHILOSOPHY:** HireInbox is an AI Hiring Utility. We charge per role, NOT per CV.
-> Employers cannot control CV volume, so per-role pricing is fair and predictable.
+### 12.2.1 B2B Pricing (Employers)
 
-### 11.2.1 B2B Per-Role Pricing (Phase 1)
+| Product | Price (ZAR) | Price (USD) |
+|---------|-------------|-------------|
+| Job Listing (30 days) | R2,500 | $140 |
+| Job Extension (30 days) | R1,500 | $85 |
+| Premium Listing (featured) | R4,500 | $250 |
+| ID Verification | R200 | $12 |
+| Criminal Check | R300 | $17 |
+| Reference Check | R400 | $23 |
+| AI Interview Add-on | R500 | $28 |
+| Bulk CV Screening (100) | R1,000 | $55 |
 
-| Product | Price (ZAR) | What's Included |
-|---------|-------------|-----------------|
-| AI CV Screening | R1,750/role | Unlimited CVs, AI ranking, shortlist, ack emails |
-| AI Interview Add-on | R1,250/role | Avatar screening interview, transcript, psychometric |
-| Verification Bundle | R800/role | ID check, criminal check, reference verification |
-| **Full Package** | R3,800/role | All of the above |
+### 12.2.2 B2B Subscriptions
 
-### 11.2.2 A-la-carte Verification (Optional)
+| Plan | Monthly (ZAR) | Annual (ZAR) | Features |
+|------|---------------|--------------|----------|
+| Starter | R299 | R2,990 | 50 CVs/mo, 2 roles |
+| Professional | R799 | R7,990 | 200 CVs/mo, 10 roles |
+| Business | R1,999 | R19,990 | 500 CVs/mo, unlimited roles |
+| Enterprise | Custom | Custom | Custom limits, SLA |
 
-| Product | Price (ZAR) |
-|---------|-------------|
-| ID Verification | R50/candidate |
-| Credit Check | R100/candidate |
-| Criminal Check | R150/candidate |
-
-### 11.2.3 B2B Subscriptions (Phase 3)
-
-| Plan | Monthly (ZAR) | Features |
-|------|---------------|----------|
-| Starter | R5,000 | 3 active roles + all add-ons |
-| Growth | R10,000 | 10 active roles + priority support |
-| Enterprise | R15,000+ | Unlimited roles + dedicated manager + API |
-
-### 11.2.3 B2C Pricing (Job Seekers)
+### 12.2.3 B2C Pricing (Job Seekers)
 
 | Product | Price (ZAR) | Description |
 |---------|-------------|-------------|
-| CV Scan | FREE (1x) | AI-powered CV analysis |
-| CV Rewrite | FREE (1x) | AI rewrites your CV professionally |
-| Video Analysis | R99-R199 | Interview presence coaching |
-| AI Avatar Coaching | R149-R299 | Practice interviews with AI |
-| Position-Specific Prep | R199 | Tailored prep for specific roles |
-| Video Pitch Package | R149 | Create video pitch for applications |
+| CV Analysis | Free (5/mo) | Basic analysis |
+| Additional Analysis | R49 | Per analysis |
+| CV Rewrite | R99 | AI-generated improved CV |
+| Video Analysis | R79 | Interview coaching |
+| Premium Bundle | R149 | Rewrite + Video + 3 analyses |
 
 ## 11.3 Payment Flow
 
-### 11.3.1 One-Time Payment
+### 12.3.1 One-Time Payment
 ```
 1. User selects product
 2. Create payment intent (server)
@@ -2183,7 +2176,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 8. Send receipt email
 ```
 
-### 11.3.2 Subscription Flow
+### 12.3.2 Subscription Flow
 ```
 1. User selects plan
 2. Create subscription (server)
@@ -2194,7 +2187,7 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 7. Schedule renewal
 ```
 
-### 11.3.3 Invoice Flow (B2B)
+### 12.3.3 Invoice Flow (B2B)
 ```
 1. Admin creates invoice
 2. Email sent to company
@@ -2217,13 +2210,13 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 
 ## 11.5 Tax Handling
 
-### 11.5.1 South Africa (VAT)
+### 12.5.1 South Africa (VAT)
 - VAT Rate: 15%
 - VAT Number: Required for invoices
 - B2B: VAT inclusive pricing
 - B2C: VAT inclusive pricing
 
-### 11.5.2 International
+### 12.5.2 International
 - No VAT charged
 - Customer responsible for local taxes
 
@@ -2238,14 +2231,14 @@ const MAX_CV_SIZE = 10 * 1024 * 1024; // 10MB
 
 ## 11.7 Failed Payment Handling
 
-### 11.7.1 One-Time Payments
+### 12.7.1 One-Time Payments
 ```
 Attempt 1: Immediate
 → Failure: Show error, suggest retry
 → Log failure reason
 ```
 
-### 11.7.2 Subscriptions
+### 12.7.2 Subscriptions
 ```
 Attempt 1: Due date
 Attempt 2: Due + 3 days (email warning)
@@ -2258,7 +2251,7 @@ Attempt 4: Due + 14 days (email warning)
 
 ---
 
-# 12. FILE HANDLING
+# 11. FILE HANDLING
 
 ## 12.1 Supported File Types
 
@@ -2365,7 +2358,7 @@ Infected files are:
 
 ---
 
-# 13. NOTIFICATIONS & MESSAGING
+# 12. NOTIFICATIONS & MESSAGING
 
 ## 13.1 Notification Types
 
@@ -2386,7 +2379,7 @@ Infected files are:
 
 ## 13.2 Channel Configuration
 
-### 13.2.1 Email (SendGrid)
+### 14.2.1 Email (SendGrid)
 ```typescript
 {
   provider: 'sendgrid',
@@ -2400,7 +2393,7 @@ Infected files are:
 }
 ```
 
-### 13.2.2 WhatsApp (360Dialog)
+### 14.2.2 WhatsApp (360Dialog)
 ```typescript
 {
   provider: '360dialog',
@@ -2414,7 +2407,7 @@ Infected files are:
 }
 ```
 
-### 13.2.3 SMS (Twilio)
+### 14.2.3 SMS (Twilio)
 ```typescript
 {
   provider: 'twilio',
@@ -2453,7 +2446,7 @@ All notifications logged with:
 
 ---
 
-# 14. BACKGROUND JOBS & QUEUES
+# 13. BACKGROUND JOBS & QUEUES
 
 ## 14.1 Job Types
 
@@ -2472,7 +2465,7 @@ All notifications logged with:
 
 ## 14.2 Implementation
 
-### 14.2.1 Vercel Cron Jobs (MVP)
+### 15.2.1 Vercel Cron Jobs (MVP)
 ```typescript
 // vercel.json
 {
@@ -2497,7 +2490,7 @@ All notifications logged with:
 }
 ```
 
-### 14.2.2 Future: BullMQ
+### 15.2.2 Future: BullMQ
 For scale, migrate to proper queue:
 - Redis-backed
 - Retry with backoff
@@ -2542,11 +2535,11 @@ const RETRY_CONFIG = {
 
 ---
 
-# 15. SEARCH & FILTERING
+# 14. SEARCH & FILTERING
 
 ## 15.1 Candidate Search
 
-### 15.1.1 Full-Text Search
+### 16.1.1 Full-Text Search
 ```sql
 SELECT * FROM candidates
 WHERE
@@ -2561,7 +2554,7 @@ ORDER BY
   score DESC;
 ```
 
-### 15.1.2 Filter Options
+### 16.1.2 Filter Options
 
 | Filter | Type | Options |
 |--------|------|---------|
@@ -2575,7 +2568,7 @@ ORDER BY
 | Location | Text | Free text |
 | Skills | Multi-select | From CV analysis |
 
-### 15.1.3 Sort Options
+### 16.1.3 Sort Options
 - Score (highest first)
 - Date applied (newest first)
 - Name (alphabetical)
@@ -2594,7 +2587,7 @@ ORDER BY
 
 ## 15.3 Talent Pool Search (Future)
 
-### 15.3.1 Semantic Search with pgvector
+### 16.3.1 Semantic Search with pgvector
 ```sql
 -- Generate embedding for search query
 -- Search by vector similarity
@@ -2611,11 +2604,11 @@ LIMIT 20;
 
 ---
 
-# 16. ANALYTICS & REPORTING
+# 15. ANALYTICS & REPORTING
 
 ## 16.1 Business Metrics
 
-### 16.1.1 Platform Metrics (Admin)
+### 17.1.1 Platform Metrics (Admin)
 - Total users (by type)
 - New signups (daily, weekly, monthly)
 - Active users (DAU, WAU, MAU)
@@ -2624,7 +2617,7 @@ LIMIT 20;
 - Churn rate
 - Conversion rate
 
-### 16.1.2 Company Metrics (B2B)
+### 17.1.2 Company Metrics (B2B)
 - CVs screened
 - Shortlist rate
 - Time to hire
@@ -2632,7 +2625,7 @@ LIMIT 20;
 - Pipeline velocity
 - Source effectiveness
 
-### 16.1.3 Candidate Metrics (B2C)
+### 17.1.3 Candidate Metrics (B2C)
 - Analyses completed
 - Score improvement
 - Video analyses
@@ -2640,13 +2633,13 @@ LIMIT 20;
 
 ## 16.2 Dashboards
 
-### 16.2.1 Employer Dashboard
+### 17.2.1 Employer Dashboard
 - Today's stats (new CVs, shortlisted, interviews)
 - Weekly trend chart
 - Role performance
 - Recent activity
 
-### 16.2.2 Admin Dashboard
+### 17.2.2 Admin Dashboard
 - Platform overview
 - Revenue chart
 - User growth
@@ -2684,7 +2677,7 @@ LIMIT 20;
 
 ---
 
-# 17. THIRD-PARTY INTEGRATIONS
+# 16. THIRD-PARTY INTEGRATIONS
 
 ## 17.1 Current Integrations
 
@@ -2714,7 +2707,7 @@ LIMIT 20;
 
 ## 17.3 Webhook System
 
-### 17.3.1 Outgoing Webhooks
+### 18.3.1 Outgoing Webhooks
 
 Events companies can subscribe to:
 ```
@@ -2745,13 +2738,13 @@ Webhook payload:
 }
 ```
 
-### 17.3.2 Webhook Security
+### 18.3.2 Webhook Security
 - HMAC-SHA256 signature
 - Timestamp validation (< 5 minutes)
 - Retry with exponential backoff
 - Dead letter queue
 
-### 17.3.3 Incoming Webhooks
+### 18.3.3 Incoming Webhooks
 
 | Source | Events |
 |--------|--------|
@@ -2772,21 +2765,21 @@ For companies integrating with HireInbox:
 
 ---
 
-# 18. MULTI-TENANCY
+# 17. MULTI-TENANCY
 
 ## 18.1 Tenant Isolation
 
-### 18.1.1 Database Level
+### 19.1.1 Database Level
 - All tables include `company_id`
 - Row-Level Security (RLS) enforced
 - No cross-tenant queries possible
 
-### 18.1.2 Application Level
+### 19.1.2 Application Level
 - Company context loaded on auth
 - All queries scoped to company
 - Middleware validates tenant access
 
-### 18.1.3 Storage Level
+### 19.1.3 Storage Level
 - Files organized by company_id
 - Access policies per company
 - No cross-company file access
@@ -2840,7 +2833,7 @@ async function checkQuota(companyId: string, resource: string): Promise<boolean>
 
 ---
 
-# 19. INTERNATIONALIZATION & LOCALIZATION
+# 18. INTERNATIONALIZATION & LOCALIZATION
 
 ## 19.1 Supported Languages
 
@@ -2863,7 +2856,7 @@ async function checkQuota(companyId: string, resource: string): Promise<boolean>
 
 ## 19.3 Content Translation
 
-### 19.3.1 UI Strings
+### 20.3.1 UI Strings
 ```typescript
 // lib/i18n/en-ZA.ts
 export const messages = {
@@ -2880,11 +2873,11 @@ export const messages = {
 };
 ```
 
-### 19.3.2 Email Templates
+### 20.3.2 Email Templates
 - Separate templates per language
 - Fallback to English
 
-### 19.3.3 AI Responses
+### 20.3.3 AI Responses
 - English only (training data)
 - Clear, professional language
 - SA-specific terminology
@@ -2900,7 +2893,7 @@ export const messages = {
 
 ---
 
-# 20. ACCESSIBILITY
+# 19. ACCESSIBILITY
 
 ## 20.1 Standards
 
@@ -2911,7 +2904,7 @@ export const messages = {
 
 ## 20.2 Implementation
 
-### 20.2.1 Semantic HTML
+### 21.2.1 Semantic HTML
 ```html
 <main role="main">
   <nav aria-label="Main navigation">...</nav>
@@ -2922,21 +2915,21 @@ export const messages = {
 </main>
 ```
 
-### 20.2.2 ARIA Labels
+### 21.2.2 ARIA Labels
 ```html
 <button aria-label="Close modal" aria-pressed="false">
   <span aria-hidden="true">&times;</span>
 </button>
 ```
 
-### 20.2.3 Keyboard Navigation
+### 21.2.3 Keyboard Navigation
 - All interactive elements focusable
 - Logical tab order
 - Focus indicators visible
 - Escape to close modals
 - Enter to submit forms
 
-### 20.2.4 Color Contrast
+### 21.2.4 Color Contrast
 - Minimum 4.5:1 for normal text
 - Minimum 3:1 for large text
 - Don't rely on color alone
@@ -2961,7 +2954,7 @@ Published at `/accessibility` with:
 
 ---
 
-# 21. NON-FUNCTIONAL REQUIREMENTS
+# 20. NON-FUNCTIONAL REQUIREMENTS
 
 ## 21.1 Performance
 
@@ -3013,7 +3006,7 @@ Published at `/accessibility` with:
 
 ---
 
-# 22. TESTING STRATEGY
+# 21. TESTING STRATEGY
 
 ## 22.1 Testing Pyramid
 
@@ -3091,7 +3084,7 @@ Published at `/accessibility` with:
 
 ---
 
-# 23. DEPLOYMENT & DEVOPS
+# 22. DEPLOYMENT & DEVOPS
 
 ## 23.1 Environments
 
@@ -3193,11 +3186,11 @@ Post-deployment:
 
 ---
 
-# 24. MONITORING & OBSERVABILITY
+# 23. MONITORING & OBSERVABILITY
 
 ## 24.1 Metrics
 
-### 24.1.1 Business Metrics
+### 25.1.1 Business Metrics
 - Daily Active Users (DAU)
 - CVs uploaded
 - CVs analyzed
@@ -3205,7 +3198,7 @@ Post-deployment:
 - Revenue (daily, monthly)
 - Churn rate
 
-### 24.1.2 Technical Metrics
+### 25.1.2 Technical Metrics
 - Request rate
 - Error rate
 - Response time (p50, p95, p99)
@@ -3217,13 +3210,13 @@ Post-deployment:
 
 ## 24.2 Logging
 
-### 24.2.1 Log Levels
+### 25.2.1 Log Levels
 - ERROR: System errors, failures
 - WARN: Potential issues, deprecations
 - INFO: Important events, milestones
 - DEBUG: Detailed debugging (dev only)
 
-### 24.2.2 Log Format
+### 25.2.2 Log Format
 ```json
 {
   "timestamp": "2026-01-15T10:00:00.000Z",
@@ -3241,7 +3234,7 @@ Post-deployment:
 }
 ```
 
-### 24.2.3 Structured Logging
+### 25.2.3 Structured Logging
 ```typescript
 logger.info('CV analysis completed', {
   candidateId: candidate.id,
@@ -3274,14 +3267,14 @@ logger.info('CV analysis completed', {
 
 ## 24.5 Dashboards
 
-### 24.5.1 Operations Dashboard
+### 25.5.1 Operations Dashboard
 - System health
 - Error rates
 - Response times
 - Active users
 - Queue depths
 
-### 24.5.2 Business Dashboard
+### 25.5.2 Business Dashboard
 - Revenue
 - Signups
 - Conversions
@@ -3289,7 +3282,7 @@ logger.info('CV analysis completed', {
 
 ---
 
-# 25. ERROR HANDLING
+# 24. ERROR HANDLING
 
 ## 25.1 Error Categories
 
@@ -3368,7 +3361,7 @@ const circuitBreaker = {
 
 ---
 
-# 26. DISASTER RECOVERY & BUSINESS CONTINUITY
+# 25. DISASTER RECOVERY & BUSINESS CONTINUITY
 
 ## 26.1 Backup Strategy
 
@@ -3382,7 +3375,7 @@ const circuitBreaker = {
 
 ## 26.2 Recovery Procedures
 
-### 26.2.1 Database Recovery
+### 27.2.1 Database Recovery
 ```
 1. Identify point of failure
 2. Stop writes to affected tables
@@ -3392,7 +3385,7 @@ const circuitBreaker = {
 6. Post-mortem
 ```
 
-### 26.2.2 Application Recovery
+### 27.2.2 Application Recovery
 ```
 1. Identify failing deployment
 2. Rollback to previous version (Vercel)
@@ -3401,7 +3394,7 @@ const circuitBreaker = {
 5. Fix and redeploy
 ```
 
-### 26.2.3 Complete Outage Recovery
+### 27.2.3 Complete Outage Recovery
 ```
 1. Activate incident response
 2. Communicate to users (status page)
@@ -3423,13 +3416,13 @@ const circuitBreaker = {
 
 ## 26.4 Business Continuity
 
-### 26.4.1 Critical Functions
+### 27.4.1 Critical Functions
 1. CV screening (B2B)
 2. Payment processing
 3. User authentication
 4. Data access
 
-### 26.4.2 Continuity Measures
+### 27.4.2 Continuity Measures
 - Multi-region database (Supabase)
 - CDN for static assets
 - Cached AI responses
@@ -3437,7 +3430,7 @@ const circuitBreaker = {
 
 ## 26.5 Incident Response
 
-### 26.5.1 Severity Levels
+### 27.5.1 Severity Levels
 
 | Level | Description | Response Time | Escalation |
 |-------|-------------|---------------|------------|
@@ -3446,7 +3439,7 @@ const circuitBreaker = {
 | P3 | Minor feature affected | 4 hours | 2 hours |
 | P4 | Cosmetic/low impact | 24 hours | 8 hours |
 
-### 26.5.2 Communication
+### 27.5.2 Communication
 - Status page: status.hireinbox.co.za
 - Email to affected users
 - Twitter updates
@@ -3454,16 +3447,16 @@ const circuitBreaker = {
 
 ---
 
-# 27. DATA MIGRATION & VERSIONING
+# 26. DATA MIGRATION & VERSIONING
 
 ## 27.1 Database Migrations
 
-### 27.1.1 Migration Tools
+### 29.1.1 Migration Tools
 - Supabase CLI
 - Version-controlled migrations
 - Rollback support
 
-### 27.1.2 Migration Process
+### 29.1.2 Migration Process
 ```bash
 # Create migration
 supabase migration new add_feature_x
@@ -3478,7 +3471,7 @@ supabase db reset
 supabase db push
 ```
 
-### 27.1.3 Migration Best Practices
+### 29.1.3 Migration Best Practices
 - Always include rollback
 - Test on staging first
 - Schedule during low traffic
@@ -3487,13 +3480,13 @@ supabase db push
 
 ## 27.2 API Versioning
 
-### 27.2.1 Strategy
+### 29.2.1 Strategy
 - Version in URL path: `/api/v1/`, `/api/v2/`
 - Support current and previous version (N-1)
 - 6-month deprecation notice
 - Sunset dates clearly communicated
 
-### 27.2.2 Version Lifecycle
+### 29.2.2 Version Lifecycle
 ```
 v1 Released → v2 Released → v1 Deprecated → v1 Sunset
     |             |              |              |
@@ -3527,11 +3520,11 @@ const FEATURE_FLAGS = {
 
 ---
 
-# 28. COMPLIANCE & LEGAL
+# 27. COMPLIANCE & LEGAL
 
-## 28.1 POPIA Compliance (South Africa)
+## 29.1 POPIA Compliance (South Africa)
 
-### 28.1.1 Requirements
+### 29.1.1 Requirements
 
 | Requirement | Implementation |
 |-------------|----------------|
@@ -3544,7 +3537,7 @@ const FEATURE_FLAGS = {
 | Data Subject Participation | Export, delete features |
 | Accountability | DPO appointed, audits |
 
-### 28.1.2 Consent Management
+### 29.1.2 Consent Management
 ```typescript
 interface Consent {
   type: 'terms' | 'privacy' | 'marketing' | 'talent_pool';
@@ -3555,14 +3548,14 @@ interface Consent {
 }
 ```
 
-### 28.1.3 Data Subject Rights
+### 29.1.3 Data Subject Rights
 - Right to access: Export all personal data
 - Right to correction: Edit profile
 - Right to deletion: Delete account
 - Right to object: Opt-out of processing
 - Right to portability: Download in standard format
 
-### 28.1.4 Data Breach Response
+### 29.1.4 Data Breach Response
 ```
 1. Detect breach (automated monitoring)
 2. Contain breach (< 1 hour)
@@ -3572,7 +3565,7 @@ interface Consent {
 6. Document and learn
 ```
 
-## 28.2 Data Retention
+## 29.2 Data Retention
 
 | Data Type | Retention | Legal Basis |
 |-----------|-----------|-------------|
@@ -3584,7 +3577,7 @@ interface Consent {
 | Backups | 90 days | Business continuity |
 | Marketing preferences | Until withdrawn | Consent |
 
-## 28.3 Data Processing Agreements
+## 29.3 Data Processing Agreements
 
 | Processor | Data Processed | DPA Status |
 |-----------|----------------|------------|
@@ -3594,20 +3587,20 @@ interface Consent {
 | SendGrid | Email addresses | Signed |
 | Yoco | Payment data | Signed |
 
-## 28.4 International Considerations
+## 29.4 International Considerations
 
-### 28.4.1 GDPR (if EU expansion)
+### 29.4.1 GDPR (if EU expansion)
 - Additional consent requirements
 - DPO appointment
 - EU representative
 - 72-hour breach notification
 
-### 28.4.2 Data Localization
+### 29.4.2 Data Localization
 - Primary data in EU (Supabase)
 - AI processing via API (data not stored)
 - Backups in same region
 
-## 28.5 Employment Law Considerations
+## 29.5 Employment Law Considerations
 
 - No automated decision-making only (human review required)
 - No discriminatory criteria in AI
@@ -3615,7 +3608,7 @@ interface Consent {
 - Audit trail for all decisions
 - Equal opportunity compliance
 
-## 28.6 Terms of Service
+## 29.6 Terms of Service
 
 Key provisions:
 - Acceptable use policy
@@ -3624,7 +3617,7 @@ Key provisions:
 - Dispute resolution (SA jurisdiction)
 - Termination rights
 
-## 28.7 Privacy Policy
+## 29.7 Privacy Policy
 
 Required disclosures:
 - Data collected

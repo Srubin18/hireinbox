@@ -804,19 +804,13 @@ Free CV Scan --> Free CV Redo --> Upsell Video Analysis --> Upsell AI Coaching
 | Role | Monthly Salary | Notes |
 |------|----------------|-------|
 | Marketing Manager | R45,000 | Mid-senior, growth-focused |
-| Full-Stack Developer | R82,000 | Senior, Cape Town market rate |
+| Full-Stack Developer | R80,000 | Senior, Cape Town market rate |
 | Success Manager | R38,000 | Mid-level, customer-focused |
-| **Total Team Salaries** | **R165,000/month** | Excluding founders |
+| **Total Team Salaries** | **R163,000/month** | |
 
 *Note: Salaries are cost-to-company. All other expenses shown include VAT (15%) where applicable.*
 
-**Founder Salaries (Optional - Month 6+):**
-| Role | Monthly Salary | Notes |
-|------|----------------|-------|
-| CEO (Simon Rubin) | R40,000 | Below market, starts Month 6 |
-| Co-CEO (Shay Sinbeti) | R40,000 | Below market, starts Month 6 |
-
-*Founders defer salary during build and early launch phases*
+*Founders (Simon & Shay) take no salary during this 18-month period.*
 
 ---
 
@@ -845,22 +839,20 @@ Free CV Scan --> Free CV Redo --> Upsell Video Analysis --> Upsell AI Coaching
 
 | Category | Monthly Cost | Notes |
 |----------|--------------|-------|
-| **Team Salaries** | R165,000 | Marketing, Dev (R82k), Success |
-| **Founder Salaries** | R80,000 | Starts Month 6 |
-| **Marketing** | R150,000 | Aggressive growth spend |
+| **Team Salaries** | R163,000 | Marketing (R45k), Dev (R80k), Success (R38k) |
+| **Marketing** | R100,000 | Growth spend |
 | **Technology** | | |
-| - Cloud Hosting (Vercel/AWS) | R11,500 | Incl VAT |
-| - AI API (OpenAI/Anthropic) | R23,000 | Incl VAT |
-| - Supabase | R3,450 | Incl VAT |
-| - Tools & Services | R5,750 | Incl VAT |
+| - Cloud Hosting (Vercel/AWS) | R10,000 | |
+| - AI API (OpenAI/Anthropic) | R20,000 | |
+| - Supabase | R3,000 | |
+| - Tools & Services | R5,000 | |
 | **Operations** | | |
-| - Office/Co-working | R17,250 | Cape Town, incl VAT |
-| - Insurance | R5,000 | No VAT on insurance |
-| - Accounting | R9,200 | Incl VAT |
-| - Legal | R5,750 | Incl VAT |
-| - Miscellaneous | R11,500 | Incl VAT |
-| **Total (Months 4-5)** | **R407,400** | Before founder salary |
-| **Total (Month 6+)** | **R487,400** | With founder salary |
+| - Office/Co-working | R15,000 | Cape Town |
+| - Insurance | R5,000 | |
+| - Accounting | R8,000 | |
+| - Legal | R5,000 | |
+| - Miscellaneous | R10,000 | |
+| **Total (Month 4+)** | **R344,000** | No founder salaries |
 
 ---
 
@@ -892,7 +884,7 @@ Free CV Scan --> Free CV Redo --> Upsell Video Analysis --> Upsell AI Coaching
 
 ### 5.6 18-Month Financial Projection
 
-*All expenses include VAT (15%) where applicable.*
+*Monthly burn: R344,000 (no founder salaries). See HIREINBOX_18_Month_Forecast.xlsx for detailed breakdown.*
 
 #### Monthly Summary
 
@@ -900,22 +892,22 @@ Free CV Scan --> Free CV Redo --> Upsell Video Analysis --> Upsell AI Coaching
 |-------|------|-------|----------|-------------|-------------|---------------|-----|------------|
 | 1 | Feb 26 | Build | R498,333 | R0 | R0 | R0 | -R498,333 | -R498,333 |
 | 2 | Mar 26 | Build | R435,083 | R0 | R0 | R0 | -R435,083 | -R933,416 |
-| 3 | Apr 26 | Build | R628,833 | R0 | R0 | R0 | -R628,833 | -R1,562,249 |
-| 4 | May 26 | Launch | R407,400 | R8,750 | R3,000 | R11,750 | -R395,650 | -R1,957,899 |
-| 5 | Jun 26 | Grow | R407,400 | R17,500 | R6,000 | R23,500 | -R383,900 | -R2,341,799 |
-| 6 | Jul 26 | Grow | R487,400 | R43,750 | R14,415 | R58,165 | -R429,235 | -R2,771,034 |
-| 7 | Aug 26 | Grow | R487,400 | R61,250 | R18,000 | R79,250 | -R408,150 | -R3,179,184 |
-| 8 | Sep 26 | Grow | R487,400 | R78,750 | R22,000 | R100,750 | -R386,650 | -R3,565,834 |
-| 9 | Oct 26 | Grow | R487,400 | R105,000 | R28,000 | R133,000 | -R354,400 | -R3,920,234 |
-| 10 | Nov 26 | Grow | R487,400 | R131,250 | R35,000 | R166,250 | -R321,150 | -R4,241,384 |
-| 11 | Dec 26 | Grow | R487,400 | R148,750 | R40,000 | R188,750 | -R298,650 | -R4,540,034 |
-| 12 | Jan 27 | Grow | R487,400 | R175,000 | R48,000 | R223,000 | -R264,400 | -R4,804,434 |
-| 13 | Feb 27 | Grow | R487,400 | R201,250 | R55,000 | R256,250 | -R231,150 | -R5,035,584 |
-| 14 | Mar 27 | Grow | R487,400 | R227,500 | R62,000 | R289,500 | -R197,900 | -R5,233,484 |
-| 15 | Apr 27 | Grow | R487,400 | R262,500 | R70,000 | R332,500 | -R154,900 | -R5,388,384 |
-| 16 | May 27 | Grow | R487,400 | R297,500 | R78,000 | R375,500 | -R111,900 | -R5,500,284 |
-| 17 | Jun 27 | Grow | R487,400 | R341,250 | R88,000 | R429,250 | -R58,150 | -R5,558,434 |
-| 18 | Jul 27 | Grow | R487,400 | R385,000 | R100,000 | R485,000 | -R2,400 | -R5,560,834 |
+| 3 | Apr 26 | Build | R626,833 | R0 | R0 | R0 | -R626,833 | -R1,560,249 |
+| 4 | May 26 | Launch | R344,000 | R8,750 | R3,000 | R11,750 | -R332,250 | -R1,892,499 |
+| 5 | Jun 26 | Grow | R344,000 | R17,500 | R6,000 | R23,500 | -R320,500 | -R2,212,999 |
+| 6 | Jul 26 | Grow | R344,000 | R43,750 | R14,415 | R58,165 | -R285,835 | -R2,498,834 |
+| 7 | Aug 26 | Grow | R344,000 | R61,250 | R18,000 | R79,250 | -R264,750 | -R2,763,584 |
+| 8 | Sep 26 | Grow | R344,000 | R78,750 | R22,000 | R100,750 | -R243,250 | -R3,006,834 |
+| 9 | Oct 26 | Grow | R344,000 | R105,000 | R28,000 | R133,000 | -R211,000 | -R3,217,834 |
+| 10 | Nov 26 | Grow | R344,000 | R131,250 | R35,000 | R166,250 | -R177,750 | -R3,395,584 |
+| 11 | Dec 26 | Grow | R344,000 | R148,750 | R40,000 | R188,750 | -R155,250 | -R3,550,834 |
+| 12 | Jan 27 | Grow | R344,000 | R175,000 | R48,000 | R223,000 | -R121,000 | -R3,671,834 |
+| 13 | Feb 27 | Grow | R344,000 | R201,250 | R55,000 | R256,250 | -R87,750 | -R3,759,584 |
+| 14 | Mar 27 | Grow | R344,000 | R227,500 | R62,000 | R289,500 | -R54,500 | -R3,814,084 |
+| 15 | Apr 27 | Grow | R344,000 | R262,500 | R70,000 | R332,500 | -R11,500 | -R3,825,584 |
+| 16 | May 27 | Profit | R344,000 | R297,500 | R78,000 | R375,500 | +R31,500 | -R3,794,084 |
+| 17 | Jun 27 | Profit | R344,000 | R341,250 | R88,000 | R429,250 | +R85,250 | -R3,708,834 |
+| 18 | Jul 27 | Profit | R344,000 | R385,000 | R100,000 | R485,000 | +R141,000 | -R3,567,834 |
 
 ---
 
