@@ -334,16 +334,18 @@ function ScanResultsContent() {
         }}>
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', cursor: 'pointer' }}>
             <input
+              id="talent-pool-opt-in"
               type="checkbox"
               checked={talentPoolOptIn}
               onChange={(e) => setTalentPoolOptIn(e.target.checked)}
+              aria-describedby="talent-pool-description"
               style={{ width: '20px', height: '20px', marginTop: '2px', accentColor: '#7c3aed' }}
             />
             <div>
               <div style={{ fontWeight: 600, color: '#5b21b6', marginBottom: '4px' }}>
-                Join the Talent Pool
+                <label htmlFor="talent-pool-opt-in">Join the Talent Pool</label>
               </div>
-              <div style={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.5 }}>
+              <div id="talent-pool-description" style={{ fontSize: '14px', color: '#6b7280', lineHeight: 1.5 }}>
                 Allow vetted employers to discover your profile. Your contact details remain private until you accept a connection.
               </div>
             </div>
@@ -384,6 +386,7 @@ function ScanResultsContent() {
 
       {/* Support button */}
       <button
+        aria-label="Get support"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -402,7 +405,7 @@ function ScanResultsContent() {
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         }}
       >
-        <span>💬</span> Support
+        <span aria-hidden="true">💬</span> Support
       </button>
     </div>
   );

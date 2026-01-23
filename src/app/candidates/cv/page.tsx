@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 // ============================================
@@ -37,6 +37,16 @@ function CVOptionsContent() {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const analysisTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (analysisTimeoutRef.current) {
+        clearTimeout(analysisTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -48,17 +58,7 @@ function CVOptionsContent() {
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  }, []);
-
-  const handleFile = (file: File) => {
+  const handleFile = useCallback((file: File) => {
     const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!validTypes.includes(file.type)) {
       alert('Please upload a PDF or Word document');
@@ -69,7 +69,17 @@ function CVOptionsContent() {
       return;
     }
     setUploadedFile(file);
-  };
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  }, [handleFile]);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -81,9 +91,14 @@ function CVOptionsContent() {
     if (!uploadedFile) return;
     setUploading(true);
 
+    // Clear any existing timeout
+    if (analysisTimeoutRef.current) {
+      clearTimeout(analysisTimeoutRef.current);
+    }
+
     // Simulate upload and analysis
     // In production: call /api/analyze-cv
-    setTimeout(() => {
+    analysisTimeoutRef.current = setTimeout(() => {
       router.push(`/candidates/scan?stage=${stage}`);
     }, 1500);
   };
@@ -298,6 +313,7 @@ function CVOptionsContent() {
 
       {/* Support button */}
       <button
+        aria-label="Get support"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -316,7 +332,7 @@ function CVOptionsContent() {
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         }}
       >
-        <span>💬</span> Support
+        <span aria-hidden="true">💬</span> Support
       </button>
 
       <style>{`

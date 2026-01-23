@@ -198,6 +198,16 @@ function UpsellsContent() {
             <div
               key={service.id}
               onClick={() => toggleService(service.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleService(service.id);
+                }
+              }}
+              role="checkbox"
+              aria-checked={selectedServices.has(service.id)}
+              aria-label={`Select ${service.name} - R${service.price}`}
+              tabIndex={0}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: '16px',
@@ -205,7 +215,8 @@ function UpsellsContent() {
                 border: `2px solid ${selectedServices.has(service.id) ? '#4F46E5' : '#e2e8f0'}`,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                position: 'relative'
+                position: 'relative',
+                outline: 'none'
               }}
             >
               {service.popular && (
@@ -232,7 +243,10 @@ function UpsellsContent() {
                 <input
                   type="checkbox"
                   checked={selectedServices.has(service.id)}
-                  onChange={() => {}}
+                  onChange={() => toggleService(service.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-hidden="true"
+                  tabIndex={-1}
                   style={{ width: '20px', height: '20px', accentColor: '#4F46E5' }}
                 />
               </div>
@@ -346,6 +360,7 @@ function UpsellsContent() {
 
       {/* Support button */}
       <button
+        aria-label="Get support"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -365,7 +380,7 @@ function UpsellsContent() {
           zIndex: 50
         }}
       >
-        <span>💬</span> Support
+        <span aria-hidden="true">💬</span> Support
       </button>
     </div>
   );

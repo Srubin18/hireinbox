@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 // ============================================
@@ -68,6 +68,25 @@ export default function CandidateDashboard() {
   const [cvVersions] = useState<CVVersion[]>(sampleCVs);
   const [messages] = useState<Message[]>(sampleMessages);
   const [talentPoolStatus, setTalentPoolStatus] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      // In production: call /api/account/delete
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Clear session and redirect
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      setIsDeleting(false);
+    }
+  }, [router]);
+
+  const handleToggleTalentPool = useCallback((checked: boolean) => {
+    setTalentPoolStatus(checked);
+  }, []);
 
   const tabs: { id: Tab; label: string; icon: string }[] = [
     { id: 'cvs', label: 'My CVs', icon: '📄' },
@@ -338,24 +357,47 @@ export default function CandidateDashboard() {
               Allow employers to discover your profile
             </div>
           </div>
-          <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '28px' }}>
+          <label
+            style={{ position: 'relative', display: 'inline-block', width: '48px', height: '28px' }}
+            role="switch"
+            aria-checked={talentPoolStatus}
+            aria-label="Toggle Talent Pool visibility"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                handleToggleTalentPool(!talentPoolStatus);
+              }
+            }}
+          >
             <input
+              id="talent-pool-toggle"
               type="checkbox"
               checked={talentPoolStatus}
-              onChange={(e) => setTalentPoolStatus(e.target.checked)}
-              style={{ opacity: 0, width: 0, height: 0 }}
+              onChange={(e) => handleToggleTalentPool(e.target.checked)}
+              style={{
+                position: 'absolute',
+                opacity: 0,
+                width: '100%',
+                height: '100%',
+                margin: 0,
+                cursor: 'pointer'
+              }}
             />
-            <span style={{
-              position: 'absolute',
-              cursor: 'pointer',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: talentPoolStatus ? '#4F46E5' : '#cbd5e1',
-              borderRadius: '28px',
-              transition: '0.3s'
-            }}>
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                cursor: 'pointer',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: talentPoolStatus ? '#4F46E5' : '#cbd5e1',
+                borderRadius: '28px',
+                transition: '0.3s'
+              }}
+            >
               <span style={{
                 position: 'absolute',
                 content: '',
@@ -419,6 +461,7 @@ export default function CandidateDashboard() {
           Permanently delete your account and all data (POPIA compliant)
         </div>
         <button
+          onClick={() => setShowDeleteConfirm(true)}
           style={{
             padding: '10px 20px',
             backgroundColor: '#fee2e2',
@@ -529,8 +572,89 @@ export default function CandidateDashboard() {
         {activeTab === 'settings' && renderSettingsTab()}
       </main>
 
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            zIndex: 100
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) {
+              setShowDeleteConfirm(false);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              padding: '24px',
+              maxWidth: '400px',
+              width: '100%'
+            }}
+          >
+            <h3
+              id="delete-dialog-title"
+              style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}
+            >
+              Delete your account?
+            </h3>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '24px', lineHeight: 1.6 }}>
+              This will permanently delete your account and all your data, including CVs, videos, and messages. This action cannot be undone (POPIA compliant).
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: isDeleting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: isDeleting ? '#f87171' : '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: isDeleting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Support button */}
       <button
+        aria-label="Get support"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -549,7 +673,7 @@ export default function CandidateDashboard() {
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         }}
       >
-        <span>💬</span> Support
+        <span aria-hidden="true">💬</span> Support
       </button>
     </div>
   );
