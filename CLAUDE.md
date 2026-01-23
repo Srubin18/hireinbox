@@ -372,4 +372,56 @@ Feature Description → PRD → Atomic Tasks → Execute → Commit → Ship
 
 ---
 
-*Last updated: 16 January 2026*
+## GUARDRAILS & ETHICS
+
+> **Tone:** "Less noise. More hires."
+
+### Core Principles
+
+| Principle | Enforcement |
+|-----------|-------------|
+| Respectful language | No "rejected", use "not successful" |
+| AI is assistive only | Humans make final decisions |
+| No auto-outreach | Manual approval required |
+| POPIA compliant | Full audit trail, data rights |
+| Support everywhere | Support button on all screens |
+
+### Language Guidelines
+
+**Never use:** rejected, failed, unqualified, bad, poor
+
+**Use instead:** not successful, did not meet criteria, does not match requirements, area for improvement, needs development
+
+### AI Guidelines
+
+**Must do:**
+- Provide evidence for all recommendations
+- Show confidence levels
+- Allow human override
+- Explain reasoning clearly
+
+**Must not:**
+- Make final hiring decisions automatically
+- Send outreach without human approval
+- Scrape private social media
+
+### POPIA Configuration
+
+| Data Type | Retention |
+|-----------|-----------|
+| Candidate data | 365 days |
+| CV files | 365 days |
+| Audit logs | 730 days |
+| Deleted account data | 30 days grace |
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/guardrails.ts` | Core guardrails configuration |
+| `src/lib/candidate-emails.ts` | POPIA-compliant email templates |
+| `src/components/SupportButton.tsx` | Global support button component |
+
+---
+
+### Last updated: 23 January 2026
