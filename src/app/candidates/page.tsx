@@ -20,9 +20,8 @@ export default function CandidatesPage() {
   ];
 
   const handleStageSelect = (stageId: string) => {
-    // For now, route to upload page with stage parameter
-    // RALF AGENT 4 will build the full onboarding flow
-    router.push(`/upload?stage=${stageId}`);
+    // Route to CV options page with stage parameter
+    router.push(`/candidates/cv?stage=${stageId}`);
   };
 
   return (
