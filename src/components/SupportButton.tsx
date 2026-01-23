@@ -1,0 +1,196 @@
+'use client';
+
+import { useState } from 'react';
+import { BRAND, SUPPORT_CONFIG } from '@/lib/guardrails';
+
+// ============================================
+// HIREINBOX - GLOBAL SUPPORT BUTTON
+//
+// Must be visible on ALL screens per guardrails.
+// Provides quick access to help and support.
+// ============================================
+
+interface SupportButtonProps {
+  position?: 'bottom-right' | 'bottom-left';
+  variant?: 'dark' | 'light';
+}
+
+export function SupportButton({
+  position = 'bottom-right',
+  variant = 'dark'
+}: SupportButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const positionStyles = {
+    'bottom-right': { bottom: '24px', right: '24px' },
+    'bottom-left': { bottom: '24px', left: '24px' },
+  };
+
+  const variantStyles = {
+    dark: {
+      button: { backgroundColor: '#0f172a', color: '#ffffff' },
+      panel: { backgroundColor: '#ffffff', color: '#0f172a' },
+    },
+    light: {
+      button: { backgroundColor: '#ffffff', color: '#0f172a', border: '1px solid #e2e8f0' },
+      panel: { backgroundColor: '#ffffff', color: '#0f172a' },
+    },
+  };
+
+  return (
+    <>
+      {/* Support Panel */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            ...positionStyles[position],
+            marginBottom: '60px',
+            width: '320px',
+            backgroundColor: variantStyles[variant].panel.backgroundColor,
+            borderRadius: '16px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+            zIndex: 1000,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '20px',
+            backgroundColor: '#4F46E5',
+            color: '#ffffff',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
+                Need help?
+              </h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  padding: 0,
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: '14px', opacity: 0.9 }}>
+              We typically respond within {SUPPORT_CONFIG.channels.responseTime}
+            </p>
+          </div>
+
+          {/* Quick help topics */}
+          <div style={{ padding: '16px' }}>
+            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase' }}>
+              Quick Help
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {SUPPORT_CONFIG.helpTopics.map((topic, i) => (
+                <button
+                  key={i}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: '#f8fafc',
+                    border: 'none',
+                    borderRadius: '8px',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    color: '#475569',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#eff6ff';
+                    e.currentTarget.style.color = '#4F46E5';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                    e.currentTarget.style.color = '#475569';
+                  }}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Contact options */}
+          <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase' }}>
+              Contact Us
+            </div>
+            <a
+              href={`mailto:${SUPPORT_CONFIG.channels.email}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px',
+                backgroundColor: '#4F46E5',
+                color: '#ffffff',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: 600,
+              }}
+            >
+              <span>📧</span>
+              <span>Email Support</span>
+            </a>
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            padding: '12px 16px',
+            backgroundColor: '#f8fafc',
+            fontSize: '12px',
+            color: '#64748b',
+            textAlign: 'center',
+          }}>
+            {BRAND.name} — {BRAND.tagline}
+          </div>
+        </div>
+      )}
+
+      {/* Support Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          position: 'fixed',
+          ...positionStyles[position],
+          padding: '12px 20px',
+          ...variantStyles[variant].button,
+          border: 'none',
+          borderRadius: '24px',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 999,
+          transition: 'all 0.2s',
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        }}
+      >
+        <span>{isOpen ? '×' : '💬'}</span>
+        <span>{isOpen ? 'Close' : 'Support'}</span>
+      </button>
+    </>
+  );
+}
+
+export default SupportButton;
