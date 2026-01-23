@@ -424,4 +424,4 @@ Feature Description → PRD → Atomic Tasks → Execute → Commit → Ship
 
 ---
 
-*Last updated: 23 January 2026*
+### Last updated: 23 January 2026

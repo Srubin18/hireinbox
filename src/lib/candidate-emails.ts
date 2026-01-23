@@ -31,6 +31,18 @@ export interface CandidateEmailData {
   timeline?: string;
 }
 
+// HTML escape function to prevent injection in email templates
+function escapeHtml(value: string): string {
+  const htmlEntities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return value.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
+}
+
 // Common email footer
 const getEmailFooter = (includeUnsubscribe = false): string => `
 <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
@@ -47,7 +59,15 @@ const getEmailFooter = (includeUnsubscribe = false): string => `
 
 // Pass 0: CV Received Acknowledgement
 export function cvReceivedEmail(data: CandidateEmailData): CandidateEmailTemplate {
-  const subject = `Thank you for applying - ${data.roleTitle} at ${data.companyName}`;
+  // Escape user-supplied fields for HTML safety
+  const safe = {
+    candidateName: escapeHtml(data.candidateName),
+    roleTitle: escapeHtml(data.roleTitle),
+    companyName: escapeHtml(data.companyName),
+    timeline: escapeHtml(data.timeline || '5-7 working days'),
+  };
+
+  const subject = `Thank you for applying - ${safe.roleTitle} at ${safe.companyName}`;
 
   const html = `
 <!DOCTYPE html>
@@ -58,9 +78,9 @@ export function cvReceivedEmail(data: CandidateEmailData): CandidateEmailTemplat
     <h1 style="color: #4F46E5; font-size: 24px; margin: 0;">${BRAND.name}</h1>
   </div>
 
-  <p>Dear ${data.candidateName},</p>
+  <p>Dear ${safe.candidateName},</p>
 
-  <p>Thank you for applying for the <strong>${data.roleTitle}</strong> position at <strong>${data.companyName}</strong>.</p>
+  <p>Thank you for applying for the <strong>${safe.roleTitle}</strong> position at <strong>${safe.companyName}</strong>.</p>
 
   <p>We have received your application and it is currently being reviewed. Here's what happens next:</p>
 
@@ -68,14 +88,14 @@ export function cvReceivedEmail(data: CandidateEmailData): CandidateEmailTemplat
     <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 16px;">Next Steps</h3>
     <ol style="margin: 0; padding-left: 20px; color: #475569;">
       <li>Your CV is being reviewed against the role requirements</li>
-      <li>Shortlisted candidates will be contacted within ${data.timeline || '5-7 working days'}</li>
+      <li>Shortlisted candidates will be contacted within ${safe.timeline}</li>
       <li>You will receive an update regardless of the outcome</li>
     </ol>
   </div>
 
   <p>We appreciate your interest and the time you took to apply.</p>
 
-  <p>Best regards,<br>The ${data.companyName} Hiring Team</p>
+  <p>Best regards,<br>The ${safe.companyName} Hiring Team</p>
 
   ${getEmailFooter()}
 </body>
@@ -107,7 +127,15 @@ Questions? Contact us at ${BRAND.supportEmail}`;
 
 // Pass 2: Shortlisted
 export function shortlistedEmail(data: CandidateEmailData & { interviewDetails?: string }): CandidateEmailTemplate {
-  const subject = `Great news! You've been shortlisted - ${data.roleTitle}`;
+  // Escape user-supplied fields for HTML safety
+  const safe = {
+    candidateName: escapeHtml(data.candidateName),
+    roleTitle: escapeHtml(data.roleTitle),
+    companyName: escapeHtml(data.companyName),
+    nextSteps: escapeHtml(data.nextSteps || 'The hiring team will be in touch soon with next steps regarding the interview process.'),
+  };
+
+  const subject = `Great news! You've been shortlisted - ${safe.roleTitle}`;
 
   const html = `
 <!DOCTYPE html>
@@ -118,20 +146,20 @@ export function shortlistedEmail(data: CandidateEmailData & { interviewDetails?:
     <h1 style="color: #4F46E5; font-size: 24px; margin: 0;">${BRAND.name}</h1>
   </div>
 
-  <p>Dear ${data.candidateName},</p>
+  <p>Dear ${safe.candidateName},</p>
 
-  <p>We are pleased to inform you that you have been <strong>shortlisted</strong> for the <strong>${data.roleTitle}</strong> position at <strong>${data.companyName}</strong>.</p>
+  <p>We are pleased to inform you that you have been <strong>shortlisted</strong> for the <strong>${safe.roleTitle}</strong> position at <strong>${safe.companyName}</strong>.</p>
 
   <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 20px; margin: 24px 0;">
     <h3 style="margin: 0 0 12px; color: #166534; font-size: 16px;">✓ You're Moving Forward</h3>
     <p style="margin: 0; color: #166534;">
-      ${data.nextSteps || 'The hiring team will be in touch soon with next steps regarding the interview process.'}
+      ${safe.nextSteps}
     </p>
   </div>
 
   <p>Congratulations on making it to this stage. We look forward to speaking with you.</p>
 
-  <p>Best regards,<br>The ${data.companyName} Hiring Team</p>
+  <p>Best regards,<br>The ${safe.companyName} Hiring Team</p>
 
   ${getEmailFooter()}
 </body>
@@ -158,7 +186,14 @@ Questions? Contact us at ${BRAND.supportEmail}`;
 
 // Pass 6: Not Successful (respectful, no "rejected" language)
 export function notSuccessfulEmail(data: CandidateEmailData & { inviteTalentPool?: boolean }): CandidateEmailTemplate {
-  const subject = `Update on your application - ${data.roleTitle}`;
+  // Escape user-supplied fields for HTML safety
+  const safe = {
+    candidateName: escapeHtml(data.candidateName),
+    roleTitle: escapeHtml(data.roleTitle),
+    companyName: escapeHtml(data.companyName),
+  };
+
+  const subject = `Update on your application - ${safe.roleTitle}`;
 
   const html = `
 <!DOCTYPE html>
@@ -169,9 +204,9 @@ export function notSuccessfulEmail(data: CandidateEmailData & { inviteTalentPool
     <h1 style="color: #4F46E5; font-size: 24px; margin: 0;">${BRAND.name}</h1>
   </div>
 
-  <p>Dear ${data.candidateName},</p>
+  <p>Dear ${safe.candidateName},</p>
 
-  <p>Thank you for taking the time to apply for the <strong>${data.roleTitle}</strong> position at <strong>${data.companyName}</strong>.</p>
+  <p>Thank you for taking the time to apply for the <strong>${safe.roleTitle}</strong> position at <strong>${safe.companyName}</strong>.</p>
 
   <p>After careful consideration, we have decided not to progress with your application at this time. This was a competitive process with many qualified candidates, and the decision was not easy.</p>
 
@@ -187,7 +222,7 @@ export function notSuccessfulEmail(data: CandidateEmailData & { inviteTalentPool
 
   <p>We wish you the very best in your career journey.</p>
 
-  <p>Best regards,<br>The ${data.companyName} Hiring Team</p>
+  <p>Best regards,<br>The ${safe.companyName} Hiring Team</p>
 
   ${getEmailFooter()}
 </body>
@@ -218,7 +253,13 @@ Questions? Contact us at ${BRAND.supportEmail}`;
 
 // Pass 7: Talent Pool Invitation
 export function talentPoolInviteEmail(data: CandidateEmailData): CandidateEmailTemplate {
-  const subject = `Join our Talent Pool - ${data.companyName}`;
+  // Escape user-supplied fields for HTML safety
+  const safe = {
+    candidateName: escapeHtml(data.candidateName),
+    companyName: escapeHtml(data.companyName),
+  };
+
+  const subject = `Join our Talent Pool - ${safe.companyName}`;
 
   const html = `
 <!DOCTYPE html>
@@ -229,7 +270,7 @@ export function talentPoolInviteEmail(data: CandidateEmailData): CandidateEmailT
     <h1 style="color: #4F46E5; font-size: 24px; margin: 0;">${BRAND.name}</h1>
   </div>
 
-  <p>Dear ${data.candidateName},</p>
+  <p>Dear ${safe.candidateName},</p>
 
   <p>We'd like to invite you to join our <strong>Talent Pool</strong>.</p>
 

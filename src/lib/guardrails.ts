@@ -13,13 +13,16 @@
 // Tone: "Less noise. More hires."
 // ============================================
 
+// Site URL for absolute URLs in emails
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://hireinbox.co.za';
+
 // Brand tone configuration
 export const BRAND = {
   tagline: 'Less noise. More hires.',
   name: 'HireInbox',
   supportEmail: 'support@hireinbox.co.za',
-  privacyUrl: '/privacy',
-  termsUrl: '/terms',
+  privacyUrl: `${SITE_URL}/privacy`,
+  termsUrl: `${SITE_URL}/terms`,
 } as const;
 
 // Respectful language guidelines
@@ -203,13 +206,19 @@ export const SUPPORT_CONFIG = {
   ],
 } as const;
 
+// Escape regex metacharacters to prevent ReDoS attacks
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Content moderation for AI responses
 export function sanitizeAIResponse(text: string): string {
   let sanitized = text;
 
   // Replace prohibited terms with preferred alternatives
   for (const [prohibited, preferred] of Object.entries(LANGUAGE_GUIDELINES.preferred)) {
-    const regex = new RegExp(`\\b${prohibited}\\b`, 'gi');
+    const escapedTerm = escapeRegExp(prohibited);
+    const regex = new RegExp(`\\b${escapedTerm}\\b`, 'gi');
     sanitized = sanitized.replace(regex, preferred);
   }
 

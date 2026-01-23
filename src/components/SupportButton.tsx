@@ -42,6 +42,10 @@ export function SupportButton({
       {/* Support Panel */}
       {isOpen && (
         <div
+          id="support-panel"
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="support-panel-title"
           style={{
             position: 'fixed',
             ...positionStyles[position],
@@ -61,10 +65,12 @@ export function SupportButton({
             color: '#ffffff',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
+              <h3 id="support-panel-title" style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
                 Need help?
               </h3>
               <button
+                type="button"
+                aria-label="Close support panel"
                 onClick={() => setIsOpen(false)}
                 style={{
                   backgroundColor: 'transparent',
@@ -89,34 +95,23 @@ export function SupportButton({
             <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase' }}>
               Quick Help
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: 0, padding: 0, listStyle: 'none' }}>
               {SUPPORT_CONFIG.helpTopics.map((topic, i) => (
-                <button
+                <li
                   key={i}
                   style={{
                     padding: '12px',
                     backgroundColor: '#f8fafc',
-                    border: 'none',
                     borderRadius: '8px',
                     textAlign: 'left',
                     fontSize: '14px',
                     color: '#475569',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = '#eff6ff';
-                    e.currentTarget.style.color = '#4F46E5';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f8fafc';
-                    e.currentTarget.style.color = '#475569';
                   }}
                 >
                   {topic}
-                </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           {/* Contact options */}
@@ -159,6 +154,10 @@ export function SupportButton({
 
       {/* Support Button */}
       <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls="support-panel"
+        aria-label={isOpen ? 'Close support panel' : 'Open support panel'}
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'fixed',
@@ -186,7 +185,7 @@ export function SupportButton({
           e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
         }}
       >
-        <span>{isOpen ? '×' : '💬'}</span>
+        <span aria-hidden="true">{isOpen ? '×' : '💬'}</span>
         <span>{isOpen ? 'Close' : 'Support'}</span>
       </button>
     </>
