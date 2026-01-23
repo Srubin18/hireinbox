@@ -178,15 +178,22 @@ export default function TalentMappingPage() {
     e.preventDefault();
     if (!searchPrompt.trim()) return;
 
-    // Simulate AI generating clarifying questions
-    const questions: ClarifyingQuestion[] = [
-      { question: 'What seniority level are you targeting? (e.g., mid-level, senior, executive)' },
-      { question: 'Are there specific industries you want to focus on or exclude?' },
-      { question: 'Is relocation an option, or must candidates be based in the specified location?' }
-    ];
+    // MAGICAL EXPERIENCE: Go straight to processing
+    // The AI extracts everything it needs from the natural language prompt
+    // No redundant questions - the prompt is the source of truth
+    setStatus('processing');
 
-    setClarifyingQuestions(questions);
-    setStatus('clarifying');
+    // Simulate async processing (30-90 min in reality, 3 sec for demo)
+    processingTimerRef.current = setTimeout(() => {
+      // In production: AI would parse the prompt and generate custom results
+      // For now, use sample results but acknowledge the search criteria
+      const customResult = {
+        ...sampleResult,
+        searchCriteria: searchPrompt.trim()
+      };
+      setResult(customResult);
+      setStatus('complete');
+    }, 3000);
   };
 
   const handleAnswerQuestion = (answer: string) => {
@@ -264,9 +271,11 @@ Best regards,
         color: '#64748b',
         marginBottom: '48px',
         textAlign: 'center',
-        lineHeight: 1.6
+        lineHeight: 1.6,
+        maxWidth: '550px',
+        margin: '0 auto 48px'
       }}>
-        Describe the role and ideal candidate in your own words. Our AI will map the market using publicly available sources.
+        Tell us exactly who you're looking for in plain English. Include the role, location, experience, qualifications, and any specific traits. The more detail, the better the results.
       </p>
 
       <form onSubmit={handleSubmitSearch}>
@@ -442,42 +451,75 @@ Best regards,
 
   const renderProcessingStep = () => (
     <div style={{
-      maxWidth: '500px',
+      maxWidth: '600px',
       margin: '0 auto',
-      padding: '80px 24px',
+      padding: '60px 24px',
       textAlign: 'center'
     }}>
       <div style={{
-        width: '80px',
-        height: '80px',
+        width: '100px',
+        height: '100px',
         margin: '0 auto 32px',
         borderRadius: '50%',
-        backgroundColor: '#eff6ff',
+        backgroundColor: '#4F46E5',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         animation: 'pulse 2s infinite'
       }}>
-        <span style={{ fontSize: '36px' }} aria-hidden="true">🔍</span>
+        <span style={{ fontSize: '48px' }} aria-hidden="true">✨</span>
       </div>
 
       <h2 style={{
-        fontSize: '24px',
+        fontSize: '28px',
         fontWeight: 700,
         color: '#0f172a',
-        marginBottom: '12px'
+        marginBottom: '16px'
       }}>
-        Mapping the market...
+        Magic in progress...
       </h2>
 
       <p style={{
         fontSize: '16px',
         color: '#64748b',
-        marginBottom: '32px',
+        marginBottom: '24px',
         lineHeight: 1.6
       }}>
-        We're searching publicly available sources to find relevant candidates. This typically takes 30-90 minutes.
+        AI is mapping the market based on your requirements.
       </p>
+
+      {/* Show what was understood from the prompt */}
+      <div style={{
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '24px',
+        textAlign: 'left'
+      }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
+          Your search
+        </div>
+        <div style={{ fontSize: '14px', color: '#374151', lineHeight: 1.6, fontStyle: 'italic' }}>
+          "{searchPrompt}"
+        </div>
+      </div>
+
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '32px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981', animation: 'pulse 1s infinite' }} />
+          <span style={{ fontSize: '14px', color: '#475569' }}>Scanning public sources...</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fbbf24', animation: 'pulse 1.5s infinite' }} />
+          <span style={{ fontSize: '14px', color: '#475569' }}>Building candidate profiles...</span>
+        </div>
+      </div>
 
       <div style={{
         backgroundColor: '#f0fdf4',
@@ -487,7 +529,7 @@ Best regards,
         fontSize: '14px',
         color: '#166534'
       }}>
-        You'll be notified by email when results are ready. You can close this page.
+        <strong>Demo mode:</strong> Results will appear in a few seconds. In production, this takes 30-90 minutes and you'll be notified by email.
       </div>
 
       <style>{`
