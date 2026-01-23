@@ -20,8 +20,13 @@ export default function CandidatesPage() {
   ];
 
   const handleStageSelect = (stageId: string) => {
-    // Route to CV options page with stage parameter
-    router.push(`/candidates/cv?stage=${stageId}`);
+    // Students and graduates get a unique journey
+    if (stageId === 'student' || stageId === 'graduate') {
+      router.push(`/candidates/new-career?stage=${stageId}`);
+    } else {
+      // Experienced professionals go straight to CV upload
+      router.push(`/candidates/cv?stage=${stageId}`);
+    }
   };
 
   return (

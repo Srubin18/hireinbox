@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 // Routes:
 // - "I'm hiring" → /hire (B2B)
 // - "I'm looking for work" → /candidates (B2C)
-// - "I need help with my CV" → /candidates (B2C)
 // ============================================
 
 const Logo = ({ size = 48 }: { size?: number }) => (
@@ -38,13 +37,6 @@ export default function RootPage() {
       id: 'looking',
       label: "I'm looking for work",
       description: 'Get your CV reviewed and find opportunities',
-      route: '/candidates',
-      primary: false
-    },
-    {
-      id: 'cv-help',
-      label: 'I need help with my CV',
-      description: 'Get feedback to improve your CV',
       route: '/candidates',
       primary: false
     }
