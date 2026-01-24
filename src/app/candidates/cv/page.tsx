@@ -106,6 +106,10 @@ function CVOptionsContent() {
         const result = await response.json();
         // Store result in sessionStorage for the scan page
         sessionStorage.setItem('cvAnalysisResult', JSON.stringify(result));
+        // Store original CV text for rewrite functionality
+        if (result.extractedText || result.cvText) {
+          sessionStorage.setItem('originalCVText', result.extractedText || result.cvText);
+        }
         router.push(`/candidates/scan?stage=${stage}&analyzed=true`);
       } else {
         // If API fails, still show sample results for demo
