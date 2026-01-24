@@ -193,13 +193,46 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid #f1f5f9', padding: '40px 32px', backgroundColor: '#f9fafb' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-          <p style={{ margin: '0 0 16px' }}>HireInbox • 2026 • Built for South African SMEs</p>
-          <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', fontSize: '13px' }}>
-            <a href="/terms" style={{ color: '#4F46E5', textDecoration: 'none' }}>Terms</a>
-            <a href="/privacy" style={{ color: '#4F46E5', textDecoration: 'none' }}>Privacy</a>
-            <a href="mailto:hello@hireinbox.co.za" style={{ color: '#4F46E5', textDecoration: 'none' }}>Contact</a>
+      <footer style={{ borderTop: '1px solid #f1f5f9', padding: '48px 32px', backgroundColor: '#f9fafb' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '32px', marginBottom: '32px' }}>
+            {/* Company */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Company</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/about" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>About Us</a>
+                <a href="/faq" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>FAQ</a>
+                <a href="mailto:hello@hireinbox.co.za" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Contact</a>
+              </div>
+            </div>
+            {/* Product */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Product</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/hire" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>For Employers</a>
+                <a href="/candidates" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>For Job Seekers</a>
+                <a href="/pricing" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Pricing</a>
+              </div>
+            </div>
+            {/* Legal */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Legal</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/terms" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Terms of Service</a>
+                <a href="/privacy" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Privacy Policy</a>
+              </div>
+            </div>
+            {/* Account */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Account</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/login" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Log In</a>
+                <a href="/signup" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Create Account</a>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+            HireInbox · 2026 · Built for South African SMEs
           </div>
         </div>
       </footer>
