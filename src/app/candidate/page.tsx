@@ -600,7 +600,7 @@ const UpsellSection = () => {
     },
     {
       id: 'avatar-interview',
-      icon: '🤖',
+      icon: '🎯',
       title: 'AI Avatar Interview',
       subtitle: 'Mock interview practice',
       price: 'R149',
@@ -1409,7 +1409,7 @@ export default function CandidateDashboard() {
             <a href="/terms" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem' }}>Terms</a>
             <a href="/" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem' }}>For Employers</a>
           </div>
-          <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>© 2025 HireInbox</div>
+          <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>© 2026 HireInbox</div>
         </div>
       </footer>
     </div>

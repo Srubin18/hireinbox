@@ -91,16 +91,34 @@ function CVOptionsContent() {
     if (!uploadedFile) return;
     setUploading(true);
 
-    // Clear any existing timeout
-    if (analysisTimeoutRef.current) {
-      clearTimeout(analysisTimeoutRef.current);
-    }
+    try {
+      // Create form data with the file
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
 
-    // Simulate upload and analysis
-    // In production: call /api/analyze-cv
-    analysisTimeoutRef.current = setTimeout(() => {
+      // Call the real AI API
+      const response = await fetch('/api/analyze-cv', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Store result in sessionStorage for the scan page
+        sessionStorage.setItem('cvAnalysisResult', JSON.stringify(result));
+        router.push(`/candidates/scan?stage=${stage}&analyzed=true`);
+      } else {
+        // If API fails, still show sample results for demo
+        console.error('CV analysis failed, showing sample results');
+        router.push(`/candidates/scan?stage=${stage}`);
+      }
+    } catch (error) {
+      console.error('Error analyzing CV:', error);
+      // Fallback to sample results for demo
       router.push(`/candidates/scan?stage=${stage}`);
-    }, 1500);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (

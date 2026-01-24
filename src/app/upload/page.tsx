@@ -1793,7 +1793,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
                   description: 'See which roles match your experience and what salary range to expect.'
                 },
                 {
-                  icon: '🤖',
+                  icon: '✓',
                   title: 'ATS Check',
                   description: 'Will your CV pass automated screening? We check formatting and keywords.'
                 },
@@ -2697,7 +2697,6 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
                 alignItems: 'center',
                 gap: 8
               }}>
-                <span>🤖</span>
                 ATS Compatibility
               </h3>
 

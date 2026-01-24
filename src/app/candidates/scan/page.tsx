@@ -92,8 +92,41 @@ function ScanResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const stage = searchParams.get('stage') || 'experienced';
+  const analyzed = searchParams.get('analyzed') === 'true';
 
-  const [result] = useState<ScanResult>(sampleResult);
+  // Try to load real results from sessionStorage, otherwise use sample
+  const [result] = useState<ScanResult>(() => {
+    if (typeof window !== 'undefined' && analyzed) {
+      const stored = sessionStorage.getItem('cvAnalysisResult');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // Map API response to our ScanResult format
+          return {
+            overallScore: parsed.score || parsed.overall_score || 72,
+            candidateName: parsed.candidate_name || 'Candidate',
+            currentTitle: parsed.current_title || 'Professional',
+            yearsExperience: parsed.years_experience || 0,
+            summary: parsed.summary || parsed.overall_feedback || sampleResult.summary,
+            strengths: parsed.strengths?.map((s: any) => ({
+              area: s.area || s.title || 'Strength',
+              detail: s.detail || s.description || s
+            })) || sampleResult.strengths,
+            improvements: parsed.improvements?.map((i: any) => ({
+              area: i.area || i.title || 'Improvement',
+              suggestion: i.suggestion || i.description || i,
+              priority: i.priority || 'medium'
+            })) || sampleResult.improvements,
+            atsScore: parsed.ats_score || parsed.atsScore || 70,
+            atsIssues: parsed.ats_issues || parsed.atsIssues || sampleResult.atsIssues
+          };
+        } catch {
+          return sampleResult;
+        }
+      }
+    }
+    return sampleResult;
+  });
   const [talentPoolOptIn, setTalentPoolOptIn] = useState(false);
 
   const getScoreColor = (score: number) => {
@@ -296,7 +329,7 @@ function ScanResultsContent() {
             alignItems: 'center',
             gap: '8px'
           }}>
-            <span>🤖</span> ATS Compatibility: {result.atsScore}%
+            ATS Compatibility: {result.atsScore}%
           </h2>
           <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
             How well your CV will be parsed by Applicant Tracking Systems

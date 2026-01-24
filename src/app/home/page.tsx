@@ -195,7 +195,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer style={{ borderTop: '1px solid #f1f5f9', padding: '40px 32px', backgroundColor: '#f9fafb' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-          <p style={{ margin: '0 0 16px' }}>HireInbox • 2025 • Built for South African SMEs</p>
+          <p style={{ margin: '0 0 16px' }}>HireInbox • 2026 • Built for South African SMEs</p>
           <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', fontSize: '13px' }}>
             <a href="/terms" style={{ color: '#4F46E5', textDecoration: 'none' }}>Terms</a>
             <a href="/privacy" style={{ color: '#4F46E5', textDecoration: 'none' }}>Privacy</a>

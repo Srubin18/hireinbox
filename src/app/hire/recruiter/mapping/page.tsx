@@ -65,59 +65,7 @@ const CONFIDENCE_STYLES = {
   low: { label: 'Low', color: '#64748b', bgColor: '#f1f5f9' }
 };
 
-// Sample results for demo
-const sampleResult: MappingResult = {
-  marketOverview: `The Finance Manager market in Cape Town shows strong activity with approximately 150-200 qualified professionals currently in relevant roles. Key employers include major banks (Standard Bank, FNB, Nedbank), big 4 accounting firms, and growing fintech companies. Most candidates have CA(SA) qualifications with 5-10 years post-articles experience. Salary benchmarks range from R850k-R1.2m for mid-level and R1.2m-R1.8m for senior positions.`,
-  totalFound: 12,
-  searchCriteria: 'Finance Manager, Cape Town, 5+ years experience, CA(SA) preferred',
-  completedAt: new Date().toISOString(),
-  candidates: [
-    {
-      id: '1',
-      name: 'Sarah van der Berg',
-      currentRole: 'Senior Finance Manager',
-      company: 'Discovery Limited',
-      industry: 'Insurance / Financial Services',
-      location: 'Cape Town',
-      whyMatch: 'CA(SA) with 8 years experience in financial services. Led team of 6 at Discovery. Mentioned in company press release for cost optimization project.',
-      sourceLinks: ['https://discovery.co.za/press/2025-finance-team'],
-      confidence: 'high'
-    },
-    {
-      id: '2',
-      name: 'Michael Naidoo',
-      currentRole: 'Finance Manager',
-      company: 'Woolworths Holdings',
-      industry: 'Retail',
-      location: 'Cape Town',
-      whyMatch: 'BCom Honours, CTA. 6 years in retail finance. Speaker at SAICA conference 2024.',
-      sourceLinks: ['https://saica.co.za/events/2024-speakers'],
-      confidence: 'high'
-    },
-    {
-      id: '3',
-      name: 'Thandi Molefe',
-      currentRole: 'Group Financial Controller',
-      company: 'Clicks Group',
-      industry: 'Retail / Healthcare',
-      location: 'Cape Town',
-      whyMatch: 'CA(SA), MBA. 10+ years experience. Quoted in Business Day article on retail finance trends.',
-      sourceLinks: ['https://businessday.co.za/retail-finance-2025'],
-      confidence: 'medium'
-    },
-    {
-      id: '4',
-      name: 'James Robertson',
-      currentRole: 'Finance Manager',
-      company: 'Yoco Technologies',
-      industry: 'Fintech',
-      location: 'Cape Town',
-      whyMatch: 'CA(SA) from Deloitte. 5 years in fintech. Company bio on Yoco website.',
-      sourceLinks: ['https://yoco.com/about/team'],
-      confidence: 'high'
-    }
-  ]
-};
+// Result will be populated from API - no more fake data
 
 export default function TalentMappingPage() {
   const router = useRouter();
@@ -174,7 +122,7 @@ export default function TalentMappingPage() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [draftingOutreach]);
 
-  const handleSubmitSearch = (e: React.FormEvent) => {
+  const handleSubmitSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchPrompt.trim()) return;
 
@@ -183,19 +131,31 @@ export default function TalentMappingPage() {
     // No redundant questions - the prompt is the source of truth
     setStatus('processing');
 
-    // Simulate async processing (30-90 min in reality, 3 sec for demo)
-    processingTimerRef.current = setTimeout(() => {
-      // In production: AI would parse the prompt and generate custom results
-      // For now, use sample results but acknowledge the search criteria
-      const customResult = {
-        ...sampleResult,
-        searchCriteria: searchPrompt.trim()
-      };
-      setResult(customResult);
+    try {
+      // Call the real talent mapping API
+      const response = await fetch('/api/talent-mapping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: searchPrompt.trim() })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process search');
+      }
+
+      const data = await response.json();
+      setResult(data);
       setStatus('complete');
-    }, 3000);
+    } catch (error) {
+      console.error('Talent mapping error:', error);
+      // Show error state
+      alert('Failed to process your search. Please try again.');
+      setStatus('input');
+    }
   };
 
+  // Clarifying questions are no longer used - we go straight to API
+  // These handlers are kept for backwards compatibility but redirect to API
   const handleAnswerQuestion = (answer: string) => {
     const updated = [...clarifyingQuestions];
     updated[currentQuestionIndex].answer = answer;
@@ -205,22 +165,14 @@ export default function TalentMappingPage() {
     if (currentQuestionIndex < clarifyingQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // All questions answered, start processing
-      setStatus('processing');
-      // Simulate async processing with cleanup ref
-      processingTimerRef.current = setTimeout(() => {
-        setResult(sampleResult);
-        setStatus('complete');
-      }, 3000);
+      // All questions answered - call API
+      handleSubmitSearch({ preventDefault: () => {} } as React.FormEvent);
     }
   };
 
   const handleSkipQuestions = () => {
-    setStatus('processing');
-    processingTimerRef.current = setTimeout(() => {
-      setResult(sampleResult);
-      setStatus('complete');
-    }, 3000);
+    // Skip questions - call API directly
+    handleSubmitSearch({ preventDefault: () => {} } as React.FormEvent);
   };
 
   const toggleCandidate = (id: string) => {
