@@ -202,7 +202,7 @@ export default function EmployerDashboard() {
         </div>
       </div>
 
-      {/* Pass filters */}
+      {/* Simplified stage filters */}
       <div style={{
         padding: '16px 24px',
         backgroundColor: '#ffffff',
@@ -211,41 +211,38 @@ export default function EmployerDashboard() {
         gap: '8px',
         overflowX: 'auto'
       }}>
-        <button
-          onClick={() => setFilterPass('all')}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: filterPass === 'all' ? '#0f172a' : '#f1f5f9',
-            color: filterPass === 'all' ? '#ffffff' : '#64748b',
-            border: 'none',
-            borderRadius: '20px',
-            fontSize: '13px',
-            fontWeight: 500,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          All ({candidates.filter(c => c.role === roles.find(r => r.id === selectedRole)?.title).length})
-        </button>
-        {([0, 1, 2, 3, 4, 5, 6, 7] as HiringPass[]).map(pass => (
-          <button
-            key={pass}
-            onClick={() => setFilterPass(pass)}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: filterPass === pass ? PASS_LABELS[pass].bgColor : '#f1f5f9',
-              color: filterPass === pass ? PASS_LABELS[pass].color : '#64748b',
-              border: filterPass === pass ? `1px solid ${PASS_LABELS[pass].color}` : '1px solid transparent',
-              borderRadius: '20px',
-              fontSize: '13px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Pass {pass}: {PASS_LABELS[pass].label} ({passCounts[pass] || 0})
-          </button>
-        ))}
+        {[
+          { id: 'all', label: 'All', color: '#0f172a', bgColor: '#f1f5f9', passes: [0, 1, 2, 3, 4, 5, 6, 7] },
+          { id: 'new', label: 'New', color: '#64748b', bgColor: '#f1f5f9', passes: [0] },
+          { id: 'screened', label: 'AI Screened', color: '#7c3aed', bgColor: '#ede9fe', passes: [1] },
+          { id: 'progress', label: 'In Progress', color: '#059669', bgColor: '#d1fae5', passes: [2, 3, 4, 5] },
+          { id: 'complete', label: 'Complete', color: '#dc2626', bgColor: '#fee2e2', passes: [6, 7] }
+        ].map(stage => {
+          const count = stage.id === 'all'
+            ? candidates.filter(c => c.role === roles.find(r => r.id === selectedRole)?.title).length
+            : candidates.filter(c => c.role === roles.find(r => r.id === selectedRole)?.title && stage.passes.includes(c.pass)).length;
+          const isActive = filterPass === 'all' ? stage.id === 'all' : stage.passes.includes(filterPass as number);
+
+          return (
+            <button
+              key={stage.id}
+              onClick={() => setFilterPass(stage.id === 'all' ? 'all' : stage.passes[0] as HiringPass)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: isActive ? stage.bgColor : '#f1f5f9',
+                color: isActive ? stage.color : '#64748b',
+                border: isActive ? `1px solid ${stage.color}` : '1px solid transparent',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {stage.label} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Bulk actions */}
