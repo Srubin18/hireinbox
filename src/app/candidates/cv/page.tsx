@@ -92,9 +92,9 @@ function CVOptionsContent() {
     setUploading(true);
 
     try {
-      // Create form data with the file
+      // Create form data with the file - API expects 'cv' as the field name
       const formData = new FormData();
-      formData.append('file', uploadedFile);
+      formData.append('cv', uploadedFile);
 
       // Call the real AI API
       const response = await fetch('/api/analyze-cv', {
@@ -104,12 +104,17 @@ function CVOptionsContent() {
 
       if (response.ok) {
         const result = await response.json();
-        // Store result in sessionStorage for the scan page
-        sessionStorage.setItem('cvAnalysisResult', JSON.stringify(result));
-        // Store original CV text for rewrite functionality
-        if (result.extractedText || result.cvText) {
-          sessionStorage.setItem('originalCVText', result.extractedText || result.cvText);
+        // Store the analysis result in sessionStorage for the scan page
+        // API returns { success, analysis, originalCV, traceId }
+        if (result.analysis) {
+          sessionStorage.setItem('cvAnalysisResult', JSON.stringify(result.analysis));
         }
+        // Store original CV text for rewrite functionality
+        if (result.originalCV) {
+          sessionStorage.setItem('originalCVText', result.originalCV);
+        }
+        // Store filename for saving to database
+        sessionStorage.setItem('cvFilename', uploadedFile.name);
         router.push(`/candidates/scan?stage=${stage}&analyzed=true`);
       } else {
         // If API fails, still show sample results for demo

@@ -39,6 +39,13 @@ export default function RootPage() {
       description: 'Get your CV reviewed and find opportunities',
       route: '/candidates',
       primary: false
+    },
+    {
+      id: 'talent-pool',
+      label: 'Talent Pool',
+      description: 'Join as a candidate or browse talent as a business',
+      route: '/talent-pool',
+      primary: false
     }
   ];
 
@@ -140,18 +147,23 @@ export default function RootPage() {
         ))}
       </div>
 
-      {/* Minimal footer */}
+      {/* Footer */}
       <div style={{
         position: 'fixed',
         bottom: '24px',
         display: 'flex',
         gap: '24px',
         color: '#94a3b8',
-        fontSize: '13px'
+        fontSize: '13px',
+        flexWrap: 'wrap',
+        justifyContent: 'center'
       }}>
+        <a href="/faq" style={{ color: '#94a3b8', textDecoration: 'none' }}>FAQ</a>
+        <a href="/about" style={{ color: '#94a3b8', textDecoration: 'none' }}>About</a>
+        <a href="/login" style={{ color: '#94a3b8', textDecoration: 'none' }}>Login</a>
+        <a href="/signup" style={{ color: '#94a3b8', textDecoration: 'none' }}>Create account</a>
         <a href="/terms" style={{ color: '#94a3b8', textDecoration: 'none' }}>Terms</a>
         <a href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none' }}>Privacy</a>
-        <a href="mailto:support@hireinbox.co.za" style={{ color: '#94a3b8', textDecoration: 'none' }}>Support</a>
       </div>
     </div>
   );

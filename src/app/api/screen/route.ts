@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { Errors, generateTraceId } from '@/lib/api-error';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -223,25 +225,31 @@ function parseAIResponse(text: string): Record<string, unknown> | null {
 }
 
 export async function POST(request: Request) {
+  // Apply rate limiting (10 requests per minute for AI endpoints)
+  const rateLimited = withRateLimit(request, 'screen', RATE_LIMITS.ai);
+  if (rateLimited) return rateLimited;
+
+  const traceId = generateTraceId();
+
   try {
     const body = await request.json();
     const { candidateId, roleId, cvText } = body;
-    if (!roleId) return NextResponse.json({ error: 'Missing roleId' }, { status: 400 });
+    if (!roleId) return Errors.validation('Missing roleId').toResponse();
 
     const { data: role, error: roleError } = await supabase.from('roles').select('*').eq('id', roleId).single();
-    if (roleError || !role) return NextResponse.json({ error: 'Role not found' }, { status: 404 });
+    if (roleError || !role) return Errors.notFound('Role').toResponse();
 
     let cvContent = cvText;
     let candidate: Record<string, unknown> | null = null;
 
     if (candidateId) {
       const { data: candidateData, error: candidateError } = await supabase.from('candidates').select('*').eq('id', candidateId).single();
-      if (candidateError || !candidateData) return NextResponse.json({ error: 'Candidate not found' }, { status: 404 });
+      if (candidateError || !candidateData) return Errors.notFound('Candidate').toResponse();
       candidate = candidateData;
       cvContent = candidateData.cv_text || cvText;
     }
 
-    if (!cvContent || cvContent.trim().length < 50) return NextResponse.json({ error: 'Invalid CV' }, { status: 400 });
+    if (!cvContent || cvContent.trim().length < 50) return Errors.validation('Invalid CV', 'CV text must be at least 50 characters').toResponse();
 
     const roleContext = buildRoleContext(role);
     const userPrompt = 'ROLE CONTEXT:\n' + roleContext + '\n\nCV TO EVALUATE:\n' + cvContent + '\n\nINSTRUCTIONS:\n1. Every strength MUST have evidence. No evidence = don\'t include it.\n2. Apply RULE 7 exception for near-miss candidates with 2+ exceptional indicators.\n3. If exception applies: recommendation MUST be CONSIDER, score 60-75, exception_applied=true.\n\nRespond with valid JSON only.';
@@ -269,7 +277,10 @@ export async function POST(request: Request) {
       assessment = parseAIResponse(retry.choices[0]?.message?.content || '');
     }
 
-    if (!assessment || !validateAnalysis(assessment)) return NextResponse.json({ error: 'Parse error' }, { status: 500 });
+    if (!assessment || !validateAnalysis(assessment)) {
+      console.error(`[${traceId}] Screening validation failed`);
+      return Errors.ai('Screening analysis failed. Please try again.', undefined, traceId).toResponse();
+    }
 
     if (!assessment.risk_register) assessment.risk_register = [];
     if (!assessment.evidence_highlights) assessment.evidence_highlights = [];
@@ -289,9 +300,14 @@ export async function POST(request: Request) {
       }).eq('id', candidateId);
     }
 
-    return NextResponse.json({ success: true, assessment, role: { id: role.id, title: role.title } });
+    return NextResponse.json({ success: true, assessment, role: { id: role.id, title: role.title }, traceId });
   } catch (error) {
-    console.error('Screening error:', error);
-    return NextResponse.json({ error: 'Screening failed' }, { status: 500 });
+    console.error(`[${traceId}] Screening error:`, error);
+    // SECURITY: Do not expose internal error details to client
+    const isOpenAIError = error instanceof Error && error.message.includes('OpenAI');
+    const userMessage = isOpenAIError
+      ? 'AI service temporarily unavailable. Please try again.'
+      : 'Screening failed. Please try again.';
+    return Errors.internal(userMessage, traceId).toResponse();
   }
 }

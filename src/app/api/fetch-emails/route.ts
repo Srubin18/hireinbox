@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import { SA_CONTEXT_PROMPT, SA_RECRUITER_CONTEXT } from '@/lib/sa-context';
 import { sendAcknowledgmentEmail } from '@/lib/email';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { Errors } from '@/lib/api-error';
 
 // V3 BRAIN - Fine-tuned on 6,000 SA recruitment examples
 const HIREINBOX_V3_MODEL = 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ';
@@ -795,7 +797,11 @@ Respond with valid JSON only.`;
   return null;
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  // Apply rate limiting (standard: 100 requests per minute)
+  const rateLimited = withRateLimit(request, 'fetch-emails', RATE_LIMITS.standard);
+  if (rateLimited) return rateLimited;
+
   const traceId = Date.now().toString(36);
   if (IS_DEV) console.log(`[${traceId}] === FETCH START (V3 BRAIN) ===`);
 
@@ -810,7 +816,7 @@ export async function POST() {
     const activeRole = roles?.[0];
     if (!activeRole) {
       if (IS_DEV) console.log(`[${traceId}] No active role found`);
-      return NextResponse.json({ error: 'No active role found', ...results }, { status: 400 });
+      return Errors.validation('No active role found', 'Please create and activate a role before fetching emails').toResponse();
     }
     if (IS_DEV) console.log(`[${traceId}] Role: ${activeRole.title}`);
 
@@ -1082,11 +1088,12 @@ export async function POST() {
 
   } catch (error) {
     console.error(`[${traceId}] Fatal error:`, error);
-    return NextResponse.json({
-      success: false,
-      processed: 0,
-      ...results,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    // SECURITY: Do not expose internal error details to client
+    const isConnectionError = error instanceof Error &&
+      (error.message.includes('IMAP') || error.message.includes('connection') || error.message.includes('timeout'));
+    const userMessage = isConnectionError
+      ? 'Email server temporarily unavailable. Please try again later.'
+      : 'Failed to process emails. Please try again.';
+    return Errors.internal(userMessage, traceId).toResponse();
   }
 }

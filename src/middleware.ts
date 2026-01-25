@@ -11,14 +11,28 @@ import { createServerClient, CookieOptions } from '@supabase/ssr';
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
+  '/',                 // Homepage (public demo)
+  '/hire',             // B2B landing
+  '/hire/ai-staff',    // AI Staff product page
+  '/candidates',       // B2C landing
+  '/candidates/cv',    // B2C CV upload
+  '/candidates/video', // B2C video
+  '/candidates/talent-pool', // B2C talent pool
   '/upload',           // B2C CV upload (public)
   '/login',            // Auth pages
   '/signup',
   '/auth/callback',
   '/auth/reset-password',
+  '/pricing',          // Pricing page
+  '/about',            // About page
+  '/faq',              // FAQ page
+  '/talent-pool',      // Talent pool browse
+  '/terms',            // Legal
+  '/privacy',          // Legal
   '/api/analyze-cv',   // B2C API (public)
   '/api/analyze-video', // B2C API (public)
   '/api/rewrite-cv',   // B2C API (public)
+  '/api/talent-pool',  // Talent pool API (public)
 ];
 
 // Static files and API routes that should always pass through
@@ -523,7 +537,15 @@ export async function middleware(request: NextRequest) {
   // ===== AUTH CHECK FOR PROTECTED ROUTES =====
 
   // Skip auth for public routes
-  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+  // Handle exact match for '/' and startsWith for other routes
+  const isPublicRoute = PUBLIC_ROUTES.some(route => {
+    if (route === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(route);
+  });
+
+  if (isPublicRoute) {
     const response = NextResponse.next();
     // Add security and CORS headers
     for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
@@ -582,16 +604,9 @@ export async function middleware(request: NextRequest) {
   // Refresh session if it exists
   const { data: { session } } = await supabase.auth.getSession();
 
-  // If no session and trying to access protected route (B2B dashboard = /)
-  if (!session && pathname === '/') {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
   // If session exists and trying to access auth pages, redirect to dashboard
   if (session && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/hire/dashboard', request.url));
   }
 
   return response;

@@ -1,155 +1,169 @@
 import Link from 'next/link';
 
+// ============================================
+// HIREINBOX 404 PAGE
+// Friendly, helpful, on-brand
+// ============================================
+
 export default function NotFound() {
   return (
     <div
       style={{
         minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f9fafb',
-        padding: '24px',
+        backgroundColor: '#ffffff',
+        padding: '32px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
-      <div
+      {/* Logo */}
+      <div style={{ marginBottom: '32px' }}>
+        <svg width="64" height="64" viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="12" fill="#4F46E5"/>
+          <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
+          <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
+          <circle cx="36" cy="12" r="9" fill="#F59E0B"/>
+          <text x="36" y="16" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">?</text>
+        </svg>
+      </div>
+
+      {/* Big 404 */}
+      <h1
         style={{
-          maxWidth: '480px',
-          width: '100%',
-          textAlign: 'center',
-          backgroundColor: '#ffffff',
-          borderRadius: '12px',
-          padding: '48px 32px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          fontSize: '72px',
+          fontWeight: 800,
+          color: '#0f172a',
+          margin: '0 0 8px',
+          letterSpacing: '-0.02em',
         }}
       >
-        <div
+        404
+      </h1>
+
+      <h2
+        style={{
+          fontSize: '24px',
+          fontWeight: 600,
+          color: '#0f172a',
+          margin: '0 0 12px',
+        }}
+      >
+        This page went missing
+      </h2>
+
+      <p
+        style={{
+          fontSize: '16px',
+          color: '#64748b',
+          margin: '0 0 32px',
+          lineHeight: 1.6,
+          textAlign: 'center',
+          maxWidth: '400px',
+        }}
+      >
+        Like a CV that never arrived. Let&apos;s get you back on track.
+      </p>
+
+      {/* Buttons */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          width: '100%',
+          maxWidth: '280px',
+        }}
+      >
+        <Link
+          href="/"
           style={{
-            width: '64px',
-            height: '64px',
-            backgroundColor: '#eff6ff',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 24px',
+            background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+            color: '#ffffff',
+            padding: '14px 24px',
+            borderRadius: '10px',
+            fontSize: '15px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            textAlign: 'center',
+            boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)',
           }}
         >
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            <line x1="11" y1="8" x2="11" y2="14" />
-            <line x1="8" y1="11" x2="14" y2="11" />
-          </svg>
-        </div>
+          Go to Homepage
+        </Link>
 
-        <h1
+        <Link
+          href="/candidates"
           style={{
-            fontSize: '72px',
-            fontWeight: '700',
-            color: '#4f46e5',
-            margin: '0 0 8px',
-            lineHeight: '1',
+            backgroundColor: '#ffffff',
+            color: '#64748b',
+            padding: '14px 24px',
+            borderRadius: '10px',
+            fontSize: '15px',
+            fontWeight: 500,
+            textDecoration: 'none',
+            textAlign: 'center',
+            border: '1px solid #e2e8f0',
           }}
         >
-          404
-        </h1>
+          Upload Your CV
+        </Link>
+      </div>
 
-        <h2
+      {/* Quick Links */}
+      <div
+        style={{
+          marginTop: '48px',
+          display: 'flex',
+          gap: '24px',
+          fontSize: '14px',
+        }}
+      >
+        <Link href="/hire" style={{ color: '#4F46E5', textDecoration: 'none' }}>
+          For Employers
+        </Link>
+        <Link href="/candidates" style={{ color: '#4F46E5', textDecoration: 'none' }}>
+          For Job Seekers
+        </Link>
+        <Link href="/faq" style={{ color: '#4F46E5', textDecoration: 'none' }}>
+          FAQ
+        </Link>
+      </div>
+
+      {/* Contact */}
+      <p
+        style={{
+          marginTop: '32px',
+          fontSize: '14px',
+          color: '#94a3b8',
+        }}
+      >
+        Need help?{' '}
+        <a
+          href="mailto:simon@hireinbox.co.za"
           style={{
-            fontSize: '24px',
-            fontWeight: '600',
-            color: '#111827',
-            margin: '0 0 12px',
+            color: '#4F46E5',
+            textDecoration: 'none',
           }}
         >
-          Page not found
-        </h2>
+          Email Simon directly
+        </a>
+      </p>
 
-        <p
-          style={{
-            fontSize: '16px',
-            color: '#6b7280',
-            margin: '0 0 32px',
-            lineHeight: '1.5',
-          }}
-        >
-          The page you are looking for does not exist or has been moved. Let us
-          help you find your way back.
-        </p>
-
-        <div
-          style={{
-            display: 'flex',
-            gap: '12px',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
-          <Link
-            href="/"
-            style={{
-              backgroundColor: '#4f46e5',
-              color: '#ffffff',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Go to Dashboard
-          </Link>
-
-          <Link
-            href="/upload"
-            style={{
-              backgroundColor: '#f3f4f6',
-              color: '#374151',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Upload CV
-          </Link>
-        </div>
-
-        <p
-          style={{
-            fontSize: '14px',
-            color: '#9ca3af',
-            margin: '32px 0 0',
-          }}
-        >
-          Need help?{' '}
-          <a
-            href="mailto:support@hireinbox.co.za"
-            style={{
-              color: '#4f46e5',
-              textDecoration: 'none',
-            }}
-          >
-            Contact support
-          </a>
-        </p>
+      {/* Footer */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          color: '#94a3b8',
+          fontSize: '13px',
+        }}
+      >
+        Built in Cape Town, South Africa
       </div>
     </div>
   );

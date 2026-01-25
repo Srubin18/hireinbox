@@ -33,7 +33,13 @@ export default function BusinessRedirect() {
       justifyContent: 'center',
       padding: '32px'
     }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+      <div style={{ marginBottom: '16px' }}>
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
+          <circle cx="24" cy="24" r="20" stroke="#E5E7EB" strokeWidth="4" fill="none"/>
+          <circle cx="24" cy="24" r="20" stroke="#4F46E5" strokeWidth="4" fill="none" strokeDasharray="80" strokeDashoffset="60" strokeLinecap="round"/>
+        </svg>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
       <p style={{ fontSize: '16px', color: '#64748b' }}>Loading your dashboard...</p>
     </div>
   );

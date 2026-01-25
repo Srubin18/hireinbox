@@ -199,11 +199,11 @@ const CircularScore = ({ score, size = 160 }: { score: number; size?: number }) 
 // Stunning Loading Animation with detailed progress
 const AnalyzingAnimation = ({ step }: { step: number }) => {
   const steps = [
-    { icon: '📄', label: 'Step 1: Uploading', shortLabel: 'Uploading', detail: 'Securely processing your CV file' },
-    { icon: '🔍', label: 'Step 2: Analyzing', shortLabel: 'Analyzing', detail: 'AI reading your experience and skills' },
-    { icon: '🎯', label: 'Step 3: Finding Improvements', shortLabel: 'Finding Improvements', detail: 'Identifying high-impact changes' },
-    { icon: '📊', label: 'Step 4: Scoring', shortLabel: 'Scoring', detail: 'Comparing to SA top performers' },
-    { icon: '✨', label: 'Step 5: Generating Report', shortLabel: 'Generating Report', detail: 'Creating your personalized insights' },
+    { step: 1, label: 'Step 1: Uploading', shortLabel: 'Uploading', detail: 'Securely processing your CV file' },
+    { step: 2, label: 'Step 2: Analyzing', shortLabel: 'Analyzing', detail: 'AI reading your experience and skills' },
+    { step: 3, label: 'Step 3: Finding Improvements', shortLabel: 'Finding Improvements', detail: 'Identifying high-impact changes' },
+    { step: 4, label: 'Step 4: Scoring', shortLabel: 'Scoring', detail: 'Comparing to SA top performers' },
+    { step: 5, label: 'Step 5: Generating Report', shortLabel: 'Generating Report', detail: 'Creating your personalized insights' },
   ];
 
   const tips = [
@@ -251,7 +251,7 @@ const AnalyzingAnimation = ({ step }: { step: number }) => {
           animation: 'pulse 2s ease-in-out infinite',
           boxShadow: '0 0 40px rgba(79, 70, 229, 0.4)'
         }}>
-          <span style={{ fontSize: '2rem' }}>{steps[step]?.icon || '🚀'}</span>
+          <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff' }}>{steps[step]?.step || 1}</span>
         </div>
 
         {/* Progress Text */}
@@ -1264,9 +1264,9 @@ function UploadPageContent() {
               borderRadius: 12
             }}>
               {[
-                { id: 'upload', label: 'Upload CV', icon: '📄' },
-                { id: 'paste', label: 'Paste Text', icon: '📋' },
-                { id: 'linkedin', label: 'LinkedIn', icon: '💼' }
+                { id: 'upload', label: 'Upload CV' },
+                { id: 'paste', label: 'Paste Text' },
+                { id: 'linkedin', label: 'LinkedIn' }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1299,7 +1299,6 @@ function UploadPageContent() {
                     transition: 'all 0.2s ease'
                   }}
                 >
-                  <span>{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
@@ -1778,32 +1777,26 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
             }}>
               {[
                 {
-                  icon: '📊',
                   title: 'Honest Score',
                   description: 'No sugarcoating. See exactly how your CV compares to top performers in SA.'
                 },
                 {
-                  icon: '🎯',
                   title: 'Specific Fixes',
                   description: 'Not "add more details" - actual examples like "Add: Reduced costs by 30%"'
                 },
                 {
-                  icon: '💼',
                   title: 'Role Matching',
                   description: 'See which roles match your experience and what salary range to expect.'
                 },
                 {
-                  icon: '✓',
                   title: 'ATS Check',
                   description: 'Will your CV pass automated screening? We check formatting and keywords.'
                 },
                 {
-                  icon: '⏱️',
                   title: '7-Second Test',
                   description: 'See what a recruiter sees in their first glance. Make those seconds count.'
                 },
                 {
-                  icon: '🇿🇦',
                   title: 'SA Context',
                   description: 'We know CA(SA), Big 4, Investec, UCT. Local expertise, not generic AI.'
                 }
@@ -1815,17 +1808,19 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
                   padding: 24
                 }}>
                   <div style={{
-                    width: 48,
-                    height: 48,
-                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                    borderRadius: 12,
+                    width: 40,
+                    height: 40,
+                    backgroundColor: 'rgba(79, 70, 229, 0.3)',
+                    borderRadius: 10,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: 16,
-                    fontSize: '1.5rem'
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    color: '#a5b4fc'
                   }}>
-                    {feature.icon}
+                    {i + 1}
                   </div>
                   <h3 style={{
                     fontSize: '1.125rem',

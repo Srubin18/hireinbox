@@ -90,7 +90,10 @@ export default function HirePage() {
           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4338ca'}
           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4F46E5'}
         >
-          <span style={{ fontSize: '24px' }}>🏢</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
           <div>
             <div>Business / Company</div>
             <div style={{ fontSize: '13px', fontWeight: 400, opacity: 0.8, marginTop: '4px' }}>
@@ -125,7 +128,12 @@ export default function HirePage() {
             e.currentTarget.style.borderColor = '#e2e8f0';
           }}
         >
-          <span style={{ fontSize: '24px' }}>🎯</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
           <div>
             <div>Recruiter / Agency</div>
             <div style={{ fontSize: '13px', fontWeight: 400, color: '#64748b', marginTop: '4px' }}>
@@ -151,36 +159,10 @@ export default function HirePage() {
         ← Back to start
       </button>
 
-      {/* Support button */}
-      <button
-        aria-label="Get support"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          padding: '12px 20px',
-          backgroundColor: '#0f172a',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: '24px',
-          fontSize: '14px',
-          fontWeight: 500,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 50
-        }}
-      >
-        <span aria-hidden="true">💬</span> Support
-      </button>
-
       {/* Tagline footer */}
       <div style={{
         position: 'fixed',
         bottom: '24px',
-        left: '24px',
         color: '#94a3b8',
         fontSize: '13px'
       }}>

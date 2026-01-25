@@ -134,36 +134,10 @@ export default function CandidatesPage() {
         ← Back to start
       </button>
 
-      {/* Support button */}
-      <button
-        aria-label="Get support"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          padding: '12px 20px',
-          backgroundColor: '#0f172a',
-          color: '#ffffff',
-          border: 'none',
-          borderRadius: '24px',
-          fontSize: '14px',
-          fontWeight: 500,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 50
-        }}
-      >
-        <span aria-hidden="true">💬</span> Support
-      </button>
-
       {/* Tagline footer */}
       <div style={{
         position: 'fixed',
         bottom: '24px',
-        left: '24px',
         color: '#94a3b8',
         fontSize: '13px'
       }}>

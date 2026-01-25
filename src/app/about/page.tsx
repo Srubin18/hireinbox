@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 // ============================================
 // HIREINBOX - ABOUT US PAGE
-// Company-focused, SA-built, experienced team
-// Da Vinci: Simple, elegant, trustworthy
+// Simple, clean, trustworthy
 // ============================================
 
 export default function AboutPage() {
@@ -26,7 +26,7 @@ export default function AboutPage() {
         alignItems: 'center'
       }}>
         <div
-          onClick={() => router.push('/home')}
+          onClick={() => router.push('/')}
           style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
         >
           <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
@@ -41,342 +41,119 @@ export default function AboutPage() {
             <span style={{ color: '#4F46E5' }}>Inbox</span>
           </span>
         </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => router.push('/login')}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: 'transparent',
-              color: '#475569',
-              border: 'none',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}
-          >
-            Log in
-          </button>
-          <button
-            onClick={() => router.push('/signup')}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#4F46E5',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Get Started
-          </button>
-        </div>
+        <button
+          onClick={() => router.push('/')}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: 'transparent',
+            color: '#475569',
+            border: 'none',
+            fontSize: '14px',
+            fontWeight: 500,
+            cursor: 'pointer'
+          }}
+        >
+          Back
+        </button>
       </header>
 
-      {/* Hero */}
-      <section style={{
-        padding: '80px 32px',
-        textAlign: 'center',
-        maxWidth: '800px',
-        margin: '0 auto'
+      {/* Breadcrumbs */}
+      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '0 32px' }}>
+        <Breadcrumbs items={[{ label: 'About' }]} />
+      </div>
+
+      {/* Main Content */}
+      <main style={{
+        maxWidth: '600px',
+        margin: '0 auto',
+        padding: '40px 32px 80px'
       }}>
         <h1 style={{
-          fontSize: '48px',
-          fontWeight: 700,
-          color: '#0f172a',
-          marginBottom: '24px',
-          letterSpacing: '-0.02em',
-          lineHeight: 1.2
-        }}>
-          Built in South Africa,<br />for South Africa
-        </h1>
-        <p style={{
-          fontSize: '20px',
-          color: '#64748b',
-          lineHeight: 1.7,
-          maxWidth: '600px',
-          margin: '0 auto'
-        }}>
-          HireInbox is an AI-powered recruitment platform that understands the unique challenges of hiring in South Africa.
-        </p>
-      </section>
-
-      {/* Mission */}
-      <section style={{
-        padding: '64px 32px',
-        backgroundColor: '#f8fafc'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: '#4F46E5',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            marginBottom: '16px'
-          }}>
-            Our Mission
-          </h2>
-          <p style={{
-            fontSize: '32px',
-            fontWeight: 600,
-            color: '#0f172a',
-            lineHeight: 1.4,
-            marginBottom: '32px'
-          }}>
-            Less noise. More hires.
-          </p>
-          <p style={{
-            fontSize: '18px',
-            color: '#475569',
-            lineHeight: 1.8
-          }}>
-            Every day, recruiters spend hours reading CVs that don't match. Every day, qualified candidates get overlooked because their CV didn't use the right keywords. We're building technology to fix both problems — AI that screens with evidence-based reasoning, explains its decisions, and helps everyone make better hiring choices.
-          </p>
-        </div>
-      </section>
-
-      {/* Why We're Different */}
-      <section style={{
-        padding: '80px 32px'
-      }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: '#0f172a',
-            marginBottom: '48px',
-            textAlign: 'center'
-          }}>
-            Why we built HireInbox
-          </h2>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '32px'
-          }}>
-            <div style={{
-              padding: '32px',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '16px'
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: '#eff6ff',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
-                Local Context Matters
-              </h3>
-              <p style={{ fontSize: '15px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
-                We understand CA(SA), BCom degrees, SAICA articles, and what "previously disadvantaged" means in employment equity context. Generic AI doesn't.
-              </p>
-            </div>
-
-            <div style={{
-              padding: '32px',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '16px'
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: '#f0fdf4',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2">
-                  <path d="M9 12l2 2 4-4"/>
-                  <circle cx="12" cy="12" r="10"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
-                Explainable AI
-              </h3>
-              <p style={{ fontSize: '15px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
-                Every decision comes with evidence. No black boxes. You can see exactly why a candidate scored the way they did — and defend it if needed.
-              </p>
-            </div>
-
-            <div style={{
-              padding: '32px',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '16px'
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: '#fef3c7',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0110 0v4"/>
-                </svg>
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
-                POPIA Compliant
-              </h3>
-              <p style={{ fontSize: '15px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
-                Full audit trails, data retention policies, and the ability to explain any automated decision. Built for South African compliance requirements.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team */}
-      <section style={{
-        padding: '80px 32px',
-        backgroundColor: '#f8fafc'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: '#0f172a',
-            marginBottom: '24px'
-          }}>
-            The Team
-          </h2>
-          <p style={{
-            fontSize: '18px',
-            color: '#64748b',
-            lineHeight: 1.7,
-            marginBottom: '48px'
-          }}>
-            HireInbox is led by experienced entrepreneurs who have built and scaled technology businesses in South Africa. We combine deep expertise in AI, recruitment, and enterprise software.
-          </p>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '32px',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{
-              padding: '32px',
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              minWidth: '280px'
-            }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                backgroundColor: '#4F46E5',
-                borderRadius: '50%',
-                margin: '0 auto 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                fontSize: '28px',
-                fontWeight: 600
-              }}>
-                SR
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
-                Simon Rubin
-              </h3>
-              <p style={{ fontSize: '14px', color: '#4F46E5', marginBottom: '12px' }}>
-                Founder
-              </p>
-              <p style={{ fontSize: '14px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
-                Cape Town-based entrepreneur with experience building technology products for the South African market.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section style={{
-        padding: '80px 32px',
-        textAlign: 'center'
-      }}>
-        <h2 style={{
-          fontSize: '36px',
+          fontSize: '32px',
           fontWeight: 700,
           color: '#0f172a',
           marginBottom: '24px'
         }}>
-          Ready to hire smarter?
-        </h2>
-        <p style={{
-          fontSize: '18px',
-          color: '#64748b',
-          marginBottom: '32px'
-        }}>
-          Join South African businesses using AI to find the right people, faster.
-        </p>
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => router.push('/signup')}
-            style={{
-              padding: '16px 32px',
-              backgroundColor: '#4F46E5',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Get Started Free
-          </button>
-          <button
-            onClick={() => router.push('/faq')}
-            style={{
-              padding: '16px 32px',
-              backgroundColor: '#f1f5f9',
-              color: '#475569',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Read FAQs
-          </button>
-        </div>
-      </section>
+          About HireInbox
+        </h1>
 
-      {/* Footer */}
-      <footer style={{
-        padding: '32px',
-        borderTop: '1px solid #f1f5f9',
-        textAlign: 'center'
-      }}>
-        <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-          HireInbox · 2026 · Built in South Africa
+        <p style={{
+          fontSize: '16px',
+          color: '#475569',
+          lineHeight: 1.7,
+          marginBottom: '24px'
+        }}>
+          HireInbox is an AI-powered CV screening tool built for the South African market. We help employers save time by automatically screening CVs against job requirements, with clear reasoning for every decision.
         </p>
-      </footer>
+
+        <p style={{
+          fontSize: '16px',
+          color: '#475569',
+          lineHeight: 1.7,
+          marginBottom: '40px'
+        }}>
+          Our AI understands local qualifications like CA(SA), BCom degrees, and South African companies. Every screening decision comes with evidence - no black boxes.
+        </p>
+
+        {/* Founder */}
+        <div style={{
+          padding: '24px',
+          backgroundColor: '#f8fafc',
+          borderRadius: '12px',
+          marginBottom: '40px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              background: '#4F46E5',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+              fontSize: '16px',
+              fontWeight: 600
+            }}>
+              SR
+            </div>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>Simon Rubin</div>
+              <div style={{ fontSize: '14px', color: '#64748b' }}>Founder, Cape Town</div>
+            </div>
+          </div>
+          <p style={{
+            fontSize: '15px',
+            color: '#475569',
+            lineHeight: 1.6,
+            margin: 0
+          }}>
+            I built HireInbox after seeing how much time recruiters spend reading CVs that don&apos;t fit. The AI does the first pass. You make the final call.
+          </p>
+        </div>
+
+        {/* Contact */}
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '12px' }}>
+            Questions? Get in touch.
+          </p>
+          <a
+            href="mailto:hello@hireinbox.co.za"
+            style={{
+              display: 'inline-block',
+              padding: '12px 24px',
+              backgroundColor: '#0f172a',
+              color: '#ffffff',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: 500
+            }}
+          >
+            hello@hireinbox.co.za
+          </a>
+        </div>
+      </main>
     </div>
   );
 }

@@ -35,21 +35,20 @@ export default function RecruiterEntryPage() {
   const options = [
     {
       id: 'volume',
-      emoji: '📥',
       label: 'Volume recruitment',
       subtitle: 'Post a role & receive CVs',
       description: 'Screen candidates from job postings. AI ranks and shortlists for you. Perfect for high-volume hiring.',
-      route: '/hire/dashboard', // Same dashboard as employers
+      route: '/hire/dashboard',
       badge: null
     },
     {
       id: 'boutique',
-      emoji: '🎯',
-      label: 'Executive / Boutique search',
+      label: 'Talent Mapping',
       subtitle: 'Map the market for a role',
       description: 'Describe who you need in plain English. AI searches public sources and returns a curated candidate list.',
       route: '/hire/recruiter/mapping',
-      badge: 'Talent Mapping'
+      badge: 'Live',
+      disabled: false
     }
   ];
 
@@ -107,30 +106,34 @@ export default function RecruiterEntryPage() {
         {options.map((option) => (
           <button
             key={option.id}
-            onClick={() => router.push(option.route)}
+            onClick={() => !option.disabled && router.push(option.route)}
+            disabled={option.disabled}
             style={{
               padding: '28px',
-              backgroundColor: '#ffffff',
+              backgroundColor: option.disabled ? '#f8fafc' : '#ffffff',
               color: '#0f172a',
               border: '2px solid #e2e8f0',
               borderRadius: '16px',
               fontSize: '16px',
               fontWeight: 600,
-              cursor: 'pointer',
+              cursor: option.disabled ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s',
               textAlign: 'left',
               display: 'flex',
               alignItems: 'flex-start',
               gap: '20px',
-              position: 'relative'
+              position: 'relative',
+              opacity: option.disabled ? 0.7 : 1
             }}
             onMouseOver={(e) => {
+              if (option.disabled) return;
               e.currentTarget.style.backgroundColor = '#f8fafc';
               e.currentTarget.style.borderColor = '#4F46E5';
               e.currentTarget.style.transform = 'translateY(-2px)';
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(79, 70, 229, 0.15)';
             }}
             onMouseOut={(e) => {
+              if (option.disabled) return;
               e.currentTarget.style.backgroundColor = '#ffffff';
               e.currentTarget.style.borderColor = '#e2e8f0';
               e.currentTarget.style.transform = 'translateY(0)';
@@ -142,7 +145,7 @@ export default function RecruiterEntryPage() {
                 position: 'absolute',
                 top: '-10px',
                 right: '16px',
-                backgroundColor: '#10B981',
+                backgroundColor: option.badge === 'Coming Soon' ? '#F59E0B' : '#10B981',
                 color: '#ffffff',
                 padding: '4px 12px',
                 borderRadius: '12px',
@@ -152,7 +155,28 @@ export default function RecruiterEntryPage() {
                 {option.badge}
               </div>
             )}
-            <span style={{ fontSize: '36px' }}>{option.emoji}</span>
+            <div style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              backgroundColor: option.id === 'volume' ? '#dbeafe' : '#ede9fe',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {option.id === 'volume' ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                  <circle cx="11" cy="11" r="3"/>
+                </svg>
+              )}
+            </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '4px' }}>
                 {option.label}
@@ -160,7 +184,7 @@ export default function RecruiterEntryPage() {
               <div style={{
                 fontSize: '15px',
                 fontWeight: 600,
-                color: '#4F46E5',
+                color: option.disabled ? '#94a3b8' : '#4F46E5',
                 marginBottom: '8px'
               }}>
                 {option.subtitle}
@@ -216,7 +240,10 @@ export default function RecruiterEntryPage() {
           zIndex: 50
         }}
       >
-        <span aria-hidden="true">💬</span> Support
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Support
       </button>
 
       {/* Tagline footer */}

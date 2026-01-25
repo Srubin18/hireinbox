@@ -28,7 +28,7 @@ const Logo = ({ size = 32 }: { size?: number }) => (
 );
 
 export default function TermsPage() {
-  const lastUpdated = '26 December 2024';
+  const lastUpdated = '25 January 2026';
 
   return (
     <div style={{
@@ -258,8 +258,33 @@ export default function TermsPage() {
             <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>
               8. Indemnification
             </h2>
+            <div style={{
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 16
+            }}>
+              <p style={{ color: '#DC2626', fontSize: '0.95rem', margin: 0, fontWeight: 600 }}>
+                IMPORTANT: Please read this section carefully.
+              </p>
+            </div>
+            <p style={{ color: '#475569', marginBottom: 16 }}>
+              To the maximum extent permitted by South African law, you agree to indemnify, defend, and hold harmless HireInbox (Pty) Ltd, its parent companies, subsidiaries, affiliates, and their respective officers, directors, employees, agents, partners, and licensors (collectively, the &quot;Indemnified Parties&quot;) from and against any and all claims, demands, actions, losses, damages, costs, liabilities, and expenses (including but not limited to reasonable attorneys&apos; fees, court costs, and expert witness fees) arising out of or relating to:
+            </p>
+            <ul style={{ color: '#475569', paddingLeft: 24, marginBottom: 16 }}>
+              <li style={{ marginBottom: 8 }}>Your use or misuse of the Service;</li>
+              <li style={{ marginBottom: 8 }}>Your violation of these Terms;</li>
+              <li style={{ marginBottom: 8 }}>Any hiring, employment, or recruitment decisions you make, whether or not based on information provided by the Service;</li>
+              <li style={{ marginBottom: 8 }}>Any content or information you submit, post, or transmit through the Service;</li>
+              <li style={{ marginBottom: 8 }}>Your violation of any law or the rights of any third party;</li>
+              <li style={{ marginBottom: 8 }}>Any claims by candidates, employees, or applicants related to your use of the Service;</li>
+              <li style={{ marginBottom: 8 }}>Claims arising from alleged discrimination, unfair labor practices, or violation of employment laws;</li>
+              <li style={{ marginBottom: 8 }}>Any unauthorized access to or use of our servers and/or any personal information stored therein;</li>
+              <li style={{ marginBottom: 8 }}>Any claim relating to the accuracy, reliability, or completeness of AI-generated recommendations.</li>
+            </ul>
             <p style={{ color: '#475569' }}>
-              You agree to indemnify, defend, and hold harmless HireInbox and its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including legal fees) arising from your use of the Service, violation of these Terms, or infringement of any third-party rights.
+              This indemnification obligation shall survive the termination of your account or these Terms. HireInbox reserves the right, at its own expense, to assume the exclusive defense and control of any matter otherwise subject to indemnification by you, in which event you will cooperate with us in asserting any available defenses.
             </p>
           </section>
 

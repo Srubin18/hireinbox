@@ -22,6 +22,38 @@ interface ClarifyingQuestion {
   answer?: string;
 }
 
+interface CandidateSource {
+  url: string;
+  type: string;
+  excerpt: string;
+}
+
+interface SalaryEstimate {
+  min: number;
+  max: number;
+  currency: string;
+  confidence: 'high' | 'medium' | 'low';
+  basis: string;
+}
+
+interface AvailabilitySignals {
+  score: number;
+  signals: string[];
+  interpretation: string;
+}
+
+interface SkillInferred {
+  skill: string;
+  evidence: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+interface CareerTrajectory {
+  direction: 'rising' | 'stable' | 'transitioning' | 'unknown';
+  evidence: string;
+  yearsInRole?: string;
+}
+
 interface MappedCandidate {
   id: string;
   name: string;
@@ -29,16 +61,42 @@ interface MappedCandidate {
   company: string;
   industry: string;
   location: string;
-  whyMatch: string;
-  sourceLinks: string[];
+  sources: CandidateSource[];
+  salaryEstimate: SalaryEstimate;
+  availabilitySignals: AvailabilitySignals;
+  skillsInferred: SkillInferred[];
+  careerTrajectory: CareerTrajectory;
+  matchScore: number;
+  matchReasons: string[];
+  potentialConcerns: string[];
   confidence: 'high' | 'medium' | 'low';
 }
 
+interface MarketIntelligence {
+  talentPoolSize: string;
+  competitorActivity: { company: string; signal: string }[];
+  salaryTrends: string;
+  marketTightness: 'tight' | 'balanced' | 'abundant';
+  recommendations: string[];
+}
+
+interface SearchCriteria {
+  originalPrompt: string;
+  parsed: {
+    role: string;
+    location: string;
+    experience: string;
+    industry: string;
+    mustHaves: string[];
+    niceToHaves: string[];
+  };
+}
+
 interface MappingResult {
-  marketOverview: string;
-  totalFound: number;
+  marketIntelligence: MarketIntelligence;
   candidates: MappedCandidate[];
-  searchCriteria: string;
+  searchCriteria: SearchCriteria;
+  sourcesSearched: number;
   completedAt: string;
 }
 
@@ -65,7 +123,15 @@ const CONFIDENCE_STYLES = {
   low: { label: 'Low', color: '#64748b', bgColor: '#f1f5f9' }
 };
 
-// Result will be populated from API - no more fake data
+const MARKET_TIGHTNESS_LABELS = {
+  tight: { label: 'Competitive', color: '#dc2626' },
+  balanced: { label: 'Balanced', color: '#d97706' },
+  abundant: { label: 'Available', color: '#059669' }
+};
+
+function formatSalary(amount: number): string {
+  return `R${(amount / 1000).toFixed(0)}k`;
+}
 
 export default function TalentMappingPage() {
   const router = useRouter();
@@ -190,15 +256,17 @@ export default function TalentMappingPage() {
     alert('Export functionality - would download CSV with selected candidates');
   };
 
-  const handleDraftOutreach = useCallback((candidate: MappedCandidate, searchRole?: string) => {
-    const roleDescription = searchRole || 'a similar role';
-    const draft = `Subject: Opportunity - ${candidate.currentRole} role
+  const handleDraftOutreach = useCallback((candidate: MappedCandidate, roleDescription?: string) => {
+    const role = roleDescription || candidate.currentRole;
+    const topSkills = candidate.skillsInferred.slice(0, 2).map(s => s.skill).join(' and ');
+
+    const draft = `Subject: Opportunity - ${role}
 
 Hi ${candidate.name.split(' ')[0]},
 
 I came across your profile and was impressed by your experience as ${candidate.currentRole} at ${candidate.company}.
 
-I'm working with a client who is looking for ${roleDescription} in ${candidate.location}, and I believe your background could be an excellent fit.
+${topSkills ? `Your expertise in ${topSkills} caught my attention. ` : ''}I'm working with a client who is looking for a ${role} in ${candidate.location}, and I believe your background could be an excellent fit.
 
 Would you be open to a brief conversation to learn more?
 
@@ -278,7 +346,9 @@ Best regards,
           display: 'flex',
           gap: '12px'
         }}>
-          <span style={{ fontSize: '20px' }} aria-hidden="true">⚖️</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" aria-hidden="true">
+            <path d="M12 3v18M5 7l7-4 7 4M5 7v3l7 4 7-4V7M5 17l7 4 7-4"/>
+          </svg>
           <div style={{ fontSize: '13px', color: '#92400e', lineHeight: 1.5 }}>
             <strong>Legal & Ethical:</strong> We only use publicly available sources (company websites, press releases, conference bios, public articles). We do not scrape social media, collect contact information, or message candidates directly.
           </div>
@@ -408,94 +478,70 @@ Best regards,
       padding: '60px 24px',
       textAlign: 'center'
     }}>
+      {/* Spinner */}
       <div style={{
-        width: '100px',
-        height: '100px',
+        width: '64px',
+        height: '64px',
         margin: '0 auto 32px',
+        border: '4px solid #e2e8f0',
+        borderTopColor: '#4F46E5',
         borderRadius: '50%',
-        backgroundColor: '#4F46E5',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        animation: 'pulse 2s infinite'
-      }}>
-        <span style={{ fontSize: '48px' }} aria-hidden="true">✨</span>
-      </div>
+        animation: 'spin 1s linear infinite'
+      }} />
 
       <h2 style={{
-        fontSize: '28px',
+        fontSize: '24px',
         fontWeight: 700,
         color: '#0f172a',
-        marginBottom: '16px'
+        marginBottom: '12px'
       }}>
-        Magic in progress...
+        Mapping talent pool
       </h2>
 
       <p style={{
-        fontSize: '16px',
+        fontSize: '15px',
         color: '#64748b',
-        marginBottom: '24px',
+        marginBottom: '32px',
         lineHeight: 1.6
       }}>
-        AI is mapping the market based on your requirements.
+        Analysing public sources for matching candidates
       </p>
 
-      {/* Show what was understood from the prompt */}
+      {/* Search summary */}
       <div style={{
         backgroundColor: '#f8fafc',
         border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '20px',
+        borderRadius: '10px',
+        padding: '16px',
         marginBottom: '24px',
         textAlign: 'left'
       }}>
-        <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
-          Your search
+        <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>
+          Search criteria
         </div>
-        <div style={{ fontSize: '14px', color: '#374151', lineHeight: 1.6, fontStyle: 'italic' }}>
-          "{searchPrompt}"
-        </div>
-      </div>
-
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        marginBottom: '32px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981', animation: 'pulse 1s infinite' }} />
-          <span style={{ fontSize: '14px', color: '#475569' }}>Scanning public sources...</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fbbf24', animation: 'pulse 1.5s infinite' }} />
-          <span style={{ fontSize: '14px', color: '#475569' }}>Building candidate profiles...</span>
+        <div style={{ fontSize: '14px', color: '#374151', lineHeight: 1.5 }}>
+          {searchPrompt}
         </div>
       </div>
 
       <div style={{
-        backgroundColor: '#f0fdf4',
-        border: '1px solid #86efac',
-        borderRadius: '10px',
-        padding: '16px',
-        fontSize: '14px',
-        color: '#166534'
+        fontSize: '13px',
+        color: '#94a3b8'
       }}>
-        <strong>Demo mode:</strong> Results will appear in a few seconds. In production, this takes 30-90 minutes and you'll be notified by email.
+        This typically takes 15-30 seconds
       </div>
 
       <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.8; }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>
   );
 
   const renderResultsStep = () => (
-    <div style={{ padding: '24px' }}>
-      {/* Market Overview */}
+    <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
+      {/* Market Intelligence */}
       <div style={{
         backgroundColor: '#ffffff',
         border: '1px solid #e2e8f0',
@@ -503,30 +549,59 @@ Best regards,
         padding: '24px',
         marginBottom: '24px'
       }}>
-        <h2 style={{
-          fontSize: '18px',
-          fontWeight: 700,
-          color: '#0f172a',
-          marginBottom: '12px'
-        }}>
-          Market Overview
-        </h2>
-        <p style={{
-          fontSize: '14px',
-          color: '#475569',
-          lineHeight: 1.7
-        }}>
-          {result?.marketOverview}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <h2 style={{
+            fontSize: '18px',
+            fontWeight: 700,
+            color: '#0f172a'
+          }}>
+            Market Intelligence
+          </h2>
+          {result?.marketIntelligence?.marketTightness && (
+            <span style={{
+              padding: '4px 10px',
+              backgroundColor: '#f1f5f9',
+              color: MARKET_TIGHTNESS_LABELS[result.marketIntelligence.marketTightness]?.color || '#64748b',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: 600
+            }}>
+              {MARKET_TIGHTNESS_LABELS[result.marketIntelligence.marketTightness]?.label || 'Unknown'} market
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div>
+            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Talent Pool</div>
+            <div style={{ fontSize: '14px', color: '#0f172a' }}>{result?.marketIntelligence?.talentPoolSize || 'Analysing...'}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Salary Trends</div>
+            <div style={{ fontSize: '14px', color: '#0f172a' }}>{result?.marketIntelligence?.salaryTrends || 'Analysing...'}</div>
+          </div>
+        </div>
+
+        {result?.marketIntelligence?.recommendations && result.marketIntelligence.recommendations.length > 0 && (
+          <div style={{ backgroundColor: '#fef3c7', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#92400e', marginBottom: '6px' }}>Recommendations</div>
+            <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '13px', color: '#78350f' }}>
+              {result.marketIntelligence.recommendations.map((rec, i) => (
+                <li key={i} style={{ marginBottom: '4px' }}>{rec}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div style={{
           marginTop: '16px',
-          padding: '12px',
+          padding: '10px 12px',
           backgroundColor: '#f8fafc',
-          borderRadius: '8px',
-          fontSize: '13px',
+          borderRadius: '6px',
+          fontSize: '12px',
           color: '#64748b'
         }}>
-          Search: {result?.searchCriteria} • Found {result?.totalFound} potential matches
+          Searched {result?.sourcesSearched || 0} sources • {result?.searchCriteria?.parsed?.role || 'Role'} in {result?.searchCriteria?.parsed?.location || 'Location'}
         </div>
       </div>
 
@@ -561,7 +636,7 @@ Best regards,
       </div>
 
       {/* Candidates list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {result?.candidates.map((candidate) => (
           <div
             key={candidate.id}
@@ -573,15 +648,16 @@ Best regards,
               transition: 'all 0.2s'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Header row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                 <input
                   type="checkbox"
                   id={`candidate-${candidate.id}`}
                   checked={selectedCandidates.has(candidate.id)}
                   onChange={() => toggleCandidate(candidate.id)}
                   aria-label={`Select ${candidate.name}`}
-                  style={{ width: '18px', height: '18px', accentColor: '#4F46E5' }}
+                  style={{ width: '18px', height: '18px', accentColor: '#4F46E5', marginTop: '3px' }}
                 />
                 <label htmlFor={`candidate-${candidate.id}`} style={{ cursor: 'pointer' }}>
                   <div style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
@@ -590,57 +666,116 @@ Best regards,
                   <div style={{ fontSize: '14px', color: '#64748b', marginTop: '2px' }}>
                     {candidate.currentRole} at {candidate.company}
                   </div>
+                  <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>
+                    {candidate.industry} • {candidate.location}
+                  </div>
                 </label>
               </div>
-              <span style={{
-                padding: '4px 10px',
-                backgroundColor: CONFIDENCE_STYLES[candidate.confidence].bgColor,
-                color: CONFIDENCE_STYLES[candidate.confidence].color,
-                borderRadius: '12px',
-                fontSize: '12px',
-                fontWeight: 500
-              }}>
-                {CONFIDENCE_STYLES[candidate.confidence].label} confidence
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                <div style={{
+                  padding: '6px 12px',
+                  backgroundColor: candidate.matchScore >= 80 ? '#d1fae5' : candidate.matchScore >= 60 ? '#fef3c7' : '#f1f5f9',
+                  color: candidate.matchScore >= 80 ? '#059669' : candidate.matchScore >= 60 ? '#d97706' : '#64748b',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 700
+                }}>
+                  {candidate.matchScore}% match
+                </div>
+                <span style={{
+                  fontSize: '11px',
+                  color: CONFIDENCE_STYLES[candidate.confidence].color
+                }}>
+                  {CONFIDENCE_STYLES[candidate.confidence].label} confidence
+                </span>
+              </div>
             </div>
 
+            {/* Key metrics row */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
-              marginBottom: '12px',
-              fontSize: '13px'
-            }}>
-              <div>
-                <span style={{ color: '#94a3b8' }}>Industry:</span>{' '}
-                <span style={{ color: '#475569' }}>{candidate.industry}</span>
-              </div>
-              <div>
-                <span style={{ color: '#94a3b8' }}>Location:</span>{' '}
-                <span style={{ color: '#475569' }}>{candidate.location}</span>
-              </div>
-              <div>
-                <span style={{ color: '#94a3b8' }}>Sources:</span>{' '}
-                <span style={{ color: '#4F46E5' }}>{candidate.sourceLinks.length} link(s)</span>
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: '#f8fafc',
+              marginBottom: '16px',
               padding: '12px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              color: '#475569',
-              lineHeight: 1.5,
-              marginBottom: '12px'
+              backgroundColor: '#f8fafc',
+              borderRadius: '8px'
             }}>
-              <strong>Why they match:</strong> {candidate.whyMatch}
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Salary Estimate</div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                  {formatSalary(candidate.salaryEstimate.min)} - {formatSalary(candidate.salaryEstimate.max)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Availability</div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: candidate.availabilitySignals.score >= 7 ? '#059669' : candidate.availabilitySignals.score >= 4 ? '#d97706' : '#64748b' }}>
+                  {candidate.availabilitySignals.score}/10
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Trajectory</div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>
+                  {candidate.careerTrajectory.direction}
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {candidate.sourceLinks.length > 0 && (
+            {/* Match reasons */}
+            {candidate.matchReasons.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#059669', marginBottom: '6px' }}>Why they match</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {candidate.matchReasons.map((reason, i) => (
+                    <span key={i} style={{
+                      padding: '4px 8px',
+                      backgroundColor: '#d1fae5',
+                      color: '#065f46',
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Potential concerns */}
+            {candidate.potentialConcerns.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#d97706', marginBottom: '6px' }}>Considerations</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {candidate.potentialConcerns.map((concern, i) => (
+                    <span key={i} style={{
+                      padding: '4px 8px',
+                      backgroundColor: '#fef3c7',
+                      color: '#92400e',
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      {concern}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Skills inferred */}
+            {candidate.skillsInferred.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>Skills Inferred</div>
+                <div style={{ fontSize: '13px', color: '#475569' }}>
+                  {candidate.skillsInferred.slice(0, 3).map(s => s.skill).join(' • ')}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+              {candidate.sources.length > 0 && (
                 <button
-                  onClick={() => window.open(candidate.sourceLinks[0], '_blank')}
+                  onClick={() => window.open(candidate.sources[0].url, '_blank')}
                   style={{
                     padding: '8px 14px',
                     backgroundColor: '#f1f5f9',
@@ -652,11 +787,11 @@ Best regards,
                     cursor: 'pointer'
                   }}
                 >
-                  View Source
+                  View Source ({candidate.sources.length})
                 </button>
               )}
               <button
-                onClick={() => handleDraftOutreach(candidate, result?.searchCriteria)}
+                onClick={() => handleDraftOutreach(candidate, result?.searchCriteria?.parsed?.role)}
                 style={{
                   padding: '8px 14px',
                   backgroundColor: '#4F46E5',
@@ -867,7 +1002,10 @@ Best regards,
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         }}
       >
-        <span aria-hidden="true">💬</span> Support
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        Support
       </button>
     </div>
   );

@@ -2,98 +2,76 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 // ============================================
 // HIREINBOX - FAQ PAGE
-// Professional, comprehensive, builds trust
+// Simple, professional, comprehensive
 // ============================================
 
 interface FAQItem {
   question: string;
   answer: string;
-  category: 'general' | 'employers' | 'candidates' | 'pricing' | 'security';
 }
 
 const faqs: FAQItem[] = [
-  // General
   {
-    category: 'general',
     question: 'What is HireInbox?',
-    answer: 'HireInbox is an AI-powered recruitment platform built for the South African market. We help employers screen CVs faster with explainable AI, and help job seekers improve their CVs and interview skills. Our AI understands local qualifications like CA(SA), BCom degrees, and South African companies.'
+    answer: 'HireInbox is an AI-powered recruitment platform built specifically for the South African market. We help employers screen CVs faster using explainable AI that shows its reasoning, and we help job seekers improve their CVs and interview skills. Our AI understands local qualifications like CA(SA), BCom degrees, and recognises South African companies and institutions.'
   },
   {
-    category: 'general',
-    question: 'How is HireInbox different from other recruitment tools?',
-    answer: 'Three key differences: First, our AI provides evidence-based reasoning - every recommendation includes quotes from the CV explaining why. Second, we\'re built specifically for South Africa, understanding local qualifications and context. Third, we\'re inbox-native - work where you already work, not in another system to learn.'
-  },
-  // Employers
-  {
-    category: 'employers',
-    question: 'How does CV screening work?',
-    answer: 'When candidates email their CVs to your HireInbox address, our AI automatically screens them against your job requirements. Each candidate receives a score (0-100) with detailed reasoning. You\'ll see a ranked shortlist with the AI\'s analysis of strengths, gaps, and interview focus areas - all backed by evidence from the CV.'
+    question: 'How does CV screening work for employers?',
+    answer: 'When candidates apply for your roles, their CVs flow into your HireInbox dashboard where our AI automatically screens them against your job requirements. Each candidate receives a score from 0-100 with detailed reasoning that explains exactly why they scored that way. You\'ll see a ranked shortlist with the AI\'s analysis of each candidate\'s strengths, potential gaps, and suggested interview focus areas - all backed by direct evidence quoted from the CV itself.'
   },
   {
-    category: 'employers',
-    question: 'Can I use HireInbox with job boards like Careers24 or Gumtree?',
-    answer: 'Yes. When posting jobs on Gumtree or Careers24, use your HireInbox email address as the application email. CVs will flow directly into HireInbox for AI screening. Note: LinkedIn and PNet use their own messaging systems, so applications from those platforms would need to be forwarded manually.'
+    question: 'Can I use HireInbox with external job boards?',
+    answer: 'Yes. When you post jobs on external job boards, you can direct applications to flow into HireInbox. CVs submitted through these channels will automatically appear in your dashboard for AI screening. This means you can advertise widely while keeping all your applications organised and screened in one central place.'
   },
   {
-    category: 'employers',
     question: 'What if I\'m hiring for multiple roles at once?',
-    answer: 'HireInbox handles this seamlessly. Our AI reads the email subject line to match applications to the correct role. If it\'s unclear which role an application is for, it goes to an "Unassigned" queue where you can manually assign it. This works even if you have 10+ roles open simultaneously.'
-  },
-  // Candidates
-  {
-    category: 'candidates',
-    question: 'Is the CV scan really free?',
-    answer: 'Yes. Every job seeker gets one free CV scan with detailed feedback on structure, clarity, and ATS compatibility. We\'ll show you exactly what\'s working and what to improve. Premium services like video analysis and CV rewriting are available if you want to go further.'
+    answer: 'HireInbox handles multiple concurrent roles seamlessly. Our AI intelligently routes applications to the correct role based on context. If it\'s ever unclear which role an application is for, it goes to an "Unassigned" queue where you can manually assign it. This works smoothly even if you have 10 or more positions open simultaneously.'
   },
   {
-    category: 'candidates',
+    question: 'What are AI Interviews and how do they work?',
+    answer: 'AI Interviews are automated video interviews that candidates complete at their convenience. You set the questions, and candidates record their responses. Our AI then analyses each response for content quality, communication skills, confidence, and relevance to the role. You receive a detailed report with timestamps, key moments, and suggested follow-up questions for the live interview. This helps you pre-screen candidates before investing time in face-to-face meetings.'
+  },
+  {
     question: 'What is the Talent Pool?',
-    answer: 'The Talent Pool is our opt-in marketplace where vetted candidates can be discovered by employers. After completing your profile (CV + optional video), you can choose to join the Talent Pool. Our AI matches you to relevant roles posted by employers on HireInbox. Your contact details stay private until you accept a connection.'
+    answer: 'The Talent Pool is our opt-in marketplace where pre-screened candidates can be discovered by employers actively hiring. Job seekers complete their profile with a CV and optional video introduction, then choose to join the pool. Our AI matches them to relevant roles posted by employers. Candidate contact details remain private until they accept a connection request, giving them full control over who can reach them.'
   },
-  // Pricing
   {
-    category: 'pricing',
+    question: 'What verification services do you offer?',
+    answer: 'We offer comprehensive candidate verification including ID verification to confirm identity, criminal record checks through official channels, and reference verification where we contact previous employers on your behalf. All verification results are documented and stored in your dashboard alongside the candidate\'s screening results, giving you a complete picture before making hiring decisions.'
+  },
+  {
+    question: 'Is the CV scan free for job seekers?',
+    answer: 'Yes. Every job seeker gets one free CV scan with detailed, actionable feedback on structure, clarity, presentation, and content. We show you exactly what\'s working well and what specific improvements would make the biggest difference. If you want to go further, premium services like personalised video analysis and professional CV rewriting are available.'
+  },
+  {
     question: 'How much does HireInbox cost for employers?',
-    answer: 'We charge per role, not per CV - so you\'re never penalised for receiving many applications. AI CV Screening is R1,750 per role (unlimited CVs). Add AI Interviews for R1,250 per role. Add Verification (ID, criminal, references) for R800 per role. The full package is R3,800 per role.'
+    answer: 'We charge per role, not per CV, so you get predictable costs regardless of how many applications you receive. AI CV Screening is R1,750 per role and includes screening for up to 200 CVs. You can add AI Interviews for R1,250 per role, or add Verification services (ID, criminal checks, references) for R800 per role. The complete package with everything included is R3,800 per role.'
   },
   {
-    category: 'pricing',
     question: 'Why do you charge per role instead of per CV?',
-    answer: 'Because employers can\'t control how many CVs they receive. A popular job might get 200 applications - you shouldn\'t be charged more for that. Per-role pricing gives you predictable costs and unlimited screening for each position you\'re filling.'
+    answer: 'Because employers cannot control how many CVs they receive for a position. Per-CV pricing would penalise you for posting popular jobs or advertising effectively. Our per-role pricing gives you complete cost certainty - you know exactly what you\'ll pay before you start, whether you receive 10 applications or 200.'
   },
-  // Security
   {
-    category: 'security',
+    question: 'How much does it cost to use the Talent Pool?',
+    answer: 'For job seekers, joining the Talent Pool is completely free. You create your profile, upload your CV, and get matched to relevant opportunities at no cost. For employers, posting a job to the Talent Pool costs R2,500 per listing. This gives you access to pre-screened candidates who have already been evaluated by our AI, saving you significant time in the initial screening process.'
+  },
+  {
     question: 'Is my data safe? Are you POPIA compliant?',
-    answer: 'Yes. We take data protection seriously. All data is stored securely in South Africa-accessible servers. We maintain full audit trails of all AI decisions (required for POPIA compliance). Candidate data is retained for 365 days then automatically deleted. You can request data deletion at any time.'
+    answer: 'Yes. We take data protection seriously and are fully compliant with South Africa\'s Protection of Personal Information Act (POPIA). All data is stored securely with encryption. We maintain complete audit trails of all AI decisions, which is essential for POPIA compliance and allows you to explain any hiring decision if challenged. Candidate data is retained for 365 days and then automatically deleted. You or any candidate can request immediate data deletion at any time.'
   },
   {
-    category: 'security',
     question: 'How does the AI make decisions? Can you explain them?',
-    answer: 'Absolutely - explainability is core to HireInbox. Every AI recommendation includes the specific evidence it used: quotes from the CV, qualifications matched, experience gaps identified. This isn\'t a black box. You can see exactly why each candidate scored the way they did, and defend that decision if challenged.'
+    answer: 'Explainability is fundamental to how HireInbox works. Every AI recommendation includes the specific evidence it used to reach that conclusion: direct quotes from the CV, qualifications that were matched or missing, experience that aligned or fell short. This is not a black box. You can see exactly why each candidate scored the way they did, understand the reasoning, and confidently defend that decision to anyone who asks.'
   }
-];
-
-const categories = [
-  { id: 'all', label: 'All Questions' },
-  { id: 'general', label: 'General' },
-  { id: 'employers', label: 'For Employers' },
-  { id: 'candidates', label: 'For Job Seekers' },
-  { id: 'pricing', label: 'Pricing' },
-  { id: 'security', label: 'Security & Privacy' }
 ];
 
 export default function FAQPage() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-
-  const filteredFaqs = activeCategory === 'all'
-    ? faqs
-    : faqs.filter(f => f.category === activeCategory);
 
   return (
     <div style={{
@@ -110,7 +88,7 @@ export default function FAQPage() {
         alignItems: 'center'
       }}>
         <div
-          onClick={() => router.push('/home')}
+          onClick={() => router.push('/')}
           style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
         >
           <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
@@ -158,15 +136,20 @@ export default function FAQPage() {
         </div>
       </header>
 
+      {/* Breadcrumbs */}
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 32px' }}>
+        <Breadcrumbs items={[{ label: 'FAQ' }]} />
+      </div>
+
       {/* Hero */}
       <section style={{
-        padding: '64px 32px 48px',
+        padding: '48px 32px 48px',
         textAlign: 'center',
         maxWidth: '800px',
         margin: '0 auto'
       }}>
         <h1 style={{
-          fontSize: '42px',
+          fontSize: '36px',
           fontWeight: 700,
           color: '#0f172a',
           marginBottom: '16px',
@@ -175,46 +158,13 @@ export default function FAQPage() {
           Frequently Asked Questions
         </h1>
         <p style={{
-          fontSize: '18px',
+          fontSize: '17px',
           color: '#64748b',
           lineHeight: 1.6
         }}>
-          Everything you need to know about HireInbox. Can't find what you're looking for? <a href="mailto:hello@hireinbox.co.za" style={{ color: '#4F46E5', textDecoration: 'none' }}>Get in touch</a>.
+          Everything you need to know about HireInbox. Can&apos;t find what you&apos;re looking for?{' '}
+          <a href="mailto:hello@hireinbox.co.za" style={{ color: '#4F46E5', textDecoration: 'none' }}>Get in touch</a>.
         </p>
-      </section>
-
-      {/* Category Filter */}
-      <section style={{
-        maxWidth: '900px',
-        margin: '0 auto',
-        padding: '0 32px 32px'
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          flexWrap: 'wrap',
-          justifyContent: 'center'
-        }}>
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: activeCategory === cat.id ? '#4F46E5' : '#f1f5f9',
-                color: activeCategory === cat.id ? '#ffffff' : '#475569',
-                border: 'none',
-                borderRadius: '24px',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
       </section>
 
       {/* FAQ List */}
@@ -224,7 +174,7 @@ export default function FAQPage() {
         padding: '0 32px 80px'
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {filteredFaqs.map((faq, index) => (
+          {faqs.map((faq, index) => (
             <div
               key={index}
               style={{
@@ -261,7 +211,8 @@ export default function FAQPage() {
                   fontSize: '20px',
                   color: '#94a3b8',
                   transform: expandedIndex === index ? 'rotate(45deg)' : 'none',
-                  transition: 'transform 0.2s'
+                  transition: 'transform 0.2s',
+                  flexShrink: 0
                 }}>
                   +
                 </span>
@@ -274,7 +225,7 @@ export default function FAQPage() {
                   <p style={{
                     fontSize: '15px',
                     color: '#475569',
-                    lineHeight: 1.7,
+                    lineHeight: 1.8,
                     margin: 0
                   }}>
                     {faq.answer}
@@ -305,7 +256,7 @@ export default function FAQPage() {
           color: '#64748b',
           marginBottom: '32px'
         }}>
-          Our team is here to help. Get in touch and we'll respond within 24 hours.
+          Our team is here to help. Get in touch and we&apos;ll respond within 24 hours.
         </p>
         <a
           href="mailto:hello@hireinbox.co.za"

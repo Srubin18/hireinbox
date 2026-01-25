@@ -99,6 +99,69 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {/* JSON-LD Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://hireinbox.co.za/#organization",
+                  "name": "HireInbox",
+                  "url": "https://hireinbox.co.za",
+                  "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://hireinbox.co.za/logo.png"
+                  },
+                  "description": "AI-powered CV screening platform for South African businesses",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Cape Town",
+                    "addressCountry": "ZA"
+                  },
+                  "sameAs": []
+                },
+                {
+                  "@type": "SoftwareApplication",
+                  "@id": "https://hireinbox.co.za/#application",
+                  "name": "HireInbox",
+                  "applicationCategory": "BusinessApplication",
+                  "operatingSystem": "Web Browser",
+                  "description": "AI CV Screening for South African SMEs - Screen CVs in seconds with explainable AI decisions",
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "1750",
+                    "priceCurrency": "ZAR",
+                    "priceValidUntil": "2026-12-31",
+                    "description": "Per role pricing - unlimited CVs"
+                  },
+                  "provider": {
+                    "@id": "https://hireinbox.co.za/#organization"
+                  },
+                  "featureList": [
+                    "AI CV Screening",
+                    "Evidence-based decisions",
+                    "POPIA compliant",
+                    "South African context",
+                    "Unlimited CVs per role"
+                  ]
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://hireinbox.co.za/#website",
+                  "url": "https://hireinbox.co.za",
+                  "name": "HireInbox",
+                  "publisher": {
+                    "@id": "https://hireinbox.co.za/#organization"
+                  },
+                  "inLanguage": "en-ZA"
+                }
+              ]
+            })
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

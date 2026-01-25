@@ -2,15 +2,13 @@
 // B2C API: Analyze CV for job seekers (no role required)
 // Returns general feedback, strengths, weaknesses, and improvement suggestions
 //
-// RATE LIMITING: Should be rate-limited to:
-// - 10 requests per hour per IP (anonymous)
-// - 50 requests per hour per authenticated user
-// - Implement with Vercel KV or Upstash Redis in production
+// RATE LIMITING: 10 requests per minute for AI endpoints (enforced)
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { SA_CONTEXT_PROMPT, SA_RECRUITER_CONTEXT } from '@/lib/sa-context';
 import { Errors, generateTraceId } from '@/lib/api-error';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 // Only log verbose debug info in development
 const IS_DEV = process.env.NODE_ENV !== 'production';
@@ -290,6 +288,10 @@ async function extractWordText(buffer: Buffer): Promise<string> {
 }
 
 export async function POST(request: Request) {
+  // Apply rate limiting (10 requests per minute for AI endpoints)
+  const rateLimited = withRateLimit(request, 'analyze-cv', RATE_LIMITS.ai);
+  if (rateLimited) return rateLimited;
+
   const traceId = generateTraceId();
   if (IS_DEV) console.log(`[${traceId}][B2C] CV Analysis request received`);
 

@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useUsage, TIER_LIMITS } from '@/lib/usage-context';
 import { B2B_PRICING, B2C_PRICING, formatPrice } from '@/lib/pricing';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 /* ===========================================
    HIREINBOX PRICING PAGE
@@ -31,7 +32,7 @@ const Logo = ({ size = 32 }: { size?: number }) => (
         <span style={{ color: '#0f172a' }}>Hire</span>
         <span style={{ color: '#4F46E5' }}>Inbox</span>
       </span>
-      <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500 }}>Less noise. Better hires.</span>
+      <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500 }}>AI that shows its working</span>
     </div>
   </a>
 );
@@ -115,9 +116,14 @@ function PricingContent() {
         </div>
       </header>
 
+      {/* Breadcrumbs */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+        <Breadcrumbs items={[{ label: 'Pricing' }]} />
+      </div>
+
       {/* Hero Section */}
       <section style={{
-        padding: '60px 24px 40px',
+        padding: '40px 24px 40px',
         textAlign: 'center',
         background: 'linear-gradient(180deg, #F8FAFC 0%, #ffffff 100%)'
       }}>
@@ -705,6 +711,77 @@ function PricingContent() {
         </div>
       </section>
 
+      {/* Feature Comparison Table */}
+      <section style={{
+        padding: '60px 24px',
+        backgroundColor: '#ffffff'
+      }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <h2 style={{
+            fontSize: '1.75rem',
+            fontWeight: 700,
+            color: '#0F172A',
+            marginBottom: '12px',
+            textAlign: 'center'
+          }}>
+            Feature Comparison
+          </h2>
+          <p style={{
+            fontSize: '1rem',
+            color: '#64748B',
+            textAlign: 'center',
+            marginBottom: '32px'
+          }}>
+            See what's included in each plan
+          </p>
+
+          <div style={{
+            overflowX: 'auto',
+            borderRadius: '12px',
+            border: '1px solid #E5E7EB'
+          }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px'
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 600, borderBottom: '1px solid #E5E7EB' }}>Feature</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600, borderBottom: '1px solid #E5E7EB' }}>Free</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600, borderBottom: '1px solid #E5E7EB', backgroundColor: '#EEF2FF' }}>Per-Role</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600, borderBottom: '1px solid #E5E7EB' }}>Enterprise</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { feature: 'AI CV Screening', free: '10 CVs', perRole: 'Unlimited', enterprise: 'Unlimited' },
+                  { feature: 'Candidate Ranking', free: '✓', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Evidence-based Scoring', free: '✓', perRole: '✓', enterprise: '✓' },
+                  { feature: 'ATS Compatibility Check', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Acknowledgement Emails', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Outcome Emails', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'AI Interview Add-on', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Verification Add-on', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Talent Pool Access', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Team Members', free: '1', perRole: '3', enterprise: 'Unlimited' },
+                  { feature: 'API Access', free: '—', perRole: '—', enterprise: '✓' },
+                  { feature: 'Priority Support', free: '—', perRole: '—', enterprise: '✓' },
+                  { feature: 'Custom Integrations', free: '—', perRole: '—', enterprise: '✓' },
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <td style={{ padding: '14px 20px', color: '#374151' }}>{row.feature}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', color: row.free === '—' ? '#9CA3AF' : '#374151' }}>{row.free}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', backgroundColor: '#FAFAFE', color: row.perRole === '—' ? '#9CA3AF' : '#374151', fontWeight: row.perRole !== '—' ? 500 : 400 }}>{row.perRole}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', color: row.enterprise === '—' ? '#9CA3AF' : '#374151' }}>{row.enterprise}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section style={{
         padding: '60px 24px',
@@ -796,7 +873,7 @@ function PricingContent() {
             <a href="/privacy" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.875rem' }}>Privacy</a>
             <a href="/terms" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.875rem' }}>Terms</a>
             <span style={{ color: '#94A3B8', fontSize: '0.875rem' }}>
-              Made in Cape Town
+              Built in Cape Town, South Africa
             </span>
           </div>
         </div>

@@ -22,12 +22,12 @@ export const B2B_PRICING = {
   CV_SCREENING: {
     id: 'cv-screening',
     name: 'AI CV Screening',
-    description: 'Unlimited CVs for one role, AI ranking & scoring, shortlist generation, acknowledgment emails',
+    description: 'Up to 200 CVs for one role, AI ranking & scoring, shortlist generation, acknowledgment emails',
     price: 1750, // R1,750 per role
     priceDisplay: 'R1,750',
     unit: 'per role',
     includes: [
-      'Unlimited CV screening for one role',
+      'Up to 200 CVs per role',
       'AI-powered ranking & scoring',
       'Automatic shortlist generation',
       'Candidate acknowledgment emails',
@@ -162,6 +162,32 @@ export const B2B_PRICING = {
     price: 20000, // R20,000/month
     priceDisplay: 'R20,000',
     unit: 'per month',
+  },
+} as const;
+
+// ============================================
+// B2C PRICING - JOB SEEKERS
+// ============================================
+
+// ============================================
+// TALENT POOL PRICING
+// ============================================
+
+export const TALENT_POOL_PRICING = {
+  CANDIDATE_JOIN: {
+    id: 'tp-candidate',
+    name: 'Join Talent Pool',
+    price: 0,
+    priceDisplay: 'FREE',
+    description: 'Get discovered by employers actively hiring',
+  },
+  EMPLOYER_POST_JOB: {
+    id: 'tp-employer-post',
+    name: 'Post Job to Talent Pool',
+    price: 2500, // R2,500 per listing
+    priceDisplay: 'R2,500',
+    unit: 'per listing',
+    description: 'Post a role and get matched with pre-screened candidates',
   },
 } as const;
 
