@@ -12,12 +12,8 @@ import { createServerClient, CookieOptions } from '@supabase/ssr';
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
   '/',                 // Homepage (public demo)
-  '/hire',             // B2B landing
-  '/hire/ai-staff',    // AI Staff product page
+  '/hire',             // B2B landing & all hire pages
   '/candidates',       // B2C landing
-  '/candidates/cv',    // B2C CV upload
-  '/candidates/video', // B2C video
-  '/candidates/talent-pool', // B2C talent pool
   '/upload',           // B2C CV upload (public)
   '/login',            // Auth pages
   '/signup',
@@ -26,9 +22,10 @@ const PUBLIC_ROUTES = [
   '/pricing',          // Pricing page
   '/about',            // About page
   '/faq',              // FAQ page
-  '/talent-pool',      // Talent pool browse
+  '/talent-pool',      // Talent pool (all pages)
   '/terms',            // Legal
   '/privacy',          // Legal
+  '/admin',            // Admin dashboard (demo)
   '/api/analyze-cv',   // B2C API (public)
   '/api/analyze-video', // B2C API (public)
   '/api/rewrite-cv',   // B2C API (public)
