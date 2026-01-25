@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 // HIREINBOX - AI INTERVIEW LANDING PAGE
 // Shows AI Avatar interviewer and explains
 // how AI-powered candidate interviews work
-// R1,250 per role add-on
+// R799 per role add-on
 // ============================================
 
 export default function AIInterviewPage() {
@@ -246,7 +246,7 @@ export default function AIInterviewPage() {
           borderRadius: '8px'
         }}>
           <span style={{ fontSize: '14px', color: '#166534' }}>
-            <strong>R1,250 per role</strong> — Unlimited candidates per role
+            <strong>R799 per role</strong> — Unlimited candidates per role
           </span>
         </div>
       </section>
@@ -505,7 +505,7 @@ export default function AIInterviewPage() {
           color: 'rgba(255,255,255,0.8)',
           marginBottom: '32px'
         }}>
-          Add AI Interviews to any role for R1,250
+          Add AI Interviews to any role for R799
         </p>
         <button
           onClick={() => router.push('/hire/dashboard')}
