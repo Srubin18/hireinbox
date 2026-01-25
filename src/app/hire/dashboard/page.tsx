@@ -933,7 +933,7 @@ export default function EmployerDashboard() {
               <button onClick={() => bulkAction('shortlist')} style={{ padding: '6px 12px', backgroundColor: '#059669', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                 Shortlist
               </button>
-              <button onClick={() => alert('AI Interviews will be conducted by your AI Staff. Configure your AI Staff team in Settings.')} style={{ padding: '6px 12px', backgroundColor: '#0891b2', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+              <button onClick={() => router.push('/hire/ai-interview')} style={{ padding: '6px 12px', backgroundColor: '#0891b2', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                 Send AI Interview
               </button>
               <button onClick={() => bulkAction('pool')} style={{ padding: '6px 12px', backgroundColor: '#7c3aed', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
@@ -1441,7 +1441,7 @@ export default function EmployerDashboard() {
                   Shortlist
                 </button>
                 <button
-                  onClick={() => alert('AI Interviews will be conducted by your AI Staff. Configure your AI Staff team in Settings.')}
+                  onClick={() => router.push('/hire/ai-interview')}
                   style={{
                     padding: '10px 20px',
                     backgroundColor: '#0891b2',
