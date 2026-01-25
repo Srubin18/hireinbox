@@ -776,8 +776,11 @@ export default function EmployerDashboard() {
                     <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0' }}>Job seekers on our marketplace</p>
                   </div>
                 </div>
-                <button onClick={() => router.push('/talent-pool/browse')} style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+                <button onClick={() => router.push('/talent-pool/browse')} style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', width: '100%', marginBottom: '8px' }}>
                   Browse Public Pool
+                </button>
+                <button onClick={() => router.push('/talent-pool/post-job')} style={{ padding: '10px 20px', backgroundColor: '#ffffff', color: '#059669', border: '2px solid #059669', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+                  Post a Job — R2,500
                 </button>
               </div>
             </div>

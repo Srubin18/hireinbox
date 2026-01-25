@@ -433,11 +433,87 @@ function PricingContent() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
-            maxWidth: '1000px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '20px',
+            maxWidth: '1200px',
             margin: '0 auto'
           }}>
+            {/* Talent Pool Job Posting */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              border: '1px solid #E5E7EB',
+              padding: '32px'
+            }}>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#10B981',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '8px'
+              }}>
+                Quick Hire
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#64748B',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '8px'
+              }}>
+                Post to Talent Pool
+              </div>
+              <div style={{
+                fontSize: '2.5rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                marginBottom: '4px'
+              }}>
+                R2,500
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '24px' }}>
+                per job listing (30 days)
+              </div>
+
+              <a
+                href="/talent-pool/post-job"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '14px',
+                  backgroundColor: '#F1F5F9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  marginBottom: '24px',
+                  cursor: 'pointer'
+                }}
+              >
+                Post a Job
+              </a>
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
+                  <CheckIcon /> AI matches candidates instantly
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
+                  <CheckIcon /> Access pre-screened talent pool
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
+                  <CheckIcon /> SA qualification aware
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
+                  <CheckIcon /> Direct candidate contact
+                </li>
+              </ul>
+            </div>
+
             {/* AI CV Screening - Base Product */}
             <div style={{
               backgroundColor: 'white',

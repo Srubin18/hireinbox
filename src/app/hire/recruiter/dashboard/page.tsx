@@ -30,6 +30,23 @@ export default function RecruiterDashboard() {
 
   const services = [
     {
+      id: 'talent-pool',
+      title: 'Post to Talent Pool',
+      description: 'Post a job and get AI-matched candidates from our pre-screened talent pool instantly.',
+      price: 'R2,500 per listing',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
+      action: () => router.push('/talent-pool/post-job'),
+      color: '#10B981',
+      badge: 'Quick Hire'
+    },
+    {
       id: 'screening',
       title: 'CV Screening',
       description: 'AI screens and ranks CVs against role requirements. Get a shortlist with evidence-based scores.',
@@ -49,7 +66,7 @@ export default function RecruiterDashboard() {
       id: 'mapping',
       title: 'Talent Mapping',
       description: 'Find hidden candidates from company pages, news, conferences - not just LinkedIn.',
-      price: 'R2,500 per search',
+      price: 'R999 per search',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8"/>
@@ -65,7 +82,7 @@ export default function RecruiterDashboard() {
       id: 'interview',
       title: 'AI Interview',
       description: 'AI avatar conducts video interviews with candidates. Get transcripts and psychometric insights.',
-      price: 'R1,250 per role',
+      price: 'R799 per role',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M23 7l-7 5 7 5V7z"/>
@@ -78,7 +95,7 @@ export default function RecruiterDashboard() {
     {
       id: 'verification',
       title: 'Verification',
-      description: 'ID verification, criminal record check, credit check, and reference verification.',
+      description: 'ID verification, credit check, and reference verification for your candidates.',
       price: 'R800 per candidate',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

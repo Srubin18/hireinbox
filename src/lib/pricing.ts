@@ -41,8 +41,8 @@ export const B2B_PRICING = {
     id: 'ai-interview',
     name: 'AI Interview',
     description: 'Avatar conducts screening interview, transcript & scoring, psychometric assessment',
-    price: 1250, // R1,250 per role
-    priceDisplay: 'R1,250',
+    price: 799, // R799 per role
+    priceDisplay: 'R799',
     unit: 'per role',
     includes: [
       'AI avatar screening interviews',
@@ -57,13 +57,13 @@ export const B2B_PRICING = {
   VERIFICATION_BUNDLE: {
     id: 'verification-bundle',
     name: 'Verification Bundle',
-    description: 'ID check, criminal check, reference verification for top candidates',
+    description: 'ID check, credit check, reference verification for top candidates',
     price: 800, // R800 per role
     priceDisplay: 'R800',
     unit: 'per role',
     includes: [
       'ID verification',
-      'Criminal background check',
+      'Credit check',
       'Reference verification',
       'Verification report',
     ],
@@ -85,13 +85,6 @@ export const B2B_PRICING = {
       priceDisplay: 'R100',
       unit: 'per candidate',
     },
-    CRIMINAL_CHECK: {
-      id: 'criminal-check',
-      name: 'Criminal Check',
-      price: 150, // R150 per candidate
-      priceDisplay: 'R150',
-      unit: 'per candidate',
-    },
     REFERENCE_CHECK: {
       id: 'reference-check',
       name: 'Reference Check',
@@ -99,6 +92,23 @@ export const B2B_PRICING = {
       priceDisplay: 'R200',
       unit: 'per candidate',
     },
+  },
+
+  // Talent Mapping (for recruiters)
+  TALENT_MAPPING: {
+    id: 'talent-mapping',
+    name: 'Talent Mapping',
+    description: 'AI searches company pages, news, conferences - find candidates your competitors miss',
+    price: 999, // R999 per search
+    priceDisplay: 'R999',
+    unit: 'per search',
+    includes: [
+      'Multi-source web intelligence',
+      'Company team page searches',
+      'Conference & event attendees',
+      'News & award mentions',
+      'Approach strategy for each candidate',
+    ],
   },
 
   // Bulk discounts for agencies & high-volume hirers
