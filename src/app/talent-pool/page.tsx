@@ -24,22 +24,15 @@ export default function TalentPoolPage() {
   const options = [
     {
       id: 'candidate',
-      label: "I'm looking for opportunities",
-      description: 'Upload your CV to get matched with relevant roles',
+      label: "I'm looking for a job",
+      description: 'Join for free and let employers find you',
       route: '/talent-pool/join',
       primary: true
     },
     {
-      id: 'browse',
-      label: "I'm looking for talent",
-      description: 'Browse pre-screened candidates ready to hire',
-      route: '/talent-pool/browse',
-      primary: false
-    },
-    {
       id: 'employer',
-      label: "I'm posting a role",
-      description: 'Post a job and let AI match you with candidates',
+      label: "I'm hiring",
+      description: 'Post a role and get matched candidates',
       route: '/talent-pool/post-job',
       primary: false
     }
