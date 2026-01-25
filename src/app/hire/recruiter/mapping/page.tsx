@@ -26,6 +26,7 @@ interface CandidateSource {
   url: string;
   type: string;
   excerpt: string;
+  valueLevel?: 'high' | 'medium' | 'low';
 }
 
 interface SalaryEstimate {
@@ -54,6 +55,19 @@ interface CareerTrajectory {
   yearsInRole?: string;
 }
 
+interface InferredProfile {
+  yearsExperience?: string;
+  careerPath?: string;
+  specializations?: string[];
+  accomplishments?: string[];
+}
+
+interface ApproachStrategy {
+  angle: string;
+  timing: string;
+  leverage: string;
+}
+
 interface MappedCandidate {
   id: string;
   name: string;
@@ -61,23 +75,44 @@ interface MappedCandidate {
   company: string;
   industry: string;
   location: string;
+  discoveryMethod?: string;
   sources: CandidateSource[];
   salaryEstimate: SalaryEstimate;
+  inferredProfile?: InferredProfile;
   availabilitySignals: AvailabilitySignals;
   skillsInferred: SkillInferred[];
   careerTrajectory: CareerTrajectory;
+  approachStrategy?: ApproachStrategy;
   matchScore: number;
   matchReasons: string[];
   potentialConcerns: string[];
   confidence: 'high' | 'medium' | 'low';
+  uniqueValue?: string;
 }
 
 interface MarketIntelligence {
   talentPoolSize: string;
-  competitorActivity: { company: string; signal: string }[];
+  talentHotspots?: string[];
+  competitorActivity: { company: string; signal: string; implication?: string }[];
   salaryTrends: string;
   marketTightness: 'tight' | 'balanced' | 'abundant';
   recommendations: string[];
+  hiddenPools?: string[];
+}
+
+interface SourcingStrategy {
+  primaryChannels: string[];
+  hiddenChannels: string[];
+  timingConsiderations: string[];
+  competitiveAdvantage: string;
+}
+
+interface IntelligenceQuality {
+  totalSources: number;
+  highValueSources: number;
+  linkedInSources: number;
+  sourceBreakdown: Record<string, number>;
+  diversityScore: number;
 }
 
 interface SearchCriteria {
@@ -95,8 +130,9 @@ interface SearchCriteria {
 interface MappingResult {
   marketIntelligence: MarketIntelligence;
   candidates: MappedCandidate[];
+  sourcingStrategy?: SourcingStrategy;
   searchCriteria: SearchCriteria;
-  sourcesSearched: number;
+  intelligenceQuality?: IntelligenceQuality;
   completedAt: string;
 }
 
@@ -541,6 +577,49 @@ Best regards,
 
   const renderResultsStep = () => (
     <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto' }}>
+      {/* Intelligence Quality Badge */}
+      {result?.intelligenceQuality && (
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '16px',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{
+            padding: '8px 14px',
+            backgroundColor: result.intelligenceQuality.highValueSources > 5 ? '#d1fae5' : '#fef3c7',
+            borderRadius: '8px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: result.intelligenceQuality.highValueSources > 5 ? '#047857' : '#b45309'
+          }}>
+            {result.intelligenceQuality.highValueSources} high-value sources
+          </div>
+          <div style={{
+            padding: '8px 14px',
+            backgroundColor: '#ede9fe',
+            borderRadius: '8px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#7c3aed'
+          }}>
+            {result.intelligenceQuality.diversityScore} source types
+          </div>
+          {result.intelligenceQuality.linkedInSources < result.intelligenceQuality.totalSources / 2 && (
+            <div style={{
+              padding: '8px 14px',
+              backgroundColor: '#dbeafe',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#1d4ed8'
+            }}>
+              Hidden candidates found
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Market Intelligence */}
       <div style={{
         backgroundColor: '#ffffff',
@@ -582,6 +661,46 @@ Best regards,
           </div>
         </div>
 
+        {/* Talent Hotspots */}
+        {result?.marketIntelligence?.talentHotspots && result.marketIntelligence.talentHotspots.length > 0 && (
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>Talent Hotspots</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {result.marketIntelligence.talentHotspots.map((spot, i) => (
+                <span key={i} style={{
+                  padding: '4px 10px',
+                  backgroundColor: '#dbeafe',
+                  color: '#1d4ed8',
+                  borderRadius: '6px',
+                  fontSize: '12px'
+                }}>
+                  {spot}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Hidden Pools - Premium Value */}
+        {result?.marketIntelligence?.hiddenPools && result.marketIntelligence.hiddenPools.length > 0 && (
+          <div style={{
+            backgroundColor: '#faf5ff',
+            border: '1px solid #e9d5ff',
+            borderRadius: '8px',
+            padding: '12px',
+            marginBottom: '12px'
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#7c3aed', marginBottom: '6px' }}>
+              Hidden Talent Pools (Premium Intel)
+            </div>
+            <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '13px', color: '#6b21a8' }}>
+              {result.marketIntelligence.hiddenPools.map((pool, i) => (
+                <li key={i} style={{ marginBottom: '4px' }}>{pool}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {result?.marketIntelligence?.recommendations && result.marketIntelligence.recommendations.length > 0 && (
           <div style={{ backgroundColor: '#fef3c7', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
             <div style={{ fontSize: '12px', fontWeight: 600, color: '#92400e', marginBottom: '6px' }}>Recommendations</div>
@@ -601,9 +720,76 @@ Best regards,
           fontSize: '12px',
           color: '#64748b'
         }}>
-          Searched {result?.sourcesSearched || 0} sources • {result?.searchCriteria?.parsed?.role || 'Role'} in {result?.searchCriteria?.parsed?.location || 'Location'}
+          Searched {result?.intelligenceQuality?.totalSources || 0} sources • {result?.searchCriteria?.parsed?.role || 'Role'} in {result?.searchCriteria?.parsed?.location || 'Location'}
         </div>
       </div>
+
+      {/* Sourcing Strategy - Premium Value */}
+      {result?.sourcingStrategy && (result.sourcingStrategy.hiddenChannels?.length > 0 || result.sourcingStrategy.competitiveAdvantage) && (
+        <div style={{
+          backgroundColor: '#ffffff',
+          border: '2px solid #7c3aed',
+          borderRadius: '12px',
+          padding: '24px',
+          marginBottom: '24px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+              Sourcing Strategy
+            </h2>
+            <span style={{
+              padding: '2px 8px',
+              backgroundColor: '#ede9fe',
+              color: '#7c3aed',
+              borderRadius: '4px',
+              fontSize: '10px',
+              fontWeight: 700
+            }}>
+              PREMIUM
+            </span>
+          </div>
+
+          {result.sourcingStrategy.competitiveAdvantage && (
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#faf5ff',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '14px',
+              color: '#6b21a8',
+              fontStyle: 'italic'
+            }}>
+              {result.sourcingStrategy.competitiveAdvantage}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            {result.sourcingStrategy.hiddenChannels?.length > 0 && (
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#7c3aed', marginBottom: '8px' }}>Hidden Channels</div>
+                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '13px', color: '#374151' }}>
+                  {result.sourcingStrategy.hiddenChannels.map((ch, i) => (
+                    <li key={i} style={{ marginBottom: '4px' }}>{ch}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {result.sourcingStrategy.timingConsiderations?.length > 0 && (
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>Timing Tips</div>
+                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '13px', color: '#374151' }}>
+                  {result.sourcingStrategy.timingConsiderations.map((tip, i) => (
+                    <li key={i} style={{ marginBottom: '4px' }}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Actions bar */}
       <div style={{
@@ -669,6 +855,19 @@ Best regards,
                   <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '2px' }}>
                     {candidate.industry} • {candidate.location}
                   </div>
+                  {candidate.discoveryMethod && (
+                    <div style={{
+                      marginTop: '6px',
+                      padding: '4px 8px',
+                      backgroundColor: '#faf5ff',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      color: '#7c3aed',
+                      display: 'inline-block'
+                    }}>
+                      Found via: {candidate.discoveryMethod}
+                    </div>
+                  )}
                 </label>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
@@ -767,6 +966,37 @@ Best regards,
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>Skills Inferred</div>
                 <div style={{ fontSize: '13px', color: '#475569' }}>
                   {candidate.skillsInferred.slice(0, 3).map(s => s.skill).join(' • ')}
+                </div>
+              </div>
+            )}
+
+            {/* Unique Value - Premium Intel */}
+            {candidate.uniqueValue && (
+              <div style={{
+                marginBottom: '12px',
+                padding: '10px 12px',
+                backgroundColor: '#faf5ff',
+                border: '1px solid #e9d5ff',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#7c3aed', marginBottom: '4px' }}>Why This Candidate is Special</div>
+                <div style={{ fontSize: '13px', color: '#6b21a8' }}>{candidate.uniqueValue}</div>
+              </div>
+            )}
+
+            {/* Approach Strategy */}
+            {candidate.approachStrategy && (candidate.approachStrategy.angle || candidate.approachStrategy.leverage) && (
+              <div style={{
+                marginBottom: '12px',
+                padding: '10px 12px',
+                backgroundColor: '#eff6ff',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: '#1d4ed8', marginBottom: '6px' }}>Approach Strategy</div>
+                <div style={{ fontSize: '12px', color: '#1e40af' }}>
+                  {candidate.approachStrategy.angle && <div style={{ marginBottom: '2px' }}><strong>Angle:</strong> {candidate.approachStrategy.angle}</div>}
+                  {candidate.approachStrategy.timing && <div style={{ marginBottom: '2px' }}><strong>Timing:</strong> {candidate.approachStrategy.timing}</div>}
+                  {candidate.approachStrategy.leverage && <div><strong>Leverage:</strong> {candidate.approachStrategy.leverage}</div>}
                 </div>
               </div>
             )}

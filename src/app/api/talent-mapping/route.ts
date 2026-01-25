@@ -4,11 +4,16 @@ import FirecrawlApp from '@mendable/firecrawl-js';
 import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
 // ============================================
-// HIREINBOX - TALENT MAPPING API
+// HIREINBOX - PREMIUM TALENT MAPPING API
 // /api/talent-mapping
 //
-// Uses OpenAI GPT-4o + Firecrawl for real web search
-// Provides South African market intelligence
+// DIFFERENTIATOR: We find candidates recruiters CAN'T find themselves
+// - Hidden candidates (not on LinkedIn, minimal profiles)
+// - Multi-source intelligence (news, company pages, conferences, patents)
+// - Deep inference (availability signals, inferred skills)
+// - Market intelligence (who's hiring, salary trends, talent movement)
+//
+// Uses: OpenAI GPT-4o + Firecrawl multi-source search
 // ============================================
 
 const openai = new OpenAI({
@@ -42,6 +47,19 @@ const SA_SALARY_BENCHMARKS: Record<string, { min: number; max: number }> = {
   'default': { min: 350000, max: 700000 }
 };
 
+// Major SA companies by industry for targeted searches
+const SA_COMPANIES_BY_INDUSTRY: Record<string, string[]> = {
+  'finance': ['Standard Bank', 'FirstRand', 'Absa', 'Nedbank', 'Investec', 'Discovery', 'Sanlam', 'Old Mutual', 'Allan Gray', 'Coronation'],
+  'tech': ['Naspers', 'Takealot', 'Discovery Vitality', 'DVT', 'BBD', 'Entelect', 'Synthesis', 'Derivco', 'Amazon AWS SA', 'Microsoft SA'],
+  'mining': ['Anglo American', 'BHP', 'Gold Fields', 'Sibanye', 'Impala Platinum', 'Exxaro', 'Kumba Iron Ore', 'Harmony Gold'],
+  'retail': ['Shoprite', 'Pick n Pay', 'Woolworths', 'Mr Price', 'Truworths', 'Clicks', 'Dis-Chem', 'Massmart'],
+  'fmcg': ['Tiger Brands', 'Pioneer Foods', 'RCL Foods', 'AVI', 'Distell', 'SAB Miller'],
+  'healthcare': ['Netcare', 'Mediclinic', 'Life Healthcare', 'Discovery Health'],
+  'telecoms': ['MTN', 'Vodacom', 'Cell C', 'Telkom', 'Rain'],
+  'manufacturing': ['Sasol', 'AECI', 'Sappi', 'Mondi', 'ArcelorMittal SA'],
+  'consulting': ['McKinsey', 'BCG', 'Bain', 'Deloitte', 'PwC', 'EY', 'KPMG', 'Accenture']
+};
+
 function estimateSalary(role: string, location: string): { min: number; max: number; currency: string; confidence: 'high' | 'medium' | 'low'; basis: string } {
   const roleLower = role.toLowerCase();
   let baseSalary = SA_SALARY_BENCHMARKS['default'];
@@ -55,7 +73,6 @@ function estimateSalary(role: string, location: string): { min: number; max: num
     }
   }
 
-  // Location adjustments
   let multiplier = 1.0;
   const loc = location.toLowerCase();
   if (loc.includes('johannesburg') || loc.includes('sandton')) multiplier = 1.1;
@@ -75,7 +92,150 @@ interface WebSearchResult {
   url: string;
   title: string;
   content: string;
-  sourceType: string;
+  sourceType: 'linkedin' | 'news' | 'company' | 'conference' | 'github' | 'academic' | 'press_release' | 'award' | 'other';
+  sourceValue: 'high' | 'medium' | 'low'; // How valuable this source is for inference
+}
+
+// Generate diverse search queries that find HIDDEN candidates
+function generateIntelligenceQueries(parsed: any): { query: string; sourceType: string; purpose: string }[] {
+  const role = parsed.role || '';
+  const location = parsed.location || 'South Africa';
+  const industry = parsed.industry || '';
+
+  const queries: { query: string; sourceType: string; purpose: string }[] = [];
+
+  // 1. COMPANY TEAM PAGES - Find people not on LinkedIn
+  queries.push({
+    query: `"${role}" "team" OR "leadership" site:.co.za ${location}`,
+    sourceType: 'company',
+    purpose: 'Hidden candidates on company team pages'
+  });
+
+  // 2. NEWS - Appointments, promotions, moves
+  queries.push({
+    query: `"${role}" ("appointed" OR "joins" OR "promoted" OR "new") ${location} ${industry}`,
+    sourceType: 'news',
+    purpose: 'Recent appointments and moves'
+  });
+
+  // 3. SA BUSINESS NEWS SPECIFICALLY
+  queries.push({
+    query: `${role} ${industry} site:fin24.com OR site:businesslive.co.za OR site:moneyweb.co.za`,
+    sourceType: 'news',
+    purpose: 'SA business news coverage'
+  });
+
+  // 4. PRESS RELEASES - Company announcements
+  queries.push({
+    query: `"${role}" "press release" OR "announcement" ${location} ${industry}`,
+    sourceType: 'press_release',
+    purpose: 'Company press releases about people'
+  });
+
+  // 5. CONFERENCE SPEAKERS - Industry experts
+  queries.push({
+    query: `"${role}" "speaker" OR "panelist" OR "keynote" ${industry} South Africa 2025 OR 2026`,
+    sourceType: 'conference',
+    purpose: 'Conference speakers (industry visibility)'
+  });
+
+  // 6. INDUSTRY AWARDS - High performers
+  queries.push({
+    query: `"${role}" "award" OR "winner" OR "finalist" ${industry} South Africa`,
+    sourceType: 'award',
+    purpose: 'Award winners (high performers)'
+  });
+
+  // 7. LINKEDIN COMPANY PAGES (not profiles) - Team composition
+  if (industry) {
+    const companies = SA_COMPANIES_BY_INDUSTRY[industry.toLowerCase()] || [];
+    if (companies.length > 0) {
+      queries.push({
+        query: `"${role}" ${companies.slice(0, 3).join(' OR ')} site:linkedin.com/company`,
+        sourceType: 'linkedin',
+        purpose: 'Company LinkedIn pages (team intel)'
+      });
+    }
+  }
+
+  // 8. GITHUB - For tech roles
+  if (role.toLowerCase().includes('developer') || role.toLowerCase().includes('engineer') ||
+      role.toLowerCase().includes('architect') || role.toLowerCase().includes('data')) {
+    queries.push({
+      query: `${role} ${location} site:github.com`,
+      sourceType: 'github',
+      purpose: 'GitHub profiles (tech candidates)'
+    });
+  }
+
+  // 9. INDUSTRY ASSOCIATIONS - Professional bodies
+  queries.push({
+    query: `"${role}" ${industry} "member" OR "fellow" OR "board" South Africa`,
+    sourceType: 'other',
+    purpose: 'Industry association members'
+  });
+
+  // 10. UNIVERSITY/ACADEMIC - For senior roles
+  if (role.toLowerCase().includes('professor') || role.toLowerCase().includes('research') ||
+      role.toLowerCase().includes('director') || role.toLowerCase().includes('head')) {
+    queries.push({
+      query: `"${role}" ${industry} site:.ac.za OR site:researchgate.net South Africa`,
+      sourceType: 'academic',
+      purpose: 'Academic/research profiles'
+    });
+  }
+
+  return queries;
+}
+
+function categorizeSource(url: string, title: string): { type: WebSearchResult['sourceType']; value: WebSearchResult['sourceValue'] } {
+  const urlLower = url.toLowerCase();
+  const titleLower = title.toLowerCase();
+
+  // LinkedIn - medium value (recruiters can search this)
+  if (urlLower.includes('linkedin.com')) {
+    return { type: 'linkedin', value: 'medium' };
+  }
+
+  // Company pages - HIGH value (hidden candidates)
+  if (urlLower.includes('/team') || urlLower.includes('/about') || urlLower.includes('/leadership') ||
+      titleLower.includes('team') || titleLower.includes('leadership')) {
+    return { type: 'company', value: 'high' };
+  }
+
+  // News - HIGH value (recent movements)
+  if (urlLower.includes('fin24') || urlLower.includes('businesslive') || urlLower.includes('moneyweb') ||
+      urlLower.includes('news') || urlLower.includes('biznews') || titleLower.includes('appoint')) {
+    return { type: 'news', value: 'high' };
+  }
+
+  // Conference - HIGH value (industry visibility)
+  if (titleLower.includes('speaker') || titleLower.includes('conference') || titleLower.includes('summit') ||
+      titleLower.includes('keynote')) {
+    return { type: 'conference', value: 'high' };
+  }
+
+  // GitHub - HIGH value for tech roles
+  if (urlLower.includes('github.com')) {
+    return { type: 'github', value: 'high' };
+  }
+
+  // Academic - HIGH value
+  if (urlLower.includes('.ac.za') || urlLower.includes('researchgate') || urlLower.includes('scholar')) {
+    return { type: 'academic', value: 'high' };
+  }
+
+  // Awards - HIGH value
+  if (titleLower.includes('award') || titleLower.includes('winner') || titleLower.includes('finalist')) {
+    return { type: 'award', value: 'high' };
+  }
+
+  // Press release - Medium value
+  if (titleLower.includes('press') || titleLower.includes('announce') || titleLower.includes('release')) {
+    return { type: 'press_release', value: 'medium' };
+  }
+
+  return { type: 'other', value: 'low' };
 }
 
 export async function POST(request: Request) {
@@ -86,7 +246,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please describe who you are looking for' }, { status: 400 });
     }
 
-    console.log('[TalentMapping] Starting search:', prompt);
+    console.log('[TalentMapping] Starting PREMIUM search:', prompt);
 
     // Step 1: Parse search criteria with OpenAI
     const parseResponse = await openai.chat.completions.create({
@@ -94,7 +254,7 @@ export async function POST(request: Request) {
       messages: [
         {
           role: 'system',
-          content: `You are an expert South African recruiter. Parse the search criteria.
+          content: `You are an expert South African executive search consultant. Parse the search criteria.
 
 ${SA_CONTEXT_PROMPT}
 
@@ -103,10 +263,12 @@ Return valid JSON only:
   "role": "job title",
   "location": "city in South Africa",
   "experience": "years required",
-  "industry": "sector",
+  "industry": "sector (use: finance, tech, mining, retail, fmcg, healthcare, telecoms, manufacturing, consulting)",
+  "seniority": "junior|mid|senior|executive",
   "mustHaves": ["requirements"],
   "niceToHaves": ["nice-to-haves"],
-  "searchQueries": ["3-5 specific web search queries to find people in this role in SA"]
+  "targetCompanies": ["specific companies to search if mentioned"],
+  "excludeCompanies": ["companies to exclude if mentioned"]
 }`
         },
         { role: 'user', content: prompt }
@@ -119,58 +281,92 @@ Return valid JSON only:
     const parsed = JSON.parse(parseResponse.choices[0]?.message?.content || '{}');
     console.log('[TalentMapping] Parsed:', parsed);
 
-    // Step 2: Execute web searches with Firecrawl
-    const webResults: WebSearchResult[] = [];
-    const searchQueries = parsed.searchQueries || [
-      `${parsed.role} ${parsed.location} site:linkedin.com`,
-      `${parsed.role} ${parsed.industry} ${parsed.location} team`,
-      `${parsed.role} appointed ${parsed.location}`
-    ];
+    // Step 2: Generate intelligent, diverse search queries
+    const searchQueries = generateIntelligenceQueries(parsed);
+    console.log('[TalentMapping] Generated', searchQueries.length, 'diverse queries');
 
-    for (const query of searchQueries.slice(0, 5)) {
+    // Step 3: Execute searches with Firecrawl
+    const webResults: WebSearchResult[] = [];
+    const sourceTypeCounts: Record<string, number> = {};
+
+    for (const sq of searchQueries) {
       try {
-        console.log('[TalentMapping] Searching:', query);
-        const results = await firecrawl.search(query, { limit: 5 }) as any;
+        console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query}`);
+        const results = await firecrawl.search(sq.query, { limit: 5 }) as any;
         const data = results?.data || results?.web || [];
 
         for (const r of data) {
           if (r?.url && (r?.markdown || r?.content || r?.description)) {
+            const { type, value } = categorizeSource(r.url, r.title || '');
+
+            // Track source diversity
+            sourceTypeCounts[type] = (sourceTypeCounts[type] || 0) + 1;
+
             webResults.push({
               url: r.url,
               title: r.title || '',
               content: (r.markdown || r.content || r.description).substring(0, 3000),
-              sourceType: r.url.includes('linkedin') ? 'linkedin' :
-                          r.url.includes('news') || r.url.includes('fin24') ? 'news' : 'other'
+              sourceType: type,
+              sourceValue: value
             });
           }
         }
       } catch (err) {
-        console.log('[TalentMapping] Search error (continuing):', err);
+        console.log(`[TalentMapping] Search error for [${sq.sourceType}] (continuing):`, err);
       }
     }
 
-    console.log('[TalentMapping] Found', webResults.length, 'web results');
+    // De-duplicate by URL
+    const uniqueResults = webResults.filter((r, i, arr) =>
+      arr.findIndex(x => x.url === r.url) === i
+    );
 
-    // Step 3: Synthesize results with OpenAI
-    const webContext = webResults.length > 0
-      ? `\n\nWEB SEARCH RESULTS:\n${webResults.map((r, i) => `[${i+1}] ${r.url}\n${r.title}\n${r.content.substring(0, 1500)}\n---`).join('\n')}`
-      : '\n\n(No web results found - provide realistic synthetic candidates based on SA market knowledge)';
+    // Prioritize high-value sources
+    const sortedResults = uniqueResults.sort((a, b) => {
+      const valueOrder = { high: 0, medium: 1, low: 2 };
+      return valueOrder[a.sourceValue] - valueOrder[b.sourceValue];
+    });
+
+    console.log('[TalentMapping] Found', sortedResults.length, 'unique results from sources:', sourceTypeCounts);
+
+    // Step 4: Synthesize with GPT-4o - FOCUS ON INFERENCE
+    const webContext = sortedResults.length > 0
+      ? `\n\nINTELLIGENCE GATHERED (${sortedResults.length} sources):\n${sortedResults.slice(0, 20).map((r, i) =>
+          `[${i+1}] [${r.sourceType.toUpperCase()}] ${r.url}\n${r.title}\n${r.content.substring(0, 2000)}\n---`
+        ).join('\n')}`
+      : '\n\n(Limited web results - provide market intelligence based on SA industry knowledge)';
+
+    const highValueCount = sortedResults.filter(r => r.sourceValue === 'high').length;
+    const linkedInCount = sortedResults.filter(r => r.sourceType === 'linkedin').length;
 
     const synthesisResponse = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: `You are a premium South African talent intelligence analyst. Generate a talent mapping report.
+          content: `You are a premium South African executive search intelligence analyst. Your job is to find HIDDEN candidates that recruiters cannot easily find themselves.
 
 ${SA_CONTEXT_PROMPT}
 
-CRITICAL:
-- If web results contain real people, extract them with evidence
-- If no web results, generate REALISTIC synthetic candidates based on typical SA market profiles
-- Always be honest about data quality and confidence
-- Use real South African company names, universities, and qualifications
-- Candidates should reflect SA demographics (diverse names)
+CRITICAL VALUE PROPOSITION:
+1. HIDDEN CANDIDATES - Prioritize people found on company pages, news, conferences - NOT just LinkedIn profiles
+2. DEEP INFERENCE - Infer skills, availability, trajectory from indirect evidence (project mentions, company growth, news about their employer)
+3. AVAILABILITY SIGNALS - Infer if someone might be open to move:
+   - Company layoffs/restructuring = high availability
+   - Long tenure (5+ years) at company in decline = might be open
+   - Recent promotion = likely staying (low availability)
+   - Company acquired = uncertainty, might be open
+4. HIDDEN SKILLS - Infer skills from:
+   - Projects mentioned in news ("led the digital transformation...")
+   - Conference topics they spoke about
+   - Awards they won
+   - GitHub contributions
+5. HONESTY - Be clear about confidence levels and evidence quality
+
+SOURCE QUALITY:
+- Company team pages, news, conferences, awards = HIGH VALUE (hidden intel)
+- LinkedIn profiles = MEDIUM VALUE (recruiter can find this)
+- Generic search results = LOW VALUE
 
 Return valid JSON only. No markdown.`
         },
@@ -183,56 +379,86 @@ Parsed criteria:
 - Location: ${parsed.location || 'South Africa'}
 - Experience: ${parsed.experience || 'Not specified'}
 - Industry: ${parsed.industry || 'Not specified'}
+- Seniority: ${parsed.seniority || 'Not specified'}
 - Must-haves: ${(parsed.mustHaves || []).join(', ')}
+- Target companies: ${(parsed.targetCompanies || []).join(', ') || 'None specified'}
+
+Intelligence quality: ${highValueCount} high-value sources, ${linkedInCount} LinkedIn sources
 ${webContext}
 
-Generate a talent mapping report as JSON:
+Generate a PREMIUM talent mapping report as JSON:
 {
   "marketIntelligence": {
     "talentPoolSize": "e.g., 'Approximately 150-300 qualified professionals in Johannesburg'",
+    "talentHotspots": ["Companies/locations where this talent concentrates"],
     "competitorActivity": [
-      { "company": "Company hiring for similar roles", "signal": "What they're doing" }
+      { "company": "Company", "signal": "What they're doing (hiring, layoffs, etc)", "implication": "What this means for sourcing" }
     ],
     "salaryTrends": "e.g., 'R550k-R850k, up 8% from 2025'",
-    "marketTightness": "tight" | "balanced" | "abundant",
-    "recommendations": ["hiring strategy tips"]
+    "marketTightness": "tight|balanced|abundant",
+    "recommendations": ["strategic sourcing tips"],
+    "hiddenPools": ["Where to find candidates others miss"]
   },
   "candidates": [
     {
-      "name": "Full Name (realistic SA name)",
+      "name": "Full Name",
       "currentRole": "Job Title",
-      "company": "Real SA Company",
+      "company": "Company Name",
       "industry": "Sector",
       "location": "City",
+      "discoveryMethod": "How we found them (e.g., 'Company team page', 'News article about appointment', 'Conference speaker')",
       "sources": [
-        { "url": "source URL or 'inferred'", "type": "linkedin|news|company|inferred", "excerpt": "relevant quote or basis" }
+        {
+          "url": "source URL",
+          "type": "company|news|conference|github|academic|award|linkedin|other",
+          "excerpt": "relevant quote",
+          "valueLevel": "high|medium|low"
+        }
       ],
+      "inferredProfile": {
+        "yearsExperience": "estimated years",
+        "careerPath": "Brief trajectory description",
+        "specializations": ["inferred specializations"],
+        "accomplishments": ["notable achievements found"]
+      },
       "skillsInferred": [
-        { "skill": "Skill Name", "evidence": "Why we think they have this", "confidence": "high|medium|low" }
+        { "skill": "Skill Name", "evidence": "How we inferred this", "confidence": "high|medium|low" }
       ],
       "availabilitySignals": {
         "score": 1-10,
-        "signals": ["reasons they might be open"],
-        "interpretation": "summary"
+        "signals": ["reasons they might be open (company news, tenure, etc)"],
+        "interpretation": "summary of availability likelihood"
       },
       "careerTrajectory": {
         "direction": "rising|stable|transitioning|unknown",
-        "evidence": "Why",
-        "yearsInRole": "2"
+        "evidence": "Why we think this",
+        "recentMoves": "Any recent promotions/changes"
+      },
+      "approachStrategy": {
+        "angle": "Best way to approach this person",
+        "timing": "Good/bad time to reach out",
+        "leverage": "What would interest them"
       },
       "matchScore": 1-100,
       "matchReasons": ["why they match"],
       "potentialConcerns": ["any concerns"],
-      "confidence": "high|medium|low"
+      "confidence": "high|medium|low",
+      "uniqueValue": "What makes this candidate special/hard to find"
     }
-  ]
+  ],
+  "sourcingStrategy": {
+    "primaryChannels": ["Where to focus sourcing"],
+    "hiddenChannels": ["Non-obvious places to find candidates"],
+    "timingConsiderations": ["When to search/approach"],
+    "competitiveAdvantage": "Why this intelligence is valuable"
+  }
 }
 
-Generate 5-8 candidates with varied confidence levels.`
+Generate 5-8 candidates. PRIORITIZE candidates found through non-LinkedIn sources. For each candidate, explain WHY they're valuable (hidden intel, not just a LinkedIn search).`
         }
       ],
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 5000,
       response_format: { type: 'json_object' }
     });
 
@@ -253,26 +479,38 @@ Generate 5-8 candidates with varied confidence levels.`
       company: c.company || 'Unknown',
       industry: c.industry || parsed.industry || 'Unknown',
       location: c.location || parsed.location || 'South Africa',
-      sources: c.sources || [{ url: 'inferred', type: 'inferred', excerpt: 'Based on market analysis' }],
+      discoveryMethod: c.discoveryMethod || 'Web search',
+      sources: c.sources || [{ url: 'inferred', type: 'other', excerpt: 'Based on market analysis', valueLevel: 'low' }],
       salaryEstimate: estimateSalary(c.currentRole || parsed.role, c.location || parsed.location),
-      availabilitySignals: c.availabilitySignals || { score: 5, signals: ['Unknown'], interpretation: 'Insufficient data' },
+      inferredProfile: c.inferredProfile || {},
       skillsInferred: c.skillsInferred || [],
+      availabilitySignals: c.availabilitySignals || { score: 5, signals: ['Unknown'], interpretation: 'Insufficient data' },
       careerTrajectory: c.careerTrajectory || { direction: 'unknown', evidence: 'Unknown' },
+      approachStrategy: c.approachStrategy || { angle: 'Standard outreach', timing: 'Anytime', leverage: 'Role opportunity' },
       matchScore: c.matchScore || 70,
       matchReasons: c.matchReasons || ['Potential fit'],
       potentialConcerns: c.potentialConcerns || [],
-      confidence: c.confidence || 'medium'
+      confidence: c.confidence || 'medium',
+      uniqueValue: c.uniqueValue || 'Identified through intelligence gathering'
     }));
 
     const result = {
       marketIntelligence: report.marketIntelligence || {
         talentPoolSize: 'Analysis in progress',
+        talentHotspots: [],
         competitorActivity: [],
         salaryTrends: 'Contact us for detailed benchmarks',
         marketTightness: 'balanced',
-        recommendations: []
+        recommendations: [],
+        hiddenPools: []
       },
       candidates: enrichedCandidates,
+      sourcingStrategy: report.sourcingStrategy || {
+        primaryChannels: [],
+        hiddenChannels: [],
+        timingConsiderations: [],
+        competitiveAdvantage: ''
+      },
       searchCriteria: {
         originalPrompt: prompt,
         parsed: {
@@ -280,15 +518,24 @@ Generate 5-8 candidates with varied confidence levels.`
           location: parsed.location || 'South Africa',
           experience: parsed.experience || 'Not specified',
           industry: parsed.industry || 'Not specified',
+          seniority: parsed.seniority || 'Not specified',
           mustHaves: parsed.mustHaves || [],
-          niceToHaves: parsed.niceToHaves || []
+          niceToHaves: parsed.niceToHaves || [],
+          targetCompanies: parsed.targetCompanies || [],
+          excludeCompanies: parsed.excludeCompanies || []
         }
       },
-      sourcesSearched: webResults.length,
+      intelligenceQuality: {
+        totalSources: sortedResults.length,
+        highValueSources: highValueCount,
+        linkedInSources: linkedInCount,
+        sourceBreakdown: sourceTypeCounts,
+        diversityScore: Object.keys(sourceTypeCounts).length // More source types = more diverse
+      },
       completedAt: new Date().toISOString()
     };
 
-    console.log('[TalentMapping] Complete:', enrichedCandidates.length, 'candidates from', webResults.length, 'sources');
+    console.log('[TalentMapping] PREMIUM Complete:', enrichedCandidates.length, 'candidates from', sortedResults.length, 'sources (', highValueCount, 'high-value)');
 
     return NextResponse.json(result);
 

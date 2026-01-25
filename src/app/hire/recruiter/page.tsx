@@ -34,20 +34,20 @@ export default function RecruiterEntryPage() {
 
   const options = [
     {
-      id: 'volume',
-      label: 'Volume recruitment',
-      subtitle: 'Post a role & receive CVs',
-      description: 'Screen candidates from job postings. AI ranks and shortlists for you. Perfect for high-volume hiring.',
-      route: '/hire/dashboard',
-      badge: null
+      id: 'dashboard',
+      label: 'Recruiter Dashboard',
+      subtitle: 'Manage clients & pipeline',
+      description: 'Your command center: track clients, active searches, pipeline, and placements. Manage all your recruitment activity.',
+      route: '/hire/recruiter/dashboard',
+      badge: 'New'
     },
     {
       id: 'boutique',
       label: 'Talent Mapping',
-      subtitle: 'Map the market for a role',
-      description: 'Describe who you need in plain English. AI searches public sources and returns a curated candidate list.',
+      subtitle: 'Find hidden candidates',
+      description: 'Our AI searches company pages, news, conferences, and more — not just LinkedIn. Find candidates your competitors miss.',
       route: '/hire/recruiter/mapping',
-      badge: 'Live',
+      badge: 'Premium',
       disabled: false
     }
   ];
@@ -145,7 +145,7 @@ export default function RecruiterEntryPage() {
                 position: 'absolute',
                 top: '-10px',
                 right: '16px',
-                backgroundColor: option.badge === 'Coming Soon' ? '#F59E0B' : '#10B981',
+                backgroundColor: option.badge === 'New' ? '#3b82f6' : option.badge === 'Premium' ? '#7c3aed' : '#10B981',
                 color: '#ffffff',
                 padding: '4px 12px',
                 borderRadius: '12px',
@@ -159,15 +159,17 @@ export default function RecruiterEntryPage() {
               width: 48,
               height: 48,
               borderRadius: 12,
-              backgroundColor: option.id === 'volume' ? '#dbeafe' : '#ede9fe',
+              backgroundColor: option.id === 'dashboard' ? '#dbeafe' : '#ede9fe',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              {option.id === 'volume' ? (
+              {option.id === 'dashboard' ? (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
-                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                  <rect x="3" y="3" width="7" height="9"/>
+                  <rect x="14" y="3" width="7" height="5"/>
+                  <rect x="14" y="12" width="7" height="9"/>
+                  <rect x="3" y="16" width="7" height="5"/>
                 </svg>
               ) : (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
