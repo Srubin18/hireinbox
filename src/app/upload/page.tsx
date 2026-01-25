@@ -1565,76 +1565,7 @@ Copy-paste from LinkedIn, Word, or any document. We'll analyze the text and give
               </div>
             )}
 
-            {/* Role & Industry Selection */}
-            <div className="role-industry-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 16,
-              marginTop: 20
-            }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.8125rem',
-                  color: 'rgba(255,255,255,0.5)',
-                  marginBottom: 8
-                }}>
-                  Target Role (optional)
-                </label>
-                <select
-                  value={targetRole}
-                  onChange={(e) => setTargetRole(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: 10,
-                    fontSize: '0.875rem',
-                    color: 'white',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {TARGET_ROLES.map(role => (
-                    <option key={role.value} value={role.value} style={{ backgroundColor: '#1E293B' }}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.8125rem',
-                  color: 'rgba(255,255,255,0.5)',
-                  marginBottom: 8
-                }}>
-                  Industry (optional)
-                </label>
-                <select
-                  value={targetIndustry}
-                  onChange={(e) => setTargetIndustry(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: 10,
-                    fontSize: '0.875rem',
-                    color: 'white',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {INDUSTRIES.map(ind => (
-                    <option key={ind.value} value={ind.value} style={{ backgroundColor: '#1E293B' }}>
-                      {ind.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            {/* Role & Industry dropdowns removed for simplicity - AI detects from CV */}
 
             {/* Error Message */}
             {error && (
