@@ -16,16 +16,17 @@ import { useRouter } from 'next/navigation';
 // NOT a full CRM - recruiters have their own systems
 // ============================================
 
-// Mock clients - in production, would come from database
-const MOCK_CLIENTS = [
-  { id: '1', name: 'Standard Bank', industry: 'Finance' },
-  { id: '2', name: 'Discovery', industry: 'Insurance/Tech' },
-  { id: '3', name: 'Woolworths', industry: 'Retail' },
-];
-
 export default function RecruiterDashboard() {
   const router = useRouter();
   const [selectedClient, setSelectedClient] = useState<string>('');
+  const [clients, setClients] = useState([
+    { id: '1', name: 'Standard Bank', industry: 'Finance' },
+    { id: '2', name: 'Discovery', industry: 'Insurance/Tech' },
+    { id: '3', name: 'Woolworths', industry: 'Retail' },
+  ]);
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientIndustry, setNewClientIndustry] = useState('');
 
   const services = [
     {
@@ -85,7 +86,7 @@ export default function RecruiterDashboard() {
           <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
       ),
-      action: () => alert('Verification services coming soon'),
+      action: () => router.push('/hire/verification'),
       color: '#0891b2'
     }
   ];
@@ -174,18 +175,20 @@ export default function RecruiterDashboard() {
               }}
             >
               <option value="">All clients</option>
-              {MOCK_CLIENTS.map(client => (
+              {clients.map(client => (
                 <option key={client.id} value={client.id}>{client.name} ({client.industry})</option>
               ))}
             </select>
             <button
+              onClick={() => setShowAddClient(true)}
               style={{
                 padding: '12px 20px',
-                backgroundColor: '#f8fafc',
-                color: '#64748b',
-                border: '1px solid #e2e8f0',
+                backgroundColor: '#7c3aed',
+                color: '#ffffff',
+                border: 'none',
                 borderRadius: '8px',
                 fontSize: '14px',
+                fontWeight: 600,
                 cursor: 'pointer'
               }}
             >
@@ -382,6 +385,144 @@ export default function RecruiterDashboard() {
         </svg>
         Support
       </button>
+
+      {/* Add Client Modal */}
+      {showAddClient && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            zIndex: 100
+          }}
+          onClick={() => setShowAddClient(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '450px',
+              width: '100%'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+              Add Client
+            </h2>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '24px' }}>
+              Add a new client to associate your work with.
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                Client Name
+              </label>
+              <input
+                type="text"
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                placeholder="e.g., Acme Corporation"
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  fontSize: '15px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                Industry
+              </label>
+              <select
+                value={newClientIndustry}
+                onChange={(e) => setNewClientIndustry(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  fontSize: '15px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="">Select industry</option>
+                <option value="Finance">Finance</option>
+                <option value="Tech">Tech</option>
+                <option value="Retail">Retail</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Mining">Mining</option>
+                <option value="Consulting">Consulting</option>
+                <option value="FMCG">FMCG</option>
+                <option value="Telecoms">Telecoms</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  if (newClientName.trim() && newClientIndustry) {
+                    const newClient = {
+                      id: String(Date.now()),
+                      name: newClientName.trim(),
+                      industry: newClientIndustry
+                    };
+                    setClients([...clients, newClient]);
+                    setSelectedClient(newClient.id);
+                    setNewClientName('');
+                    setNewClientIndustry('');
+                    setShowAddClient(false);
+                  }
+                }}
+                disabled={!newClientName.trim() || !newClientIndustry}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  backgroundColor: newClientName.trim() && newClientIndustry ? '#7c3aed' : '#e2e8f0',
+                  color: newClientName.trim() && newClientIndustry ? '#ffffff' : '#94a3b8',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: newClientName.trim() && newClientIndustry ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Add Client
+              </button>
+              <button
+                onClick={() => {
+                  setNewClientName('');
+                  setNewClientIndustry('');
+                  setShowAddClient(false);
+                }}
+                style={{
+                  padding: '12px 20px',
+                  backgroundColor: '#f1f5f9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
