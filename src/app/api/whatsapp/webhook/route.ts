@@ -855,7 +855,12 @@ async function handleDocument(sender: string, document: any): Promise<void> {
 // ============================================================================
 // OWNER/TESTER NUMBERS - Can access both flows
 // ============================================================================
-const OWNER_NUMBERS = ['27721172137']; // Simon - can test both flows
+const OWNER_NUMBERS = [
+  '27721172137',  // Simon
+  '27827832892',  // Tester 1
+  '27829245253',  // Tester 2
+  '27721441733',  // Tester 3
+]; // Can test both flows (recruiter + job seeker)
 
 function isOwner(phoneNumber: string): boolean {
   return OWNER_NUMBERS.includes(phoneNumber);
