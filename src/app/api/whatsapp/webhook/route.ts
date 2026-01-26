@@ -82,7 +82,7 @@ async function sendWhatsAppMessage(to: string, message: string): Promise<boolean
   }
 
   try {
-    const response = await fetch('https://waba-v2.360dialog.io/v1/messages', {
+    const response = await fetch('https://waba-v2.360dialog.io/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
 
   try {
     // Step 1: Get media URL
-    const urlResponse = await fetch(`https://waba-v2.360dialog.io/v1/media/${mediaId}`, {
+    const urlResponse = await fetch(`https://waba-v2.360dialog.io/media/${mediaId}`, {
       headers: { 'D360-API-KEY': apiKey }
     });
 
