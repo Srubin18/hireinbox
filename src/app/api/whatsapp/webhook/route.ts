@@ -842,16 +842,25 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string | null> {
 // ============================================================================
 async function handleDocument(sender: string, document: any): Promise<void> {
   const state = getState(sender);
-  const isOwnerUser = isOwner(sender);
+  const isSuperOwnerUser = isSuperOwner(sender);
+  const isRecruiterTesterUser = isRecruiterTester(sender);
   const authorized = await isAuthorized(sender);
 
-  console.log(`[HireInbox WA] handleDocument - owner: ${isOwnerUser}, authorized: ${authorized}, flow: ${state.flow}`);
+  console.log(`[HireInbox WA] handleDocument - superOwner: ${isSuperOwnerUser}, recruiterTester: ${isRecruiterTesterUser}, authorized: ${authorized}, flow: ${state.flow}`);
 
-  // OWNERS: Always respect their explicit flow choice (they chose 1 or 2)
-  // NON-OWNERS: authorized → recruiter, else → jobseeker
-  const shouldProcessAsJobSpec = isOwnerUser
-    ? state.flow === 'recruiter'  // Owners: respect their choice
-    : authorized;                  // Non-owners: based on authorization
+  // Determine if document should be processed as job spec (recruiter) or CV (jobseeker)
+  // - Super owner (Simon): respect their explicit flow choice (they chose 1 or 2)
+  // - Recruiter testers: ALWAYS job spec (recruiter mode only)
+  // - DB authorized: job spec
+  // - Everyone else: CV (jobseeker)
+  let shouldProcessAsJobSpec: boolean;
+  if (isSuperOwnerUser) {
+    shouldProcessAsJobSpec = state.flow === 'recruiter';
+  } else if (isRecruiterTesterUser) {
+    shouldProcessAsJobSpec = true; // Recruiter testers ONLY get recruiter mode
+  } else {
+    shouldProcessAsJobSpec = authorized;
+  }
 
   if (shouldProcessAsJobSpec) {
     const filename = document.filename || 'jobspec.pdf';
@@ -1017,20 +1026,35 @@ async function handleDocument(sender: string, document: any): Promise<void> {
 }
 
 // ============================================================================
-// OWNER/TESTER NUMBERS - Can access both flows
+// ACCESS CONTROL
 // ============================================================================
-const OWNER_NUMBERS = [
-  '27721172137',  // Simon
+
+// SUPER OWNER: Simon only - gets both recruiter AND jobseeker modes
+const SUPER_OWNER = '27721172137'; // Simon
+
+// TESTER NUMBERS: These get recruiter mode ONLY (talent mapping)
+const RECRUITER_TESTERS = [
   '27827832892',  // Tester 1
   '27829245253',  // Tester 2
   '27721441733',  // Tester 3
   '27823093387',  // Marcel
   '27814877909',  // Bernard
   '27728103109',  // Modicai
-]; // Can test both flows (recruiter + job seeker)
+];
 
+// Super owner gets both modes with menu
+function isSuperOwner(phoneNumber: string): boolean {
+  return phoneNumber === SUPER_OWNER;
+}
+
+// Recruiter testers get recruiter mode only (no menu, no jobseeker)
+function isRecruiterTester(phoneNumber: string): boolean {
+  return RECRUITER_TESTERS.includes(phoneNumber);
+}
+
+// Legacy function - now only returns true for super owner
 function isOwner(phoneNumber: string): boolean {
-  return OWNER_NUMBERS.includes(phoneNumber);
+  return isSuperOwner(phoneNumber);
 }
 
 // ============================================================================
@@ -1143,13 +1167,19 @@ async function handleOwnerMessage(sender: string, text: string): Promise<void> {
 // MAIN MESSAGE ROUTER
 // ============================================================================
 async function handleMessage(sender: string, text: string): Promise<void> {
-  // Owner gets dual-mode access
-  if (isOwner(sender)) {
+  // Super owner (Simon) gets dual-mode access with menu
+  if (isSuperOwner(sender)) {
     await handleOwnerMessage(sender, text);
     return;
   }
 
-  // Check if recruiter or job seeker
+  // Recruiter testers get recruiter mode only (no menu)
+  if (isRecruiterTester(sender)) {
+    await handleRecruiterMessage(sender, text);
+    return;
+  }
+
+  // Check if recruiter (from database) or job seeker
   const authorized = await isAuthorized(sender);
 
   if (authorized) {
@@ -1215,14 +1245,9 @@ export async function POST(request: NextRequest) {
 
           // Handle document uploads (CV PDFs for job seekers, Job specs for recruiters)
           if (message.type === 'document' && message.document) {
-            // For owners, ALWAYS ask what the document is for (they have access to both modes)
-            if (isOwner(sender)) {
+            // SUPER OWNER (Simon) only: Ask what the document is for (both modes)
+            if (isSuperOwner(sender)) {
               const state = getState(sender);
-              // Check if they're answering a pending document prompt
-              if (state.step === 'pending_document') {
-                // They should have replied 1 or 2, but sent another document instead
-                // Just ask again
-              }
               // Save the document info and ask what it's for
               setState(sender, {
                 ...state,
@@ -1238,6 +1263,7 @@ export async function POST(request: NextRequest) {
               );
               continue;
             }
+            // Everyone else: process document normally (recruiters → job spec, others → CV)
             await handleDocument(sender, message.document);
           }
 
