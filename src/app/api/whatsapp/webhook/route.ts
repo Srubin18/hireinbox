@@ -75,7 +75,7 @@ function isDuplicate(messageId: string): boolean {
 // WHATSAPP API: Send message via 360dialog
 // ============================================================================
 async function sendWhatsAppMessage(to: string, message: string): Promise<boolean> {
-  const apiKey = process.env.WHATSAPP_API_KEY || process.env.DIALOG_360_API_KEY;
+  const apiKey = process.env.WHATSAPP_API_KEY || process.env.WHATSAPP_360_API_KEY || process.env.DIALOG_360_API_KEY;
   if (!apiKey) {
     console.error('[HireInbox WA] No API key');
     return false;
@@ -169,7 +169,7 @@ async function getFreeScansUsed(phoneNumber: string): Promise<number> {
 // WHATSAPP MEDIA: Download document from WhatsApp
 // ============================================================================
 async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
-  const apiKey = process.env.WHATSAPP_API_KEY || process.env.DIALOG_360_API_KEY;
+  const apiKey = process.env.WHATSAPP_API_KEY || process.env.WHATSAPP_360_API_KEY || process.env.DIALOG_360_API_KEY;
   if (!apiKey) return null;
 
   try {
