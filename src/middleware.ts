@@ -38,6 +38,7 @@ const EXCLUDED_PATTERNS = [
   '/favicon.ico',
   '/icon.svg',
   '/api/health',
+  '/api/whatsapp',  // WhatsApp webhook (360dialog) - needs to bypass security
 ];
 
 // Rate limit configurations
@@ -58,8 +59,8 @@ const BOT_USER_AGENTS = [
   'node-fetch', 'request/', 'superagent', 'aiohttp', 'httpx',
 ];
 
-// Legitimate bots to allow (search engines, Vercel)
-const ALLOWED_BOTS = ['googlebot', 'bingbot', 'vercel', 'uptimerobot', 'pingdom'];
+// Legitimate bots to allow (search engines, Vercel, WhatsApp)
+const ALLOWED_BOTS = ['googlebot', 'bingbot', 'vercel', 'uptimerobot', 'pingdom', '360dialog', 'facebookexternalua', 'meta', 'whatsapp'];
 
 // Suspicious patterns in requests (potential attacks)
 const SUSPICIOUS_PATTERNS = [
