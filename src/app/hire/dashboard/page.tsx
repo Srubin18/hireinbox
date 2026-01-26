@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 
 // ============================================
 // HIREINBOX B2B - COMPREHENSIVE EMPLOYER DASHBOARD
@@ -231,10 +232,22 @@ const sampleRoles: Role[] = [
   { id: '3', title: 'Sales Executive', location: 'Durban', createdAt: '2026-01-20', candidateCount: 12, newToday: 2 },
 ];
 
+// Supabase client for demo mode
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
+
 export default function EmployerDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isDemo = searchParams.get('demo') === 'true';
+
   const [candidates, setCandidates] = useState<Candidate[]>(sampleCandidates);
-  const [roles] = useState<Role[]>(sampleRoles);
+  const [roles, setRoles] = useState<Role[]>(sampleRoles);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [fetchingEmails, setFetchingEmails] = useState(false);
+  const [lastFetchResult, setLastFetchResult] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('1');
   const [activeNav, setActiveNav] = useState<NavSection>('inbox');
   const [filterPass, setFilterPass] = useState<HiringPass | 'all'>('all');
@@ -281,6 +294,129 @@ export default function EmployerDashboard() {
       }
     }
   }, []);
+
+  // DEMO MODE: Load real data from Supabase
+  useEffect(() => {
+    if (!isDemo) return;
+
+    async function loadDemoData() {
+      setDemoLoading(true);
+      try {
+        // Load real roles
+        const { data: dbRoles } = await supabase
+          .from('roles')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (dbRoles && dbRoles.length > 0) {
+          const mappedRoles: Role[] = dbRoles.map(r => ({
+            id: r.id,
+            title: r.title || 'Untitled Role',
+            location: r.location || 'Remote',
+            createdAt: r.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+            candidateCount: 0,
+            newToday: 0
+          }));
+          setRoles(mappedRoles);
+          setSelectedRole(mappedRoles[0].id);
+        }
+
+        // Load real candidates
+        const { data: dbCandidates } = await supabase
+          .from('candidates')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (dbCandidates && dbCandidates.length > 0) {
+          const mappedCandidates: Candidate[] = dbCandidates.map(c => ({
+            id: c.id,
+            name: c.name || 'Unknown',
+            email: c.email || '',
+            phone: c.phone || '',
+            role: c.role_id || '',
+            pass: mapStatusToPass(c.status),
+            aiMatch: mapScoreToMatch(c.score || c.ai_score),
+            aiScore: c.score || c.ai_score || 0,
+            hasVideo: false,
+            hasAiInterview: false,
+            verified: false,
+            receivedAt: c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+            lastUpdated: c.updated_at?.split('T')[0] || c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
+          }));
+          setCandidates(mappedCandidates);
+        }
+      } catch (err) {
+        console.error('Demo data load error:', err);
+      }
+      setDemoLoading(false);
+    }
+
+    loadDemoData();
+  }, [isDemo]);
+
+  // Helper to map status to pass
+  function mapStatusToPass(status: string): HiringPass {
+    switch (status) {
+      case 'shortlist': return 2;
+      case 'talent_pool': return 7;
+      case 'screened': return 1;
+      case 'reject': return 1;
+      case 'unprocessed': return 0;
+      default: return 0;
+    }
+  }
+
+  // Helper to map score to match
+  function mapScoreToMatch(score: number): AIMatch {
+    if (score >= 80) return 'strong';
+    if (score >= 60) return 'possible';
+    return 'low';
+  }
+
+  // DEMO MODE: Fetch emails from inbox
+  async function fetchEmailsFromInbox() {
+    setFetchingEmails(true);
+    setLastFetchResult(null);
+    try {
+      const res = await fetch('/api/fetch-emails', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setLastFetchResult(`Fetched ${data.processedCount || 0} emails, stored ${data.storedCount || 0} candidates`);
+        // Reload candidates
+        const { data: dbCandidates } = await supabase
+          .from('candidates')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (dbCandidates) {
+          const mappedCandidates: Candidate[] = dbCandidates.map(c => ({
+            id: c.id,
+            name: c.name || 'Unknown',
+            email: c.email || '',
+            phone: c.phone || '',
+            role: c.role_id || '',
+            pass: mapStatusToPass(c.status),
+            aiMatch: mapScoreToMatch(c.score || c.ai_score),
+            aiScore: c.score || c.ai_score || 0,
+            hasVideo: false,
+            hasAiInterview: false,
+            verified: false,
+            receivedAt: c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+            lastUpdated: c.updated_at?.split('T')[0] || c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
+          }));
+          setCandidates(mappedCandidates);
+        }
+      } else {
+        setLastFetchResult(`Error: ${data.error || 'Failed to fetch'}`);
+      }
+    } catch (err) {
+      setLastFetchResult(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+    setFetchingEmails(false);
+  }
 
   // Complete onboarding
   const completeOnboarding = () => {
@@ -448,8 +584,62 @@ export default function EmployerDashboard() {
       minHeight: '100vh',
       backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      display: 'flex'
+      display: 'flex',
+      flexDirection: 'column'
     }}>
+      {/* DEMO MODE BANNER */}
+      {isDemo && (
+        <div style={{
+          backgroundColor: '#7c3aed',
+          color: '#ffffff',
+          padding: '12px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600 }}>
+              DEMO MODE - Real Data from Database
+            </span>
+            {demoLoading && <span style={{ fontSize: '12px' }}>Loading...</span>}
+            {lastFetchResult && (
+              <span style={{ fontSize: '12px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '4px' }}>
+                {lastFetchResult}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={fetchEmailsFromInbox}
+              disabled={fetchingEmails}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: fetchingEmails ? '#a78bfa' : '#ffffff',
+                color: fetchingEmails ? '#ffffff' : '#7c3aed',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: fetchingEmails ? 'wait' : 'pointer'
+              }}
+            >
+              {fetchingEmails ? 'Fetching...' : 'Fetch from Inbox'}
+            </button>
+            <span style={{ fontSize: '12px', opacity: 0.8 }}>
+              Email: ssrubin18+hireinbox@gmail.com
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Main content wrapper with flex */}
+      <div style={{ display: 'flex', flex: 1, marginTop: isDemo ? '52px' : 0 }}>
       {/* Sidebar */}
       <aside style={{
         width: '260px',
@@ -2326,6 +2516,7 @@ export default function EmployerDashboard() {
         </div>
       )}
 
+      </div>{/* End main content wrapper */}
     </div>
   );
 }
