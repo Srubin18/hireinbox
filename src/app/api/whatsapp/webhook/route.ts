@@ -138,6 +138,8 @@ interface ConversationState {
   candidateName?: string;
   cvText?: string;
   freeScansUsed?: number;
+  // Owner pending document (when they need to choose 1 or 2)
+  pendingDocument?: any;
 }
 
 const conversationStates = new Map<string, ConversationState>();
@@ -536,19 +538,23 @@ async function saveToTalentPool(
   analysis: any
 ): Promise<boolean> {
   try {
-    const { error } = await supabase.from('talent_pool').insert({
+    // Use whatsapp_talent_pool table (separate from B2B talent_pool which requires company_id)
+    const { error } = await supabase.from('whatsapp_talent_pool').upsert({
       phone_number: phoneNumber,
       name: name,
       cv_text: cvText,
       overall_score: analysis.overall_score,
       current_title: analysis.current_title,
-      years_experience: analysis.years_experience,
+      years_experience: String(analysis.years_experience || ''),
       education_level: analysis.education_level,
       natural_fit_roles: analysis.career_insights?.natural_fit_roles || [],
       industries: analysis.career_insights?.industries || [],
       full_analysis: analysis,
       opted_in_at: new Date().toISOString(),
       source: 'whatsapp'
+    }, {
+      onConflict: 'phone_number',
+      ignoreDuplicates: false // Update existing record
     });
 
     if (error) {
@@ -932,13 +938,17 @@ async function handleDocument(sender: string, document: any): Promise<void> {
   );
 
   // Download the file
+  console.log(`[HireInbox WA] Starting media download for job seeker CV: ${mediaId}`);
   const buffer = await downloadWhatsAppMedia(mediaId);
   if (!buffer) {
+    console.error(`[HireInbox WA] Media download failed for: ${mediaId}`);
     await sendWhatsAppMessage(sender,
-      'Couldn\'t download your file. Please try again or paste your CV text instead.'
+      'Couldn\'t download your file. Please try again or paste your CV text instead.\n\n' +
+      '_Tip: You can also copy-paste your CV text directly into the chat._'
     );
     return;
   }
+  console.log(`[HireInbox WA] Media download successful: ${buffer.length} bytes`);
 
   setState(sender, { ...state, step: 'analyzing', flow: 'jobseeker' });
   await sendWhatsAppMessage(sender,
@@ -949,7 +959,8 @@ async function handleDocument(sender: string, document: any): Promise<void> {
     const result = await analyzeCVFromBuffer(buffer, filename);
 
     if (!result.success || !result.analysis) {
-      throw new Error('Analysis failed');
+      console.error('[HireInbox WA] CV analysis returned no result:', result);
+      throw new Error('Analysis returned no result');
     }
 
     const analysis = result.analysis;
@@ -980,12 +991,21 @@ async function handleDocument(sender: string, document: any): Promise<void> {
 
   } catch (error) {
     console.error('[HireInbox WA] CV document analysis failed:', error);
-    await sendWhatsAppMessage(sender,
-      'Couldn\'t read your CV. Please:\n' +
-      '• Try a different PDF\n' +
-      '• Or paste your CV text instead\n\n' +
-      '_Some PDFs are image-only and can\'t be read_'
-    );
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    // Provide more specific error messages
+    let userMessage = 'Couldn\'t read your CV. Please:\n' +
+      '- Try a different PDF\n' +
+      '- Or paste your CV text instead\n\n' +
+      '_Some PDFs are image-only and can\'t be read_';
+
+    if (errorMessage.includes('Rate limit') || errorMessage.includes('429')) {
+      userMessage = 'We\'re experiencing high demand. Please try again in a minute.';
+    } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+      userMessage = 'Analysis took too long. Please try again with a smaller CV file.';
+    }
+
+    await sendWhatsAppMessage(sender, userMessage);
   }
 }
 
@@ -1012,6 +1032,27 @@ function isOwner(phoneNumber: string): boolean {
 async function handleOwnerMessage(sender: string, text: string): Promise<void> {
   const lowerText = text.toLowerCase().trim();
   const state = getState(sender);
+
+  // Handle pending document choice (owner uploaded a doc and needs to choose 1 or 2)
+  if (state.step === 'pending_document' && state.pendingDocument) {
+    if (lowerText === '1' || lowerText === 'job spec' || lowerText === 'jobspec') {
+      // Process as job spec (recruiter mode)
+      setState(sender, { ...state, step: 'processing', flow: 'recruiter', pendingDocument: undefined });
+      await handleDocument(sender, state.pendingDocument);
+      return;
+    }
+    if (lowerText === '2' || lowerText === 'cv' || lowerText === 'my cv') {
+      // Process as CV (job seeker mode)
+      setState(sender, { ...state, step: 'processing', flow: 'jobseeker', pendingDocument: undefined });
+      await handleDocument(sender, state.pendingDocument);
+      return;
+    }
+    // Invalid response - ask again
+    await sendWhatsAppMessage(sender,
+      'Please reply *1* (Job Spec) or *2* (My CV)'
+    );
+    return;
+  }
 
   // IMPORTANT: If already in a flow with results, route to that handler FIRST
   // This allows viewing multiple candidates without mode switching
@@ -1163,19 +1204,28 @@ export async function POST(request: NextRequest) {
 
           // Handle document uploads (CV PDFs for job seekers, Job specs for recruiters)
           if (message.type === 'document' && message.document) {
-            // For owners, check their current flow
+            // For owners, ALWAYS ask what the document is for (they have access to both modes)
             if (isOwner(sender)) {
               const state = getState(sender);
-              if (!state.flow) {
-                // No flow selected yet, prompt them
-                await sendWhatsAppMessage(sender,
-                  'What\'s this document for?\n\n' +
-                  '*1.* Job spec (find candidates)\n' +
-                  '*2.* My CV (get feedback)\n\n' +
-                  'Reply 1 or 2, then send the document again.'
-                );
-                continue;
+              // Check if they're answering a pending document prompt
+              if (state.step === 'pending_document') {
+                // They should have replied 1 or 2, but sent another document instead
+                // Just ask again
               }
+              // Save the document info and ask what it's for
+              setState(sender, {
+                ...state,
+                step: 'pending_document',
+                pendingDocument: message.document
+              });
+              await sendWhatsAppMessage(sender,
+                '📄 Got your document!\n\n' +
+                'What would you like to do?\n\n' +
+                '*1.* Analyze as *Job Spec* (find matching candidates)\n' +
+                '*2.* Analyze as *My CV* (get feedback)\n\n' +
+                'Reply *1* or *2*'
+              );
+              continue;
             }
             await handleDocument(sender, message.document);
           }

@@ -209,10 +209,35 @@ async function extractPDFText(buffer: Buffer, filename: string): Promise<string>
 
     let extractedText = '';
 
-    // Method 1: ConvertAPI (most reliable for production)
-    if (process.env.CONVERTAPI_SECRET) {
+    // Method 1: pdf-parse (primary - works well on Vercel serverless)
+    try {
+      console.log('[PDF] Method 1: Trying pdf-parse...');
+      const pdfParse = (await import('pdf-parse')).default;
+      const data = await pdfParse(buffer);
+      extractedText = data.text || '';
+      console.log(`[PDF] pdf-parse SUCCESS: ${extractedText.length} chars`);
+    } catch (e) {
+      console.warn('[PDF] pdf-parse error:', e instanceof Error ? e.message : e);
+    }
+
+    // Method 2: unpdf (Vercel-optimized, pure JS fallback)
+    if (!extractedText || extractedText.length < 100) {
       try {
-        console.log('[PDF] Method 1: Trying ConvertAPI...');
+        console.log('[PDF] Method 2: Trying unpdf...');
+        const { extractText } = await import('unpdf');
+        const uint8Array = new Uint8Array(buffer);
+        const { text } = await extractText(uint8Array, { mergePages: true });
+        extractedText = text || '';
+        console.log(`[PDF] unpdf SUCCESS: ${extractedText.length} chars`);
+      } catch (e) {
+        console.warn('[PDF] unpdf error:', e instanceof Error ? e.message : e);
+      }
+    }
+
+    // Method 3: ConvertAPI (external service fallback - may have expired credits)
+    if ((!extractedText || extractedText.length < 100) && process.env.CONVERTAPI_SECRET) {
+      try {
+        console.log('[PDF] Method 3: Trying ConvertAPI...');
         const base64PDF = buffer.toString('base64');
         const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
           method: 'POST',
@@ -239,35 +264,6 @@ async function extractPDFText(buffer: Buffer, filename: string): Promise<string>
         }
       } catch (e) {
         console.warn('[PDF] ConvertAPI error:', e instanceof Error ? e.message : e);
-      }
-    } else {
-      console.log('[PDF] ConvertAPI: SKIPPED (no API key)');
-    }
-
-    // Method 2: unpdf (Vercel-optimized, pure JS)
-    if (!extractedText || extractedText.length < 100) {
-      try {
-        console.log('[PDF] Method 2: Trying unpdf...');
-        const { extractText } = await import('unpdf');
-        const uint8Array = new Uint8Array(buffer);
-        const { text } = await extractText(uint8Array, { mergePages: true });
-        extractedText = text || '';
-        console.log(`[PDF] unpdf SUCCESS: ${extractedText.length} chars`);
-      } catch (e) {
-        console.warn('[PDF] unpdf error:', e instanceof Error ? e.message : e);
-      }
-    }
-
-    // Method 3: pdf-parse (fallback)
-    if (!extractedText || extractedText.length < 100) {
-      try {
-        console.log('[PDF] Method 3: Trying pdf-parse...');
-        const pdfParse = (await import('pdf-parse')).default;
-        const data = await pdfParse(buffer);
-        extractedText = data.text || '';
-        console.log(`[PDF] pdf-parse SUCCESS: ${extractedText.length} chars`);
-      } catch (e) {
-        console.warn('[PDF] pdf-parse error:', e instanceof Error ? e.message : e);
       }
     }
 

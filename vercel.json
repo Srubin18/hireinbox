@@ -11,6 +11,9 @@
     },
     "src/app/api/automation/run/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/whatsapp/webhook/route.ts": {
+      "maxDuration": 90
     }
   },
   "crons": [
