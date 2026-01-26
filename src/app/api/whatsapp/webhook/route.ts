@@ -170,32 +170,48 @@ async function getFreeScansUsed(phoneNumber: string): Promise<number> {
 // ============================================================================
 async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
   const apiKey = process.env.WHATSAPP_API_KEY || process.env.WHATSAPP_360_API_KEY || process.env.DIALOG_360_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.error('[HireInbox WA] No API key configured');
+    return null;
+  }
 
   try {
+    // Wait for media to propagate (not immediately available after webhook)
+    await new Promise(r => setTimeout(r, 2000));
+
     // Step 1: Get media URL
-    const urlResponse = await fetch(`https://waba-v2.360dialog.io/media/${mediaId}`, {
+    // 360dialog v2 API: GET /{mediaId} (no /media/ prefix)
+    console.log(`[HireInbox WA] Fetching media info: ${mediaId.slice(0, 20)}...`);
+    const urlResponse = await fetch(`https://waba-v2.360dialog.io/${mediaId}`, {
       headers: { 'D360-API-KEY': apiKey }
     });
 
     if (!urlResponse.ok) {
-      console.error('[HireInbox WA] Media URL fetch failed:', await urlResponse.text());
+      const errorText = await urlResponse.text();
+      console.error('[HireInbox WA] Media URL fetch failed:', urlResponse.status, errorText);
       return null;
     }
 
-    const { url } = await urlResponse.json();
+    const mediaInfo = await urlResponse.json();
+    console.log('[HireInbox WA] Media info:', mediaInfo.mime_type, mediaInfo.url?.slice(0, 50));
 
-    // Step 2: Download the file
-    const fileResponse = await fetch(url, {
+    if (!mediaInfo.url) {
+      console.error('[HireInbox WA] No URL in media response');
+      return null;
+    }
+
+    // Step 2: Download the actual file
+    const fileResponse = await fetch(mediaInfo.url, {
       headers: { 'D360-API-KEY': apiKey }
     });
 
     if (!fileResponse.ok) {
-      console.error('[HireInbox WA] Media download failed');
+      console.error('[HireInbox WA] Media download failed:', fileResponse.status);
       return null;
     }
 
     const arrayBuffer = await fileResponse.arrayBuffer();
+    console.log(`[HireInbox WA] Downloaded ${arrayBuffer.byteLength} bytes`);
     return Buffer.from(arrayBuffer);
   } catch (error) {
     console.error('[HireInbox WA] Media download error:', error);
