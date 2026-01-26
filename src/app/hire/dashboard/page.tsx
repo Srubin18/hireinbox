@@ -2343,8 +2343,61 @@ export default function EmployerDashboard() {
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setShowNewRoleModal(false)} style={{ flex: 1, padding: '14px', backgroundColor: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
               <button
-                onClick={() => {
-                  alert('In production, this creates a new role and redirects to PayFast for payment.');
+                onClick={async () => {
+                  if (isDemo) {
+                    // In demo mode, actually create the role
+                    try {
+                      const res = await fetch('/api/roles', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          title: newRoleTitle,
+                          description: newRoleDescription,
+                          department: newRoleDepartment,
+                          location: newRoleLocation,
+                          experienceMin: newRoleExperienceMin,
+                          experienceMax: newRoleExperienceMax,
+                          seniorityLevel: newRoleSeniorityLevel,
+                          employmentType: newRoleEmploymentType,
+                          workArrangement: newRoleWorkArrangement,
+                          salaryMin: newRoleSalaryMin,
+                          salaryMax: newRoleSalaryMax,
+                          qualifications: newRoleQualifications,
+                          mustHaveSkills: newRoleMustHaveSkills,
+                          niceToHaveSkills: newRoleNiceToHaveSkills,
+                          dealbreakers: newRoleDealbreakers
+                        })
+                      });
+                      const data = await res.json();
+                      if (data.success && data.role) {
+                        // Add to roles list and select it
+                        const newRole: Role = {
+                          id: data.role.id,
+                          title: data.role.title,
+                          location: newRoleLocation || 'Remote',
+                          createdAt: new Date().toISOString().split('T')[0],
+                          candidateCount: 0,
+                          newToday: 0
+                        };
+                        setRoles(prev => [newRole, ...prev]);
+                        setSelectedRole(newRole.id);
+                        setLastFetchResult(`Role "${newRoleTitle}" created successfully!`);
+                        // Reset form
+                        setNewRoleTitle(''); setNewRoleLocation(''); setNewRoleDescription('');
+                        setNewRoleDepartment(''); setNewRoleExperienceMin(''); setNewRoleExperienceMax('');
+                        setNewRoleSeniorityLevel(''); setNewRoleEmploymentType('full-time');
+                        setNewRoleWorkArrangement(''); setNewRoleSalaryMin(''); setNewRoleSalaryMax('');
+                        setNewRoleQualifications(''); setNewRoleMustHaveSkills(''); setNewRoleNiceToHaveSkills('');
+                        setNewRoleDealbreakers('');
+                      } else {
+                        alert('Error creating role: ' + (data.error || 'Unknown error'));
+                      }
+                    } catch (err) {
+                      alert('Error creating role: ' + (err instanceof Error ? err.message : 'Unknown error'));
+                    }
+                  } else {
+                    alert('In production, this creates a new role and redirects to PayFast for payment.');
+                  }
                   setShowNewRoleModal(false);
                 }}
                 disabled={!newRoleTitle.trim() || !newRoleLocation.trim()}
@@ -2360,7 +2413,7 @@ export default function EmployerDashboard() {
                   cursor: newRoleTitle.trim() && newRoleLocation.trim() ? 'pointer' : 'not-allowed'
                 }}
               >
-                Create Role — R1,750
+                {isDemo ? 'Create Role (Demo)' : 'Create Role — R1,750'}
               </button>
             </div>
           </div>

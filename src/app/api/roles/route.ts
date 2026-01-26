@@ -1,99 +1,103 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireAuth, isAuthError, requireRateLimit } from '@/lib/api-auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET(request: NextRequest) {
-  // Check rate limit
-  const rateLimitError = requireRateLimit(request, { maxRequests: 100, windowMs: 3600000 });
-  if (rateLimitError) return rateLimitError;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (isAuthError(authResult)) return authResult;
-  const { user } = authResult;
-
+// GET - List roles
+export async function GET() {
   try {
-    // Get user's company to filter roles
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .single();
-
-    let query = supabase
+    const { data: roles, error } = await supabase
       .from('roles')
       .select('*')
       .order('created_at', { ascending: false });
-
-    // Filter by company if user has one
-    if (userProfile?.company_id) {
-      query = query.eq('company_id', userProfile.company_id);
-    }
-
-    const { data: roles, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ roles });
-  } catch (error) {
-    console.error('Error fetching roles:', error);
+  } catch (err) {
     return NextResponse.json({ error: 'Failed to fetch roles' }, { status: 500 });
   }
 }
 
-export async function POST(request: NextRequest) {
-  // Check rate limit
-  const rateLimitError = requireRateLimit(request, { maxRequests: 50, windowMs: 3600000 });
-  if (rateLimitError) return rateLimitError;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (isAuthError(authResult)) return authResult;
-  const { user } = authResult;
-
+// POST - Create a new role
+export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const {
+      title,
+      description,
+      department,
+      location,
+      experienceMin,
+      experienceMax,
+      seniorityLevel,
+      employmentType,
+      workArrangement,
+      salaryMin,
+      salaryMax,
+      qualifications,
+      mustHaveSkills,
+      niceToHaveSkills,
+      dealbreakers
+    } = body;
 
-    // Get user's company
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .single();
-    
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
+
+    // Build the role object
     const roleData = {
-      title: body.title,
-      status: body.status || 'active',
-      criteria: body.criteria || {},
-      facts: body.facts || {},
-      preferences: body.preferences || {},
-      context: body.context || {},
-      ai_guidance: body.ai_guidance || {},
-      screening_questions: body.screening_questions || [],
-      company_id: userProfile?.company_id || null,
-      created_by: user.id,
+      title: title.trim(),
+      status: 'active',
+      context: {
+        seniority: seniorityLevel || 'Mid-level',
+        employment_type: employmentType || 'Full-time',
+        department: department || null,
+        work_arrangement: workArrangement || 'Onsite'
+      },
+      facts: {
+        min_experience_years: experienceMin ? parseInt(experienceMin) : 0,
+        max_experience_years: experienceMax ? parseInt(experienceMax) : null,
+        required_skills: mustHaveSkills ? mustHaveSkills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        qualifications: qualifications ? qualifications.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        location: location || 'Remote',
+        work_type: workArrangement || 'Onsite',
+        salary_min: salaryMin ? parseInt(salaryMin) : null,
+        salary_max: salaryMax ? parseInt(salaryMax) : null
+      },
+      preferences: {
+        nice_to_have: niceToHaveSkills || ''
+      },
+      ai_guidance: {
+        strong_fit: description || '',
+        disqualifiers: dealbreakers || ''
+      },
+      criteria: {
+        min_experience_years: experienceMin ? parseInt(experienceMin) : 0,
+        required_skills: mustHaveSkills ? mustHaveSkills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        locations: location ? [location] : []
+      }
     };
 
-    const { data: role, error } = await supabase
+    const { data, error } = await supabase
       .from('roles')
-      .insert([roleData])
+      .insert(roleData)
       .select()
       .single();
 
     if (error) {
+      console.error('Role creation error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ role });
-  } catch (error) {
-    console.error('Error creating role:', error);
+    return NextResponse.json({ role: data, success: true });
+  } catch (err) {
+    console.error('Role creation error:', err);
     return NextResponse.json({ error: 'Failed to create role' }, { status: 500 });
   }
 }
