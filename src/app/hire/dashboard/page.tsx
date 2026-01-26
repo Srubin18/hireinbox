@@ -25,7 +25,6 @@ type NavSection = 'inbox' | 'screening' | 'interviews' | 'verification' | 'pipel
 
 interface VerificationStatus {
   idCheck?: 'pending' | 'in_progress' | 'passed' | 'failed' | 'not_ordered';
-  criminalCheck?: 'pending' | 'in_progress' | 'clear' | 'flagged' | 'not_ordered';
   creditCheck?: 'pending' | 'in_progress' | 'good' | 'fair' | 'poor' | 'not_ordered';
   referenceCheck?: 'pending' | 'in_progress' | 'positive' | 'mixed' | 'negative' | 'not_ordered';
 }
@@ -199,10 +198,9 @@ const Icons = {
 // Verification pricing
 const VERIFICATION_PRICING = {
   idCheck: { label: 'ID Verification', price: 150, icon: 'id', description: 'Verify South African ID against Home Affairs' },
-  criminalCheck: { label: 'Criminal Check', price: 250, icon: 'shield', description: 'SAPS criminal record check' },
   creditCheck: { label: 'Credit Check', price: 200, icon: 'creditCard', description: 'TransUnion credit report summary' },
   referenceCheck: { label: 'Reference Check', price: 200, icon: 'userCheck', description: 'AI-assisted reference verification (2 refs)' },
-  fullPackage: { label: 'Complete Package', price: 700, icon: 'package', description: 'All 4 checks - Save R100' }
+  fullPackage: { label: 'Complete Package', price: 550, icon: 'package', description: 'All 3 checks - Save R50' }
 };
 
 const Logo = () => (
@@ -245,9 +243,9 @@ const sampleCandidates: Candidate[] = [
   { id: '2', name: 'Michael Chen', email: 'michael@email.com', phone: '+27 83 234 5678', role: 'Senior Developer', pass: 1, aiMatch: 'strong', aiScore: 88, receivedAt: '2026-01-22', lastUpdated: '2026-01-22' },
   { id: '3', name: 'Thabo Molefe', email: 'thabo@email.com', phone: '+27 84 345 6789', role: 'Senior Developer', pass: 3, aiMatch: 'strong', aiScore: 85, hasAiInterview: true, receivedAt: '2026-01-21', lastUpdated: '2026-01-22' },
   { id: '4', name: 'Priya Naidoo', email: 'priya@email.com', phone: '+27 85 456 7890', role: 'Senior Developer', pass: 0, receivedAt: '2026-01-23', lastUpdated: '2026-01-23' },
-  { id: '5', name: 'John Smith', email: 'john@email.com', phone: '+27 86 567 8901', role: 'Senior Developer', pass: 5, aiMatch: 'strong', aiScore: 95, hasAiInterview: true, verified: true, verification: { idCheck: 'passed', criminalCheck: 'clear', creditCheck: 'good', referenceCheck: 'positive' }, receivedAt: '2026-01-18', lastUpdated: '2026-01-22' },
+  { id: '5', name: 'John Smith', email: 'john@email.com', phone: '+27 86 567 8901', role: 'Senior Developer', pass: 5, aiMatch: 'strong', aiScore: 95, hasAiInterview: true, verified: true, verification: { idCheck: 'passed', creditCheck: 'good', referenceCheck: 'positive' }, receivedAt: '2026-01-18', lastUpdated: '2026-01-22' },
   { id: '6', name: 'Nomsa Dlamini', email: 'nomsa@email.com', phone: '+27 87 678 9012', role: 'Senior Developer', pass: 1, aiMatch: 'low', aiScore: 45, receivedAt: '2026-01-21', lastUpdated: '2026-01-22' },
-  { id: '7', name: 'David Botha', email: 'david@email.com', phone: '+27 82 999 1234', role: 'Senior Developer', pass: 4, aiMatch: 'strong', aiScore: 87, hasAiInterview: true, verification: { idCheck: 'passed', criminalCheck: 'in_progress', creditCheck: 'pending', referenceCheck: 'not_ordered' }, receivedAt: '2026-01-19', lastUpdated: '2026-01-24' },
+  { id: '7', name: 'David Botha', email: 'david@email.com', phone: '+27 82 999 1234', role: 'Senior Developer', pass: 4, aiMatch: 'strong', aiScore: 87, hasAiInterview: true, verification: { idCheck: 'passed', creditCheck: 'pending', referenceCheck: 'not_ordered' }, receivedAt: '2026-01-19', lastUpdated: '2026-01-24' },
 ];
 
 const sampleRoles: Role[] = [
@@ -577,9 +575,6 @@ export default function EmployerDashboard() {
     const newVerification: VerificationStatus = { ...viewingCandidate.verification };
     if (selectedVerifications.has('fullPackage') || selectedVerifications.has('idCheck')) {
       newVerification.idCheck = 'pending';
-    }
-    if (selectedVerifications.has('fullPackage') || selectedVerifications.has('criminalCheck')) {
-      newVerification.criminalCheck = 'pending';
     }
     if (selectedVerifications.has('fullPackage') || selectedVerifications.has('creditCheck')) {
       newVerification.creditCheck = 'pending';
@@ -1483,7 +1478,7 @@ export default function EmployerDashboard() {
                 </div>
                 <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
                   <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>AI Score</div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{viewingCandidate.aiScore || 'Pending'}%</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{viewingCandidate.aiScore !== undefined && viewingCandidate.aiScore !== null ? `${viewingCandidate.aiScore}%` : 'Pending'}</div>
                 </div>
                 <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px', textAlign: 'center' }}>
                   <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Video</div>
@@ -1599,7 +1594,6 @@ export default function EmployerDashboard() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                     {[
                       { key: 'idCheck', label: 'ID Verification' },
-                      { key: 'criminalCheck', label: 'Criminal Check' },
                       { key: 'creditCheck', label: 'Credit Check' },
                       { key: 'referenceCheck', label: 'Reference Check' },
                     ].map(item => {
@@ -1647,7 +1641,7 @@ export default function EmployerDashboard() {
 
                 {/* Individual Checks */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
-                  {(['idCheck', 'criminalCheck', 'creditCheck', 'referenceCheck'] as const).map(key => {
+                  {(['idCheck', 'creditCheck', 'referenceCheck'] as const).map(key => {
                     const pricing = VERIFICATION_PRICING[key];
                     const isSelected = selectedVerifications.has(key) || selectedVerifications.has('fullPackage');
                     const alreadyOrdered = viewingCandidate.verification?.[key] && viewingCandidate.verification[key] !== 'not_ordered';
@@ -1721,11 +1715,11 @@ export default function EmployerDashboard() {
                           fontSize: '11px',
                           fontWeight: 600
                         }}>
-                          SAVE R100
+                          SAVE R50
                         </span>
                       </div>
                       <div style={{ fontSize: '13px', marginTop: '4px', opacity: 0.8 }}>
-                        All 4 checks: ID + Criminal + Credit + References
+                        All 3 checks: ID + Credit + References
                       </div>
                     </div>
                     <div style={{ fontSize: '24px', fontWeight: 700 }}>
@@ -2773,7 +2767,6 @@ export default function EmployerDashboard() {
             <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                 {showVerificationDetail === 'idCheck' && 'ID Verification'}
-                {showVerificationDetail === 'criminalCheck' && 'Criminal Record Check'}
                 {showVerificationDetail === 'creditCheck' && 'Credit Check'}
                 {showVerificationDetail === 'referenceCheck' && 'Reference Check'}
               </h2>
@@ -2800,32 +2793,6 @@ export default function EmployerDashboard() {
                     {['Upload ID document', 'AI extracts details', 'Home Affairs check', 'Results in 1-2 days'].map((step, i) => (
                       <div key={i} style={{ flex: 1, textAlign: 'center', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#4F46E5', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontWeight: 700, fontSize: '14px' }}>{i + 1}</div>
-                        <div style={{ fontSize: '12px', color: '#475569' }}>{step}</div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {showVerificationDetail === 'criminalCheck' && (
-                <>
-                  <div style={{ backgroundColor: '#fef3c7', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
-                    <div style={{ fontSize: '28px', fontWeight: 700, color: '#d97706', marginBottom: '4px' }}>R250</div>
-                    <div style={{ fontSize: '14px', color: '#92400e' }}>per candidate</div>
-                  </div>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>What&apos;s included:</h3>
-                  <ul style={{ margin: '0 0 20px', paddingLeft: '20px', color: '#475569', fontSize: '14px', lineHeight: '2' }}>
-                    <li>SAPS criminal record check</li>
-                    <li>National criminal database search</li>
-                    <li>Pending case checks</li>
-                    <li>Historical conviction records</li>
-                    <li>Official clearance certificate</li>
-                  </ul>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>How it works:</h3>
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-                    {['Candidate consent', 'Fingerprint submission', 'SAPS processing', 'Results in 3-5 days'].map((step, i) => (
-                      <div key={i} style={{ flex: 1, textAlign: 'center', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#d97706', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', fontWeight: 700, fontSize: '14px' }}>{i + 1}</div>
                         <div style={{ fontSize: '12px', color: '#475569' }}>{step}</div>
                       </div>
                     ))}
