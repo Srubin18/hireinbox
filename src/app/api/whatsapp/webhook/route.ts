@@ -710,7 +710,7 @@ async function handleDocument(sender: string, document: any): Promise<void> {
     const filename = document.filename || 'jobspec.pdf';
     const mediaId = document.id;
 
-    await sendWhatsAppMessage(sender, '📥 *Downloading job spec...*');
+    await sendWhatsAppMessage(sender, '📥 *Downloading your document...*');
 
     const buffer = await downloadWhatsAppMedia(mediaId);
     if (!buffer) {
