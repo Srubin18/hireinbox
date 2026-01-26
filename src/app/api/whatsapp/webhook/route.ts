@@ -168,70 +168,171 @@ async function getFreeScansUsed(phoneNumber: string): Promise<number> {
 // ============================================================================
 // WHATSAPP MEDIA: Download document from WhatsApp
 // ============================================================================
-// Transform Facebook CDN URL to 360dialog proxy URL
-function transformMediaUrl(originalUrl: string): string {
-  if (!originalUrl) return originalUrl;
-  if (originalUrl.includes('waba-v2.360dialog.io')) return originalUrl;
 
-  // 360dialog returns URLs pointing to Facebook's CDN
-  if (originalUrl.includes('lookaside.fbsbx.com')) {
-    return originalUrl
-      .replace('https://lookaside.fbsbx.com', 'https://waba-v2.360dialog.io')
-      .replace(/\\/g, '');
+/**
+ * Transform Facebook CDN URL to 360dialog proxy URL
+ *
+ * 360dialog returns URLs like:
+ * https://lookaside.fbsbx.com\/whatsapp_business\/attachments\/?mid=...&ext=...&hash=...
+ *
+ * We need to convert to:
+ * https://waba-v2.360dialog.io/whatsapp_business/attachments/?mid=...&ext=...&hash=...
+ */
+function transformMediaUrl(originalUrl: string): string {
+  if (!originalUrl) {
+    console.log('[HireInbox WA] transformMediaUrl: Empty URL');
+    return originalUrl;
   }
-  return originalUrl;
+
+  console.log('[HireInbox WA] transformMediaUrl INPUT:', originalUrl);
+
+  // Already transformed
+  if (originalUrl.includes('waba-v2.360dialog.io')) {
+    console.log('[HireInbox WA] transformMediaUrl: Already 360dialog URL');
+    return originalUrl;
+  }
+
+  // Step 1: Remove escaped backslashes (JSON escaping from 360dialog response)
+  let cleanUrl = originalUrl.replace(/\\/g, '');
+  console.log('[HireInbox WA] transformMediaUrl after backslash removal:', cleanUrl);
+
+  // Step 2: Replace Facebook CDN host with 360dialog proxy
+  if (cleanUrl.includes('lookaside.fbsbx.com')) {
+    cleanUrl = cleanUrl.replace('https://lookaside.fbsbx.com', 'https://waba-v2.360dialog.io');
+    console.log('[HireInbox WA] transformMediaUrl OUTPUT:', cleanUrl);
+    return cleanUrl;
+  }
+
+  // Unknown URL format - log and return as-is
+  console.log('[HireInbox WA] transformMediaUrl: Unknown URL format, returning as-is');
+  return cleanUrl;
 }
 
 async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
   const apiKey = process.env.WHATSAPP_API_KEY || process.env.WHATSAPP_360_API_KEY || process.env.DIALOG_360_API_KEY;
   if (!apiKey) {
-    console.error('[HireInbox WA] No API key configured');
+    console.error('[HireInbox WA] FATAL: No API key configured');
     return null;
   }
 
+  console.log('[HireInbox WA] ====== MEDIA DOWNLOAD START ======');
+  console.log('[HireInbox WA] Media ID:', mediaId);
+  console.log('[HireInbox WA] API Key (first 10 chars):', apiKey.slice(0, 10) + '...');
+
   try {
     // Wait for media to propagate (not immediately available after webhook)
+    console.log('[HireInbox WA] Waiting 2s for media propagation...');
     await new Promise(r => setTimeout(r, 2000));
 
     // Step 1: Get media info (URL + mime type)
-    console.log(`[HireInbox WA] Fetching media info: ${mediaId.slice(0, 20)}...`);
-    const urlResponse = await fetch(`https://waba-v2.360dialog.io/${mediaId}`, {
+    const mediaInfoUrl = `https://waba-v2.360dialog.io/${mediaId}`;
+    console.log('[HireInbox WA] Step 1: Fetching media info from:', mediaInfoUrl);
+
+    const urlResponse = await fetch(mediaInfoUrl, {
       headers: { 'D360-API-KEY': apiKey }
     });
+
+    console.log('[HireInbox WA] Media info response status:', urlResponse.status);
+    console.log('[HireInbox WA] Media info response headers:', JSON.stringify(Object.fromEntries(urlResponse.headers.entries())));
 
     if (!urlResponse.ok) {
       const errorText = await urlResponse.text();
-      console.error('[HireInbox WA] Media URL fetch failed:', urlResponse.status, errorText);
+      console.error('[HireInbox WA] Step 1 FAILED - Media URL fetch error');
+      console.error('[HireInbox WA] Status:', urlResponse.status);
+      console.error('[HireInbox WA] Error body:', errorText);
       return null;
     }
 
-    const mediaInfo = await urlResponse.json();
-    console.log('[HireInbox WA] Media info received:', mediaInfo.mime_type);
+    const mediaInfoText = await urlResponse.text();
+    console.log('[HireInbox WA] Raw media info response:', mediaInfoText.slice(0, 500));
+
+    let mediaInfo;
+    try {
+      mediaInfo = JSON.parse(mediaInfoText);
+    } catch (parseError) {
+      console.error('[HireInbox WA] Failed to parse media info JSON:', parseError);
+      return null;
+    }
+
+    console.log('[HireInbox WA] Parsed media info:', JSON.stringify(mediaInfo));
 
     if (!mediaInfo.url) {
-      console.error('[HireInbox WA] No URL in media response');
+      console.error('[HireInbox WA] Step 1 FAILED - No URL in media response');
+      console.error('[HireInbox WA] Full response:', JSON.stringify(mediaInfo));
       return null;
     }
 
-    // Step 2: Transform URL (Facebook CDN → 360dialog proxy)
+    // Step 2: Transform URL (Facebook CDN -> 360dialog proxy)
+    console.log('[HireInbox WA] Step 2: Transforming URL...');
     const downloadUrl = transformMediaUrl(mediaInfo.url);
-    console.log('[HireInbox WA] Download URL:', downloadUrl.slice(0, 60) + '...');
+    console.log('[HireInbox WA] Final download URL:', downloadUrl);
 
     // Step 3: Download the actual file
+    console.log('[HireInbox WA] Step 3: Downloading file...');
+
     const fileResponse = await fetch(downloadUrl, {
-      headers: { 'D360-API-KEY': apiKey }
+      headers: {
+        'D360-API-KEY': apiKey,
+        'Accept': '*/*'
+      },
+      redirect: 'follow'  // Follow 308 redirects
     });
 
+    console.log('[HireInbox WA] Download response status:', fileResponse.status);
+    console.log('[HireInbox WA] Download response headers:', JSON.stringify(Object.fromEntries(fileResponse.headers.entries())));
+
     if (!fileResponse.ok) {
-      console.error('[HireInbox WA] Media download failed:', fileResponse.status);
+      const errorText = await fileResponse.text();
+      console.error('[HireInbox WA] Step 3 FAILED - Media download error');
+      console.error('[HireInbox WA] Status:', fileResponse.status);
+      console.error('[HireInbox WA] Error body:', errorText.slice(0, 500));
+
+      // Try alternative: direct download from Facebook CDN (may work in some cases)
+      if (mediaInfo.url && !mediaInfo.url.includes('waba-v2.360dialog.io')) {
+        console.log('[HireInbox WA] Attempting direct Facebook CDN download as fallback...');
+        const directUrl = mediaInfo.url.replace(/\\/g, '');
+        console.log('[HireInbox WA] Direct URL:', directUrl);
+
+        const directResponse = await fetch(directUrl, {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          redirect: 'follow'
+        });
+
+        console.log('[HireInbox WA] Direct download status:', directResponse.status);
+
+        if (directResponse.ok) {
+          const arrayBuffer = await directResponse.arrayBuffer();
+          console.log(`[HireInbox WA] Direct download SUCCESS: ${arrayBuffer.byteLength} bytes`);
+          console.log('[HireInbox WA] ====== MEDIA DOWNLOAD END (via direct) ======');
+          return Buffer.from(arrayBuffer);
+        } else {
+          console.error('[HireInbox WA] Direct download also failed:', directResponse.status);
+        }
+      }
+
       return null;
     }
+
+    const contentType = fileResponse.headers.get('content-type');
+    console.log('[HireInbox WA] Content-Type:', contentType);
 
     const arrayBuffer = await fileResponse.arrayBuffer();
     console.log(`[HireInbox WA] Downloaded ${arrayBuffer.byteLength} bytes`);
+
+    // Validate we got actual file content (not an error page)
+    if (arrayBuffer.byteLength < 100) {
+      console.error('[HireInbox WA] Downloaded file too small, likely an error');
+      const text = new TextDecoder().decode(arrayBuffer);
+      console.error('[HireInbox WA] Content:', text);
+      return null;
+    }
+
+    console.log('[HireInbox WA] ====== MEDIA DOWNLOAD END (SUCCESS) ======');
     return Buffer.from(arrayBuffer);
   } catch (error) {
-    console.error('[HireInbox WA] Media download error:', error);
+    console.error('[HireInbox WA] Media download EXCEPTION:', error);
+    console.error('[HireInbox WA] Error stack:', error instanceof Error ? error.stack : 'No stack');
+    console.log('[HireInbox WA] ====== MEDIA DOWNLOAD END (ERROR) ======');
     return null;
   }
 }
