@@ -334,6 +334,9 @@ function formatCandidateDetail(candidate: any): string {
     message += `\n🔗 ${candidate.sources[0].url}`;
   }
 
+  // Reminder to view other candidates
+  message += '\n\n---\n_Reply 1-5 for other candidates | "new" for new search_';
+
   return message;
 }
 
@@ -873,7 +876,36 @@ async function handleOwnerMessage(sender: string, text: string): Promise<void> {
   const lowerText = text.toLowerCase().trim();
   const state = getState(sender);
 
-  // Handle mode selection
+  // IMPORTANT: If already in a flow with results, route to that handler FIRST
+  // This allows viewing multiple candidates without mode switching
+  if (state.flow === 'recruiter' && state.lastResults?.candidates) {
+    // Check if it's a number for candidate selection (1-10)
+    const num = parseInt(lowerText);
+    if (!isNaN(num) && num >= 1 && num <= 10) {
+      await handleRecruiterMessage(sender, text);
+      return;
+    }
+    // Also handle "more" and "new" in recruiter mode
+    if (['more', 'new', 'search', 'again'].includes(lowerText)) {
+      await handleRecruiterMessage(sender, text);
+      return;
+    }
+  }
+
+  // Handle "menu" to show options again
+  if (lowerText === 'menu' || lowerText === 'hi' || lowerText === 'hello' || lowerText === 'start') {
+    setState(sender, { ...state, step: 'owner_menu', flow: undefined, lastResults: undefined });
+    await sendWhatsAppMessage(sender,
+      '*HireInbox Test Menu* 🧪\n\n' +
+      'You have access to both modes:\n\n' +
+      '*1.* Recruiter - Talent Mapping\n' +
+      '*2.* Job Seeker - CV Scanner\n\n' +
+      'Reply *1* or *2* to choose.'
+    );
+    return;
+  }
+
+  // Handle mode selection (only when not in a flow with results)
   if (lowerText === '1' || lowerText === 'recruiter' || lowerText === 'talent') {
     setState(sender, { ...state, flow: 'recruiter', step: 'awaiting_search' });
     await sendWhatsAppMessage(sender,
@@ -892,19 +924,6 @@ async function handleOwnerMessage(sender: string, text: string): Promise<void> {
       '*Job Seeker Mode* 📄\n\n' +
       'Send your CV (PDF or paste text) for instant AI feedback!\n\n' +
       '_Reply "menu" to switch modes_'
-    );
-    return;
-  }
-
-  // Handle "menu" to show options again
-  if (lowerText === 'menu' || lowerText === 'hi' || lowerText === 'hello' || lowerText === 'start') {
-    setState(sender, { ...state, step: 'owner_menu' });
-    await sendWhatsAppMessage(sender,
-      '*HireInbox Test Menu* 🧪\n\n' +
-      'You have access to both modes:\n\n' +
-      '*1.* Recruiter - Talent Mapping\n' +
-      '*2.* Job Seeker - CV Scanner\n\n' +
-      'Reply *1* or *2* to choose.'
     );
     return;
   }
