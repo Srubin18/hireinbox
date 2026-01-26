@@ -501,14 +501,22 @@ function buildRoleContext(role: Record<string, unknown>): string {
 }
 
 async function extractPDFText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
-  const maxRetries = 2;
+  console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes)`);
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      if (IS_DEV) console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes) - Attempt ${attempt}`);
-      const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+  // Always use pdf-parse - it works on Vercel and doesn't require external API
+  try {
+    const pdfParseModule = await import('pdf-parse');
+    const pdfParse = pdfParseModule.default || pdfParseModule;
+    const data = await pdfParse(buffer);
+    console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
+    return data.text || '';
+  } catch (e) {
+    console.error(`[${traceId}][PDF] pdf-parse ERROR:`, e);
 
-      if (isProduction && process.env.CONVERTAPI_SECRET) {
+    // Fallback to ConvertAPI if pdf-parse fails and API key exists
+    if (process.env.CONVERTAPI_SECRET) {
+      try {
+        console.log(`[${traceId}][PDF] Trying ConvertAPI fallback...`);
         const base64PDF = buffer.toString('base64');
         const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
           method: 'POST',
@@ -520,40 +528,22 @@ async function extractPDFText(buffer: Buffer, traceId: string, filename: string)
             ]
           }),
         });
-        if (!response.ok) {
-          console.error(`[${traceId}][PDF] ConvertAPI error: ${response.status}`);
-          if (attempt < maxRetries) continue;
-          return '';
+        if (response.ok) {
+          const result = await response.json();
+          if (result.Files?.[0]?.Url) {
+            const textResponse = await fetch(result.Files[0].Url);
+            const pdfText = await textResponse.text();
+            console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
+            return pdfText;
+          }
         }
-        const result = await response.json();
-        if (!result.Files?.[0]?.Url) {
-          console.error(`[${traceId}][PDF] No URL in response`);
-          if (attempt < maxRetries) continue;
-          return '';
-        }
-        const textResponse = await fetch(result.Files[0].Url);
-        const pdfText = await textResponse.text();
-
-        if (pdfText.length < 100) {
-          console.error(`[${traceId}][PDF] ConvertAPI returned too little text: ${pdfText.length} chars`);
-          if (attempt < maxRetries) continue;
-        }
-
-        if (IS_DEV) console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
-        return pdfText;
-      } else {
-        const pdfParseModule = await import('pdf-parse');
-        const pdfParse = pdfParseModule.default || pdfParseModule;
-        const data = await pdfParse(buffer);
-        if (IS_DEV) console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
-        return data.text || '';
+      } catch (convertErr) {
+        console.error(`[${traceId}][PDF] ConvertAPI fallback ERROR:`, convertErr);
       }
-    } catch (e) {
-      console.error(`[${traceId}][PDF] ERROR on attempt ${attempt}:`, e);
-      if (attempt === maxRetries) return '';
     }
+
+    return '';
   }
-  return '';
 }
 
 async function extractWordText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
