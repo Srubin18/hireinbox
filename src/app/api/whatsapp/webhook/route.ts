@@ -731,7 +731,7 @@ async function handleDocument(sender: string, document: any): Promise<void> {
     const buffer = await downloadWhatsAppMedia(mediaId);
     if (!buffer) {
       await sendWhatsAppMessage(sender,
-        'Couldn\'t download the file. Please paste the job description as text instead.'
+        'Couldn\'t download the file. Please paste the text instead.'
       );
       return;
     }
@@ -879,6 +879,9 @@ const OWNER_NUMBERS = [
   '27827832892',  // Tester 1
   '27829245253',  // Tester 2
   '27721441733',  // Tester 3
+  '27823093387',  // Marcel
+  '27814877909',  // Bernard
+  '27728103109',  // Modicai
 ]; // Can test both flows (recruiter + job seeker)
 
 function isOwner(phoneNumber: string): boolean {
