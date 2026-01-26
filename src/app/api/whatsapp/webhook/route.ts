@@ -894,7 +894,7 @@ async function handleOwnerMessage(sender: string, text: string): Promise<void> {
 
   // Handle "menu" to show options again
   if (lowerText === 'menu' || lowerText === 'hi' || lowerText === 'hello' || lowerText === 'start') {
-    setState(sender, { ...state, step: 'owner_menu', flow: undefined, lastResults: undefined });
+    setState(sender, { step: 'owner_menu', flow: 'jobseeker' }); // Reset state
     await sendWhatsAppMessage(sender,
       '*HireInbox Test Menu* 🧪\n\n' +
       'You have access to both modes:\n\n' +
