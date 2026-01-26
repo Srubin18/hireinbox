@@ -1058,9 +1058,13 @@ export async function POST(request: Request) {
           results.storedCount++;
           results.candidates.push(`${candidateName} (${analysis.overall_score})`);
 
-          // IMPORTANT: Only send acknowledgment emails if explicitly enabled on the role
-          // Default is OFF to prevent sending emails during testing/demo
+          // IMPORTANT: EMAILS ARE OFF BY DEFAULT
+          // Only sends if role has auto_ack_enabled explicitly set to true
+          // This protects demo mode and testing - no accidental emails to candidates
           const autoAckEnabled = (matchedRole.auto_ack_enabled === true);
+
+          // LOUD LOG: Make it clear emails are blocked
+          console.log(`[${traceId}] EMAIL STATUS: auto_ack_enabled=${matchedRole.auto_ack_enabled} → ${autoAckEnabled ? 'WILL SEND' : 'BLOCKED (safe)'}`);
           const candidateEmail = String(analysis.candidate_email || fromEmail);
 
           // SAFETY: Don't auto-email if this looks like a forwarded CV
