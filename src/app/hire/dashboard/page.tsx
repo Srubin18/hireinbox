@@ -320,6 +320,81 @@ export default function EmployerDashboard() {
     }
   }, []);
 
+  // Helper: Extract AI reasoning from screening_result if not in separate field
+  function extractAiReasoning(aiReasoning: string | null, screeningResult: Record<string, unknown> | null): string {
+    if (aiReasoning && aiReasoning.length > 10) return aiReasoning;
+    if (!screeningResult) return '';
+    // Try multiple locations
+    const sr = screeningResult as Record<string, unknown>;
+    if (sr.recommendation_reason) return String(sr.recommendation_reason);
+    if (sr.fit_summary) return String(sr.fit_summary);
+    const summary = sr.summary as Record<string, unknown> | undefined;
+    if (summary?.fit_assessment) return String(summary.fit_assessment);
+    return '';
+  }
+
+  // Helper: Extract strengths from screening_result if not in separate field
+  function extractStrengths(strengths: string[] | null, screeningResult: Record<string, unknown> | null): string[] {
+    if (strengths && strengths.length > 0) return strengths;
+    if (!screeningResult) return [];
+    const sr = screeningResult as Record<string, unknown>;
+    // Try summary.strengths
+    const summary = sr.summary as Record<string, unknown> | undefined;
+    if (summary?.strengths && Array.isArray(summary.strengths)) {
+      return (summary.strengths as Array<{label?: string; evidence?: string}>)
+        .map(s => `${s.label || 'Strength'}: "${s.evidence || ''}"`);
+    }
+    // Try top-level strengths
+    if (sr.strengths && Array.isArray(sr.strengths)) {
+      return (sr.strengths as Array<{label?: string; skill?: string; evidence?: string}>)
+        .map(s => `${s.label || s.skill || 'Strength'}: "${s.evidence || ''}"`);
+    }
+    // Try evidence_highlights
+    if (sr.evidence_highlights && Array.isArray(sr.evidence_highlights)) {
+      return (sr.evidence_highlights as Array<{claim?: string; evidence?: string}>)
+        .slice(0, 5).map(e => `${e.claim || 'Evidence'}: "${e.evidence || ''}"`);
+    }
+    // Try ranking.factors with high scores
+    const ranking = sr.ranking as Record<string, unknown> | undefined;
+    if (ranking?.factors && Array.isArray(ranking.factors)) {
+      return (ranking.factors as Array<{factor?: string; score?: number; evidence?: string; notes?: string}>)
+        .filter(f => (f.score || 0) >= 60)
+        .map(f => `${f.factor || 'Factor'}: "${f.evidence || f.notes || 'Good'}"`);
+    }
+    return [];
+  }
+
+  // Helper: Extract weaknesses from screening_result if not in separate field
+  function extractWeaknesses(weaknesses: string[] | null, screeningResult: Record<string, unknown> | null): string[] {
+    if (weaknesses && weaknesses.length > 0) return weaknesses;
+    if (!screeningResult) return [];
+    const sr = screeningResult as Record<string, unknown>;
+    // Try summary.weaknesses
+    const summary = sr.summary as Record<string, unknown> | undefined;
+    if (summary?.weaknesses && Array.isArray(summary.weaknesses)) {
+      return (summary.weaknesses as Array<{label?: string; evidence?: string}>)
+        .map(w => `${w.label || 'Concern'}: "${w.evidence || 'Not mentioned'}"`);
+    }
+    // Try top-level weaknesses
+    if (sr.weaknesses && Array.isArray(sr.weaknesses)) {
+      return (sr.weaknesses as Array<{label?: string; area?: string; evidence?: string}>)
+        .map(w => `${w.label || w.area || 'Concern'}: "${w.evidence || ''}"`);
+    }
+    // Try risk_register
+    if (sr.risk_register && Array.isArray(sr.risk_register)) {
+      return (sr.risk_register as Array<{risk?: string; severity?: string; evidence?: string}>)
+        .map(r => `${r.risk || 'Risk'}: "${r.evidence || ''}"`);
+    }
+    // Try knockouts.checks for failed items
+    const knockouts = sr.knockouts as Record<string, unknown> | undefined;
+    if (knockouts?.checks && Array.isArray(knockouts.checks)) {
+      return (knockouts.checks as Array<{requirement?: string; status?: string; evidence?: string}>)
+        .filter(k => k.status === 'FAIL')
+        .map(k => `${k.requirement || 'Requirement'}: "${k.evidence || 'Not met'}"`);
+    }
+    return [];
+  }
+
   // DEMO MODE: Load real data via API (bypasses RLS)
   useEffect(() => {
     if (!isDemo) return;
@@ -379,9 +454,9 @@ export default function EmployerDashboard() {
           receivedAt: ((c.created_at as string) || '').split('T')[0] || new Date().toISOString().split('T')[0],
           lastUpdated: ((c.updated_at as string) || (c.created_at as string) || '').split('T')[0] || new Date().toISOString().split('T')[0],
           aiRecommendation: (c.ai_recommendation as string) || '',
-          aiReasoning: (c.ai_reasoning as string) || '',
-          strengths: (c.strengths as string[]) || [],
-          weaknesses: (c.missing as string[]) || [],
+          aiReasoning: extractAiReasoning(c.ai_reasoning as string, c.screening_result as Record<string, unknown>),
+          strengths: extractStrengths(c.strengths as string[], c.screening_result as Record<string, unknown>),
+          weaknesses: extractWeaknesses(c.missing as string[], c.screening_result as Record<string, unknown>),
           screeningResult: (c.screening_result as Record<string, unknown>) || null
         }));
         setCandidates(mappedCandidates);
@@ -451,9 +526,9 @@ export default function EmployerDashboard() {
             lastUpdated: c.updated_at?.split('T')[0] || c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
             // AI Analysis fields
             aiRecommendation: c.ai_recommendation || '',
-            aiReasoning: c.ai_reasoning || '',
-            strengths: c.strengths || [],
-            weaknesses: c.missing || [],
+            aiReasoning: extractAiReasoning(c.ai_reasoning, c.screening_result as Record<string, unknown>),
+            strengths: extractStrengths(c.strengths, c.screening_result as Record<string, unknown>),
+            weaknesses: extractWeaknesses(c.missing, c.screening_result as Record<string, unknown>),
             screeningResult: c.screening_result || null
           }));
           setCandidates(mappedCandidates);
