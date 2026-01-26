@@ -845,8 +845,15 @@ async function handleDocument(sender: string, document: any): Promise<void> {
   const isOwnerUser = isOwner(sender);
   const authorized = await isAuthorized(sender);
 
-  // Recruiter or owner in recruiter mode: treat as job spec
-  if (authorized || (isOwnerUser && state.flow === 'recruiter')) {
+  console.log(`[HireInbox WA] handleDocument - owner: ${isOwnerUser}, authorized: ${authorized}, flow: ${state.flow}`);
+
+  // OWNERS: Always respect their explicit flow choice (they chose 1 or 2)
+  // NON-OWNERS: authorized → recruiter, else → jobseeker
+  const shouldProcessAsJobSpec = isOwnerUser
+    ? state.flow === 'recruiter'  // Owners: respect their choice
+    : authorized;                  // Non-owners: based on authorization
+
+  if (shouldProcessAsJobSpec) {
     const filename = document.filename || 'jobspec.pdf';
     const mediaId = document.id;
 
@@ -1035,16 +1042,20 @@ async function handleOwnerMessage(sender: string, text: string): Promise<void> {
 
   // Handle pending document choice (owner uploaded a doc and needs to choose 1 or 2)
   if (state.step === 'pending_document' && state.pendingDocument) {
+    const pendingDoc = state.pendingDocument; // Save before clearing!
+
     if (lowerText === '1' || lowerText === 'job spec' || lowerText === 'jobspec') {
       // Process as job spec (recruiter mode)
+      console.log('[HireInbox WA] Owner chose 1 (Job Spec) for pending document');
       setState(sender, { ...state, step: 'processing', flow: 'recruiter', pendingDocument: undefined });
-      await handleDocument(sender, state.pendingDocument);
+      await handleDocument(sender, pendingDoc);
       return;
     }
     if (lowerText === '2' || lowerText === 'cv' || lowerText === 'my cv') {
       // Process as CV (job seeker mode)
+      console.log('[HireInbox WA] Owner chose 2 (CV) for pending document');
       setState(sender, { ...state, step: 'processing', flow: 'jobseeker', pendingDocument: undefined });
-      await handleDocument(sender, state.pendingDocument);
+      await handleDocument(sender, pendingDoc);
       return;
     }
     // Invalid response - ask again
