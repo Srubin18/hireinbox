@@ -1,7 +1,28 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import FirecrawlApp from '@mendable/firecrawl-js';
+import { createClient } from '@supabase/supabase-js';
 import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
+
+// Supabase client for usage logging
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// Log pilot usage for tracking
+async function logPilotUsage(userEmail: string | null, action: string, details: object, estimatedCost: number) {
+  try {
+    await supabase.from('pilot_usage_log').insert({
+      user_email: userEmail,
+      action,
+      details,
+      estimated_cost: estimatedCost,
+    });
+  } catch (e) {
+    console.error('[UsageLog] Failed to log:', e);
+  }
+}
 
 // ============================================
 // HIREINBOX - PREMIUM TALENT MAPPING API
@@ -248,6 +269,26 @@ interface EnrichedCandidate {
   dataSource: string;
   publiclyAvailable: true;
   howWeFoundYou: string;
+
+  // PHASE 1: Career Velocity & Resignation Propensity
+  careerVelocity: {
+    estimatedTenure: string;
+    industryAverage: string;
+    stagnationSignal: boolean;
+    velocityScore: number;
+    interpretation: string;
+  };
+  resignationPropensity: {
+    score: 'High' | 'Medium' | 'Low';
+    numericScore: number;
+    factors: Array<{ factor: string; impact: string; evidence: string }>;
+    recommendation: string;
+  };
+  personalizedHook: {
+    recentActivity: string;
+    suggestedOpener: string;
+    connectionAngle: string;
+  };
 }
 
 // ============================================
@@ -581,6 +622,208 @@ function generateIntelligenceQueries(parsed: any): { query: string; sourceType: 
     howWeFoundYou: 'You were listed as a speaker at an industry summit or forum'
   });
 
+  // ========== ENTREPRENEUR-FOCUSED QUERIES ==========
+  // These queries specifically target founders, business owners, and entrepreneurial leaders
+  // rather than corporate executives climbing the ladder
+
+  // 23. FOUNDERS & CO-FOUNDERS
+  queries.push({
+    query: `"founder" OR "co-founder" ${industry} South Africa ${location || ''}`,
+    sourceType: 'news',
+    purpose: 'Find founders and co-founders of companies in this space',
+    dataSource: 'News and company profiles (publicly accessible)',
+    howWeFoundYou: 'You were identified as a founder/co-founder in this industry'
+  });
+
+  // 24. SMALL BUSINESS CEOs & OWNERS
+  queries.push({
+    query: `"CEO" OR "owner" OR "managing director" "small business" OR "SME" OR "startup" ${industry} South Africa`,
+    sourceType: 'news',
+    purpose: 'Find CEOs/owners of small businesses and SMEs',
+    dataSource: 'Business news and profiles (publicly accessible)',
+    howWeFoundYou: 'You were identified as leading a small business or SME'
+  });
+
+  // 25. ENTREPRENEUR AWARDS & RECOGNITION
+  queries.push({
+    query: `"entrepreneur" OR "business owner" ${industry} South Africa "award" OR "winner" OR "finalist" OR "top 40"`,
+    sourceType: 'news',
+    purpose: 'Award-winning entrepreneurs in this industry',
+    dataSource: 'Awards and recognition lists (publicly accessible)',
+    howWeFoundYou: 'You were recognized in an entrepreneurship award or list'
+  });
+
+  // 26. PE/VC-BACKED FOUNDERS
+  queries.push({
+    query: `"raised funding" OR "private equity" OR "venture capital" "founder" OR "CEO" ${industry} South Africa`,
+    sourceType: 'startup_news',
+    purpose: 'Founders who have raised PE/VC funding',
+    dataSource: 'Funding news and press releases (publicly accessible)',
+    howWeFoundYou: 'You were mentioned in funding news as a founder/CEO'
+  });
+
+  // 27. ENTREPRENEURSHIP PROGRAMS & ACCELERATORS
+  queries.push({
+    query: `"accelerator" OR "incubator" OR "entrepreneurship program" ${industry} South Africa "alumni" OR "founder" OR "graduate"`,
+    sourceType: 'startup_news',
+    purpose: 'Entrepreneurs from accelerators and programs',
+    dataSource: 'Accelerator alumni lists (publicly accessible)',
+    howWeFoundYou: 'You were listed as an alumni of an entrepreneurship program'
+  });
+
+  // 28. BUSINESS OWNER PROFILES
+  queries.push({
+    query: `"business owner" OR "owns" OR "founded" ${industry} South Africa site:linkedin.com/in`,
+    sourceType: 'linkedin',
+    purpose: 'LinkedIn profiles of business owners',
+    dataSource: 'LinkedIn public profiles (publicly accessible)',
+    howWeFoundYou: 'Your LinkedIn profile indicates business ownership'
+  });
+
+  // 29. STARTUP DIRECTORIES
+  queries.push({
+    query: `${industry} South Africa site:crunchbase.com OR site:angel.co OR site:f6s.com "founder" OR "CEO"`,
+    sourceType: 'company',
+    purpose: 'Startup founders from directories',
+    dataSource: 'Startup directories (publicly accessible)',
+    howWeFoundYou: 'Your startup was listed in a startup directory'
+  });
+
+  // 30. SELF-MADE / ENTREPRENEURIAL SUCCESS STORIES
+  queries.push({
+    query: `"built" OR "started" OR "launched" "own business" OR "own company" ${industry} South Africa`,
+    sourceType: 'news',
+    purpose: 'Entrepreneurs who built their own businesses',
+    dataSource: 'Business success stories (publicly accessible)',
+    howWeFoundYou: 'You were featured in a business success story'
+  });
+
+  // 31. FRANCHISE OWNERS (for relevant industries)
+  queries.push({
+    query: `"franchise owner" OR "franchisee" OR "multi-unit" ${industry} South Africa`,
+    sourceType: 'news',
+    purpose: 'Franchise owners and operators',
+    dataSource: 'Franchise news and directories (publicly accessible)',
+    howWeFoundYou: 'You were identified as a franchise owner/operator'
+  });
+
+  // 32. ENTREPRENEURIAL EXITS & SUCCESS
+  queries.push({
+    query: `"sold" OR "exited" OR "acquisition" "founder" OR "entrepreneur" ${industry} South Africa`,
+    sourceType: 'news',
+    purpose: 'Entrepreneurs with successful exits',
+    dataSource: 'M&A and exit news (publicly accessible)',
+    howWeFoundYou: 'You were mentioned in business exit/acquisition news'
+  });
+
+  // ========== PHASE 1: COMPANY INSTABILITY SIGNALS ==========
+  // Find talent at companies experiencing disruption (high availability)
+
+  // 33. LAYOFFS & RETRENCHMENTS
+  queries.push({
+    query: `${industry} South Africa "layoffs" OR "retrenchments" OR "job cuts" OR "redundancies" 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Companies with layoffs - talent may be available',
+    dataSource: 'News about company layoffs (publicly accessible)',
+    howWeFoundYou: 'Your employer was mentioned in layoff news'
+  });
+
+  // 34. COMPANY RESTRUCTURING
+  queries.push({
+    query: `${industry} South Africa "restructuring" OR "reorganization" OR "transformation" OR "turnaround" 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Companies restructuring - talent may be open to move',
+    dataSource: 'News about company restructuring (publicly accessible)',
+    howWeFoundYou: 'Your employer is undergoing restructuring'
+  });
+
+  // 35. M&A ACTIVITY (uncertainty = openness)
+  queries.push({
+    query: `${industry} South Africa "acquired" OR "merger" OR "takeover" OR "bought by" 2025 2026`,
+    sourceType: 'news',
+    purpose: 'M&A creates uncertainty - talent may be receptive',
+    dataSource: 'M&A news (publicly accessible)',
+    howWeFoundYou: 'Your employer was involved in M&A activity'
+  });
+
+  // 36. FINANCIAL TROUBLE SIGNALS
+  queries.push({
+    query: `${industry} South Africa "financial difficulties" OR "losses" OR "downturn" OR "struggles" 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Companies in trouble - talent may want stability elsewhere',
+    dataSource: 'Financial news (publicly accessible)',
+    howWeFoundYou: 'Your employer was mentioned in financial news'
+  });
+
+  // ========== PHASE 1: HIDDEN GEM PROXY SEARCHES ==========
+  // Find talent through outputs, not profiles
+
+  // 37. GITHUB CONTRIBUTORS (tech roles)
+  queries.push({
+    query: `site:github.com ${industry} South Africa OR Johannesburg OR "Cape Town" contributors`,
+    sourceType: 'github',
+    purpose: 'Find developers through their actual code contributions',
+    dataSource: 'GitHub public repositories (publicly accessible)',
+    howWeFoundYou: 'Your GitHub contributions were discovered'
+  });
+
+  // 38. RESEARCH PAPERS & PUBLICATIONS
+  queries.push({
+    query: `site:researchgate.net OR site:scholar.google.com ${role} ${industry} South Africa`,
+    sourceType: 'academic',
+    purpose: 'Find thought leaders through research output',
+    dataSource: 'Academic publications (publicly accessible)',
+    howWeFoundYou: 'Your research publications were found'
+  });
+
+  // 39. INDUSTRY THOUGHT LEADERS (articles authored)
+  queries.push({
+    query: `"written by" OR "authored by" OR "by" ${role} ${industry} South Africa site:bizcommunity.com OR site:itweb.co.za`,
+    sourceType: 'trade_publication',
+    purpose: 'Find leaders who write for industry publications',
+    dataSource: 'Trade publication articles (publicly accessible)',
+    howWeFoundYou: 'Your published articles were discovered'
+  });
+
+  // 40. PODCAST GUESTS & SPEAKERS
+  queries.push({
+    query: `"guest" OR "interview" OR "speaks" ${role} ${industry} South Africa podcast OR webinar 2025 2026`,
+    sourceType: 'podcast',
+    purpose: 'Find visible leaders through media appearances',
+    dataSource: 'Podcast/webinar listings (publicly accessible)',
+    howWeFoundYou: 'Your podcast/webinar appearance was found'
+  });
+
+  // ========== PHASE 2: COMPETITOR BRAIN DRAIN ==========
+  // Track where competitor talent is moving
+
+  // 41. TALENT MOVEMENT NEWS
+  queries.push({
+    query: `${industry} South Africa "joins" OR "appointed" OR "moves to" OR "hired" ${role} 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Track recent talent movement in the industry',
+    dataSource: 'Appointment news (publicly accessible)',
+    howWeFoundYou: 'Your career move was reported in the news'
+  });
+
+  // 42. COMPETITOR DEPARTURES
+  queries.push({
+    query: `${industry} South Africa "leaves" OR "departs" OR "exits" OR "resignation" ${role} 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Track talent leaving competitors',
+    dataSource: 'Departure news (publicly accessible)',
+    howWeFoundYou: 'Your departure was mentioned in news'
+  });
+
+  // 43. INTERNAL PROMOTIONS (signals others may be passed over)
+  queries.push({
+    query: `${industry} South Africa "internal promotion" OR "promoted from within" OR "elevated to" ${role} 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Find companies with internal promotions - others may be passed over and open to move',
+    dataSource: 'Promotion news (publicly accessible)',
+    howWeFoundYou: 'Internal promotion at your company was announced'
+  });
+
   return queries;
 }
 
@@ -762,14 +1005,36 @@ function categorizeSource(url: string, title: string): {
 
 export async function POST(request: Request) {
   try {
-    const { prompt } = await request.json();
+    const { prompt, industry, salaryBand } = await request.json();
 
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length < 5) {
       return NextResponse.json({ error: 'Please describe who you are looking for' }, { status: 400 });
     }
 
+    // Try to get user email from auth header for usage tracking
+    let userEmail: string | null = null;
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        userEmail = user?.email || null;
+      } catch { /* ignore auth errors for public endpoint */ }
+    }
+
     const searchTimestamp = new Date().toISOString();
-    console.log('[TalentMapping] Starting PREMIUM search:', prompt);
+    console.log('[TalentMapping] Starting PREMIUM search:', prompt, userEmail ? `(user: ${userEmail})` : '(anonymous)');
+    if (industry) console.log('[TalentMapping] Specified industry:', industry);
+    if (salaryBand) console.log('[TalentMapping] Specified salary band:', salaryBand);
+
+    // Build enhanced prompt with explicit fields if provided
+    let enhancedPrompt = prompt;
+    if (industry || salaryBand) {
+      const additions = [];
+      if (industry) additions.push(`IMPORTANT: The target industry is ${industry}`);
+      if (salaryBand) additions.push(`IMPORTANT: The salary band is ${salaryBand}`);
+      enhancedPrompt = `${prompt}\n\n${additions.join('\n')}`;
+    }
 
     // Step 1: Parse search criteria with OpenAI
     const parseResponse = await openai.chat.completions.create({
@@ -782,6 +1047,8 @@ export async function POST(request: Request) {
 ${SA_CONTEXT_PROMPT}
 
 IMPORTANT: Extract ALL details from the spec. Do not simplify or summarize - capture every requirement, preference, and exclusion.
+${industry ? `\nNOTE: The recruiter has explicitly specified the industry as "${industry}" - use this exact value.` : ''}
+${salaryBand ? `\nNOTE: The recruiter has explicitly specified the salary band as "${salaryBand}" - factor this into seniority assessment.` : ''}
 
 Return valid JSON only:
 {
@@ -800,7 +1067,7 @@ Return valid JSON only:
   "specificExpertise": ["detailed technical/functional expertise required"]
 }`
         },
-        { role: 'user', content: prompt }
+        { role: 'user', content: enhancedPrompt }
       ],
       temperature: 0.3,
       max_tokens: 800,
@@ -808,6 +1075,8 @@ Return valid JSON only:
     });
 
     const parsed = JSON.parse(parseResponse.choices[0]?.message?.content || '{}');
+    // Apply explicit overrides if provided by recruiter
+    if (industry) parsed.industry = industry;
     console.log('[TalentMapping] Parsed:', parsed);
 
     // Step 2: Generate intelligent, diverse search queries
@@ -916,6 +1185,59 @@ CRITICAL VALUE PROPOSITION:
    - GitHub contributions
 5. HONESTY - Be clear about confidence levels and evidence quality
 
+PHASE 1 INTELLIGENCE (MUST INCLUDE):
+=====================================
+A. CAREER VELOCITY SCORE - For each candidate:
+   - Calculate implied tenure at current role (from news dates, LinkedIn if visible)
+   - SA industry averages: Finance 2.5 years, Tech 2 years, Legal 3 years, Manufacturing 4 years
+   - If current tenure > industry average + 1 year = "Stagnation Signal" (likely open to move)
+   - If recently promoted (< 1 year) = "Recently Advanced" (likely staying)
+   - Score: 1-10 where 10 = highest likelihood of being open to move
+
+B. RESIGNATION PROPENSITY SCORE - CRITICAL LOGIC:
+
+   DISQUALIFIERS (these people are NOT good targets):
+   - JUST APPOINTED/NEW IN ROLE (< 18 months): Score = LOW. They just started, they are NOT moving!
+   - RETIRING/ANNOUNCED RETIREMENT: Score = N/A. They're leaving anyway, not a recruitment target!
+   - FOUNDER/OWNER with equity stake: Score = LOW. Unlikely to leave their own company.
+
+   POSITIVE signals (MORE likely to move):
+   - Company instability (layoffs, restructuring, M&A at THEIR employer) = +3 points
+   - Career stagnation (same role 3+ years, no promotion news) = +2 points
+   - Industry decline = +2 points
+   - Tenure 2-4 years (peak "itchy feet" window) = +2 points
+   - Company acquired/merged = +2 points (uncertainty)
+   - PASSED OVER: If someone else at their company just got promoted to a role they might have wanted = +3 points (feeling undervalued)
+   - Colleague departures (peers leaving) = +2 points (social proof to move)
+
+   NEGATIVE signals (LESS likely to move):
+   - Recent appointment/promotion (< 18 months) = -5 points (THEY JUST STARTED!)
+   - Recent award or recognition = -2 points (feeling valued)
+   - Founder/Partner/Owner = -3 points (equity stake)
+   - Strong employer brand (Google, McKinsey) = -1 point
+
+   Output: "High" (7-10), "Medium" (4-6), "Low" (1-3)
+
+   IMPORTANT: If news says they were "appointed", "joined", "promoted" RECENTLY, that means LOW score!
+
+C. PERSONALIZED OUTREACH HOOK - For each candidate:
+   - Find their most recent public activity (article, podcast, award, project)
+   - Draft a 2-sentence opener that references this specifically
+   - Example: "Saw your piece on digital transformation at [Company] - your point about [X] resonated with a client I'm working with."
+
+PHASE 2 INTELLIGENCE (MUST INCLUDE):
+=====================================
+D. COMPETITOR BRAIN DRAIN - In market intelligence:
+   - List companies losing talent in this space
+   - List companies gaining talent
+   - Identify "leaky" employers (high departure signals)
+   - Recommend targeting talent at unstable companies
+
+E. WHEN TO CALL RECOMMENDATION - For each candidate:
+   - Specific timing: "Now", "After Q1 bonus (March)", "After performance review (July)"
+   - Reasoning: Based on SA business cycles, company news, career stage
+   - Urgency: "High" (act now, signals strong), "Medium" (good timing), "Low" (can wait)
+
 SOURCE QUALITY:
 - Company team pages, news, conferences, awards = HIGH VALUE (hidden intel)
 - LinkedIn profiles = MEDIUM VALUE (recruiter can find this)
@@ -987,6 +1309,17 @@ Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate,
       "direction": "up|stable|down",
       "percentage": "e.g., +8%",
       "drivers": ["What's driving salary changes"]
+    },
+    "competitorBrainDrain": {
+      "companiesLosingTalent": [
+        { "company": "Name", "signals": ["layoffs", "restructuring"], "talentAvailability": "high|medium|low" }
+      ],
+      "companiesGainingTalent": [
+        { "company": "Name", "signals": ["expansion", "funding"], "competitionLevel": "high|medium|low" }
+      ],
+      "leakyEmployers": ["Companies with high departure rates - prioritize sourcing from these"],
+      "stableEmployers": ["Companies with low turnover - harder to poach from"],
+      "recommendation": "Strategic advice on where to focus sourcing efforts"
     }
   },
   "talentHeatmap": {
@@ -1025,6 +1358,27 @@ Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate,
         "score": 1-10,
         "signals": ["reasons they might be open (company news, tenure, etc)"],
         "interpretation": "summary of availability likelihood"
+      },
+      "careerVelocity": {
+        "estimatedTenure": "e.g., '3.5 years in current role'",
+        "industryAverage": "e.g., '2.5 years for finance'",
+        "stagnationSignal": true|false,
+        "velocityScore": 1-10,
+        "interpretation": "e.g., 'Tenure exceeds industry average - likely open to new opportunities'"
+      },
+      "resignationPropensity": {
+        "score": "High|Medium|Low",
+        "numericScore": 1-10,
+        "factors": [
+          { "factor": "Factor name", "impact": "positive|negative|neutral", "evidence": "Specific evidence from sources" }
+        ],
+        "recommendation": "Specific advice - MUST say LOW if recently appointed/new in role/retiring"
+      },
+      "CRITICAL_CHECK": "Before assigning High score: Is this person NEWLY appointed (< 2 years)? If YES, score MUST be LOW. Is this person RETIRING? If YES, they are NOT a recruitment target.",
+      "personalizedHook": {
+        "recentActivity": "e.g., 'Spoke at FinTech Africa Summit on digital lending'",
+        "suggestedOpener": "Two-sentence personalized outreach message",
+        "connectionAngle": "Why this would resonate with them"
       },
       "careerTrajectory": {
         "direction": "rising|stable|transitioning|unknown",
@@ -1087,6 +1441,158 @@ Generate 5-8 candidates. PRIORITIZE candidates found through non-LinkedIn source
       throw new Error('Failed to generate report');
     }
 
+    // ============================================
+    // GUARDRAIL PASS 1: Keyword-based quick fix
+    // ============================================
+    const quickFixResignationPropensity = (candidate: any): any => {
+      const discoveryMethod = (candidate.discoveryMethod || '').toLowerCase();
+      const sources = (candidate.sources || []).map((s: any) => (s.excerpt || '').toLowerCase()).join(' ');
+      const allText = `${discoveryMethod} ${sources} ${(candidate.personalizedHook?.recentActivity || '').toLowerCase()}`;
+
+      const recentAppointmentSignals = [
+        'appointed', 'joins', 'joined', 'new ceo', 'new role', 'promoted',
+        'takes over', 'named as', 'assumed role', 'started as', 'beginning as'
+      ];
+      const hasRecentAppointment = recentAppointmentSignals.some(signal => allText.includes(signal));
+
+      const retirementSignals = ['retiring', 'retirement', 'stepping down', 'leaving the role', 'departing'];
+      const isRetiring = retirementSignals.some(signal => allText.includes(signal));
+
+      if (hasRecentAppointment && !isRetiring) {
+        return { needsVerification: true, reason: 'recent_appointment', original: candidate.resignationPropensity };
+      }
+      if (isRetiring) {
+        return { needsVerification: true, reason: 'retirement', original: candidate.resignationPropensity };
+      }
+      // High score needs verification too
+      if (candidate.resignationPropensity?.score === 'High') {
+        return { needsVerification: true, reason: 'high_score_check', original: candidate.resignationPropensity };
+      }
+      return { needsVerification: false, original: candidate.resignationPropensity };
+    };
+
+    // ============================================
+    // GUARDRAIL PASS 2: AI Verification (critic)
+    // ============================================
+    const verifyResignationPropensity = async (candidates: any[]): Promise<any[]> => {
+      const candidatesNeedingVerification = candidates.filter((c, i) => {
+        const check = quickFixResignationPropensity(c);
+        candidates[i]._verificationCheck = check;
+        return check.needsVerification;
+      });
+
+      if (candidatesNeedingVerification.length === 0) {
+        console.log('[Verification] No candidates need verification');
+        return candidates;
+      }
+
+      console.log(`[Verification] Verifying ${candidatesNeedingVerification.length} candidates`);
+
+      try {
+        const verificationPrompt = candidatesNeedingVerification.map((c, i) =>
+          `CANDIDATE ${i + 1}: ${c.name}
+Role: ${c.currentRole} at ${c.company}
+Discovery: ${c.discoveryMethod}
+Sources: ${(c.sources || []).map((s: any) => s.excerpt).join(' | ')}
+Current Score: ${c.resignationPropensity?.score || 'Unknown'}
+Flag Reason: ${c._verificationCheck?.reason}`
+        ).join('\n\n');
+
+        const verificationResponse = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a CRITICAL REVIEWER checking resignation propensity scores for accuracy.
+
+YOUR JOB: Verify if the Move Likelihood score is CORRECT based on the evidence.
+
+CRITICAL RULES:
+1. RECENTLY APPOINTED (< 2 years in role) = MUST be LOW score. They just started!
+2. RETIRING = NOT a recruitment target. Score should be LOW or N/A.
+3. FOUNDER/OWNER = Usually LOW (they own the company)
+4. High scores require EVIDENCE of instability, stagnation, or openness to move
+
+For each candidate, respond with:
+- correctedScore: "High" | "Medium" | "Low"
+- reasoning: Why this score (1 sentence)
+- isReliable: true/false (would a Google search confirm this?)
+
+Return JSON array only.`
+            },
+            {
+              role: 'user',
+              content: `Verify these candidates:\n\n${verificationPrompt}\n\nReturn JSON: [{"candidateIndex": 0, "correctedScore": "Low", "reasoning": "Recently appointed as CEO", "isReliable": true}, ...]`
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 1000,
+          response_format: { type: 'json_object' }
+        });
+
+        const verificationResult = JSON.parse(verificationResponse.choices[0]?.message?.content || '{"corrections":[]}');
+        const corrections = verificationResult.corrections || verificationResult || [];
+
+        // Apply corrections
+        if (Array.isArray(corrections)) {
+          corrections.forEach((correction: any) => {
+            const idx = correction.candidateIndex;
+            if (idx !== undefined && candidatesNeedingVerification[idx]) {
+              const originalCandidate = candidates.find(c => c.name === candidatesNeedingVerification[idx].name);
+              if (originalCandidate) {
+                console.log(`[Verification] Correcting ${originalCandidate.name}: ${originalCandidate.resignationPropensity?.score} -> ${correction.correctedScore}`);
+                originalCandidate.resignationPropensity = {
+                  score: correction.correctedScore,
+                  numericScore: correction.correctedScore === 'High' ? 8 : correction.correctedScore === 'Medium' ? 5 : 2,
+                  factors: [
+                    { factor: 'Verified', impact: correction.correctedScore === 'Low' ? 'negative' : 'positive', evidence: correction.reasoning }
+                  ],
+                  recommendation: correction.reasoning,
+                  verified: true,
+                  isReliable: correction.isReliable
+                };
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.error('[Verification] Error during verification pass:', err);
+        // Fall back to keyword-based fixes
+        candidates.forEach(c => {
+          const check = c._verificationCheck;
+          if (check?.needsVerification) {
+            if (check.reason === 'recent_appointment') {
+              c.resignationPropensity = {
+                score: 'Low',
+                numericScore: 2,
+                factors: [{ factor: 'Recent appointment', impact: 'negative', evidence: 'Recently started in role' }],
+                recommendation: 'Recently appointed - wait 18-24 months before approaching.'
+              };
+            } else if (check.reason === 'retirement') {
+              c.resignationPropensity = {
+                score: 'Low',
+                numericScore: 1,
+                factors: [{ factor: 'Retiring', impact: 'negative', evidence: 'Retirement announced' }],
+                recommendation: 'Retiring - not a recruitment target.'
+              };
+            }
+          }
+        });
+      }
+
+      // Clean up temp field
+      candidates.forEach(c => delete c._verificationCheck);
+      return candidates;
+    };
+
+    // ============================================
+    // RUN VERIFICATION PASS
+    // ============================================
+    if (report.candidates && report.candidates.length > 0) {
+      console.log('[TalentMapping] Running verification pass on', report.candidates.length, 'candidates');
+      report.candidates = await verifyResignationPropensity(report.candidates);
+    }
+
     // Enrich candidates with salary estimates and compliance fields
     const enrichedCandidates: EnrichedCandidate[] = (report.candidates || []).map((c: any, i: number) => {
       const candidate: EnrichedCandidate = {
@@ -1128,7 +1634,27 @@ Generate 5-8 candidates. PRIORITIZE candidates found through non-LinkedIn source
         redFlags: c.redFlags || [],
         dataSource: c.dataSource || 'Web search',
         publiclyAvailable: true,
-        howWeFoundYou: c.howWeFoundYou || 'Your public professional information appeared in search results'
+        howWeFoundYou: c.howWeFoundYou || 'Your public professional information appeared in search results',
+
+        // PHASE 1: Career Velocity & Resignation Propensity
+        careerVelocity: c.careerVelocity || {
+          estimatedTenure: 'Unknown',
+          industryAverage: '2-3 years',
+          stagnationSignal: false,
+          velocityScore: 5,
+          interpretation: 'Insufficient data to assess career velocity'
+        },
+        resignationPropensity: c.resignationPropensity || {
+          score: 'Medium',
+          numericScore: 5,
+          factors: [],
+          recommendation: 'Standard outreach - no strong move signals detected'
+        },
+        personalizedHook: c.personalizedHook || {
+          recentActivity: 'No recent public activity found',
+          suggestedOpener: `Hi ${(c.name || 'there').split(' ')[0]}, I came across your profile and was impressed by your experience at ${c.company || 'your company'}.`,
+          connectionAngle: 'Professional opportunity alignment'
+        }
       };
 
       return candidate;
@@ -1186,14 +1712,22 @@ Generate 5-8 candidates. PRIORITIZE candidates found through non-LinkedIn source
         hiddenPools: []
       },
 
-      // New: Competitive intelligence
-      competitiveIntelligence: report.competitiveIntelligence || {
-        companiesHiringSimilarRoles: [],
-        recentFundingMAndA: [],
-        marketSalaryMovement: {
+      // New: Competitive intelligence with Brain Drain analysis
+      competitiveIntelligence: {
+        companiesHiringSimilarRoles: report.competitiveIntelligence?.companiesHiringSimilarRoles || [],
+        recentFundingMAndA: report.competitiveIntelligence?.recentFundingMAndA || [],
+        marketSalaryMovement: report.competitiveIntelligence?.marketSalaryMovement || {
           direction: 'stable',
           percentage: '0%',
           drivers: ['Insufficient data']
+        },
+        // PHASE 2: Competitor Brain Drain
+        competitorBrainDrain: report.competitiveIntelligence?.competitorBrainDrain || {
+          companiesLosingTalent: [],
+          companiesGainingTalent: [],
+          leakyEmployers: [],
+          stableEmployers: [],
+          recommendation: 'Run additional searches to identify talent movement patterns'
         }
       },
 
@@ -1266,6 +1800,23 @@ Generate 5-8 candidates. PRIORITIZE candidates found through non-LinkedIn source
     };
 
     console.log('[TalentMapping] PREMIUM Complete:', enrichedCandidates.length, 'candidates from', sortedResults.length, 'sources (', highValueCount, 'high-value)');
+
+    // Log usage for pilot tracking
+    // Estimated cost: ~42 Firecrawl queries at $0.01 = $0.42, + 2 GPT-4o calls = ~$0.30 = ~$0.72 total
+    const estimatedCost = 0.72;
+    await logPilotUsage(
+      userEmail,
+      'talent_mapping',
+      {
+        role: parsed.role,
+        location: parsed.location,
+        industry: parsed.industry,
+        candidatesFound: enrichedCandidates.length,
+        sourcesSearched: sortedResults.length,
+        searchQueries: searchMethodology.length,
+      },
+      estimatedCost
+    );
 
     return NextResponse.json(result);
 

@@ -38,19 +38,44 @@ PHASE 1: KNOCKOUTS (Pass/Fail Hard Requirements)
 ------------------------------------------------
 Knockouts are NON-NEGOTIABLE requirements from the role. Candidate MUST pass ALL knockouts to proceed.
 
+CRITICAL: DISTINGUISH BETWEEN DISQUALIFIERS vs STRONG FIT
+=========================================================
+Role specs contain different types of criteria. You MUST treat them differently:
+
+1. DISQUALIFIERS (from role spec) = TRUE KNOCKOUTS
+   - These are explicitly labeled as "Disqualifiers" in the role
+   - Example: "no driver's license", "no experience", "no degree"
+   - If candidate hits a disqualifier → REJECT
+
+2. REQUIRED SKILLS = SOFT KNOCKOUTS
+   - Skills listed as "Required" in the role
+   - Candidate should have MOST (70%+) of required skills
+   - Missing 1-2 required skills = lower score, NOT automatic rejection
+
+3. STRONG FIT / NICE-TO-HAVE = RANKING FACTORS ONLY
+   - Criteria listed under "What Makes a Strong Fit" or similar
+   - These are BONUS points, NOT rejection criteria
+   - Missing "Strong Fit" criteria should NEVER cause rejection
+   - They affect RANKING score, not knockout status
+
+EXAMPLE:
+- Role says "Disqualifiers: no experience" → Knockout (fail = reject)
+- Role says "Required: Excel, Financial Reporting" → Need most, not all
+- Role says "Strong Fit: trust accounts experience" → Bonus points only, NOT knockout
+
 Common knockouts (check against role requirements):
-- Minimum years of experience
+- Explicit DISQUALIFIERS from role spec (highest priority)
+- Minimum years of experience (if stated as required)
 - Required qualifications (e.g., CA(SA), degree, certification)
-- Required skills (specific technical or functional skills)
-- Location/work authorization
-- Industry experience (if specified as required)
+- Location/work authorization (if specified as required)
 
 For EACH knockout:
 - PASS: Clear evidence the requirement is met
 - FAIL: Requirement not met or not mentioned
 - EXCEPTION: Near-miss with exceptional trajectory (see Rule 7)
 
-If ANY knockout = FAIL (without exception): recommendation = REJECT
+If ANY true knockout (DISQUALIFIER) = FAIL (without exception): recommendation = REJECT
+If missing STRONG FIT criteria: Lower score but DO NOT REJECT
 
 PHASE 2: RANKING FACTORS (Differentiators for Survivors)
 ---------------------------------------------------------

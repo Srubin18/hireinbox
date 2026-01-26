@@ -1,688 +1,877 @@
-// app/api/whatsapp/webhook/route.ts
-// WhatsApp Webhook for HireInbox - Candidate Screening via WhatsApp
-//
-// Phase 2: Full Conversational Screening
-// - Receives incoming WhatsApp messages from Twilio
-// - Handles CV uploads (PDF, images)
-// - Asks knockout questions
-// - Auto-screens using GPT-4o
-// - Forwards results to recruiter
-//
-// SETUP:
-// 1. Configure Twilio webhook URL: https://your-domain.com/api/whatsapp/webhook
-// 2. Set to HTTP POST
-// 3. Enable signature validation in production
+/**
+ * HireInbox WhatsApp Webhook (360dialog)
+ *
+ * TWO FLOWS:
+ * 1. RECRUITER FLOW: Authorized numbers get talent mapping
+ * 2. JOB SEEKER FLOW: Anyone else can submit CV, get feedback, join talent pool
+ *
+ * This is our moat: Nobody else in SA does instant AI CV feedback via WhatsApp
+ */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
 import crypto from 'crypto';
-
-// Only log verbose debug info in development
-const IS_DEV = process.env.NODE_ENV !== 'production';
-import {
-  parseIncomingMessage,
-  getConversationState,
-  updateConversationState,
-  getKnockoutQuestions,
-  getNextQuestion,
-  validateAnswer,
-  downloadMedia,
-  isValidCVFormat,
-  generateTwiMLResponse,
-  generateEmptyTwiMLResponse,
-  sendWhatsAppMessage,
-  normalizePhoneNumber,
-  MESSAGES,
-  type ConversationState,
-  type IncomingWhatsAppMessage,
-  type KnockoutQuestion,
-} from '@/lib/whatsapp';
-import { SA_CONTEXT_PROMPT, SA_RECRUITER_CONTEXT } from '@/lib/sa-context';
-
-// ============================================
-// CONFIG
-// ============================================
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Twilio Auth Token for signature validation
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || '';
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-
-// ============================================
-// TWILIO SIGNATURE VALIDATION
-// ============================================
-
-/**
- * Validates Twilio webhook signature to ensure requests are from Twilio
- * https://www.twilio.com/docs/usage/security#validating-requests
- */
-function validateTwilioSignature(
-  signature: string,
-  url: string,
-  params: Record<string, string>
-): boolean {
-  if (!TWILIO_AUTH_TOKEN) {
-    console.warn('[TWILIO] Auth token not configured, skipping validation');
-    return true; // Allow in dev if not configured
+// ============================================================================
+// SECURITY: Webhook signature verification (360dialog/Meta)
+// ============================================================================
+function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  const appSecret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET;
+  if (!appSecret) {
+    console.warn('[HireInbox WA] No app secret configured');
+    return true;
   }
+  if (!signature) return false;
 
-  // Sort params alphabetically and concatenate
-  const sortedKeys = Object.keys(params).sort();
-  let data = url;
-  for (const key of sortedKeys) {
-    data += key + params[key];
-  }
+  const expectedSignature = signature.replace('sha256=', '');
+  const hmac = crypto.createHmac('sha256', appSecret);
+  hmac.update(payload, 'utf8');
+  const computedSignature = hmac.digest('hex');
 
-  // Create HMAC-SHA1 signature
-  const hmac = crypto.createHmac('sha1', TWILIO_AUTH_TOKEN);
-  hmac.update(data);
-  const expectedSignature = hmac.digest('base64');
-
-  // Compare signatures using timing-safe comparison
   try {
     return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature)
+      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(computedSignature, 'hex')
     );
   } catch {
     return false;
   }
 }
 
-// ============================================
-// CV EXTRACTION (from incoming media)
-// ============================================
+// ============================================================================
+// RATE LIMITING
+// ============================================================================
+const rateLimitMap = new Map<string, number[]>();
+function checkRateLimit(sender: string): boolean {
+  const now = Date.now();
+  const timestamps = rateLimitMap.get(sender) || [];
+  const recent = timestamps.filter(t => now - t < 60000);
+  if (recent.length >= 5) return false;
+  recent.push(now);
+  rateLimitMap.set(sender, recent);
+  return true;
+}
 
-async function extractTextFromMedia(
-  buffer: Buffer,
-  contentType: string,
-  traceId: string
-): Promise<string> {
+// ============================================================================
+// DEDUPLICATION
+// ============================================================================
+const processedMessages = new Map<string, number>();
+function isDuplicate(messageId: string): boolean {
+  const now = Date.now();
+  for (const [key, timestamp] of processedMessages.entries()) {
+    if (now - timestamp > 60000) processedMessages.delete(key);
+  }
+  if (processedMessages.has(messageId)) return true;
+  processedMessages.set(messageId, now);
+  return false;
+}
+
+// ============================================================================
+// WHATSAPP API: Send message via 360dialog
+// ============================================================================
+async function sendWhatsAppMessage(to: string, message: string): Promise<boolean> {
+  const apiKey = process.env.WHATSAPP_API_KEY || process.env.DIALOG_360_API_KEY;
+  if (!apiKey) {
+    console.error('[HireInbox WA] No API key');
+    return false;
+  }
+
   try {
-    // PDF extraction
-    if (contentType.includes('pdf')) {
-      if (IS_DEV) console.log(`[${traceId}][EXTRACT] Processing PDF...`);
-      const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+    const response = await fetch('https://waba.360dialog.io/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'D360-API-KEY': apiKey,
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: to,
+        type: 'text',
+        text: { body: message }
+      })
+    });
 
-      if (isProduction && process.env.CONVERTAPI_SECRET) {
-        const base64PDF = buffer.toString('base64');
-        const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            Parameters: [
-              { Name: 'File', FileValue: { Name: 'cv.pdf', Data: base64PDF } },
-              { Name: 'StoreFile', Value: true }
-            ]
-          }),
-        });
-        if (!response.ok) return '';
-        const result = await response.json();
-        if (!result.Files?.[0]?.Url) return '';
-        const textResponse = await fetch(result.Files[0].Url);
-        return await textResponse.text();
-      } else {
-        const pdfParseModule = await import('pdf-parse');
-        const pdfParse = pdfParseModule.default || pdfParseModule;
-        const data = await pdfParse(buffer);
-        return data.text || '';
-      }
+    if (!response.ok) {
+      console.error('[HireInbox WA] Send failed:', await response.text());
     }
-
-    // Word document extraction
-    if (contentType.includes('word') || contentType.includes('document')) {
-      if (IS_DEV) console.log(`[${traceId}][EXTRACT] Processing Word document...`);
-      const mammoth = (await import('mammoth')).default;
-      const result = await mammoth.extractRawText({ buffer });
-      return result.value || '';
-    }
-
-    // Image OCR (for photos of CVs)
-    if (contentType.includes('image')) {
-      if (IS_DEV) console.log(`[${traceId}][EXTRACT] Processing image with OCR...`);
-      // Use GPT-4o vision for OCR
-      const base64Image = buffer.toString('base64');
-      const mimeType = contentType.includes('jpeg') ? 'image/jpeg' :
-                       contentType.includes('png') ? 'image/png' : 'image/webp';
-
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        max_tokens: 4000,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Extract ALL text from this CV/resume image. Return the complete text content, preserving structure where possible. Include all contact details, work experience, education, and skills. Output only the extracted text, no commentary.',
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:${mimeType};base64,${base64Image}`,
-                  detail: 'high',
-                },
-              },
-            ],
-          },
-        ],
-      });
-
-      return completion.choices[0]?.message?.content || '';
-    }
-
-    return '';
+    return response.ok;
   } catch (error) {
-    console.error(`[${traceId}][EXTRACT] Error:`, error);
-    return '';
+    console.error('[HireInbox WA] Send error:', error);
+    return false;
   }
 }
 
-// ============================================
-// AI SCREENING (simplified for WhatsApp)
-// ============================================
-
-const WHATSAPP_SCREENING_PROMPT = `You are HireInbox's AI Recruiter screening a CV received via WhatsApp.
-
-Evaluate this CV against the role requirements and provide a quick assessment.
-
-IMPORTANT RULES:
-1. Be concise - this will be sent via WhatsApp
-2. Every strength MUST have evidence from the CV
-3. Use SA context for qualifications (CA(SA), Big 4, etc.)
-4. Return valid JSON only
-
-${SA_CONTEXT_PROMPT}
-
-${SA_RECRUITER_CONTEXT}
-
-OUTPUT FORMAT:
-{
-  "candidate_name": "<name or null>",
-  "candidate_email": "<email or null>",
-  "candidate_phone": "<phone or null>",
-  "years_experience": <number or null>,
-  "overall_score": <0-100>,
-  "recommendation": "SHORTLIST|CONSIDER|REJECT",
-  "summary": "<2-3 sentences: key strengths, concerns, fit assessment>",
-  "top_strengths": ["<strength 1 with evidence>", "<strength 2 with evidence>"],
-  "concerns": ["<concern 1>", "<concern 2>"],
-  "knockout_results": {
-    "experience_met": <true|false|null>,
-    "skills_met": <true|false|null>,
-    "location_suitable": <true|false|null>
+// ============================================================================
+// AUTHORIZATION: Check if phone number is whitelisted
+// ============================================================================
+async function isAuthorized(phoneNumber: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('whatsapp_authorized_numbers')
+      .select('phone_number')
+      .eq('phone_number', phoneNumber)
+      .eq('active', true)
+      .single();
+    return !!data;
+  } catch {
+    return false;
   }
-}`;
+}
 
-async function screenCVForWhatsApp(
-  cvText: string,
-  role: Record<string, unknown>,
-  knockoutResponses: Record<string, string>,
-  traceId: string
-): Promise<Record<string, unknown> | null> {
-  // Cast facts to proper type
-  const facts = role.facts as {
-    min_experience_years?: number;
-    required_skills?: string[];
-    location?: string;
-  } | undefined;
+// ============================================================================
+// CONVERSATION STATE (in-memory for simplicity)
+// ============================================================================
+interface ConversationState {
+  step: string;
+  flow: 'recruiter' | 'jobseeker';
+  // Recruiter flow
+  lastSearch?: string;
+  lastResults?: any;
+  // Job seeker flow
+  lastCVAnalysis?: any;
+  candidateName?: string;
+  cvText?: string;
+  freeScansUsed?: number;
+}
 
-  const roleContext = `
-ROLE: ${role.title || 'General Position'}
-${facts?.min_experience_years ? `MINIMUM EXPERIENCE: ${facts.min_experience_years} years` : ''}
-${facts?.required_skills?.length ? `REQUIRED SKILLS: ${facts.required_skills.join(', ')}` : ''}
-${facts?.location ? `LOCATION: ${facts.location}` : ''}
+const conversationStates = new Map<string, ConversationState>();
 
-CANDIDATE KNOCKOUT RESPONSES:
-${Object.entries(knockoutResponses).map(([k, v]) => `- ${k}: ${v}`).join('\n')}`;
+function getState(sender: string): ConversationState {
+  return conversationStates.get(sender) || { step: 'greeting', flow: 'jobseeker' };
+}
+
+function setState(sender: string, state: ConversationState): void {
+  conversationStates.set(sender, state);
+}
+
+// ============================================================================
+// CHECK FREE SCANS REMAINING (job seekers get 1 free)
+// ============================================================================
+async function getFreeScansUsed(phoneNumber: string): Promise<number> {
+  try {
+    const { count } = await supabase
+      .from('whatsapp_cv_scans')
+      .select('*', { count: 'exact', head: true })
+      .eq('phone_number', phoneNumber);
+    return count || 0;
+  } catch {
+    return 0;
+  }
+}
+
+// ============================================================================
+// WHATSAPP MEDIA: Download document from WhatsApp
+// ============================================================================
+async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
+  const apiKey = process.env.WHATSAPP_API_KEY || process.env.DIALOG_360_API_KEY;
+  if (!apiKey) return null;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      temperature: 0,
-      max_tokens: 1500,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: WHATSAPP_SCREENING_PROMPT },
-        { role: 'user', content: `${roleContext}\n\nCV TEXT:\n${cvText}` }
-      ],
+    // Step 1: Get media URL
+    const urlResponse = await fetch(`https://waba.360dialog.io/v1/media/${mediaId}`, {
+      headers: { 'D360-API-KEY': apiKey }
     });
 
-    const text = completion.choices[0]?.message?.content || '';
-    const cleaned = text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
-    return JSON.parse(cleaned);
+    if (!urlResponse.ok) {
+      console.error('[HireInbox WA] Media URL fetch failed:', await urlResponse.text());
+      return null;
+    }
+
+    const { url } = await urlResponse.json();
+
+    // Step 2: Download the file
+    const fileResponse = await fetch(url, {
+      headers: { 'D360-API-KEY': apiKey }
+    });
+
+    if (!fileResponse.ok) {
+      console.error('[HireInbox WA] Media download failed');
+      return null;
+    }
+
+    const arrayBuffer = await fileResponse.arrayBuffer();
+    return Buffer.from(arrayBuffer);
   } catch (error) {
-    console.error(`[${traceId}][SCREEN] AI screening failed:`, error);
+    console.error('[HireInbox WA] Media download error:', error);
     return null;
   }
 }
 
-// ============================================
-// CONVERSATION HANDLERS
-// ============================================
+// ============================================================================
+// TALENT MAPPING: Call our API (Recruiter flow)
+// ============================================================================
+async function runTalentMapping(prompt: string): Promise<any> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hireinbox.co.za';
 
-async function handleInitialMessage(
-  message: IncomingWhatsAppMessage,
-  traceId: string
-): Promise<string> {
-  // Check for opt-out
-  const lowerBody = message.body.toLowerCase().trim();
-  if (['stop', 'unsubscribe', 'optout', 'opt out', 'cancel'].includes(lowerBody)) {
-    await supabase.from('whatsapp_optouts').upsert({
-      phone: normalizePhoneNumber(message.from),
-      opted_out_at: new Date().toISOString(),
-    });
-    return MESSAGES.OPT_OUT;
-  }
-
-  // Get active role for initial message
-  const { data: roles } = await supabase
-    .from('roles')
-    .select('id, title')
-    .eq('status', 'active')
-    .limit(1);
-
-  const activeRole = roles?.[0];
-  const roleName = activeRole?.title;
-
-  // Check if they want to apply
-  if (['apply', 'yes', 'start', 'hi', 'hello', 'hey'].includes(lowerBody)) {
-    // Create conversation state
-    await updateConversationState(supabase, {
-      candidatePhone: message.from,
-      stage: 'collecting_cv',
-      roleId: activeRole?.id,
-      responses: {},
-      cvReceived: false,
-    });
-
-    return MESSAGES.SEND_CV;
-  }
-
-  // Check if they sent media (CV) right away
-  if (message.numMedia > 0) {
-    return await handleCVUpload(message, traceId, undefined);
-  }
-
-  // Default welcome
-  return MESSAGES.WELCOME(roleName);
-}
-
-async function handleCVUpload(
-  message: IncomingWhatsAppMessage,
-  traceId: string,
-  existingState?: ConversationState | null
-): Promise<string> {
-  if (message.numMedia === 0) {
-    return MESSAGES.SEND_CV;
-  }
-
-  const mediaUrl = message.mediaUrls[0];
-  const contentType = message.mediaContentTypes[0] || '';
-
-  // Validate format
-  if (!isValidCVFormat(contentType)) {
-    return MESSAGES.CV_FAILED;
-  }
-
-  // Download media
-  if (IS_DEV) console.log(`[${traceId}][CV] Downloading media: ${contentType}`);
-  const media = await downloadMedia(mediaUrl);
-  if (!media) {
-    return MESSAGES.CV_FAILED;
-  }
-
-  // Extract text
-  if (IS_DEV) console.log(`[${traceId}][CV] Extracting text...`);
-  const cvText = await extractTextFromMedia(media.buffer, contentType, traceId);
-
-  if (cvText.length < 50) {
-    if (IS_DEV) console.log(`[${traceId}][CV] Extraction failed or too short: ${cvText.length} chars`);
-    return MESSAGES.CV_FAILED;
-  }
-
-  if (IS_DEV) console.log(`[${traceId}][CV] Extracted ${cvText.length} characters`);
-
-  // Store CV and move to knockout questions
-  const state: Partial<ConversationState> & { candidatePhone: string } = {
-    candidatePhone: message.from,
-    stage: 'knockout_questions',
-    cvReceived: true,
-    cvUrl: mediaUrl,
-    responses: existingState?.responses || {},
-  };
-
-  // Get active role
-  const { data: roles } = await supabase
-    .from('roles')
-    .select('*')
-    .eq('status', 'active')
-    .limit(1);
-
-  const activeRole = roles?.[0];
-  state.roleId = activeRole?.id;
-
-  await updateConversationState(supabase, state);
-
-  // Store CV text temporarily for screening
-  await supabase.from('whatsapp_cv_cache').upsert({
-    phone: normalizePhoneNumber(message.from),
-    cv_text: cvText,
-    received_at: new Date().toISOString(),
+  const response = await fetch(`${baseUrl}/api/talent-mapping`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
   });
 
-  // Try to extract name from CV for personalization
-  let candidateName: string | undefined;
-  const nameMatch = cvText.match(/^([A-Z][a-z]+ [A-Z][a-z]+)/m);
-  if (nameMatch) {
-    candidateName = nameMatch[1];
+  if (!response.ok) {
+    throw new Error(`API returned ${response.status}`);
   }
 
-  // Get first knockout question
-  const questions = getKnockoutQuestions(activeRole);
-  const firstQuestion = questions[0];
-
-  if (firstQuestion) {
-    return `${MESSAGES.CV_RECEIVED(candidateName)}
-
-${firstQuestion.question}`;
-  }
-
-  return MESSAGES.CV_RECEIVED(candidateName);
+  return await response.json();
 }
 
-async function handleKnockoutQuestion(
-  message: IncomingWhatsAppMessage,
-  state: ConversationState,
-  traceId: string
-): Promise<string> {
-  // Get role
-  const { data: role } = await supabase
-    .from('roles')
-    .select('*')
-    .eq('id', state.roleId)
-    .single();
+// ============================================================================
+// CV ANALYSIS: Call our API (Job seeker flow)
+// ============================================================================
+async function analyzeCVFromText(cvText: string): Promise<any> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hireinbox.co.za';
 
-  const questions = getKnockoutQuestions(role);
+  const formData = new FormData();
+  formData.append('cvText', cvText);
 
-  // Find current question (the one we're waiting for answer to)
-  const currentQuestion = getNextQuestion(questions, state.responses);
+  const response = await fetch(`${baseUrl}/api/analyze-cv`, {
+    method: 'POST',
+    body: formData
+  });
 
-  if (!currentQuestion) {
-    // All questions answered - proceed to screening
-    return await completeApplication(message, state, role, traceId);
+  if (!response.ok) {
+    throw new Error(`CV analysis returned ${response.status}`);
   }
 
-  // Validate answer
-  const answer = message.body.trim();
-  if (!validateAnswer(currentQuestion, answer)) {
-    return MESSAGES.INVALID_ANSWER(currentQuestion.errorMessage);
+  return await response.json();
+}
+
+async function analyzeCVFromBuffer(buffer: Buffer, filename: string): Promise<any> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hireinbox.co.za';
+
+  const formData = new FormData();
+  // Create ArrayBuffer copy and cast to satisfy strict TypeScript
+  const arrayBuffer = buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength
+  ) as ArrayBuffer;
+  const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+  formData.append('cv', blob, filename);
+
+  const response = await fetch(`${baseUrl}/api/analyze-cv`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!response.ok) {
+    throw new Error(`CV analysis returned ${response.status}`);
   }
 
-  // Store answer
-  const updatedResponses = {
-    ...state.responses,
-    [currentQuestion.id]: answer,
-  };
+  return await response.json();
+}
 
-  // Get next question
-  const nextQuestion = getNextQuestion(questions, updatedResponses);
+// ============================================================================
+// FORMAT RESULTS FOR WHATSAPP
+// ============================================================================
+function formatCandidatesForWhatsApp(results: any): string {
+  const candidates = results.candidates || [];
 
-  if (nextQuestion) {
-    // Update state and ask next question
-    await updateConversationState(supabase, {
-      candidatePhone: message.from,
-      stage: 'knockout_questions',
-      responses: updatedResponses,
+  if (candidates.length === 0) {
+    return 'No candidates found. Try broadening your search.';
+  }
+
+  let message = `*Found ${candidates.length} candidates:*\n\n`;
+
+  const maxShow = Math.min(candidates.length, 5);
+  for (let i = 0; i < maxShow; i++) {
+    const c = candidates[i];
+    const moveEmoji = c.resignationPropensity?.score === 'High' ? '🔥' :
+                      c.resignationPropensity?.score === 'Medium' ? '⚡' : '❄️';
+
+    message += `*${i + 1}. ${c.name}* - ${c.matchScore}% match\n`;
+    message += `${c.currentRole} at ${c.company}\n`;
+    message += `📍 ${c.location}\n`;
+    message += `${moveEmoji} ${c.resignationPropensity?.score || 'Medium'} move likelihood\n`;
+
+    if (c.uniqueValue) {
+      const short = c.uniqueValue.length > 80 ? c.uniqueValue.slice(0, 80) + '...' : c.uniqueValue;
+      message += `_"${short}"_\n`;
+    }
+    message += '\n';
+  }
+
+  message += `Reply 1-${maxShow} for details`;
+  if (candidates.length > 5) {
+    message += ` | "more" for rest`;
+  }
+
+  return message;
+}
+
+function formatCandidateDetail(candidate: any): string {
+  let message = `*${candidate.name}*\n`;
+  message += `${candidate.currentRole} at ${candidate.company}\n`;
+  message += `📍 ${candidate.location}\n\n`;
+
+  message += `*Match:* ${candidate.matchScore}%\n`;
+  message += `*Move Likelihood:* ${candidate.resignationPropensity?.score || 'Medium'}\n\n`;
+
+  if (candidate.uniqueValue) {
+    message += `*Why they match:*\n${candidate.uniqueValue}\n\n`;
+  }
+
+  if (candidate.resignationPropensity?.factors?.length > 0) {
+    message += `*Move signals:*\n`;
+    for (const f of candidate.resignationPropensity.factors) {
+      const arrow = f.impact === 'positive' ? '↑' : f.impact === 'negative' ? '↓' : '→';
+      message += `${arrow} ${f.factor}: ${f.evidence}\n`;
+    }
+    message += '\n';
+  }
+
+  if (candidate.personalizedHook?.connectionAngle) {
+    message += `*Approach:* ${candidate.personalizedHook.connectionAngle}\n`;
+  }
+
+  if (candidate.sources?.[0]?.url) {
+    message += `\n🔗 ${candidate.sources[0].url}`;
+  }
+
+  return message;
+}
+
+// ============================================================================
+// FORMAT CV ANALYSIS FOR WHATSAPP (Job seeker flow)
+// ============================================================================
+function formatCVAnalysisForWhatsApp(analysis: any): string {
+  const score = analysis.overall_score || 0;
+  const scoreEmoji = score >= 80 ? '🟢' : score >= 60 ? '🟡' : '🔴';
+
+  let message = `*Your CV Score: ${scoreEmoji} ${score}/100*\n\n`;
+
+  // First impression
+  if (analysis.first_impression) {
+    message += `_${analysis.first_impression}_\n\n`;
+  }
+
+  // Top 3 strengths
+  if (analysis.strengths?.length > 0) {
+    message += `*Your Strengths:*\n`;
+    const topStrengths = analysis.strengths.slice(0, 3);
+    for (const s of topStrengths) {
+      message += `✅ ${s.strength}\n`;
+    }
+    message += '\n';
+  }
+
+  // Top 3 improvements
+  if (analysis.improvements?.length > 0) {
+    message += `*To Improve:*\n`;
+    const topImprovements = analysis.improvements.slice(0, 3);
+    for (const imp of topImprovements) {
+      const priority = imp.priority === 'HIGH' ? '🔴' : imp.priority === 'MEDIUM' ? '🟡' : '🟢';
+      message += `${priority} ${imp.area}\n`;
+    }
+    message += '\n';
+  }
+
+  // Quick wins
+  if (analysis.quick_wins?.length > 0) {
+    message += `*Quick Wins:*\n`;
+    for (const qw of analysis.quick_wins.slice(0, 2)) {
+      message += `💡 ${qw}\n`;
+    }
+    message += '\n';
+  }
+
+  // Career fit
+  if (analysis.career_insights?.natural_fit_roles?.length > 0) {
+    message += `*Best Fit Roles:* ${analysis.career_insights.natural_fit_roles.slice(0, 3).join(', ')}\n\n`;
+  }
+
+  return message;
+}
+
+// ============================================================================
+// TALENT POOL: Save candidate to pool
+// ============================================================================
+async function saveToTalentPool(
+  phoneNumber: string,
+  name: string,
+  cvText: string,
+  analysis: any
+): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('talent_pool').insert({
+      phone_number: phoneNumber,
+      name: name,
+      cv_text: cvText,
+      overall_score: analysis.overall_score,
+      current_title: analysis.current_title,
+      years_experience: analysis.years_experience,
+      education_level: analysis.education_level,
+      natural_fit_roles: analysis.career_insights?.natural_fit_roles || [],
+      industries: analysis.career_insights?.industries || [],
+      full_analysis: analysis,
+      opted_in_at: new Date().toISOString(),
+      source: 'whatsapp'
     });
 
-    return nextQuestion.question;
+    if (error) {
+      console.error('[HireInbox WA] Talent pool insert error:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('[HireInbox WA] Talent pool error:', error);
+    return false;
   }
-
-  // All questions answered
-  await updateConversationState(supabase, {
-    candidatePhone: message.from,
-    stage: 'complete',
-    responses: updatedResponses,
-  });
-
-  return await completeApplication(message, { ...state, responses: updatedResponses }, role, traceId);
 }
 
-async function completeApplication(
-  message: IncomingWhatsAppMessage,
-  state: ConversationState,
-  role: Record<string, unknown>,
-  traceId: string
-): Promise<string> {
-  if (IS_DEV) console.log(`[${traceId}][COMPLETE] Processing complete application`);
+// ============================================================================
+// LOG CV SCAN (for free scan tracking)
+// ============================================================================
+async function logCVScan(phoneNumber: string, analysis: any): Promise<void> {
+  try {
+    await supabase.from('whatsapp_cv_scans').insert({
+      phone_number: phoneNumber,
+      candidate_name: analysis.candidate_name,
+      overall_score: analysis.overall_score,
+      scanned_at: new Date().toISOString()
+    });
+  } catch {
+    // Non-critical, continue
+  }
+}
 
-  // Get cached CV text
-  const { data: cvCache } = await supabase
-    .from('whatsapp_cv_cache')
-    .select('cv_text')
-    .eq('phone', normalizePhoneNumber(message.from))
-    .single();
+// ============================================================================
+// MESSAGE HANDLER: RECRUITER FLOW
+// ============================================================================
+async function handleRecruiterMessage(sender: string, text: string): Promise<void> {
+  const lowerText = text.toLowerCase().trim();
+  const state = getState(sender);
 
-  if (!cvCache?.cv_text) {
-    console.error(`[${traceId}][COMPLETE] No CV text found`);
-    return MESSAGES.ERROR;
+  // Handle greetings
+  const greetings = ['hi', 'hello', 'hey', 'start', 'howzit', 'help'];
+  if (greetings.some(g => lowerText === g)) {
+    setState(sender, { ...state, step: 'awaiting_search', flow: 'recruiter' });
+    await sendWhatsAppMessage(sender,
+      'Hey! 👋 *HireInbox Talent Mapping*\n\n' +
+      'Describe the role you\'re hiring for:\n\n' +
+      '_Example: "CFO for fintech in Joburg, CA(SA), 10+ years"_'
+    );
+    return;
   }
 
-  // Screen the CV
-  if (IS_DEV) console.log(`[${traceId}][COMPLETE] Running AI screening...`);
-  const screening = await screenCVForWhatsApp(cvCache.cv_text, role, state.responses, traceId);
-
-  if (!screening) {
-    console.error(`[${traceId}][COMPLETE] Screening failed`);
-    return MESSAGES.APPLICATION_COMPLETE(message.profileName);
+  // Handle "more" command
+  if (lowerText === 'more' && state.lastResults?.candidates?.length > 5) {
+    let message = '*More candidates:*\n\n';
+    const remaining = state.lastResults.candidates.slice(5);
+    for (let i = 0; i < remaining.length; i++) {
+      const c = remaining[i];
+      message += `*${i + 6}. ${c.name}* - ${c.matchScore}%\n`;
+      message += `${c.currentRole} at ${c.company}\n\n`;
+    }
+    await sendWhatsAppMessage(sender, message);
+    return;
   }
 
-  if (IS_DEV) console.log(`[${traceId}][COMPLETE] Screening result: ${screening.recommendation} (${screening.overall_score})`);
-
-  // Map recommendation to status
-  const status = {
-    'SHORTLIST': 'shortlist',
-    'CONSIDER': 'talent_pool',
-    'REJECT': 'reject',
-  }[String(screening.recommendation)] || 'screened';
-
-  // Create candidate record
-  const candidateData = {
-    company_id: role.company_id,
-    role_id: state.roleId,
-    name: String(screening.candidate_name || message.profileName || 'WhatsApp Applicant'),
-    email: screening.candidate_email ? String(screening.candidate_email) : null,
-    phone: normalizePhoneNumber(message.from),
-    whatsapp_number: normalizePhoneNumber(message.from),
-    cv_text: cvCache.cv_text,
-    ai_score: Math.round(Number(screening.overall_score) || 0),
-    ai_recommendation: String(screening.recommendation),
-    ai_reasoning: String(screening.summary || ''),
-    screening_result: screening,
-    screened_at: new Date().toISOString(),
-    status,
-    score: Math.round(Number(screening.overall_score) || 0),
-    strengths: screening.top_strengths || [],
-    missing: screening.concerns || [],
-    source: 'whatsapp',
-    knockout_responses: state.responses,
-  };
-
-  const { data: candidate, error: insertError } = await supabase
-    .from('candidates')
-    .insert(candidateData)
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error(`[${traceId}][COMPLETE] Failed to create candidate:`, insertError);
-    return MESSAGES.APPLICATION_COMPLETE(String(screening.candidate_name));
-  }
-
-  // Update conversation state with candidate ID
-  await updateConversationState(supabase, {
-    candidatePhone: message.from,
-    stage: 'complete',
-    candidateId: candidate.id,
-    responses: state.responses,
-  });
-
-  // Clean up CV cache
-  await supabase.from('whatsapp_cv_cache').delete()
-    .eq('phone', normalizePhoneNumber(message.from));
-
-  // Notify recruiter (if configured)
-  if (status === 'shortlist' || status === 'talent_pool') {
-    // Get recruiter's WhatsApp number if configured
-    const { data: company } = await supabase
-      .from('companies')
-      .select('recruiter_whatsapp')
-      .eq('id', role.company_id)
-      .single();
-
-    if (company?.recruiter_whatsapp) {
-      // Send notification asynchronously
-      sendWhatsAppMessage({
-        to: company.recruiter_whatsapp,
-        body: MESSAGES.NEW_CV_ALERT(
-          String(screening.candidate_name || 'New Candidate'),
-          String(role.title || 'Open Position'),
-          Number(screening.overall_score || 0),
-          String(screening.recommendation || 'REVIEW')
-        ),
-      }).catch(err => {
-        console.error(`[${traceId}][COMPLETE] Failed to notify recruiter:`, err);
-      });
+  // Handle number selection
+  const num = parseInt(lowerText);
+  if (!isNaN(num) && num >= 1 && num <= 10 && state.lastResults?.candidates) {
+    const candidate = state.lastResults.candidates[num - 1];
+    if (candidate) {
+      await sendWhatsAppMessage(sender, formatCandidateDetail(candidate));
+      return;
     }
   }
 
-  return MESSAGES.APPLICATION_COMPLETE(String(screening.candidate_name));
+  // Handle new search
+  if (['new', 'search', 'again'].includes(lowerText)) {
+    setState(sender, { ...state, step: 'awaiting_search' });
+    await sendWhatsAppMessage(sender, 'Ready! 🔍 Describe the role.');
+    return;
+  }
+
+  // Assume it's a search query if long enough
+  if (text.length > 10) {
+    setState(sender, { ...state, step: 'searching', lastSearch: text });
+
+    const shortPrompt = text.length > 100 ? text.slice(0, 100) + '...' : text;
+    await sendWhatsAppMessage(sender,
+      `🔍 Searching for:\n_"${shortPrompt}"_\n\n30-60 seconds...`
+    );
+
+    try {
+      const results = await runTalentMapping(text);
+      setState(sender, { ...state, step: 'results_shown', lastSearch: text, lastResults: results });
+      await sendWhatsAppMessage(sender, formatCandidatesForWhatsApp(results));
+
+      // Log usage (non-critical, ignore errors)
+      try {
+        await supabase.from('pilot_usage_log').insert({
+          phone_number: sender,
+          action: 'whatsapp_talent_mapping',
+          details: { prompt: text, candidateCount: results.candidates?.length || 0 },
+          estimated_cost: 0.72
+        });
+      } catch { /* ignore logging errors */ }
+
+    } catch (error) {
+      console.error('[HireInbox WA] Search failed:', error);
+      await sendWhatsAppMessage(sender, 'Search failed. Try again or contact simon@hireinbox.co.za');
+    }
+    return;
+  }
+
+  // Default
+  await sendWhatsAppMessage(sender,
+    'Send a job description to search, or say "hi" for help.'
+  );
 }
 
-// ============================================
-// MAIN WEBHOOK HANDLER
-// ============================================
+// ============================================================================
+// MESSAGE HANDLER: JOB SEEKER FLOW
+// ============================================================================
+async function handleJobSeekerMessage(sender: string, text: string): Promise<void> {
+  const lowerText = text.toLowerCase().trim();
+  const state = getState(sender);
 
-export async function POST(request: Request) {
-  const traceId = Date.now().toString(36);
-  if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] Incoming message`);
+  // Handle greetings - show menu
+  const greetings = ['hi', 'hello', 'hey', 'start', 'howzit', 'help', 'menu'];
+  if (greetings.some(g => lowerText === g)) {
+    const scansUsed = await getFreeScansUsed(sender);
+    const freeRemaining = scansUsed < 1 ? 1 : 0;
+
+    setState(sender, { ...state, step: 'menu', flow: 'jobseeker', freeScansUsed: scansUsed });
+
+    await sendWhatsAppMessage(sender,
+      '*HireInbox CV Scanner* 📄\n\n' +
+      'Get instant AI feedback on your CV!\n\n' +
+      `🆓 Free scans remaining: *${freeRemaining}*\n\n` +
+      '*How it works:*\n' +
+      '1️⃣ Send your CV (PDF or paste text)\n' +
+      '2️⃣ Get your score + feedback in 30 seconds\n' +
+      '3️⃣ Optionally join our talent pool\n\n' +
+      '_Recruiters search our pool daily for roles!_\n\n' +
+      '👉 *Send your CV to get started*'
+    );
+    return;
+  }
+
+  // Handle talent pool opt-in confirmation
+  if (state.step === 'awaiting_optin') {
+    if (['yes', 'y', 'join', 'opt in', 'optin', '1'].includes(lowerText)) {
+      const success = await saveToTalentPool(
+        sender,
+        state.candidateName || 'Unknown',
+        state.cvText || '',
+        state.lastCVAnalysis
+      );
+
+      if (success) {
+        await sendWhatsAppMessage(sender,
+          '✅ *You\'re in the talent pool!*\n\n' +
+          'Recruiters can now find you for matching roles.\n\n' +
+          'We\'ll WhatsApp you when there\'s a match. Good luck! 🍀\n\n' +
+          '_Reply "hi" to scan another CV_'
+        );
+      } else {
+        await sendWhatsAppMessage(sender,
+          'Oops! Something went wrong. Please try again or contact simon@hireinbox.co.za'
+        );
+      }
+
+      setState(sender, { ...state, step: 'complete', flow: 'jobseeker' });
+      return;
+    }
+
+    if (['no', 'n', 'skip', '2'].includes(lowerText)) {
+      await sendWhatsAppMessage(sender,
+        'No problem! Your CV was NOT saved to our pool.\n\n' +
+        'Want another scan? Just send your CV.\n\n' +
+        '_Reply "hi" for the menu_'
+      );
+      setState(sender, { ...state, step: 'complete', flow: 'jobseeker' });
+      return;
+    }
+  }
+
+  // Handle pasted CV text (if it looks like a CV - long text with common CV keywords)
+  const cvKeywords = ['experience', 'education', 'skills', 'employment', 'work history', 'qualifications', 'cv', 'resume', 'curriculum'];
+  const looksLikeCV = text.length > 200 && cvKeywords.some(k => lowerText.includes(k));
+
+  if (looksLikeCV) {
+    // Check free scan limit
+    const scansUsed = await getFreeScansUsed(sender);
+    if (scansUsed >= 1) {
+      await sendWhatsAppMessage(sender,
+        '😅 You\'ve used your free scan!\n\n' +
+        'Get unlimited CV scans at *hireinbox.co.za*\n\n' +
+        'Or contact simon@hireinbox.co.za for access.'
+      );
+      return;
+    }
+
+    setState(sender, { ...state, step: 'analyzing', flow: 'jobseeker', cvText: text });
+    await sendWhatsAppMessage(sender,
+      '📄 *Analyzing your CV...*\n\nThis takes about 30 seconds.'
+    );
+
+    try {
+      const result = await analyzeCVFromText(text);
+
+      if (!result.success || !result.analysis) {
+        throw new Error('Analysis failed');
+      }
+
+      const analysis = result.analysis;
+
+      // Log the scan
+      await logCVScan(sender, analysis);
+
+      // Send results
+      await sendWhatsAppMessage(sender, formatCVAnalysisForWhatsApp(analysis));
+
+      // Offer talent pool
+      setState(sender, {
+        ...state,
+        step: 'awaiting_optin',
+        flow: 'jobseeker',
+        lastCVAnalysis: analysis,
+        candidateName: analysis.candidate_name,
+        cvText: text
+      });
+
+      await sendWhatsAppMessage(sender,
+        '*Join our Talent Pool?*\n\n' +
+        'Recruiters search our pool for candidates daily.\n' +
+        'We\'ll notify you when there\'s a match.\n\n' +
+        'Reply *YES* to join or *NO* to skip.'
+      );
+
+    } catch (error) {
+      console.error('[HireInbox WA] CV analysis failed:', error);
+      await sendWhatsAppMessage(sender,
+        'Analysis failed. Please try again or visit hireinbox.co.za\n\n' +
+        'Tip: Make sure your CV text is complete.'
+      );
+    }
+    return;
+  }
+
+  // Default: prompt for CV
+  await sendWhatsAppMessage(sender,
+    'I need your CV to analyze! 📄\n\n' +
+    '*Options:*\n' +
+    '• Send a PDF document\n' +
+    '• Paste your CV text\n\n' +
+    '_Reply "hi" for help_'
+  );
+}
+
+// ============================================================================
+// DOCUMENT HANDLER: CV uploads
+// ============================================================================
+async function handleDocument(sender: string, document: any): Promise<void> {
+  const state = getState(sender);
+
+  // Check if it's a recruiter
+  const authorized = await isAuthorized(sender);
+  if (authorized) {
+    await sendWhatsAppMessage(sender,
+      'Documents aren\'t needed for talent mapping.\n\n' +
+      'Just describe the role you\'re hiring for!'
+    );
+    return;
+  }
+
+  // Job seeker - process CV
+  const filename = document.filename || 'cv.pdf';
+  const mimeType = document.mime_type || '';
+  const mediaId = document.id;
+
+  // Validate file type
+  const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  const validExtensions = ['.pdf', '.doc', '.docx'];
+
+  const hasValidMime = validTypes.some(t => mimeType.includes(t));
+  const hasValidExt = validExtensions.some(e => filename.toLowerCase().endsWith(e));
+
+  if (!hasValidMime && !hasValidExt) {
+    await sendWhatsAppMessage(sender,
+      'Please send a PDF or Word document (.pdf, .doc, .docx)\n\n' +
+      'Or you can paste your CV text directly.'
+    );
+    return;
+  }
+
+  // Check free scan limit
+  const scansUsed = await getFreeScansUsed(sender);
+  if (scansUsed >= 1) {
+    await sendWhatsAppMessage(sender,
+      '😅 You\'ve used your free scan!\n\n' +
+      'Get unlimited CV scans at *hireinbox.co.za*\n\n' +
+      'Or contact simon@hireinbox.co.za for access.'
+    );
+    return;
+  }
+
+  setState(sender, { ...state, step: 'downloading', flow: 'jobseeker' });
+  await sendWhatsAppMessage(sender,
+    '📥 *Downloading your CV...*'
+  );
+
+  // Download the file
+  const buffer = await downloadWhatsAppMedia(mediaId);
+  if (!buffer) {
+    await sendWhatsAppMessage(sender,
+      'Couldn\'t download your file. Please try again or paste your CV text instead.'
+    );
+    return;
+  }
+
+  setState(sender, { ...state, step: 'analyzing', flow: 'jobseeker' });
+  await sendWhatsAppMessage(sender,
+    '📄 *Analyzing your CV...*\n\nThis takes about 30 seconds.'
+  );
 
   try {
-    // Parse form data from Twilio
-    const formData = await request.formData();
-    const body: Record<string, string> = {};
-    formData.forEach((value, key) => {
-      body[key] = String(value);
-    });
+    const result = await analyzeCVFromBuffer(buffer, filename);
 
-    // Validate Twilio signature in production
-    if (IS_PRODUCTION) {
-      const signature = request.headers.get('X-Twilio-Signature') || '';
-      const url = request.url;
-      if (!validateTwilioSignature(signature, url, body)) {
-        console.error(`[${traceId}][WHATSAPP-WEBHOOK] Invalid Twilio signature`);
-        return new NextResponse('Unauthorized', { status: 401 });
-      }
+    if (!result.success || !result.analysis) {
+      throw new Error('Analysis failed');
     }
 
-    // Parse message
-    const message = parseIncomingMessage(body);
-    if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] From: ${message.from}, Body: "${message.body.substring(0, 50)}...", Media: ${message.numMedia}`);
+    const analysis = result.analysis;
+    const cvText = result.originalCV || '';
 
-    // Get conversation state
-    const state = await getConversationState(supabase, message.from);
-    if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] State: ${state?.stage || 'new'}`);
+    // Log the scan
+    await logCVScan(sender, analysis);
 
-    let responseMessage: string;
+    // Send results
+    await sendWhatsAppMessage(sender, formatCVAnalysisForWhatsApp(analysis));
 
-    // Handle based on conversation stage
-    if (!state || state.stage === 'initial') {
-      responseMessage = await handleInitialMessage(message, traceId);
-    } else if (state.stage === 'collecting_cv') {
-      // They should be sending CV
-      if (message.numMedia > 0) {
-        responseMessage = await handleCVUpload(message, traceId, state);
-      } else if (message.body.toLowerCase().trim() === 'stop') {
-        responseMessage = MESSAGES.OPT_OUT;
-        await updateConversationState(supabase, {
-          candidatePhone: message.from,
-          stage: 'opted_out',
-        });
-      } else {
-        responseMessage = MESSAGES.SEND_CV;
-      }
-    } else if (state.stage === 'knockout_questions') {
-      // Handle knockout question responses or media
-      if (message.numMedia > 0 && !state.cvReceived) {
-        responseMessage = await handleCVUpload(message, traceId, state);
-      } else {
-        responseMessage = await handleKnockoutQuestion(message, state, traceId);
-      }
-    } else if (state.stage === 'complete') {
-      // Already completed - acknowledge
-      responseMessage = 'Thanks! Your application has already been submitted. A recruiter will be in touch if your profile matches.';
-    } else if (state.stage === 'opted_out') {
-      // Opted out - check if they want to re-subscribe
-      if (['apply', 'subscribe', 'start'].includes(message.body.toLowerCase().trim())) {
-        await supabase.from('whatsapp_optouts').delete()
-          .eq('phone', normalizePhoneNumber(message.from));
-        await updateConversationState(supabase, {
-          candidatePhone: message.from,
-          stage: 'initial',
-          responses: {},
-          cvReceived: false,
-        });
-        responseMessage = await handleInitialMessage(message, traceId);
-      } else {
-        responseMessage = 'You are currently unsubscribed. Reply APPLY to start a new application.';
-      }
-    } else {
-      responseMessage = MESSAGES.NOT_UNDERSTOOD;
-    }
-
-    // Return TwiML response
-    if (IS_DEV) console.log(`[${traceId}][WHATSAPP-WEBHOOK] Responding: "${responseMessage.substring(0, 50)}..."`);
-    const twiml = generateTwiMLResponse(responseMessage);
-
-    return new NextResponse(twiml, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/xml',
-      },
+    // Offer talent pool
+    setState(sender, {
+      ...state,
+      step: 'awaiting_optin',
+      flow: 'jobseeker',
+      lastCVAnalysis: analysis,
+      candidateName: analysis.candidate_name,
+      cvText: cvText
     });
+
+    await sendWhatsAppMessage(sender,
+      '*Join our Talent Pool?*\n\n' +
+      'Recruiters search our pool for candidates daily.\n' +
+      'We\'ll notify you when there\'s a match.\n\n' +
+      'Reply *YES* to join or *NO* to skip.'
+    );
 
   } catch (error) {
-    console.error(`[${traceId}][WHATSAPP-WEBHOOK] Error:`, error);
-
-    // Return error response in TwiML format
-    const twiml = generateTwiMLResponse(MESSAGES.ERROR);
-    return new NextResponse(twiml, {
-      status: 200, // Twilio expects 200 even for errors
-      headers: {
-        'Content-Type': 'application/xml',
-      },
-    });
+    console.error('[HireInbox WA] CV document analysis failed:', error);
+    await sendWhatsAppMessage(sender,
+      'Couldn\'t read your CV. Please:\n' +
+      '• Try a different PDF\n' +
+      '• Or paste your CV text instead\n\n' +
+      '_Some PDFs are image-only and can\'t be read_'
+    );
   }
 }
 
-// ============================================
-// GET: Webhook verification
-// ============================================
+// ============================================================================
+// MAIN MESSAGE ROUTER
+// ============================================================================
+async function handleMessage(sender: string, text: string): Promise<void> {
+  // Check if recruiter or job seeker
+  const authorized = await isAuthorized(sender);
 
-export async function GET() {
-  return NextResponse.json({
-    service: 'whatsapp-webhook',
-    status: 'ready',
-    message: 'Configure this URL in Twilio Console for WhatsApp webhook',
-  });
+  if (authorized) {
+    await handleRecruiterMessage(sender, text);
+  } else {
+    await handleJobSeekerMessage(sender, text);
+  }
+}
+
+// ============================================================================
+// WEBHOOK HANDLERS
+// ============================================================================
+
+export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams;
+  const mode = params.get('hub.mode');
+  const token = params.get('hub.verify_token');
+  const challenge = params.get('hub.challenge');
+
+  if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+    console.log('[HireInbox WA] Webhook verified');
+    return new NextResponse(challenge, { status: 200 });
+  }
+
+  return NextResponse.json({ error: 'Verification failed' }, { status: 403 });
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const rawBody = await request.text();
+    const signature = request.headers.get('X-Hub-Signature-256');
+
+    if (!verifyWebhookSignature(rawBody, signature)) {
+      console.error('[HireInbox WA] Invalid signature');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
+    }
+
+    const payload = JSON.parse(rawBody);
+
+    for (const entry of payload.entry || []) {
+      for (const change of entry.changes || []) {
+        const messages = change.value?.messages || [];
+
+        for (const message of messages) {
+          const sender = message.from;
+          const messageId = message.id;
+
+          if (isDuplicate(messageId)) {
+            console.log(`[HireInbox WA] Duplicate: ${messageId.slice(0, 10)}...`);
+            continue;
+          }
+
+          if (!checkRateLimit(sender)) {
+            console.log(`[HireInbox WA] Rate limited: ${sender.slice(0, 6)}...`);
+            continue;
+          }
+
+          console.log(`[HireInbox WA] Message from ${sender.slice(0, 6)}...: ${message.type}`);
+
+          if (message.type === 'text' && message.text?.body) {
+            await handleMessage(sender, message.text.body);
+          }
+
+          // Handle document uploads (CV PDFs)
+          if (message.type === 'document' && message.document) {
+            await handleDocument(sender, message.document);
+          }
+
+          // Handle images (sometimes people send CV screenshots)
+          if (message.type === 'image') {
+            await sendWhatsAppMessage(sender,
+              'I can\'t read images of CVs yet.\n\n' +
+              'Please send a *PDF* or *paste your CV text*.'
+            );
+          }
+
+          if (message.type === 'audio') {
+            await sendWhatsAppMessage(sender,
+              'Got your voice note! 🎙️\n\n' +
+              'For job seekers: Please send your CV as a PDF or paste the text.\n\n' +
+              'For recruiters: Please type your search query.'
+            );
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({ status: 'ok' });
+  } catch (error) {
+    console.error('[HireInbox WA] Webhook error:', error);
+    return NextResponse.json({ status: 'ok' }); // Always 200 to prevent retries
+  }
 }
