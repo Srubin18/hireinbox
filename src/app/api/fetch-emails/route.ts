@@ -520,46 +520,41 @@ function buildRoleContext(role: Record<string, unknown>): string {
 async function extractPDFText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
   console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes)`);
 
-  // Use pdf-parse - simple and reliable on Vercel
+  // METHOD 1: unpdf - DESIGNED FOR SERVERLESS (Vercel)
   try {
+    console.log(`[${traceId}][PDF] Trying unpdf (serverless-optimized)...`);
+    const { extractText } = await import('unpdf');
+    const uint8Array = new Uint8Array(buffer);
+    const result = await extractText(uint8Array, { mergePages: true });
+    const text = typeof result.text === 'string' ? result.text : (result.text || []).join('\n\n');
+    console.log(`[${traceId}][PDF] unpdf extracted ${text.length} chars`);
+
+    if (text.length > 100) {
+      console.log(`[${traceId}][PDF] SUCCESS with unpdf. First 200 chars: ${text.substring(0, 200).replace(/\n/g, ' ')}`);
+      return text;
+    }
+  } catch (e1) {
+    console.error(`[${traceId}][PDF] unpdf failed:`, e1 instanceof Error ? e1.message : e1);
+  }
+
+  // METHOD 2: pdf-parse - fallback (works locally, issues on Vercel)
+  try {
+    console.log(`[${traceId}][PDF] Trying pdf-parse fallback...`);
     const pdfParseModule = await import('pdf-parse');
     const pdfParse = pdfParseModule.default || pdfParseModule;
     const data = await pdfParse(buffer);
     const text = data.text || '';
-    console.log(`[${traceId}][PDF] Extracted ${text.length} chars from ${data.numpages || 1} pages`);
+    console.log(`[${traceId}][PDF] pdf-parse extracted ${text.length} chars`);
 
     if (text.length > 100) {
-      console.log(`[${traceId}][PDF] First 200 chars: ${text.substring(0, 200).replace(/\n/g, ' ')}...`);
+      console.log(`[${traceId}][PDF] SUCCESS with pdf-parse`);
       return text;
     }
-  } catch (e) {
-    console.error(`[${traceId}][PDF] pdf-parse failed:`, e instanceof Error ? e.message : e);
-  }
-
-  // Fallback: try pdfjs-dist
-  try {
-    console.log(`[${traceId}][PDF] Trying pdfjs-dist fallback...`);
-    const pdfjsLib = await import('pdfjs-dist');
-    const uint8Array = new Uint8Array(buffer);
-    const loadingTask = pdfjsLib.getDocument({ data: uint8Array, useSystemFonts: true });
-    const pdf = await loadingTask.promise;
-    const pageTexts: string[] = [];
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item) => ('str' in item ? item.str : '')).join(' ');
-      pageTexts.push(pageText);
-    }
-
-    const fullText = pageTexts.join('\n\n').trim();
-    console.log(`[${traceId}][PDF] pdfjs-dist extracted ${fullText.length} chars`);
-    if (fullText.length > 100) return fullText;
   } catch (e2) {
-    console.error(`[${traceId}][PDF] pdfjs-dist failed:`, e2 instanceof Error ? e2.message : e2);
+    console.error(`[${traceId}][PDF] pdf-parse failed:`, e2 instanceof Error ? e2.message : e2);
   }
 
-  console.error(`[${traceId}][PDF] All extraction methods failed for ${filename}`);
+  console.error(`[${traceId}][PDF] ALL METHODS FAILED for ${filename}`);
   return '';
 }
 
