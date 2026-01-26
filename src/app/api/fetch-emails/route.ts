@@ -1144,7 +1144,16 @@ export async function POST(request: Request) {
           fitAssessment = String(analysis.fit_summary);
         }
 
-        if (IS_DEV) console.log(`[${traceId}] Extracted: ${strengths.length} strengths, ${weaknesses.length} weaknesses`);
+        // ALWAYS log extraction results for debugging
+        console.log(`[${traceId}] EXTRACTION DEBUG:`, {
+          hasRanking: !!ranking,
+          hasSummary: !!summary,
+          summaryKeys: summary ? Object.keys(summary) : [],
+          analysisKeys: Object.keys(analysis).slice(0, 15),
+          strengthsFound: strengths.length,
+          weaknessesFound: weaknesses.length,
+          fitAssessmentLength: fitAssessment.length
+        });
 
         const { error: insertErr } = await supabase.from('candidates').insert({
           company_id: matchedRole.company_id,
