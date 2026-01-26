@@ -668,18 +668,93 @@ async function handleJobSeekerMessage(sender: string, text: string): Promise<voi
 }
 
 // ============================================================================
-// DOCUMENT HANDLER: CV uploads
+// EXTRACT TEXT FROM PDF (for job specs)
+// ============================================================================
+async function extractTextFromPDF(buffer: Buffer): Promise<string | null> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hireinbox.co.za';
+    const formData = new FormData();
+    const arrayBuffer = buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    ) as ArrayBuffer;
+    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+    formData.append('file', blob, 'jobspec.pdf');
+
+    const response = await fetch(`${baseUrl}/api/extract-text`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.text || null;
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================================
+// DOCUMENT HANDLER: CV uploads (job seekers) & Job specs (recruiters)
 // ============================================================================
 async function handleDocument(sender: string, document: any): Promise<void> {
   const state = getState(sender);
-
-  // Check if it's a recruiter
+  const isOwnerUser = isOwner(sender);
   const authorized = await isAuthorized(sender);
-  if (authorized) {
+
+  // Recruiter or owner in recruiter mode: treat as job spec
+  if (authorized || (isOwnerUser && state.flow === 'recruiter')) {
+    const filename = document.filename || 'jobspec.pdf';
+    const mediaId = document.id;
+
+    await sendWhatsAppMessage(sender, '📥 *Downloading job spec...*');
+
+    const buffer = await downloadWhatsAppMedia(mediaId);
+    if (!buffer) {
+      await sendWhatsAppMessage(sender,
+        'Couldn\'t download the file. Please paste the job description as text instead.'
+      );
+      return;
+    }
+
+    await sendWhatsAppMessage(sender, '📄 *Extracting job requirements...*');
+
+    const jobSpecText = await extractTextFromPDF(buffer);
+    if (!jobSpecText || jobSpecText.length < 50) {
+      await sendWhatsAppMessage(sender,
+        'Couldn\'t read the PDF. Please paste the job description as text instead.\n\n' +
+        '_Some PDFs are image-only and can\'t be read._'
+      );
+      return;
+    }
+
+    // Now run talent mapping with the extracted text
+    setState(sender, { ...state, step: 'searching', lastSearch: jobSpecText, flow: 'recruiter' });
+
+    const shortPrompt = jobSpecText.length > 100 ? jobSpecText.slice(0, 100) + '...' : jobSpecText;
     await sendWhatsAppMessage(sender,
-      'Documents aren\'t needed for talent mapping.\n\n' +
-      'Just describe the role you\'re hiring for!'
+      `🔍 *Searching for candidates matching:*\n_"${shortPrompt}"_\n\n30-60 seconds...`
     );
+
+    try {
+      const results = await runTalentMapping(jobSpecText);
+      setState(sender, { ...state, step: 'results_shown', lastSearch: jobSpecText, lastResults: results, flow: 'recruiter' });
+      await sendWhatsAppMessage(sender, formatCandidatesForWhatsApp(results));
+
+      // Log usage
+      try {
+        await supabase.from('pilot_usage_log').insert({
+          phone_number: sender,
+          action: 'whatsapp_talent_mapping_pdf',
+          details: { promptLength: jobSpecText.length, candidateCount: results.candidates?.length || 0 },
+          estimated_cost: 0.72
+        });
+      } catch { /* ignore */ }
+
+    } catch (error) {
+      console.error('[HireInbox WA] PDF talent mapping failed:', error);
+      await sendWhatsAppMessage(sender, 'Search failed. Try again or paste the job description as text.');
+    }
     return;
   }
 
@@ -778,9 +853,89 @@ async function handleDocument(sender: string, document: any): Promise<void> {
 }
 
 // ============================================================================
+// OWNER/TESTER NUMBERS - Can access both flows
+// ============================================================================
+const OWNER_NUMBERS = ['27721172137']; // Simon - can test both flows
+
+function isOwner(phoneNumber: string): boolean {
+  return OWNER_NUMBERS.includes(phoneNumber);
+}
+
+// ============================================================================
+// OWNER MENU HANDLER
+// ============================================================================
+async function handleOwnerMessage(sender: string, text: string): Promise<void> {
+  const lowerText = text.toLowerCase().trim();
+  const state = getState(sender);
+
+  // Handle mode selection
+  if (lowerText === '1' || lowerText === 'recruiter' || lowerText === 'talent') {
+    setState(sender, { ...state, flow: 'recruiter', step: 'awaiting_search' });
+    await sendWhatsAppMessage(sender,
+      '*Recruiter Mode* 🔍\n\n' +
+      'Describe the role you\'re hiring for:\n\n' +
+      '_Example: "CFO for fintech in Joburg, CA(SA), 10+ years"_\n\n' +
+      'Or send a PDF job spec!\n\n' +
+      '_Reply "menu" to switch modes_'
+    );
+    return;
+  }
+
+  if (lowerText === '2' || lowerText === 'jobseeker' || lowerText === 'cv') {
+    setState(sender, { ...state, flow: 'jobseeker', step: 'menu' });
+    await sendWhatsAppMessage(sender,
+      '*Job Seeker Mode* 📄\n\n' +
+      'Send your CV (PDF or paste text) for instant AI feedback!\n\n' +
+      '_Reply "menu" to switch modes_'
+    );
+    return;
+  }
+
+  // Handle "menu" to show options again
+  if (lowerText === 'menu' || lowerText === 'hi' || lowerText === 'hello' || lowerText === 'start') {
+    setState(sender, { ...state, step: 'owner_menu' });
+    await sendWhatsAppMessage(sender,
+      '*HireInbox Test Menu* 🧪\n\n' +
+      'You have access to both modes:\n\n' +
+      '*1.* Recruiter - Talent Mapping\n' +
+      '*2.* Job Seeker - CV Scanner\n\n' +
+      'Reply *1* or *2* to choose.'
+    );
+    return;
+  }
+
+  // If already in a flow, route to that handler
+  if (state.flow === 'recruiter') {
+    await handleRecruiterMessage(sender, text);
+    return;
+  }
+
+  if (state.flow === 'jobseeker') {
+    await handleJobSeekerMessage(sender, text);
+    return;
+  }
+
+  // Default: show menu
+  setState(sender, { ...state, step: 'owner_menu' });
+  await sendWhatsAppMessage(sender,
+    '*HireInbox Test Menu* 🧪\n\n' +
+    'You have access to both modes:\n\n' +
+    '*1.* Recruiter - Talent Mapping\n' +
+    '*2.* Job Seeker - CV Scanner\n\n' +
+    'Reply *1* or *2* to choose.'
+  );
+}
+
+// ============================================================================
 // MAIN MESSAGE ROUTER
 // ============================================================================
 async function handleMessage(sender: string, text: string): Promise<void> {
+  // Owner gets dual-mode access
+  if (isOwner(sender)) {
+    await handleOwnerMessage(sender, text);
+    return;
+  }
+
   // Check if recruiter or job seeker
   const authorized = await isAuthorized(sender);
 
@@ -845,8 +1000,22 @@ export async function POST(request: NextRequest) {
             await handleMessage(sender, message.text.body);
           }
 
-          // Handle document uploads (CV PDFs)
+          // Handle document uploads (CV PDFs for job seekers, Job specs for recruiters)
           if (message.type === 'document' && message.document) {
+            // For owners, check their current flow
+            if (isOwner(sender)) {
+              const state = getState(sender);
+              if (!state.flow) {
+                // No flow selected yet, prompt them
+                await sendWhatsAppMessage(sender,
+                  'What\'s this document for?\n\n' +
+                  '*1.* Job spec (find candidates)\n' +
+                  '*2.* My CV (get feedback)\n\n' +
+                  'Reply 1 or 2, then send the document again.'
+                );
+                continue;
+              }
+            }
             await handleDocument(sender, message.document);
           }
 
