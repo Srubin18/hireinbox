@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 // PASS 1 — AI SCREENED (Strong / Possible / Low match)
 // PASS 2 — SHORTLISTED (Manual selection, outcome emails)
 // PASS 3 — AI INTERVIEW (Optional - Transcript + summary)
-// PASS 4 — VERIFICATION (Optional - ID/Criminal/Credit/Refs)
+// PASS 4 — VERIFICATION (Optional - ID/Credit/Refs)
 // PASS 5 — HUMAN INTERVIEW (Manual status updates)
 // PASS 6 — OUTCOME (Offer / Hired / Not successful)
 // PASS 7 — TALENT POOL DECISION (Employer opt-in, candidate consent)
@@ -25,7 +25,6 @@ type NavSection = 'inbox' | 'screening' | 'interviews' | 'verification' | 'pipel
 
 interface VerificationStatus {
   idCheck?: 'pending' | 'in_progress' | 'passed' | 'failed' | 'not_ordered';
-  criminalCheck?: 'pending' | 'in_progress' | 'clear' | 'flagged' | 'not_ordered';
   creditCheck?: 'pending' | 'in_progress' | 'good' | 'fair' | 'poor' | 'not_ordered';
   referenceCheck?: 'pending' | 'in_progress' | 'positive' | 'mixed' | 'negative' | 'not_ordered';
 }
@@ -45,6 +44,12 @@ interface Candidate {
   verification?: VerificationStatus;
   receivedAt: string;
   lastUpdated: string;
+  // AI Analysis fields
+  aiRecommendation?: string;
+  aiReasoning?: string;
+  strengths?: string[];
+  weaknesses?: string[];
+  screeningResult?: Record<string, unknown>;
 }
 
 interface Role {
@@ -54,6 +59,19 @@ interface Role {
   createdAt: string;
   candidateCount: number;
   newToday: number;
+  // Extended fields for role details
+  seniority?: string;
+  employmentType?: string;
+  workArrangement?: string;
+  department?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  minExperience?: number;
+  maxExperience?: number;
+  requiredSkills?: string[];
+  qualifications?: string[];
+  strongFit?: string;
+  disqualifiers?: string;
 }
 
 // SVG Icons
@@ -169,16 +187,20 @@ const Icons = {
       <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
       <line x1="12" y1="22.08" x2="12" y2="12"/>
     </svg>
+  ),
+  star: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
   )
 };
 
 // Verification pricing
 const VERIFICATION_PRICING = {
   idCheck: { label: 'ID Verification', price: 150, icon: 'id', description: 'Verify South African ID against Home Affairs' },
-  criminalCheck: { label: 'Criminal Check', price: 250, icon: 'fileSearch', description: 'SAPS criminal record check' },
   creditCheck: { label: 'Credit Check', price: 200, icon: 'creditCard', description: 'TransUnion credit report summary' },
   referenceCheck: { label: 'Reference Check', price: 200, icon: 'userCheck', description: 'AI-assisted reference verification (2 refs)' },
-  fullPackage: { label: 'Complete Package', price: 700, icon: 'package', description: 'All 4 checks - Save R100' }
+  fullPackage: { label: 'Complete Package', price: 500, icon: 'package', description: 'All 3 checks - Save R50' }
 };
 
 const Logo = () => (
@@ -285,6 +307,9 @@ export default function EmployerDashboard() {
   // Verification detail modal state
   const [showVerificationDetail, setShowVerificationDetail] = useState<string | null>(null);
 
+  // View Role modal state
+  const [showRoleDetail, setShowRoleDetail] = useState(false);
+
   // Check localStorage for onboarding completion on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -295,60 +320,75 @@ export default function EmployerDashboard() {
     }
   }, []);
 
-  // DEMO MODE: Load real data from Supabase
+  // DEMO MODE: Load real data via API (bypasses RLS)
   useEffect(() => {
     if (!isDemo) return;
 
     async function loadDemoData() {
       setDemoLoading(true);
       try {
-        // Load real roles
-        const { data: dbRoles } = await supabase
-          .from('roles')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(10);
+        const res = await fetch('/api/demo-data');
+        const data = await res.json();
+        console.log('[DEMO] API response:', data.roles?.length, 'roles,', data.candidates?.length, 'candidates');
 
-        if (dbRoles && dbRoles.length > 0) {
-          const mappedRoles: Role[] = dbRoles.map(r => ({
-            id: r.id,
-            title: r.title || 'Untitled Role',
-            location: r.location || 'Remote',
-            createdAt: r.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        // Map roles with extended fields
+        const mappedRoles: Role[] = (data.roles || []).map((r: Record<string, unknown>) => {
+          const context = r.context as Record<string, unknown> || {};
+          const facts = r.facts as Record<string, unknown> || {};
+          const aiGuidance = r.ai_guidance as Record<string, unknown> || {};
+          return {
+            id: r.id as string,
+            title: (r.title as string) || 'Untitled Role',
+            location: (facts.location as string) || 'Remote',
+            createdAt: ((r.created_at as string) || '').split('T')[0] || new Date().toISOString().split('T')[0],
             candidateCount: 0,
-            newToday: 0
-          }));
-          setRoles(mappedRoles);
+            newToday: 0,
+            // Extended fields
+            seniority: context.seniority as string,
+            employmentType: context.employment_type as string,
+            workArrangement: context.work_arrangement as string,
+            department: context.department as string,
+            salaryMin: facts.salary_min as number,
+            salaryMax: facts.salary_max as number,
+            minExperience: facts.min_experience_years as number,
+            maxExperience: facts.max_experience_years as number,
+            requiredSkills: facts.required_skills as string[],
+            qualifications: facts.qualifications as string[],
+            strongFit: aiGuidance.strong_fit as string,
+            disqualifiers: aiGuidance.disqualifiers as string,
+          };
+        });
+        setRoles(mappedRoles);
+        if (mappedRoles.length > 0) {
           setSelectedRole(mappedRoles[0].id);
         }
 
-        // Load real candidates
-        const { data: dbCandidates } = await supabase
-          .from('candidates')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (dbCandidates && dbCandidates.length > 0) {
-          const mappedCandidates: Candidate[] = dbCandidates.map(c => ({
-            id: c.id,
-            name: c.name || 'Unknown',
-            email: c.email || '',
-            phone: c.phone || '',
-            role: c.role_id || '',
-            pass: mapStatusToPass(c.status),
-            aiMatch: mapScoreToMatch(c.score || c.ai_score),
-            aiScore: c.score || c.ai_score || 0,
-            hasVideo: false,
-            hasAiInterview: false,
-            verified: false,
-            receivedAt: c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-            lastUpdated: c.updated_at?.split('T')[0] || c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
-          }));
-          setCandidates(mappedCandidates);
-        }
+        // Map candidates
+        const mappedCandidates: Candidate[] = (data.candidates || []).map((c: Record<string, unknown>) => ({
+          id: c.id as string,
+          name: (c.name as string) || 'Unknown',
+          email: (c.email as string) || '',
+          phone: (c.phone as string) || '',
+          role: (c.role_id as string) || '',
+          pass: mapStatusToPass(c.status as string),
+          aiMatch: mapScoreToMatch((c.score as number) || (c.ai_score as number) || 0),
+          aiScore: (c.score as number) || (c.ai_score as number) || 0,
+          hasVideo: false,
+          hasAiInterview: false,
+          verified: false,
+          receivedAt: ((c.created_at as string) || '').split('T')[0] || new Date().toISOString().split('T')[0],
+          lastUpdated: ((c.updated_at as string) || (c.created_at as string) || '').split('T')[0] || new Date().toISOString().split('T')[0],
+          aiRecommendation: (c.ai_recommendation as string) || '',
+          aiReasoning: (c.ai_reasoning as string) || '',
+          strengths: (c.strengths as string[]) || [],
+          weaknesses: (c.missing as string[]) || [],
+          screeningResult: (c.screening_result as Record<string, unknown>) || null
+        }));
+        setCandidates(mappedCandidates);
+        console.log('[DEMO] Loaded', mappedCandidates.length, 'candidates');
       } catch (err) {
         console.error('Demo data load error:', err);
+        setCandidates([]);
       }
       setDemoLoading(false);
     }
@@ -405,7 +445,13 @@ export default function EmployerDashboard() {
             hasAiInterview: false,
             verified: false,
             receivedAt: c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-            lastUpdated: c.updated_at?.split('T')[0] || c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0]
+            lastUpdated: c.updated_at?.split('T')[0] || c.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+            // AI Analysis fields
+            aiRecommendation: c.ai_recommendation || '',
+            aiReasoning: c.ai_reasoning || '',
+            strengths: c.strengths || [],
+            weaknesses: c.missing || [],
+            screeningResult: c.screening_result || null
           }));
           setCandidates(mappedCandidates);
         }
@@ -445,7 +491,10 @@ export default function EmployerDashboard() {
   };
 
   const filteredCandidates = candidates.filter(c => {
-    if (c.role !== roles.find(r => r.id === selectedRole)?.title) return false;
+    // Role filter: compare by ID or by title (for sample data compatibility)
+    // Always apply role filter, even in demo mode
+    const selectedRoleTitle = roles.find(r => r.id === selectedRole)?.title;
+    if (c.role !== selectedRole && c.role !== selectedRoleTitle) return false;
     // Apply nav-based filter for candidate views
     if (['inbox', 'screening', 'interviews', 'verification'].includes(activeNav)) {
       const navPass = navToPassFilter[activeNav];
@@ -466,7 +515,17 @@ export default function EmployerDashboard() {
     setSelectedCandidates(newSelected);
   };
 
-  const bulkAction = (action: 'shortlist' | 'reject' | 'interview' | 'pool') => {
+  const bulkAction = async (action: 'shortlist' | 'reject' | 'interview' | 'pool' | 'delete') => {
+    if (action === 'delete') {
+      // Delete from database and state
+      const idsToDelete = Array.from(selectedCandidates);
+      for (const id of idsToDelete) {
+        await supabase.from('candidates').delete().eq('id', id);
+      }
+      setCandidates(prev => prev.filter(c => !selectedCandidates.has(c.id)));
+      setSelectedCandidates(new Set());
+      return;
+    }
     setCandidates(prev => prev.map(c => {
       if (!selectedCandidates.has(c.id)) return c;
       if (action === 'shortlist') return { ...c, pass: 2 as HiringPass };
@@ -570,13 +629,15 @@ export default function EmployerDashboard() {
     { id: 'settings', label: 'Settings', icon: Icons.settings },
   ];
 
-  // Stats for current role
+  // Stats for current role - calculate from actual candidates
   const currentRole = roles.find(r => r.id === selectedRole);
+  const today = new Date().toISOString().split('T')[0];
+  const roleCandidates = candidates.filter(c => c.role === selectedRole || c.role === currentRole?.title);
   const stats = {
-    total: currentRole?.candidateCount || 0,
-    newToday: currentRole?.newToday || 0,
-    shortlisted: candidates.filter(c => c.role === currentRole?.title && c.pass >= 2).length,
-    pending: candidates.filter(c => c.role === currentRole?.title && c.pass < 2).length,
+    total: roleCandidates.length,
+    newToday: roleCandidates.filter(c => c.receivedAt === today).length,
+    shortlisted: roleCandidates.filter(c => c.pass >= 2).length,
+    pending: roleCandidates.filter(c => c.pass < 2).length,
   };
 
   return (
@@ -659,26 +720,44 @@ export default function EmployerDashboard() {
 
         {/* Role selector */}
         <div style={{ padding: '16px 16px 8px' }}>
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              backgroundColor: '#ffffff',
-              cursor: 'pointer'
-            }}
-          >
-            {roles.map(role => (
-              <option key={role.id} value={role.id}>
-                {role.title}
-              </option>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              style={{
+                flex: 1,
+                padding: '10px 12px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 600,
+                backgroundColor: '#ffffff',
+                cursor: 'pointer'
+              }}
+            >
+              {roles.map(role => (
+                <option key={role.id} value={role.id}>
+                  {role.title}
+                </option>
             ))}
-          </select>
+            </select>
+            <button
+              onClick={() => setShowRoleDetail(true)}
+              style={{
+                padding: '10px 12px',
+                backgroundColor: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#4F46E5',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              View
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -1132,6 +1211,9 @@ export default function EmployerDashboard() {
               <button onClick={() => bulkAction('pool')} style={{ padding: '6px 12px', backgroundColor: '#7c3aed', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                 Add to Pool
               </button>
+              <button onClick={() => bulkAction('delete')} style={{ padding: '6px 12px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+                Delete
+              </button>
             </div>
           </div>
         )}
@@ -1414,6 +1496,97 @@ export default function EmployerDashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* AI Analysis Report */}
+              {(viewingCandidate.aiRecommendation || viewingCandidate.aiReasoning || (viewingCandidate.strengths && viewingCandidate.strengths.length > 0)) && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {Icons.star} AI Screening Report
+                  </h3>
+
+                  {/* Recommendation Badge */}
+                  {viewingCandidate.aiRecommendation && (
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 16px',
+                      backgroundColor: viewingCandidate.aiRecommendation === 'SHORTLIST' ? '#dcfce7' :
+                                      viewingCandidate.aiRecommendation === 'CONSIDER' ? '#fef3c7' : '#fee2e2',
+                      color: viewingCandidate.aiRecommendation === 'SHORTLIST' ? '#166534' :
+                             viewingCandidate.aiRecommendation === 'CONSIDER' ? '#92400e' : '#991b1b',
+                      borderRadius: '8px',
+                      marginBottom: '16px',
+                      fontSize: '14px',
+                      fontWeight: 600
+                    }}>
+                      AI Recommendation: {viewingCandidate.aiRecommendation}
+                    </div>
+                  )}
+
+                  {/* Fit Assessment */}
+                  {viewingCandidate.aiReasoning && (
+                    <div style={{
+                      padding: '16px',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '10px',
+                      marginBottom: '16px',
+                      borderLeft: '4px solid #4F46E5'
+                    }}>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '8px', fontWeight: 600 }}>Fit Assessment</div>
+                      <div style={{ fontSize: '14px', color: '#334155', lineHeight: '1.6' }}>
+                        {viewingCandidate.aiReasoning}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Strengths */}
+                  {viewingCandidate.strengths && viewingCandidate.strengths.length > 0 && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <div style={{ fontSize: '13px', color: '#059669', fontWeight: 600, marginBottom: '8px' }}>
+                        Strengths (with evidence)
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {viewingCandidate.strengths.map((s, i) => (
+                          <div key={i} style={{
+                            padding: '10px 14px',
+                            backgroundColor: '#ecfdf5',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            color: '#065f46',
+                            borderLeft: '3px solid #10b981'
+                          }}>
+                            {s}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Weaknesses/Gaps */}
+                  {viewingCandidate.weaknesses && viewingCandidate.weaknesses.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '13px', color: '#dc2626', fontWeight: 600, marginBottom: '8px' }}>
+                        Areas of Concern
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {viewingCandidate.weaknesses.map((w, i) => (
+                          <div key={i} style={{
+                            padding: '10px 14px',
+                            backgroundColor: '#fef2f2',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            color: '#991b1b',
+                            borderLeft: '3px solid #ef4444'
+                          }}>
+                            {w}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Verification Status (if any ordered) */}
               {viewingCandidate.verification && Object.values(viewingCandidate.verification).some(v => v && v !== 'not_ordered') && (
@@ -2184,6 +2357,165 @@ export default function EmployerDashboard() {
             <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', marginTop: '16px' }}>
               Your credentials are encrypted and stored securely. We only read emails with CV attachments.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* View Role Detail Modal */}
+      {showRoleDetail && currentRole && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            zIndex: 100
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowRoleDetail(false); }}
+        >
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: 0, textTransform: 'capitalize' }}>
+                  {currentRole.title}
+                </h2>
+                <div style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
+                  Role Requirements & AI Matching Criteria
+                </div>
+              </div>
+              <button onClick={() => setShowRoleDetail(false)} style={{ backgroundColor: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#64748b' }}>×</button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px' }}>
+              {/* Basic Info */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Location</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>{currentRole.location || 'Not specified'}</div>
+                </div>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Seniority</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>{currentRole.seniority || 'Not specified'}</div>
+                </div>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Employment Type</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>{currentRole.employmentType || 'Full-time'}</div>
+                </div>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Work Arrangement</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>{currentRole.workArrangement || 'Onsite'}</div>
+                </div>
+              </div>
+
+              {/* Experience & Salary */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ padding: '16px', backgroundColor: '#eff6ff', borderRadius: '10px', borderLeft: '4px solid #4F46E5' }}>
+                  <div style={{ fontSize: '12px', color: '#4F46E5', marginBottom: '4px', fontWeight: 600 }}>Experience Required</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                    {currentRole.minExperience || 0} - {currentRole.maxExperience || 10} years
+                  </div>
+                </div>
+                <div style={{ padding: '16px', backgroundColor: '#f0fdf4', borderRadius: '10px', borderLeft: '4px solid #10b981' }}>
+                  <div style={{ fontSize: '12px', color: '#10b981', marginBottom: '4px', fontWeight: 600 }}>Salary Range</div>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                    R{(currentRole.salaryMin || 0).toLocaleString()} - R{(currentRole.salaryMax || 0).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Required Skills */}
+              {currentRole.requiredSkills && currentRole.requiredSkills.length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>Required Skills</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {currentRole.requiredSkills.map((skill, i) => (
+                      <span key={i} style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#ede9fe',
+                        color: '#7c3aed',
+                        borderRadius: '16px',
+                        fontSize: '13px',
+                        fontWeight: 500
+                      }}>
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Guidance - Strong Fit */}
+              {currentRole.strongFit && (
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#059669', marginBottom: '8px' }}>What Makes a Strong Fit</div>
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#ecfdf5',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    color: '#065f46',
+                    lineHeight: '1.6',
+                    borderLeft: '4px solid #10b981'
+                  }}>
+                    {currentRole.strongFit}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Guidance - Disqualifiers */}
+              {currentRole.disqualifiers && (
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#dc2626', marginBottom: '8px' }}>Disqualifiers</div>
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#fef2f2',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    color: '#991b1b',
+                    lineHeight: '1.6',
+                    borderLeft: '4px solid #ef4444'
+                  }}>
+                    {currentRole.disqualifiers}
+                  </div>
+                </div>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowRoleDetail(false)}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  backgroundColor: '#4F46E5',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
