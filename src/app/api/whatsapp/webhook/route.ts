@@ -168,6 +168,20 @@ async function getFreeScansUsed(phoneNumber: string): Promise<number> {
 // ============================================================================
 // WHATSAPP MEDIA: Download document from WhatsApp
 // ============================================================================
+// Transform Facebook CDN URL to 360dialog proxy URL
+function transformMediaUrl(originalUrl: string): string {
+  if (!originalUrl) return originalUrl;
+  if (originalUrl.includes('waba-v2.360dialog.io')) return originalUrl;
+
+  // 360dialog returns URLs pointing to Facebook's CDN
+  if (originalUrl.includes('lookaside.fbsbx.com')) {
+    return originalUrl
+      .replace('https://lookaside.fbsbx.com', 'https://waba-v2.360dialog.io')
+      .replace(/\\/g, '');
+  }
+  return originalUrl;
+}
+
 async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
   const apiKey = process.env.WHATSAPP_API_KEY || process.env.WHATSAPP_360_API_KEY || process.env.DIALOG_360_API_KEY;
   if (!apiKey) {
@@ -179,8 +193,7 @@ async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
     // Wait for media to propagate (not immediately available after webhook)
     await new Promise(r => setTimeout(r, 2000));
 
-    // Step 1: Get media URL
-    // 360dialog v2 API: GET /{mediaId} (no /media/ prefix)
+    // Step 1: Get media info (URL + mime type)
     console.log(`[HireInbox WA] Fetching media info: ${mediaId.slice(0, 20)}...`);
     const urlResponse = await fetch(`https://waba-v2.360dialog.io/${mediaId}`, {
       headers: { 'D360-API-KEY': apiKey }
@@ -193,15 +206,19 @@ async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
     }
 
     const mediaInfo = await urlResponse.json();
-    console.log('[HireInbox WA] Media info:', mediaInfo.mime_type, mediaInfo.url?.slice(0, 50));
+    console.log('[HireInbox WA] Media info received:', mediaInfo.mime_type);
 
     if (!mediaInfo.url) {
       console.error('[HireInbox WA] No URL in media response');
       return null;
     }
 
-    // Step 2: Download the actual file
-    const fileResponse = await fetch(mediaInfo.url, {
+    // Step 2: Transform URL (Facebook CDN → 360dialog proxy)
+    const downloadUrl = transformMediaUrl(mediaInfo.url);
+    console.log('[HireInbox WA] Download URL:', downloadUrl.slice(0, 60) + '...');
+
+    // Step 3: Download the actual file
+    const fileResponse = await fetch(downloadUrl, {
       headers: { 'D360-API-KEY': apiKey }
     });
 
