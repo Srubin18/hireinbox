@@ -515,7 +515,7 @@ async function handleRecruiterMessage(sender: string, text: string): Promise<voi
 
     const shortPrompt = text.length > 100 ? text.slice(0, 100) + '...' : text;
     await sendWhatsAppMessage(sender,
-      `🔍 Searching for:\n_"${shortPrompt}"_\n\n30-60 seconds...`
+      `🔍 Searching for:\n_"${shortPrompt}"_\n\n1-3 minutes...`
     );
 
     try {
@@ -752,7 +752,7 @@ async function handleDocument(sender: string, document: any): Promise<void> {
 
     const shortPrompt = jobSpecText.length > 100 ? jobSpecText.slice(0, 100) + '...' : jobSpecText;
     await sendWhatsAppMessage(sender,
-      `🔍 *Searching for candidates matching:*\n_"${shortPrompt}"_\n\n30-60 seconds...`
+      `🔍 *Searching for candidates matching:*\n_"${shortPrompt}"_\n\n1-3 minutes...`
     );
 
     try {
