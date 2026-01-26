@@ -469,14 +469,28 @@ function buildRoleContext(role: Record<string, unknown>): string {
     if (context.industry) sections.push(`INDUSTRY: ${context.industry}`);
   }
 
+  // Location and work arrangement are PREFERENCES, not hard requirements
+  // (unless employer explicitly marks location_required=true)
   const facts = role.facts as Record<string, unknown> | undefined;
+  const locationRequired = facts?.location_required === true;
+
+  // Add location context BEFORE hard requirements (as preference, not knockout)
+  if (facts?.location || facts?.work_type) {
+    sections.push('\nROLE LOCATION (preference, not knockout unless explicitly required):');
+    if (facts.location) sections.push(`- Preferred location: ${facts.location}`);
+    if (facts.work_type) sections.push(`- Work arrangement: ${facts.work_type}`);
+    if (!locationRequired) {
+      sections.push('- NOTE: Location mismatch should result in CONSIDER with relocation discussion, NOT automatic rejection');
+    }
+  }
+
   if (facts && Object.keys(facts).length > 0) {
-    sections.push('\nHARD REQUIREMENTS:');
+    sections.push('\nHARD REQUIREMENTS (knockouts):');
     if (facts.min_experience_years !== undefined) sections.push(`- Minimum ${facts.min_experience_years} years experience`);
     if (Array.isArray(facts.required_skills) && facts.required_skills.length > 0) sections.push(`- Required skills: ${facts.required_skills.join(', ')}`);
     if (Array.isArray(facts.qualifications) && facts.qualifications.length > 0) sections.push(`- Qualifications: ${facts.qualifications.join(', ')}`);
-    if (facts.location) sections.push(`- Location: ${facts.location}`);
-    if (facts.work_type) sections.push(`- Work type: ${facts.work_type}`);
+    // Only include location as hard requirement if explicitly marked
+    if (locationRequired && facts.location) sections.push(`- REQUIRED Location: ${facts.location}`);
     if (facts.must_have) sections.push(`- Must have: ${facts.must_have}`);
   }
 
@@ -494,7 +508,10 @@ function buildRoleContext(role: Record<string, unknown>): string {
     sections.push('\nREQUIREMENTS:');
     if (criteria.min_experience_years !== undefined) sections.push(`- Minimum ${criteria.min_experience_years} years experience`);
     if (Array.isArray(criteria.required_skills) && criteria.required_skills.length > 0) sections.push(`- Required skills: ${criteria.required_skills.join(', ')}`);
-    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) sections.push(`- Location: ${criteria.locations.join(' or ')}`);
+    // Location from criteria is also a preference unless marked required
+    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) {
+      sections.push(`- Preferred location: ${criteria.locations.join(' or ')}`);
+    }
   }
 
   return sections.join('\n');
