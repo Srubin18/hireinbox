@@ -452,8 +452,8 @@ function isWordDoc(attachment: { contentType?: string; filename?: string }): boo
 function mapRecommendationToStatus(rec: string): string {
   switch ((rec || '').toUpperCase()) {
     case 'SHORTLIST': return 'shortlist';
-    case 'CONSIDER': return 'talent_pool';
-    case 'REJECT': return 'reject';
+    case 'CONSIDER': return 'screened';
+    case 'REJECT': return 'screened';
     default: return 'screened';
   }
 }
@@ -503,47 +503,47 @@ function buildRoleContext(role: Record<string, unknown>): string {
 async function extractPDFText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
   console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes)`);
 
-  // Always use pdf-parse - it works on Vercel and doesn't require external API
+  // Use pdf-parse - simple and reliable on Vercel
   try {
     const pdfParseModule = await import('pdf-parse');
     const pdfParse = pdfParseModule.default || pdfParseModule;
     const data = await pdfParse(buffer);
-    console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
-    return data.text || '';
-  } catch (e) {
-    console.error(`[${traceId}][PDF] pdf-parse ERROR:`, e);
+    const text = data.text || '';
+    console.log(`[${traceId}][PDF] Extracted ${text.length} chars from ${data.numpages || 1} pages`);
 
-    // Fallback to ConvertAPI if pdf-parse fails and API key exists
-    if (process.env.CONVERTAPI_SECRET) {
-      try {
-        console.log(`[${traceId}][PDF] Trying ConvertAPI fallback...`);
-        const base64PDF = buffer.toString('base64');
-        const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            Parameters: [
-              { Name: 'File', FileValue: { Name: filename, Data: base64PDF } },
-              { Name: 'StoreFile', Value: true }
-            ]
-          }),
-        });
-        if (response.ok) {
-          const result = await response.json();
-          if (result.Files?.[0]?.Url) {
-            const textResponse = await fetch(result.Files[0].Url);
-            const pdfText = await textResponse.text();
-            console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
-            return pdfText;
-          }
-        }
-      } catch (convertErr) {
-        console.error(`[${traceId}][PDF] ConvertAPI fallback ERROR:`, convertErr);
-      }
+    if (text.length > 100) {
+      console.log(`[${traceId}][PDF] First 200 chars: ${text.substring(0, 200).replace(/\n/g, ' ')}...`);
+      return text;
+    }
+  } catch (e) {
+    console.error(`[${traceId}][PDF] pdf-parse failed:`, e instanceof Error ? e.message : e);
+  }
+
+  // Fallback: try pdfjs-dist
+  try {
+    console.log(`[${traceId}][PDF] Trying pdfjs-dist fallback...`);
+    const pdfjsLib = await import('pdfjs-dist');
+    const uint8Array = new Uint8Array(buffer);
+    const loadingTask = pdfjsLib.getDocument({ data: uint8Array, useSystemFonts: true });
+    const pdf = await loadingTask.promise;
+    const pageTexts: string[] = [];
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map((item) => ('str' in item ? item.str : '')).join(' ');
+      pageTexts.push(pageText);
     }
 
-    return '';
+    const fullText = pageTexts.join('\n\n').trim();
+    console.log(`[${traceId}][PDF] pdfjs-dist extracted ${fullText.length} chars`);
+    if (fullText.length > 100) return fullText;
+  } catch (e2) {
+    console.error(`[${traceId}][PDF] pdfjs-dist failed:`, e2 instanceof Error ? e2.message : e2);
   }
+
+  console.error(`[${traceId}][PDF] All extraction methods failed for ${filename}`);
+  return '';
 }
 
 async function extractWordText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
@@ -801,14 +801,35 @@ export async function POST(request: Request) {
     candidates: [] as string[], errors: [] as string[]
   };
 
+  // Helper: Match email subject to a role title
+  function matchRoleFromSubject(subject: string, roles: Array<{ id: string; title: string }>): typeof roles[0] | null {
+    const subjectLower = subject.toLowerCase();
+    for (const role of roles) {
+      const titleLower = role.title.toLowerCase();
+      // Check if role title appears in subject (e.g., "Portfolio Manager" in "Applying for Portfolio Manager")
+      if (subjectLower.includes(titleLower)) {
+        return role;
+      }
+      // Also check individual words for partial matches (e.g., "portfolio" matches "Portfolio Manager")
+      const titleWords = titleLower.split(/\s+/).filter(w => w.length > 3);
+      for (const word of titleWords) {
+        if (subjectLower.includes(word)) {
+          return role;
+        }
+      }
+    }
+    return null;
+  }
+
   try {
-    const { data: roles } = await supabase.from('roles').select('*').eq('status', 'active').limit(1);
-    const activeRole = roles?.[0];
-    if (!activeRole) {
-      if (IS_DEV) console.log(`[${traceId}] No active role found`);
+    // Fetch ALL active roles for subject-line matching
+    const { data: roles } = await supabase.from('roles').select('*').eq('status', 'active');
+    if (!roles?.length) {
+      if (IS_DEV) console.log(`[${traceId}] No active roles found`);
       return Errors.validation('No active role found', 'Please create and activate a role before fetching emails').toResponse();
     }
-    if (IS_DEV) console.log(`[${traceId}] Role: ${activeRole.title}`);
+    const defaultRole = roles[0]; // Fallback if no subject match
+    if (IS_DEV) console.log(`[${traceId}] Found ${roles.length} active roles: ${roles.map(r => r.title).join(', ')}`);
 
     const connection = await Imap.connect({
       imap: {
@@ -856,9 +877,20 @@ export async function POST(request: Request) {
         const subject = parsed.subject || '(no subject)';
         const textBody = parsed.text || '';
 
-        // DEV: Log mafadi emails for debugging
-        if (IS_DEV && (fromEmail.includes('mafadi') || subject.toLowerCase().includes('lerato'))) {
-          console.log(`[${traceId}] FOUND MAFADI/LERATO EMAIL: "${subject}" from ${fromEmail}`);
+        // Match subject line to role (or use default)
+        const matchedRole = matchRoleFromSubject(subject, roles) || defaultRole;
+        if (IS_DEV) {
+          if (matchRoleFromSubject(subject, roles)) {
+            console.log(`[${traceId}] Subject "${subject}" matched to role: ${matchedRole.title}`);
+          } else {
+            console.log(`[${traceId}] No role match in subject, using default: ${matchedRole.title}`);
+          }
+        }
+
+        // DEV: Log specific emails for debugging
+        if (IS_DEV && (fromEmail.includes('mafadi') || subject.toLowerCase().includes('lerato') || subject.toLowerCase().includes('megando') || fromEmail.includes('megando'))) {
+          console.log(`[${traceId}] DEBUG TARGET EMAIL: "${subject}" from ${fromEmail}`);
+          console.log(`[${traceId}] Attachments: ${parsed.attachments?.length || 0}`);
         }
 
         if (fromEmail === process.env.GMAIL_USER?.toLowerCase()) continue;
@@ -882,7 +914,7 @@ export async function POST(request: Request) {
 
         const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
         const { data: existing } = await supabase.from('candidates').select('id, status')
-          .eq('email', fromEmail).eq('role_id', activeRole.id).gte('created_at', oneDayAgo).limit(1);
+          .eq('email', fromEmail).eq('role_id', matchedRole.id).gte('created_at', oneDayAgo).limit(1);
         if (existing?.length && existing[0].status !== 'unprocessed') {
           results.skippedDuplicates++;
           if (IS_DEV) console.log(`[${traceId}] SKIPPED DUPLICATE: ${fromEmail} (already processed as ${existing[0].status})`);
@@ -897,12 +929,34 @@ export async function POST(request: Request) {
         const attachmentInfo: string[] = [];
 
         if (parsed.attachments?.length) {
+          console.log(`[${traceId}] Found ${parsed.attachments.length} attachments`);
           for (const att of parsed.attachments) {
             const filename = att.filename || 'unknown';
-            attachmentInfo.push(`${filename} (${att.content?.length || 0} bytes)`);
+            const contentType = typeof att.content;
+            const contentLen = att.content?.length || 0;
+            const isBuffer = Buffer.isBuffer(att.content);
+            attachmentInfo.push(`${filename} (${contentLen} bytes, type=${contentType}, isBuffer=${isBuffer})`);
+            console.log(`[${traceId}] Attachment: ${filename} | contentType=${att.contentType} | size=${contentLen} | jsType=${contentType} | isBuffer=${isBuffer}`);
 
             if (isPDF(att)) {
-              const text = await extractPDFText(att.content, traceId, filename);
+              // Ensure we have a proper Buffer
+              let pdfBuffer: Buffer;
+              if (Buffer.isBuffer(att.content)) {
+                pdfBuffer = att.content;
+              } else if (att.content instanceof Uint8Array) {
+                pdfBuffer = Buffer.from(att.content);
+              } else if (typeof att.content === 'string') {
+                // Might be base64 encoded
+                pdfBuffer = Buffer.from(att.content, 'base64');
+                console.log(`[${traceId}] Converted base64 string to buffer: ${pdfBuffer.length} bytes`);
+              } else {
+                console.error(`[${traceId}] Unknown attachment content type: ${contentType}`);
+                results.failedParseCount++;
+                results.errors.push(`PDF unknown type: ${filename}`);
+                continue;
+              }
+
+              const text = await extractPDFText(pdfBuffer, traceId, filename);
               if (text.length > 10) { cvText += text + '\n'; results.parsedCount++; }
               else { results.failedParseCount++; results.errors.push(`PDF empty: ${filename}`); }
             } else if (isWordDoc(att)) {
@@ -916,7 +970,7 @@ export async function POST(request: Request) {
         if (cvText.length < 50) {
           if (IS_DEV) console.log(`[${traceId}] CV too short (${cvText.length} chars), storing as unprocessed`);
           const { error: unprocessedErr } = await supabase.from('candidates').insert({
-            company_id: activeRole.company_id, role_id: activeRole.id,
+            company_id: matchedRole.company_id, role_id: matchedRole.id,
             name: subject, email: fromEmail,
             cv_text: `[PARSE FAILED] ${attachmentInfo.join(', ') || 'no attachments'}`,
             status: 'unprocessed', ai_score: 0, score: 0, strengths: [], missing: ['CV parsing failed']
@@ -929,7 +983,7 @@ export async function POST(request: Request) {
           continue;
         }
 
-        const analysis = await screenCV(cvText, activeRole, traceId);
+        const analysis = await screenCV(cvText, matchedRole, traceId);
         if (!analysis) {
           results.errors.push(`AI screening failed: ${fromEmail}`);
           if (IS_DEV) console.log(`[${traceId}] AI screening failed for ${fromEmail}`);
@@ -939,7 +993,7 @@ export async function POST(request: Request) {
         if (IS_DEV) console.log(`[${traceId}] AI result: ${analysis.candidate_name} - Score:${analysis.overall_score} - ${analysis.recommendation} - Exception:${analysis.exception_applied || false}`);
 
         if (!analysis.exception_applied && String(analysis.recommendation).toUpperCase() === 'REJECT') {
-          const layer4 = detectServerSideException(analysis, activeRole, traceId);
+          const layer4 = detectServerSideException(analysis, matchedRole, traceId);
           if (layer4.shouldUpgrade) {
             if (IS_DEV) console.log(`[${traceId}][LAYER4] UPGRADING to CONSIDER: ${layer4.reason}`);
             analysis.recommendation = 'CONSIDER';
@@ -962,8 +1016,8 @@ export async function POST(request: Request) {
           .map(w => `${w.label}: "${w.evidence}"`);
 
         const { error: insertErr } = await supabase.from('candidates').insert({
-          company_id: activeRole.company_id,
-          role_id: activeRole.id,
+          company_id: matchedRole.company_id,
+          role_id: matchedRole.id,
           name: candidateName,
           email: String(analysis.candidate_email || fromEmail),
           phone: analysis.candidate_phone ? String(analysis.candidate_phone) : null,
@@ -987,13 +1041,24 @@ export async function POST(request: Request) {
           results.storedCount++;
           results.candidates.push(`${candidateName} (${analysis.overall_score})`);
 
+          // IMPORTANT: Only send acknowledgment emails if explicitly enabled on the role
+          // Default is OFF to prevent sending emails during testing/demo
+          const autoAckEnabled = (matchedRole.auto_ack_enabled === true);
           const candidateEmail = String(analysis.candidate_email || fromEmail);
-          if (candidateEmail && candidateEmail.includes('@')) {
+
+          // SAFETY: Don't auto-email if this looks like a forwarded CV
+          // (sender email doesn't match candidate email = probably forwarded by HR/recruiter)
+          const isForwarded = candidateEmail.toLowerCase() !== fromEmail.toLowerCase();
+          if (isForwarded && IS_DEV) {
+            console.log(`[${traceId}] CV appears to be forwarded (from: ${fromEmail}, candidate: ${candidateEmail}) - skipping auto-ack`);
+          }
+
+          if (autoAckEnabled && !isForwarded && candidateEmail && candidateEmail.includes('@')) {
             try {
               const ackResult = await sendAcknowledgmentEmail(
                 candidateEmail,
                 candidateName,
-                activeRole.title,
+                matchedRole.title,
                 'Mafadi Group'
               );
               if (ackResult.success) {
@@ -1004,9 +1069,11 @@ export async function POST(request: Request) {
             } catch (ackErr) {
               console.error(`[${traceId}] Auto-acknowledgment error:`, ackErr);
             }
+          } else if (IS_DEV) {
+            console.log(`[${traceId}] Auto-acknowledgment DISABLED (auto_ack_enabled: ${autoAckEnabled})`);
           }
 
-          const autoConfig = activeRole.auto_schedule_config as {
+          const autoConfig = matchedRole.auto_schedule_config as {
             enabled?: boolean;
             min_score_to_schedule?: number;
             send_invite_email?: boolean;
@@ -1022,7 +1089,7 @@ export async function POST(request: Request) {
                   .from('candidates')
                   .select('id')
                   .eq('email', candidateEmail)
-                  .eq('role_id', activeRole.id)
+                  .eq('role_id', matchedRole.id)
                   .order('created_at', { ascending: false })
                   .limit(1)
                   .single();
@@ -1032,7 +1099,7 @@ export async function POST(request: Request) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      role_id: activeRole.id,
+                      role_id: matchedRole.id,
                       candidate_ids: [insertedCandidate.id],
                     }),
                   });
