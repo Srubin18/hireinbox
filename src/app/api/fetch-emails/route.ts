@@ -1125,11 +1125,14 @@ export async function POST(request: Request) {
           // Extract from risk_register
           weaknesses = (analysis.risk_register as Array<{risk: string; severity: string; evidence: string}>)
             .map(r => `${r.risk}: "${r.evidence}"`);
-        } else if (analysis.knockouts?.checks && Array.isArray(analysis.knockouts.checks)) {
+        } else if (analysis.knockouts && typeof analysis.knockouts === 'object') {
           // Extract failed knockouts as weaknesses
-          weaknesses = (analysis.knockouts.checks as Array<{requirement: string; status: string; evidence: string}>)
-            .filter(k => k.status === 'FAIL')
-            .map(k => `${k.requirement}: "${k.evidence}"`);
+          const knockouts = analysis.knockouts as { checks?: Array<{requirement: string; status: string; evidence: string}> };
+          if (knockouts.checks && Array.isArray(knockouts.checks)) {
+            weaknesses = knockouts.checks
+              .filter(k => k.status === 'FAIL')
+              .map(k => `${k.requirement}: "${k.evidence}"`);
+          }
         }
 
         // Build fit assessment from multiple sources
