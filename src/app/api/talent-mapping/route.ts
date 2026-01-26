@@ -777,21 +777,27 @@ export async function POST(request: Request) {
       messages: [
         {
           role: 'system',
-          content: `You are an expert South African executive search consultant. Parse the search criteria.
+          content: `You are an expert South African executive search consultant. Parse the search criteria COMPREHENSIVELY.
 
 ${SA_CONTEXT_PROMPT}
 
+IMPORTANT: Extract ALL details from the spec. Do not simplify or summarize - capture every requirement, preference, and exclusion.
+
 Return valid JSON only:
 {
-  "role": "job title",
+  "role": "exact job title",
   "location": "city in South Africa",
-  "experience": "years required",
-  "industry": "sector (use: finance, tech, mining, retail, fmcg, healthcare, telecoms, manufacturing, consulting)",
+  "experience": "years required (e.g., '10+ years')",
+  "industry": "sector (use: finance, tech, mining, retail, fmcg, healthcare, telecoms, manufacturing, consulting, property)",
   "seniority": "junior|mid|senior|executive",
-  "mustHaves": ["requirements"],
-  "niceToHaves": ["nice-to-haves"],
+  "salaryRange": { "min": null, "max": null, "currency": "ZAR" },
+  "mustHaves": ["EVERY key requirement - be comprehensive, include technical skills, qualifications, experience types"],
+  "niceToHaves": ["ALL nice-to-have backgrounds and preferences"],
   "targetCompanies": ["specific companies to search if mentioned"],
-  "excludeCompanies": ["companies to exclude if mentioned"]
+  "excludeCompanies": ["companies to exclude if mentioned"],
+  "excludeProfiles": ["types of candidates to exclude (e.g., 'career bankers with no hands-on scaling')"],
+  "personalityTraits": ["any personality/style requirements (e.g., 'growth-oriented', 'entrepreneurial')"],
+  "specificExpertise": ["detailed technical/functional expertise required"]
 }`
         },
         { role: 'user', content: prompt }
@@ -924,16 +930,26 @@ Return valid JSON only. No markdown.`
         },
         {
           role: 'user',
-          content: `Search: "${prompt}"
+          content: `=== FULL SEARCH SPECIFICATION (Match candidates against ALL of this) ===
+${prompt}
+=== END FULL SPEC ===
 
-Parsed criteria:
+Parsed criteria summary:
 - Role: ${parsed.role || 'Unknown'}
 - Location: ${parsed.location || 'South Africa'}
 - Experience: ${parsed.experience || 'Not specified'}
 - Industry: ${parsed.industry || 'Not specified'}
 - Seniority: ${parsed.seniority || 'Not specified'}
-- Must-haves: ${(parsed.mustHaves || []).join(', ')}
+- Salary Range: ${parsed.salaryRange ? `R${parsed.salaryRange.min || '?'} - R${parsed.salaryRange.max || '?'}` : 'Not specified'}
+- Must-haves: ${(parsed.mustHaves || []).join('; ')}
+- Nice-to-haves: ${(parsed.niceToHaves || []).join('; ') || 'None'}
+- Specific expertise required: ${(parsed.specificExpertise || []).join('; ') || 'None'}
+- Personality/style: ${(parsed.personalityTraits || []).join('; ') || 'None'}
 - Target companies: ${(parsed.targetCompanies || []).join(', ') || 'None specified'}
+- EXCLUDE companies: ${(parsed.excludeCompanies || []).join(', ') || 'None'}
+- EXCLUDE profiles: ${(parsed.excludeProfiles || []).join('; ') || 'None'}
+
+CRITICAL: Score each candidate against the FULL SPEC above, not just the summary. If the spec says to EXCLUDE certain profiles, do NOT include them.
 
 Intelligence quality: ${highValueCount} high-value sources, ${linkedInCount} LinkedIn sources
 ${webContext}
