@@ -25,6 +25,7 @@ type NavSection = 'inbox' | 'screening' | 'interviews' | 'verification' | 'pipel
 
 interface VerificationStatus {
   idCheck?: 'pending' | 'in_progress' | 'passed' | 'failed' | 'not_ordered';
+  criminalCheck?: 'pending' | 'in_progress' | 'clear' | 'flagged' | 'not_ordered';
   creditCheck?: 'pending' | 'in_progress' | 'good' | 'fair' | 'poor' | 'not_ordered';
   referenceCheck?: 'pending' | 'in_progress' | 'positive' | 'mixed' | 'negative' | 'not_ordered';
 }
@@ -198,9 +199,10 @@ const Icons = {
 // Verification pricing
 const VERIFICATION_PRICING = {
   idCheck: { label: 'ID Verification', price: 150, icon: 'id', description: 'Verify South African ID against Home Affairs' },
+  criminalCheck: { label: 'Criminal Check', price: 250, icon: 'shield', description: 'SAPS criminal record check' },
   creditCheck: { label: 'Credit Check', price: 200, icon: 'creditCard', description: 'TransUnion credit report summary' },
   referenceCheck: { label: 'Reference Check', price: 200, icon: 'userCheck', description: 'AI-assisted reference verification (2 refs)' },
-  fullPackage: { label: 'Complete Package', price: 500, icon: 'package', description: 'All 3 checks - Save R50' }
+  fullPackage: { label: 'Complete Package', price: 700, icon: 'package', description: 'All 4 checks - Save R100' }
 };
 
 const Logo = () => (

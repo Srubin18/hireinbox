@@ -520,24 +520,54 @@ function buildRoleContext(role: Record<string, unknown>): string {
 async function extractPDFText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
   console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes)`);
 
+  // Validate buffer
+  if (!buffer || buffer.length < 100) {
+    console.error(`[${traceId}][PDF] Buffer too small: ${buffer?.length || 0} bytes`);
+    return '';
+  }
+
+  // Check PDF magic bytes (%PDF-)
+  const header = buffer.slice(0, 8).toString('utf8');
+  if (!header.includes('%PDF')) {
+    console.error(`[${traceId}][PDF] Invalid PDF header: ${header.replace(/[^\x20-\x7E]/g, '?')}`);
+    return '';
+  }
+  console.log(`[${traceId}][PDF] Valid PDF header detected`);
+
   // METHOD 1: unpdf - DESIGNED FOR SERVERLESS (Vercel)
+  // https://github.com/unjs/unpdf - Built specifically for edge/serverless
   try {
     console.log(`[${traceId}][PDF] Trying unpdf (serverless-optimized)...`);
-    const { extractText } = await import('unpdf');
-    const uint8Array = new Uint8Array(buffer);
-    const result = await extractText(uint8Array, { mergePages: true });
-    const text = typeof result.text === 'string' ? result.text : (result.text || []).join('\n\n');
-    console.log(`[${traceId}][PDF] unpdf extracted ${text.length} chars`);
+    const { extractText, getDocumentProxy } = await import('unpdf');
+
+    // Convert to Uint8Array (the format unpdf expects)
+    const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    console.log(`[${traceId}][PDF] Converted to Uint8Array: ${data.length} bytes, first bytes: ${Array.from(data.slice(0, 5)).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
+
+    // First get document proxy to verify PDF loads
+    const pdf = await getDocumentProxy(data);
+    console.log(`[${traceId}][PDF] unpdf loaded PDF: ${pdf.numPages} pages`);
+
+    // Extract text with mergePages
+    const result = await extractText(pdf, { mergePages: true });
+    const text = result.text || '';
+    console.log(`[${traceId}][PDF] unpdf extracted ${text.length} chars from ${result.totalPages} pages`);
 
     if (text.length > 100) {
       console.log(`[${traceId}][PDF] SUCCESS with unpdf. First 200 chars: ${text.substring(0, 200).replace(/\n/g, ' ')}`);
       return text;
+    } else {
+      console.log(`[${traceId}][PDF] unpdf returned too little text (${text.length}), trying fallback`);
     }
   } catch (e1) {
-    console.error(`[${traceId}][PDF] unpdf failed:`, e1 instanceof Error ? e1.message : e1);
+    const errMsg = e1 instanceof Error ? `${e1.name}: ${e1.message}` : String(e1);
+    console.error(`[${traceId}][PDF] unpdf failed:`, errMsg);
+    if (e1 instanceof Error && e1.stack) {
+      console.error(`[${traceId}][PDF] Stack:`, e1.stack.split('\n').slice(0, 3).join('\n'));
+    }
   }
 
-  // METHOD 2: pdf-parse - fallback (works locally, issues on Vercel)
+  // METHOD 2: pdf-parse - fallback (has known Vercel issues but sometimes works)
   try {
     console.log(`[${traceId}][PDF] Trying pdf-parse fallback...`);
     const pdfParseModule = await import('pdf-parse');
@@ -551,10 +581,48 @@ async function extractPDFText(buffer: Buffer, traceId: string, filename: string)
       return text;
     }
   } catch (e2) {
-    console.error(`[${traceId}][PDF] pdf-parse failed:`, e2 instanceof Error ? e2.message : e2);
+    const errMsg = e2 instanceof Error ? `${e2.name}: ${e2.message}` : String(e2);
+    console.error(`[${traceId}][PDF] pdf-parse failed:`, errMsg);
   }
 
-  console.error(`[${traceId}][PDF] ALL METHODS FAILED for ${filename}`);
+  // METHOD 3: pdf2json - another fallback option
+  try {
+    console.log(`[${traceId}][PDF] Trying pdf2json fallback...`);
+    const PDFParser = (await import('pdf2json')).default;
+
+    const text = await new Promise<string>((resolve, reject) => {
+      // PDFParser(context, needRawText) - pass 1 for needRawText to get raw text
+      const pdfParser = new PDFParser(null, 1);
+
+      pdfParser.on('pdfParser_dataError', (errData: { parserError: Error }) => {
+        reject(errData.parserError);
+      });
+
+      pdfParser.on('pdfParser_dataReady', () => {
+        try {
+          const rawText = pdfParser.getRawTextContent();
+          resolve(rawText);
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+      // Parse the buffer directly
+      pdfParser.parseBuffer(buffer);
+    });
+
+    console.log(`[${traceId}][PDF] pdf2json extracted ${text.length} chars`);
+
+    if (text.length > 100) {
+      console.log(`[${traceId}][PDF] SUCCESS with pdf2json`);
+      return text;
+    }
+  } catch (e3) {
+    const errMsg = e3 instanceof Error ? `${e3.name}: ${e3.message}` : String(e3);
+    console.error(`[${traceId}][PDF] pdf2json failed:`, errMsg);
+  }
+
+  console.error(`[${traceId}][PDF] ALL 3 METHODS FAILED for ${filename}`);
   return '';
 }
 
