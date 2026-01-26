@@ -149,7 +149,7 @@ export default function HomePage() {
             {[
               { name: 'AI CV Screening', price: 'R1,750', period: '/role', cvs: 'Unlimited CVs', emoji: '📋', popular: true },
               { name: '+ AI Interview', price: 'R1,250', period: '/role', cvs: 'Avatar interviews', emoji: '🎥' },
-              { name: '+ Verification', price: 'R800', period: '/role', cvs: 'ID, criminal, refs', emoji: '✓' }
+              { name: '+ Verification', price: 'R800', period: '/role', cvs: 'ID, credit, refs', emoji: '✓' }
             ].map((plan, i) => (
               <div
                 key={i}

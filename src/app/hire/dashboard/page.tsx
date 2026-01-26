@@ -397,12 +397,15 @@ export default function EmployerDashboard() {
   }, [isDemo]);
 
   // Helper to map status to pass
+  // ALL new candidates appear in Inbox (pass 0) first
+  // They move to AI Screening (pass 1) only when manually reviewed/moved
   function mapStatusToPass(status: string): HiringPass {
     switch (status) {
       case 'shortlist': return 2;
       case 'talent_pool': return 7;
-      case 'screened': return 1;
-      case 'reject': return 1;
+      case 'reviewed': return 1;  // Manually reviewed goes to AI Screening
+      case 'screened': return 0;  // AI screened but not reviewed → stays in Inbox
+      case 'reject': return 0;    // Rejected stays in Inbox until moved
       case 'unprocessed': return 0;
       default: return 0;
     }

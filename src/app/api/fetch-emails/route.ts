@@ -1089,11 +1089,59 @@ export async function POST(request: Request) {
         const candidateName = String(analysis.candidate_name || subject);
         const status = mapRecommendationToStatus(String(analysis.recommendation));
 
+        // ROBUST EXTRACTION: Check multiple possible locations for strengths/weaknesses
         const summary = analysis.summary as Record<string, unknown> | undefined;
-        const strengths = (summary?.strengths as Array<{label: string; evidence: string}> || [])
-          .map(s => `${s.label}: "${s.evidence}"`);
-        const weaknesses = (summary?.weaknesses as Array<{label: string; evidence: string}> || [])
-          .map(w => `${w.label}: "${w.evidence}"`);
+        const ranking = analysis.ranking as Record<string, unknown> | undefined;
+
+        // Try multiple locations for strengths
+        let strengths: string[] = [];
+        if (summary?.strengths && Array.isArray(summary.strengths)) {
+          strengths = (summary.strengths as Array<{label: string; evidence: string}>)
+            .map(s => `${s.label}: "${s.evidence}"`);
+        } else if (analysis.strengths && Array.isArray(analysis.strengths)) {
+          // V3 model may put strengths at top level
+          strengths = (analysis.strengths as Array<{label?: string; skill?: string; evidence?: string; claim?: string}>)
+            .map(s => `${s.label || s.skill || s.claim || 'Strength'}: "${s.evidence || 'Evidence found'}"`);
+        } else if (analysis.evidence_highlights && Array.isArray(analysis.evidence_highlights)) {
+          // Extract from evidence_highlights
+          strengths = (analysis.evidence_highlights as Array<{claim: string; evidence: string}>)
+            .slice(0, 5).map(e => `${e.claim}: "${e.evidence}"`);
+        } else if (ranking?.factors && Array.isArray(ranking.factors)) {
+          // Extract high-scoring factors as strengths
+          strengths = (ranking.factors as Array<{factor: string; score: number; evidence: string; notes?: string}>)
+            .filter(f => f.score >= 60)
+            .map(f => `${f.factor}: "${f.evidence || f.notes || 'Good'}"`);
+        }
+
+        // Try multiple locations for weaknesses
+        let weaknesses: string[] = [];
+        if (summary?.weaknesses && Array.isArray(summary.weaknesses)) {
+          weaknesses = (summary.weaknesses as Array<{label: string; evidence: string}>)
+            .map(w => `${w.label}: "${w.evidence}"`);
+        } else if (analysis.weaknesses && Array.isArray(analysis.weaknesses)) {
+          weaknesses = (analysis.weaknesses as Array<{label?: string; area?: string; evidence?: string; concern?: string}>)
+            .map(w => `${w.label || w.area || w.concern || 'Concern'}: "${w.evidence || 'Not mentioned'}"`);
+        } else if (analysis.risk_register && Array.isArray(analysis.risk_register)) {
+          // Extract from risk_register
+          weaknesses = (analysis.risk_register as Array<{risk: string; severity: string; evidence: string}>)
+            .map(r => `${r.risk}: "${r.evidence}"`);
+        } else if (analysis.knockouts?.checks && Array.isArray(analysis.knockouts.checks)) {
+          // Extract failed knockouts as weaknesses
+          weaknesses = (analysis.knockouts.checks as Array<{requirement: string; status: string; evidence: string}>)
+            .filter(k => k.status === 'FAIL')
+            .map(k => `${k.requirement}: "${k.evidence}"`);
+        }
+
+        // Build fit assessment from multiple sources
+        let fitAssessment = String(analysis.recommendation_reason || '');
+        if (!fitAssessment && summary?.fit_assessment) {
+          fitAssessment = String(summary.fit_assessment);
+        }
+        if (!fitAssessment && analysis.fit_summary) {
+          fitAssessment = String(analysis.fit_summary);
+        }
+
+        if (IS_DEV) console.log(`[${traceId}] Extracted: ${strengths.length} strengths, ${weaknesses.length} weaknesses`);
 
         const { error: insertErr } = await supabase.from('candidates').insert({
           company_id: matchedRole.company_id,
@@ -1104,7 +1152,7 @@ export async function POST(request: Request) {
           cv_text: cvText,
           ai_score: Math.round(Number(analysis.overall_score)),
           ai_recommendation: String(analysis.recommendation),
-          ai_reasoning: String(analysis.recommendation_reason || summary?.fit_assessment || ''),
+          ai_reasoning: fitAssessment,
           screening_result: analysis,
           screened_at: new Date().toISOString(),
           status: status,

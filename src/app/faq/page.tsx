@@ -41,7 +41,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'What verification services do you offer?',
-    answer: 'We offer comprehensive candidate verification including ID verification to confirm identity, criminal record checks through official channels, and reference verification where we contact previous employers on your behalf. All verification results are documented and stored in your dashboard alongside the candidate\'s screening results, giving you a complete picture before making hiring decisions.'
+    answer: 'We offer comprehensive candidate verification including ID verification to confirm identity, credit checks, and reference verification where we contact previous employers on your behalf. All verification results are documented and stored in your dashboard alongside the candidate\'s screening results, giving you a complete picture before making hiring decisions.'
   },
   {
     question: 'Is the CV scan free for job seekers?',
@@ -49,7 +49,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How much does HireInbox cost for employers?',
-    answer: 'We charge per role, not per CV, so you get predictable costs regardless of how many applications you receive. AI CV Screening is R1,750 per role and includes screening for up to 200 CVs. You can add AI Interviews for R1,250 per role, or add Verification services (ID, criminal checks, references) for R800 per role. The complete package with everything included is R3,800 per role.'
+    answer: 'We charge per role, not per CV, so you get predictable costs regardless of how many applications you receive. AI CV Screening is R1,750 per role and includes screening for up to 200 CVs. You can add AI Interviews for R1,250 per role, or add Verification services (ID, credit, references) for R800 per role. The complete package with everything included is R3,800 per role.'
   },
   {
     question: 'Why do you charge per role instead of per CV?',

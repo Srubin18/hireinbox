@@ -90,7 +90,7 @@ export const PRODUCTS: Record<string, Product> = {
   b2b_verification: {
     id: 'b2b_verification',
     name: 'Verification Bundle',
-    description: 'ID check, criminal check, reference verification',
+    description: 'ID check, credit check, reference verification',
     price: B2B_PRICING.VERIFICATION_BUNDLE.price * 100, // R800 in cents
     priceDisplay: B2B_PRICING.VERIFICATION_BUNDLE.priceDisplay,
     type: 'once_off',
