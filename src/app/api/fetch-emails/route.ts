@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import { SA_CONTEXT_PROMPT, SA_RECRUITER_CONTEXT } from '@/lib/sa-context';
 import { sendAcknowledgmentEmail } from '@/lib/email';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { Errors } from '@/lib/api-error';
 
 // V3 BRAIN - Fine-tuned on 6,000 SA recruitment examples
 const HIREINBOX_V3_MODEL = 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ';
@@ -36,19 +38,44 @@ PHASE 1: KNOCKOUTS (Pass/Fail Hard Requirements)
 ------------------------------------------------
 Knockouts are NON-NEGOTIABLE requirements from the role. Candidate MUST pass ALL knockouts to proceed.
 
+CRITICAL: DISTINGUISH BETWEEN DISQUALIFIERS vs STRONG FIT
+=========================================================
+Role specs contain different types of criteria. You MUST treat them differently:
+
+1. DISQUALIFIERS (from role spec) = TRUE KNOCKOUTS
+   - These are explicitly labeled as "Disqualifiers" in the role
+   - Example: "no driver's license", "no experience", "no degree"
+   - If candidate hits a disqualifier → REJECT
+
+2. REQUIRED SKILLS = SOFT KNOCKOUTS
+   - Skills listed as "Required" in the role
+   - Candidate should have MOST (70%+) of required skills
+   - Missing 1-2 required skills = lower score, NOT automatic rejection
+
+3. STRONG FIT / NICE-TO-HAVE = RANKING FACTORS ONLY
+   - Criteria listed under "What Makes a Strong Fit" or similar
+   - These are BONUS points, NOT rejection criteria
+   - Missing "Strong Fit" criteria should NEVER cause rejection
+   - They affect RANKING score, not knockout status
+
+EXAMPLE:
+- Role says "Disqualifiers: no experience" → Knockout (fail = reject)
+- Role says "Required: Excel, Financial Reporting" → Need most, not all
+- Role says "Strong Fit: trust accounts experience" → Bonus points only, NOT knockout
+
 Common knockouts (check against role requirements):
-- Minimum years of experience
+- Explicit DISQUALIFIERS from role spec (highest priority)
+- Minimum years of experience (if stated as required)
 - Required qualifications (e.g., CA(SA), degree, certification)
-- Required skills (specific technical or functional skills)
-- Location/work authorization
-- Industry experience (if specified as required)
+- Location/work authorization (if specified as required)
 
 For EACH knockout:
 - PASS: Clear evidence the requirement is met
 - FAIL: Requirement not met or not mentioned
 - EXCEPTION: Near-miss with exceptional trajectory (see Rule 7)
 
-If ANY knockout = FAIL (without exception): recommendation = REJECT
+If ANY true knockout (DISQUALIFIER) = FAIL (without exception): recommendation = REJECT
+If missing STRONG FIT criteria: Lower score but DO NOT REJECT
 
 PHASE 2: RANKING FACTORS (Differentiators for Survivors)
 ---------------------------------------------------------
@@ -450,8 +477,8 @@ function isWordDoc(attachment: { contentType?: string; filename?: string }): boo
 function mapRecommendationToStatus(rec: string): string {
   switch ((rec || '').toUpperCase()) {
     case 'SHORTLIST': return 'shortlist';
-    case 'CONSIDER': return 'talent_pool';
-    case 'REJECT': return 'reject';
+    case 'CONSIDER': return 'screened';
+    case 'REJECT': return 'screened';
     default: return 'screened';
   }
 }
@@ -467,14 +494,28 @@ function buildRoleContext(role: Record<string, unknown>): string {
     if (context.industry) sections.push(`INDUSTRY: ${context.industry}`);
   }
 
+  // Location and work arrangement are PREFERENCES, not hard requirements
+  // (unless employer explicitly marks location_required=true)
   const facts = role.facts as Record<string, unknown> | undefined;
+  const locationRequired = facts?.location_required === true;
+
+  // Add location context BEFORE hard requirements (as preference, not knockout)
+  if (facts?.location || facts?.work_type) {
+    sections.push('\nROLE LOCATION (preference, not knockout unless explicitly required):');
+    if (facts.location) sections.push(`- Preferred location: ${facts.location}`);
+    if (facts.work_type) sections.push(`- Work arrangement: ${facts.work_type}`);
+    if (!locationRequired) {
+      sections.push('- NOTE: Location mismatch should result in CONSIDER with relocation discussion, NOT automatic rejection');
+    }
+  }
+
   if (facts && Object.keys(facts).length > 0) {
-    sections.push('\nHARD REQUIREMENTS:');
+    sections.push('\nHARD REQUIREMENTS (knockouts):');
     if (facts.min_experience_years !== undefined) sections.push(`- Minimum ${facts.min_experience_years} years experience`);
     if (Array.isArray(facts.required_skills) && facts.required_skills.length > 0) sections.push(`- Required skills: ${facts.required_skills.join(', ')}`);
     if (Array.isArray(facts.qualifications) && facts.qualifications.length > 0) sections.push(`- Qualifications: ${facts.qualifications.join(', ')}`);
-    if (facts.location) sections.push(`- Location: ${facts.location}`);
-    if (facts.work_type) sections.push(`- Work type: ${facts.work_type}`);
+    // Only include location as hard requirement if explicitly marked
+    if (locationRequired && facts.location) sections.push(`- REQUIRED Location: ${facts.location}`);
     if (facts.must_have) sections.push(`- Must have: ${facts.must_have}`);
   }
 
@@ -492,65 +533,121 @@ function buildRoleContext(role: Record<string, unknown>): string {
     sections.push('\nREQUIREMENTS:');
     if (criteria.min_experience_years !== undefined) sections.push(`- Minimum ${criteria.min_experience_years} years experience`);
     if (Array.isArray(criteria.required_skills) && criteria.required_skills.length > 0) sections.push(`- Required skills: ${criteria.required_skills.join(', ')}`);
-    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) sections.push(`- Location: ${criteria.locations.join(' or ')}`);
+    // Location from criteria is also a preference unless marked required
+    if (Array.isArray(criteria.locations) && criteria.locations.length > 0) {
+      sections.push(`- Preferred location: ${criteria.locations.join(' or ')}`);
+    }
   }
 
   return sections.join('\n');
 }
 
 async function extractPDFText(buffer: Buffer, traceId: string, filename: string): Promise<string> {
-  const maxRetries = 2;
+  console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes)`);
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      if (IS_DEV) console.log(`[${traceId}][PDF] Processing: ${filename} (${buffer.length} bytes) - Attempt ${attempt}`);
-      const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+  // Validate buffer
+  if (!buffer || buffer.length < 100) {
+    console.error(`[${traceId}][PDF] Buffer too small: ${buffer?.length || 0} bytes`);
+    return '';
+  }
 
-      if (isProduction && process.env.CONVERTAPI_SECRET) {
-        const base64PDF = buffer.toString('base64');
-        const response = await fetch(`https://v2.convertapi.com/convert/pdf/to/txt?Secret=${process.env.CONVERTAPI_SECRET}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            Parameters: [
-              { Name: 'File', FileValue: { Name: filename, Data: base64PDF } },
-              { Name: 'StoreFile', Value: true }
-            ]
-          }),
-        });
-        if (!response.ok) {
-          console.error(`[${traceId}][PDF] ConvertAPI error: ${response.status}`);
-          if (attempt < maxRetries) continue;
-          return '';
-        }
-        const result = await response.json();
-        if (!result.Files?.[0]?.Url) {
-          console.error(`[${traceId}][PDF] No URL in response`);
-          if (attempt < maxRetries) continue;
-          return '';
-        }
-        const textResponse = await fetch(result.Files[0].Url);
-        const pdfText = await textResponse.text();
+  // Check PDF magic bytes (%PDF-)
+  const header = buffer.slice(0, 8).toString('utf8');
+  if (!header.includes('%PDF')) {
+    console.error(`[${traceId}][PDF] Invalid PDF header: ${header.replace(/[^\x20-\x7E]/g, '?')}`);
+    return '';
+  }
+  console.log(`[${traceId}][PDF] Valid PDF header detected`);
 
-        if (pdfText.length < 100) {
-          console.error(`[${traceId}][PDF] ConvertAPI returned too little text: ${pdfText.length} chars`);
-          if (attempt < maxRetries) continue;
-        }
+  // METHOD 1: unpdf - DESIGNED FOR SERVERLESS (Vercel)
+  // https://github.com/unjs/unpdf - Built specifically for edge/serverless
+  try {
+    console.log(`[${traceId}][PDF] Trying unpdf (serverless-optimized)...`);
+    const { extractText, getDocumentProxy } = await import('unpdf');
 
-        if (IS_DEV) console.log(`[${traceId}][PDF] Extracted ${pdfText.length} chars via ConvertAPI`);
-        return pdfText;
-      } else {
-        const pdfParseModule = await import('pdf-parse');
-        const pdfParse = pdfParseModule.default || pdfParseModule;
-        const data = await pdfParse(buffer);
-        if (IS_DEV) console.log(`[${traceId}][PDF] Extracted ${data.text?.length || 0} chars via pdf-parse`);
-        return data.text || '';
-      }
-    } catch (e) {
-      console.error(`[${traceId}][PDF] ERROR on attempt ${attempt}:`, e);
-      if (attempt === maxRetries) return '';
+    // Convert to Uint8Array (the format unpdf expects)
+    const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    console.log(`[${traceId}][PDF] Converted to Uint8Array: ${data.length} bytes, first bytes: ${Array.from(data.slice(0, 5)).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
+
+    // First get document proxy to verify PDF loads
+    const pdf = await getDocumentProxy(data);
+    console.log(`[${traceId}][PDF] unpdf loaded PDF: ${pdf.numPages} pages`);
+
+    // Extract text with mergePages
+    const result = await extractText(pdf, { mergePages: true });
+    const text = result.text || '';
+    console.log(`[${traceId}][PDF] unpdf extracted ${text.length} chars from ${result.totalPages} pages`);
+
+    if (text.length > 100) {
+      console.log(`[${traceId}][PDF] SUCCESS with unpdf. First 200 chars: ${text.substring(0, 200).replace(/\n/g, ' ')}`);
+      return text;
+    } else {
+      console.log(`[${traceId}][PDF] unpdf returned too little text (${text.length}), trying fallback`);
+    }
+  } catch (e1) {
+    const errMsg = e1 instanceof Error ? `${e1.name}: ${e1.message}` : String(e1);
+    console.error(`[${traceId}][PDF] unpdf failed:`, errMsg);
+    if (e1 instanceof Error && e1.stack) {
+      console.error(`[${traceId}][PDF] Stack:`, e1.stack.split('\n').slice(0, 3).join('\n'));
     }
   }
+
+  // METHOD 2: pdf-parse - fallback (has known Vercel issues but sometimes works)
+  try {
+    console.log(`[${traceId}][PDF] Trying pdf-parse fallback...`);
+    const pdfParseModule = await import('pdf-parse');
+    const pdfParse = pdfParseModule.default || pdfParseModule;
+    const data = await pdfParse(buffer);
+    const text = data.text || '';
+    console.log(`[${traceId}][PDF] pdf-parse extracted ${text.length} chars`);
+
+    if (text.length > 100) {
+      console.log(`[${traceId}][PDF] SUCCESS with pdf-parse`);
+      return text;
+    }
+  } catch (e2) {
+    const errMsg = e2 instanceof Error ? `${e2.name}: ${e2.message}` : String(e2);
+    console.error(`[${traceId}][PDF] pdf-parse failed:`, errMsg);
+  }
+
+  // METHOD 3: pdf2json - another fallback option
+  try {
+    console.log(`[${traceId}][PDF] Trying pdf2json fallback...`);
+    const PDFParser = (await import('pdf2json')).default;
+
+    const text = await new Promise<string>((resolve, reject) => {
+      // PDFParser(context, needRawText) - pass 1 for needRawText to get raw text
+      const pdfParser = new PDFParser(null, 1);
+
+      pdfParser.on('pdfParser_dataError', (errData: { parserError: Error }) => {
+        reject(errData.parserError);
+      });
+
+      pdfParser.on('pdfParser_dataReady', () => {
+        try {
+          const rawText = pdfParser.getRawTextContent();
+          resolve(rawText);
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+      // Parse the buffer directly
+      pdfParser.parseBuffer(buffer);
+    });
+
+    console.log(`[${traceId}][PDF] pdf2json extracted ${text.length} chars`);
+
+    if (text.length > 100) {
+      console.log(`[${traceId}][PDF] SUCCESS with pdf2json`);
+      return text;
+    }
+  } catch (e3) {
+    const errMsg = e3 instanceof Error ? `${e3.name}: ${e3.message}` : String(e3);
+    console.error(`[${traceId}][PDF] pdf2json failed:`, errMsg);
+  }
+
+  console.error(`[${traceId}][PDF] ALL 3 METHODS FAILED for ${filename}`);
   return '';
 }
 
@@ -764,7 +861,7 @@ Respond with valid JSON only.`;
 
       if (!validateAnalysis(parsed)) {
         console.error(`[${traceId}][AI] Validation failed - attempting retry`);
-        if (IS_DEV) console.log(`[${traceId}][AI] Failed response:`, JSON.stringify({ overall_score: parsed.overall_score, recommendation: parsed.recommendation, exception_applied: parsed.exception_applied, risk_register: parsed.risk_register?.length || 'missing' }));
+        if (IS_DEV) console.log(`[${traceId}][AI] Failed response:`, JSON.stringify({ overall_score: parsed.overall_score, recommendation: parsed.recommendation, exception_applied: parsed.exception_applied, risk_register: Array.isArray(parsed.risk_register) ? parsed.risk_register.length : 'missing' }));
         if (attempt === 1) {
           messages.push({ role: 'assistant', content: text });
           messages.push({ role: 'user', content: 'Invalid. Rules: 1) Valid JSON. 2) If exception_applied=true, recommendation MUST be CONSIDER. 3) SHORTLIST>=80, CONSIDER>=60. Try again.' });
@@ -795,7 +892,11 @@ Respond with valid JSON only.`;
   return null;
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  // Apply rate limiting (standard: 100 requests per minute)
+  const rateLimited = withRateLimit(request, 'fetch-emails', RATE_LIMITS.standard);
+  if (rateLimited) return rateLimited;
+
   const traceId = Date.now().toString(36);
   if (IS_DEV) console.log(`[${traceId}] === FETCH START (V3 BRAIN) ===`);
 
@@ -805,14 +906,35 @@ export async function POST() {
     candidates: [] as string[], errors: [] as string[]
   };
 
-  try {
-    const { data: roles } = await supabase.from('roles').select('*').eq('status', 'active').limit(1);
-    const activeRole = roles?.[0];
-    if (!activeRole) {
-      if (IS_DEV) console.log(`[${traceId}] No active role found`);
-      return NextResponse.json({ error: 'No active role found', ...results }, { status: 400 });
+  // Helper: Match email subject to a role title
+  function matchRoleFromSubject(subject: string, roles: Array<{ id: string; title: string }>): typeof roles[0] | null {
+    const subjectLower = subject.toLowerCase();
+    for (const role of roles) {
+      const titleLower = role.title.toLowerCase();
+      // Check if role title appears in subject (e.g., "Portfolio Manager" in "Applying for Portfolio Manager")
+      if (subjectLower.includes(titleLower)) {
+        return role;
+      }
+      // Also check individual words for partial matches (e.g., "portfolio" matches "Portfolio Manager")
+      const titleWords = titleLower.split(/\s+/).filter(w => w.length > 3);
+      for (const word of titleWords) {
+        if (subjectLower.includes(word)) {
+          return role;
+        }
+      }
     }
-    if (IS_DEV) console.log(`[${traceId}] Role: ${activeRole.title}`);
+    return null;
+  }
+
+  try {
+    // Fetch ALL active roles for subject-line matching
+    const { data: roles } = await supabase.from('roles').select('*').eq('status', 'active');
+    if (!roles?.length) {
+      if (IS_DEV) console.log(`[${traceId}] No active roles found`);
+      return Errors.validation('No active role found', 'Please create and activate a role before fetching emails').toResponse();
+    }
+    const defaultRole = roles[0]; // Fallback if no subject match
+    if (IS_DEV) console.log(`[${traceId}] Found ${roles.length} active roles: ${roles.map(r => r.title).join(', ')}`);
 
     const connection = await Imap.connect({
       imap: {
@@ -860,9 +982,20 @@ export async function POST() {
         const subject = parsed.subject || '(no subject)';
         const textBody = parsed.text || '';
 
-        // DEV: Log mafadi emails for debugging
-        if (IS_DEV && (fromEmail.includes('mafadi') || subject.toLowerCase().includes('lerato'))) {
-          console.log(`[${traceId}] FOUND MAFADI/LERATO EMAIL: "${subject}" from ${fromEmail}`);
+        // Match subject line to role (or use default)
+        const matchedRole = matchRoleFromSubject(subject, roles) || defaultRole;
+        if (IS_DEV) {
+          if (matchRoleFromSubject(subject, roles)) {
+            console.log(`[${traceId}] Subject "${subject}" matched to role: ${matchedRole.title}`);
+          } else {
+            console.log(`[${traceId}] No role match in subject, using default: ${matchedRole.title}`);
+          }
+        }
+
+        // DEV: Log specific emails for debugging
+        if (IS_DEV && (fromEmail.includes('mafadi') || subject.toLowerCase().includes('lerato') || subject.toLowerCase().includes('megando') || fromEmail.includes('megando'))) {
+          console.log(`[${traceId}] DEBUG TARGET EMAIL: "${subject}" from ${fromEmail}`);
+          console.log(`[${traceId}] Attachments: ${parsed.attachments?.length || 0}`);
         }
 
         if (fromEmail === process.env.GMAIL_USER?.toLowerCase()) continue;
@@ -886,7 +1019,7 @@ export async function POST() {
 
         const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
         const { data: existing } = await supabase.from('candidates').select('id, status')
-          .eq('email', fromEmail).eq('role_id', activeRole.id).gte('created_at', oneDayAgo).limit(1);
+          .eq('email', fromEmail).eq('role_id', matchedRole.id).gte('created_at', oneDayAgo).limit(1);
         if (existing?.length && existing[0].status !== 'unprocessed') {
           results.skippedDuplicates++;
           if (IS_DEV) console.log(`[${traceId}] SKIPPED DUPLICATE: ${fromEmail} (already processed as ${existing[0].status})`);
@@ -901,12 +1034,34 @@ export async function POST() {
         const attachmentInfo: string[] = [];
 
         if (parsed.attachments?.length) {
+          console.log(`[${traceId}] Found ${parsed.attachments.length} attachments`);
           for (const att of parsed.attachments) {
             const filename = att.filename || 'unknown';
-            attachmentInfo.push(`${filename} (${att.content?.length || 0} bytes)`);
+            const contentType = typeof att.content;
+            const contentLen = att.content?.length || 0;
+            const isBuffer = Buffer.isBuffer(att.content);
+            attachmentInfo.push(`${filename} (${contentLen} bytes, type=${contentType}, isBuffer=${isBuffer})`);
+            console.log(`[${traceId}] Attachment: ${filename} | contentType=${att.contentType} | size=${contentLen} | jsType=${contentType} | isBuffer=${isBuffer}`);
 
             if (isPDF(att)) {
-              const text = await extractPDFText(att.content, traceId, filename);
+              // Ensure we have a proper Buffer
+              let pdfBuffer: Buffer;
+              if (Buffer.isBuffer(att.content)) {
+                pdfBuffer = att.content;
+              } else if (att.content instanceof Uint8Array) {
+                pdfBuffer = Buffer.from(att.content);
+              } else if (typeof att.content === 'string') {
+                // Might be base64 encoded
+                pdfBuffer = Buffer.from(att.content, 'base64');
+                console.log(`[${traceId}] Converted base64 string to buffer: ${pdfBuffer.length} bytes`);
+              } else {
+                console.error(`[${traceId}] Unknown attachment content type: ${contentType}`);
+                results.failedParseCount++;
+                results.errors.push(`PDF unknown type: ${filename}`);
+                continue;
+              }
+
+              const text = await extractPDFText(pdfBuffer, traceId, filename);
               if (text.length > 10) { cvText += text + '\n'; results.parsedCount++; }
               else { results.failedParseCount++; results.errors.push(`PDF empty: ${filename}`); }
             } else if (isWordDoc(att)) {
@@ -920,7 +1075,7 @@ export async function POST() {
         if (cvText.length < 50) {
           if (IS_DEV) console.log(`[${traceId}] CV too short (${cvText.length} chars), storing as unprocessed`);
           const { error: unprocessedErr } = await supabase.from('candidates').insert({
-            company_id: activeRole.company_id, role_id: activeRole.id,
+            company_id: matchedRole.company_id, role_id: matchedRole.id,
             name: subject, email: fromEmail,
             cv_text: `[PARSE FAILED] ${attachmentInfo.join(', ') || 'no attachments'}`,
             status: 'unprocessed', ai_score: 0, score: 0, strengths: [], missing: ['CV parsing failed']
@@ -933,7 +1088,7 @@ export async function POST() {
           continue;
         }
 
-        const analysis = await screenCV(cvText, activeRole, traceId);
+        const analysis = await screenCV(cvText, matchedRole, traceId);
         if (!analysis) {
           results.errors.push(`AI screening failed: ${fromEmail}`);
           if (IS_DEV) console.log(`[${traceId}] AI screening failed for ${fromEmail}`);
@@ -943,7 +1098,7 @@ export async function POST() {
         if (IS_DEV) console.log(`[${traceId}] AI result: ${analysis.candidate_name} - Score:${analysis.overall_score} - ${analysis.recommendation} - Exception:${analysis.exception_applied || false}`);
 
         if (!analysis.exception_applied && String(analysis.recommendation).toUpperCase() === 'REJECT') {
-          const layer4 = detectServerSideException(analysis, activeRole, traceId);
+          const layer4 = detectServerSideException(analysis, matchedRole, traceId);
           if (layer4.shouldUpgrade) {
             if (IS_DEV) console.log(`[${traceId}][LAYER4] UPGRADING to CONSIDER: ${layer4.reason}`);
             analysis.recommendation = 'CONSIDER';
@@ -959,22 +1114,82 @@ export async function POST() {
         const candidateName = String(analysis.candidate_name || subject);
         const status = mapRecommendationToStatus(String(analysis.recommendation));
 
+        // ROBUST EXTRACTION: Check multiple possible locations for strengths/weaknesses
         const summary = analysis.summary as Record<string, unknown> | undefined;
-        const strengths = (summary?.strengths as Array<{label: string; evidence: string}> || [])
-          .map(s => `${s.label}: "${s.evidence}"`);
-        const weaknesses = (summary?.weaknesses as Array<{label: string; evidence: string}> || [])
-          .map(w => `${w.label}: "${w.evidence}"`);
+        const ranking = analysis.ranking as Record<string, unknown> | undefined;
+
+        // Try multiple locations for strengths
+        let strengths: string[] = [];
+        if (summary?.strengths && Array.isArray(summary.strengths)) {
+          strengths = (summary.strengths as Array<{label: string; evidence: string}>)
+            .map(s => `${s.label}: "${s.evidence}"`);
+        } else if (analysis.strengths && Array.isArray(analysis.strengths)) {
+          // V3 model may put strengths at top level
+          strengths = (analysis.strengths as Array<{label?: string; skill?: string; evidence?: string; claim?: string}>)
+            .map(s => `${s.label || s.skill || s.claim || 'Strength'}: "${s.evidence || 'Evidence found'}"`);
+        } else if (analysis.evidence_highlights && Array.isArray(analysis.evidence_highlights)) {
+          // Extract from evidence_highlights
+          strengths = (analysis.evidence_highlights as Array<{claim: string; evidence: string}>)
+            .slice(0, 5).map(e => `${e.claim}: "${e.evidence}"`);
+        } else if (ranking?.factors && Array.isArray(ranking.factors)) {
+          // Extract high-scoring factors as strengths
+          strengths = (ranking.factors as Array<{factor: string; score: number; evidence: string; notes?: string}>)
+            .filter(f => f.score >= 60)
+            .map(f => `${f.factor}: "${f.evidence || f.notes || 'Good'}"`);
+        }
+
+        // Try multiple locations for weaknesses
+        let weaknesses: string[] = [];
+        if (summary?.weaknesses && Array.isArray(summary.weaknesses)) {
+          weaknesses = (summary.weaknesses as Array<{label: string; evidence: string}>)
+            .map(w => `${w.label}: "${w.evidence}"`);
+        } else if (analysis.weaknesses && Array.isArray(analysis.weaknesses)) {
+          weaknesses = (analysis.weaknesses as Array<{label?: string; area?: string; evidence?: string; concern?: string}>)
+            .map(w => `${w.label || w.area || w.concern || 'Concern'}: "${w.evidence || 'Not mentioned'}"`);
+        } else if (analysis.risk_register && Array.isArray(analysis.risk_register)) {
+          // Extract from risk_register
+          weaknesses = (analysis.risk_register as Array<{risk: string; severity: string; evidence: string}>)
+            .map(r => `${r.risk}: "${r.evidence}"`);
+        } else if (analysis.knockouts && typeof analysis.knockouts === 'object') {
+          // Extract failed knockouts as weaknesses
+          const knockouts = analysis.knockouts as { checks?: Array<{requirement: string; status: string; evidence: string}> };
+          if (knockouts.checks && Array.isArray(knockouts.checks)) {
+            weaknesses = knockouts.checks
+              .filter(k => k.status === 'FAIL')
+              .map(k => `${k.requirement}: "${k.evidence}"`);
+          }
+        }
+
+        // Build fit assessment from multiple sources
+        let fitAssessment = String(analysis.recommendation_reason || '');
+        if (!fitAssessment && summary?.fit_assessment) {
+          fitAssessment = String(summary.fit_assessment);
+        }
+        if (!fitAssessment && analysis.fit_summary) {
+          fitAssessment = String(analysis.fit_summary);
+        }
+
+        // ALWAYS log extraction results for debugging
+        console.log(`[${traceId}] EXTRACTION DEBUG:`, {
+          hasRanking: !!ranking,
+          hasSummary: !!summary,
+          summaryKeys: summary ? Object.keys(summary) : [],
+          analysisKeys: Object.keys(analysis).slice(0, 15),
+          strengthsFound: strengths.length,
+          weaknessesFound: weaknesses.length,
+          fitAssessmentLength: fitAssessment.length
+        });
 
         const { error: insertErr } = await supabase.from('candidates').insert({
-          company_id: activeRole.company_id,
-          role_id: activeRole.id,
+          company_id: matchedRole.company_id,
+          role_id: matchedRole.id,
           name: candidateName,
           email: String(analysis.candidate_email || fromEmail),
           phone: analysis.candidate_phone ? String(analysis.candidate_phone) : null,
           cv_text: cvText,
           ai_score: Math.round(Number(analysis.overall_score)),
           ai_recommendation: String(analysis.recommendation),
-          ai_reasoning: String(analysis.recommendation_reason || summary?.fit_assessment || ''),
+          ai_reasoning: fitAssessment,
           screening_result: analysis,
           screened_at: new Date().toISOString(),
           status: status,
@@ -991,13 +1206,28 @@ export async function POST() {
           results.storedCount++;
           results.candidates.push(`${candidateName} (${analysis.overall_score})`);
 
+          // IMPORTANT: EMAILS ARE OFF BY DEFAULT
+          // Only sends if role has auto_ack_enabled explicitly set to true
+          // This protects demo mode and testing - no accidental emails to candidates
+          const autoAckEnabled = (matchedRole.auto_ack_enabled === true);
+
+          // LOUD LOG: Make it clear emails are blocked
+          console.log(`[${traceId}] EMAIL STATUS: auto_ack_enabled=${matchedRole.auto_ack_enabled} → ${autoAckEnabled ? 'WILL SEND' : 'BLOCKED (safe)'}`);
           const candidateEmail = String(analysis.candidate_email || fromEmail);
-          if (candidateEmail && candidateEmail.includes('@')) {
+
+          // SAFETY: Don't auto-email if this looks like a forwarded CV
+          // (sender email doesn't match candidate email = probably forwarded by HR/recruiter)
+          const isForwarded = candidateEmail.toLowerCase() !== fromEmail.toLowerCase();
+          if (isForwarded && IS_DEV) {
+            console.log(`[${traceId}] CV appears to be forwarded (from: ${fromEmail}, candidate: ${candidateEmail}) - skipping auto-ack`);
+          }
+
+          if (autoAckEnabled && !isForwarded && candidateEmail && candidateEmail.includes('@')) {
             try {
               const ackResult = await sendAcknowledgmentEmail(
                 candidateEmail,
                 candidateName,
-                activeRole.title,
+                matchedRole.title,
                 'Mafadi Group'
               );
               if (ackResult.success) {
@@ -1008,9 +1238,11 @@ export async function POST() {
             } catch (ackErr) {
               console.error(`[${traceId}] Auto-acknowledgment error:`, ackErr);
             }
+          } else if (IS_DEV) {
+            console.log(`[${traceId}] Auto-acknowledgment DISABLED (auto_ack_enabled: ${autoAckEnabled})`);
           }
 
-          const autoConfig = activeRole.auto_schedule_config as {
+          const autoConfig = matchedRole.auto_schedule_config as {
             enabled?: boolean;
             min_score_to_schedule?: number;
             send_invite_email?: boolean;
@@ -1026,7 +1258,7 @@ export async function POST() {
                   .from('candidates')
                   .select('id')
                   .eq('email', candidateEmail)
-                  .eq('role_id', activeRole.id)
+                  .eq('role_id', matchedRole.id)
                   .order('created_at', { ascending: false })
                   .limit(1)
                   .single();
@@ -1036,7 +1268,7 @@ export async function POST() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      role_id: activeRole.id,
+                      role_id: matchedRole.id,
                       candidate_ids: [insertedCandidate.id],
                     }),
                   });
@@ -1082,11 +1314,12 @@ export async function POST() {
 
   } catch (error) {
     console.error(`[${traceId}] Fatal error:`, error);
-    return NextResponse.json({
-      success: false,
-      processed: 0,
-      ...results,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    // SECURITY: Do not expose internal error details to client
+    const isConnectionError = error instanceof Error &&
+      (error.message.includes('IMAP') || error.message.includes('connection') || error.message.includes('timeout'));
+    const userMessage = isConnectionError
+      ? 'Email server temporarily unavailable. Please try again later.'
+      : 'Failed to process emails. Please try again.';
+    return Errors.internal(userMessage, traceId).toResponse();
   }
 }

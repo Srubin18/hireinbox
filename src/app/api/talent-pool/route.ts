@@ -3,9 +3,16 @@
 
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { Errors, generateTraceId } from '@/lib/api-error';
 
 // GET - Fetch talent pool for a company with advanced filtering
 export async function GET(request: Request) {
+  // Apply rate limiting
+  const rateLimited = withRateLimit(request, 'talent-pool-get', RATE_LIMITS.standard);
+  if (rateLimited) return rateLimited;
+
+  const traceId = generateTraceId();
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get('company_id');
   const category = searchParams.get('category');
@@ -104,8 +111,8 @@ export async function GET(request: Request) {
     const { data, error } = await query.limit(500);
 
     if (error) {
-      console.error('[TalentPool] Fetch error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error(`[${traceId}][TalentPool] Fetch error:`, error);
+      return Errors.database('Failed to fetch talent pool', undefined, traceId).toResponse();
     }
 
     let filteredData = data || [];
@@ -168,13 +175,19 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('[TalentPool] Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch talent pool' }, { status: 500 });
+    console.error(`[${traceId}][TalentPool] Error:`, error);
+    return Errors.internal('Failed to fetch talent pool', traceId).toResponse();
   }
 }
 
 // POST - Add candidate to talent pool (single or bulk)
 export async function POST(request: Request) {
+  // Apply rate limiting
+  const rateLimited = withRateLimit(request, 'talent-pool-post', RATE_LIMITS.standard);
+  if (rateLimited) return rateLimited;
+
+  const traceId = generateTraceId();
+
   try {
     const body = await request.json();
 
@@ -205,10 +218,7 @@ export async function POST(request: Request) {
     } = body;
 
     if (!company_id || !candidate_id) {
-      return NextResponse.json(
-        { error: 'company_id and candidate_id are required' },
-        { status: 400 }
-      );
+      return Errors.validation('company_id and candidate_id are required').toResponse();
     }
 
     const supabase = await createServerSupabaseClient();
@@ -251,11 +261,11 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('[TalentPool] Insert error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error(`[${traceId}][TalentPool] Insert error:`, error);
+      return Errors.database('Failed to add candidate to talent pool', undefined, traceId).toResponse();
     }
 
-    console.log(`[TalentPool] Added candidate ${candidate_id} to pool for company ${company_id}`);
+    console.log(`[${traceId}][TalentPool] Added candidate ${candidate_id} to pool for company ${company_id}`);
 
     return NextResponse.json({
       success: true,
@@ -264,8 +274,8 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('[TalentPool] Error:', error);
-    return NextResponse.json({ error: 'Failed to add to talent pool' }, { status: 500 });
+    console.error(`[${traceId}][TalentPool] Error:`, error);
+    return Errors.internal('Failed to add to talent pool', traceId).toResponse();
   }
 }
 
@@ -387,6 +397,12 @@ async function handleExportCSV(body: { talent_pool_ids?: string[]; folder?: stri
 
 // PATCH - Update talent pool entry (toggle sharing, update notes, tags, folder, etc.)
 export async function PATCH(request: Request) {
+  // Apply rate limiting
+  const rateLimited = withRateLimit(request, 'talent-pool-patch', RATE_LIMITS.standard);
+  if (rateLimited) return rateLimited;
+
+  const traceId = generateTraceId();
+
   try {
     const body = await request.json();
     const { id, ids, action, ...updates } = body;
@@ -463,7 +479,7 @@ export async function PATCH(request: Request) {
     }
 
     if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+      return Errors.validation('id is required').toResponse();
     }
 
     const supabase = await createServerSupabaseClient();
@@ -481,8 +497,8 @@ export async function PATCH(request: Request) {
       .single();
 
     if (error) {
-      console.error('[TalentPool] Update error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error(`[${traceId}][TalentPool] Update error:`, error);
+      return Errors.database('Failed to update talent pool entry', undefined, traceId).toResponse();
     }
 
     return NextResponse.json({
@@ -491,18 +507,23 @@ export async function PATCH(request: Request) {
     });
 
   } catch (error) {
-    console.error('[TalentPool] Error:', error);
-    return NextResponse.json({ error: 'Failed to update talent pool entry' }, { status: 500 });
+    console.error(`[${traceId}][TalentPool] Error:`, error);
+    return Errors.internal('Failed to update talent pool entry', traceId).toResponse();
   }
 }
 
 // DELETE - Remove from talent pool
 export async function DELETE(request: Request) {
+  // Apply rate limiting
+  const rateLimited = withRateLimit(request, 'talent-pool-delete', RATE_LIMITS.standard);
+  if (rateLimited) return rateLimited;
+
+  const traceId = generateTraceId();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
   if (!id) {
-    return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    return Errors.validation('id is required').toResponse();
   }
 
   try {
@@ -514,8 +535,8 @@ export async function DELETE(request: Request) {
       .eq('id', id);
 
     if (error) {
-      console.error('[TalentPool] Delete error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error(`[${traceId}][TalentPool] Delete error:`, error);
+      return Errors.database('Failed to remove from talent pool', undefined, traceId).toResponse();
     }
 
     return NextResponse.json({
@@ -524,7 +545,7 @@ export async function DELETE(request: Request) {
     });
 
   } catch (error) {
-    console.error('[TalentPool] Error:', error);
-    return NextResponse.json({ error: 'Failed to remove from talent pool' }, { status: 500 });
+    console.error(`[${traceId}][TalentPool] Error:`, error);
+    return Errors.internal('Failed to remove from talent pool', traceId).toResponse();
   }
 }

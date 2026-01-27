@@ -49,9 +49,6 @@ reviews:
 chat:
   auto_reply: true
 
-# Review profile
-profile: assertive
-
 # Early access features
 early_access: true
 

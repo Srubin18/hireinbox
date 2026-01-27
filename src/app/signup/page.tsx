@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { isFreeEmailProvider, getFreeEmailWarning } from '@/lib/email-validation';
 
 // ============================================
 // HireInbox Signup Page - World-class design
@@ -23,30 +24,63 @@ const Logo = ({ size = 40 }: { size?: number }) => (
         <span style={{ color: '#0f172a' }}>Hire</span>
         <span style={{ color: '#4F46E5' }}>Inbox</span>
       </span>
-      <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}>Less noise. Better hires.</span>
+      <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 500 }}>AI that shows its working</span>
     </div>
   </div>
 );
 
 function SignupPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp, signInWithGoogle } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<'employer' | 'jobseeker'>('employer');
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [freeEmailWarning, setFreeEmailWarning] = useState(false);
+
+  // Read URL params for context
+  const returnUrl = searchParams.get('return') || '';
+  const typeParam = searchParams.get('type');
+
+  // Auto-set user type based on URL param
+  useEffect(() => {
+    if (typeParam === 'employer') {
+      setUserType('employer');
+    } else if (typeParam === 'candidate' || typeParam === 'jobseeker') {
+      setUserType('jobseeker');
+    }
+  }, [typeParam]);
+
+  // Check for free email provider when email changes (for employers)
+  useEffect(() => {
+    if (userType === 'employer' && email) {
+      setFreeEmailWarning(isFreeEmailProvider(email));
+    } else {
+      setFreeEmailWarning(false);
+    }
+  }, [email, userType]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     // Validation
+    if (!agreeTerms) {
+      setError('You must accept the Terms & Conditions to create an account');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -59,7 +93,10 @@ function SignupPageContent() {
 
     setLoading(true);
 
-    const { error } = await signUp(email, password, { full_name: fullName });
+    const metadata = userType === 'employer'
+      ? { full_name: fullName, company_name: companyName, vat_number: vatNumber, phone: phone, user_type: userType }
+      : { full_name: fullName, phone: phone, user_type: userType };
+    const { error } = await signUp(email, password, metadata);
 
     if (error) {
       setError(error.message);
@@ -153,7 +190,7 @@ function SignupPageContent() {
               Create your account
             </h1>
             <p style={{ fontSize: '1rem', color: '#64748b' }}>
-              Start screening CVs in seconds
+              {userType === 'employer' ? 'Manage your hiring process' : 'Find opportunities that match your skills'}
             </p>
           </div>
 
@@ -203,6 +240,83 @@ function SignupPageContent() {
             >
               I&apos;m job seeking
             </button>
+          </div>
+
+          {/* What You'll Get Section */}
+          <div style={{
+            backgroundColor: '#f8fafc',
+            borderRadius: 12,
+            padding: '16px 20px',
+            marginBottom: 24
+          }}>
+            <h3 style={{
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: '#64748b',
+              marginBottom: 12,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              What you&apos;ll get
+            </h3>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10
+            }}>
+              {userType === 'employer' ? (
+                <>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#10B981" fillOpacity="0.15"/>
+                      <path d="M8 12l2.5 2.5L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>AI CV screening</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#10B981" fillOpacity="0.15"/>
+                      <path d="M8 12l2.5 2.5L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>Candidate ranking</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#10B981" fillOpacity="0.15"/>
+                      <path d="M8 12l2.5 2.5L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>Evidence-based decisions</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#10B981" fillOpacity="0.15"/>
+                      <path d="M8 12l2.5 2.5L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>Free CV analysis</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#10B981" fillOpacity="0.15"/>
+                      <path d="M8 12l2.5 2.5L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>Personalized feedback</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#10B981" fillOpacity="0.15"/>
+                      <path d="M8 12l2.5 2.5L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span style={{ fontSize: '0.875rem', color: '#374151' }}>Job matching</span>
+                  </li>
+                </>
+              )}
+            </ul>
           </div>
 
           {/* Google Sign Up */}
@@ -293,6 +407,61 @@ function SignupPageContent() {
               />
             </div>
 
+            {/* Company Name - Only for employers */}
+            {userType === 'employer' && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+                  Company name
+                </label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Acme Corporation"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    fontSize: '16px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 10,
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#4F46E5'}
+                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+            )}
+
+            {/* VAT Number - Only for employers */}
+            {userType === 'employer' && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+                  VAT number <span style={{ color: '#94a3b8', fontWeight: 400 }}>(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={vatNumber}
+                  onChange={(e) => setVatNumber(e.target.value)}
+                  placeholder="4000123456"
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    fontSize: '16px',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 10,
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#4F46E5'}
+                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+            )}
+
             {/* Email */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: 6 }}>
@@ -303,6 +472,54 @@ function SignupPageContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={userType === 'employer' ? 'you@company.com' : 'you@email.com'}
+                required
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  fontSize: '16px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 10,
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={e => e.target.style.borderColor = '#4F46E5'}
+                onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+              />
+              {/* Free Email Warning for Employers */}
+              {freeEmailWarning && userType === 'employer' && (
+                <div style={{
+                  marginTop: 8,
+                  padding: '10px 12px',
+                  backgroundColor: '#FFFBEB',
+                  border: '1px solid #FCD34D',
+                  borderRadius: 8,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 8
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <span style={{ fontSize: '0.8125rem', color: '#92400E', lineHeight: 1.4 }}>
+                    {getFreeEmailWarning()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Phone Number */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+                Phone number
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="082 123 4567"
                 required
                 style={{
                   width: '100%',
@@ -373,10 +590,47 @@ function SignupPageContent() {
                   )}
                 </button>
               </div>
+              {/* Password strength indicator */}
+              {password && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                    {[...Array(4)].map((_, i) => {
+                      const strength =
+                        (password.length >= 8 ? 1 : 0) +
+                        (/[A-Z]/.test(password) ? 1 : 0) +
+                        (/[0-9]/.test(password) ? 1 : 0) +
+                        (/[^A-Za-z0-9]/.test(password) ? 1 : 0);
+                      const colors = ['#ef4444', '#f59e0b', '#eab308', '#22c55e'];
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            flex: 1,
+                            height: 4,
+                            borderRadius: 2,
+                            backgroundColor: i < strength ? colors[Math.min(strength - 1, 3)] : '#e2e8f0'
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    {(() => {
+                      const strength =
+                        (password.length >= 8 ? 1 : 0) +
+                        (/[A-Z]/.test(password) ? 1 : 0) +
+                        (/[0-9]/.test(password) ? 1 : 0) +
+                        (/[^A-Za-z0-9]/.test(password) ? 1 : 0);
+                      const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+                      return labels[Math.min(strength - 1, 3)] || 'Too short';
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Confirm Password */}
-            <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 20 }}>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: 6 }}>
                 Confirm password
               </label>
@@ -399,6 +653,40 @@ function SignupPageContent() {
                 onFocus={e => e.target.style.borderColor = '#4F46E5'}
                 onBlur={e => e.target.style.borderColor = '#e2e8f0'}
               />
+            </div>
+
+            {/* Terms & Conditions Checkbox */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+                cursor: 'pointer'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  required
+                  style={{
+                    width: 20,
+                    height: 20,
+                    accentColor: '#4F46E5',
+                    marginTop: 2,
+                    flexShrink: 0
+                  }}
+                />
+                <span style={{ fontSize: '0.8125rem', color: '#374151', lineHeight: 1.5 }}>
+                  I agree to the{' '}
+                  <a href="/terms" target="_blank" style={{ color: '#4F46E5', textDecoration: 'underline' }}>
+                    Terms & Conditions
+                  </a>{' '}
+                  and{' '}
+                  <a href="/privacy" target="_blank" style={{ color: '#4F46E5', textDecoration: 'underline' }}>
+                    Privacy Policy
+                  </a>. I understand that my data will be processed in accordance with South African POPIA regulations. *
+                </span>
+              </label>
             </div>
 
             {/* Submit Button */}
@@ -445,60 +733,8 @@ function SignupPageContent() {
             </a>
           </p>
 
-          {/* What you get */}
-          <div style={{
-            marginTop: 32,
-            padding: 20,
-            backgroundColor: '#f8fafc',
-            borderRadius: 12,
-            border: '1px solid #e2e8f0'
-          }}>
-            <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0f172a', marginBottom: 12 }}>
-              {userType === 'employer' ? 'What you get:' : 'Free for job seekers:'}
-            </p>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {userType === 'employer' ? (
-                <>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#64748b', marginBottom: 8 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                    10 free CV screenings
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#64748b', marginBottom: 8 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                    AI-powered scoring with evidence
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#64748b' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                    Works with your email inbox
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#64748b', marginBottom: 8 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                    1 free CV assessment
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#64748b', marginBottom: 8 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                    See how recruiters view your CV
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#64748b' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                    Get actionable improvement tips
-                  </li>
-                </>
-              )}
-            </ul>
-          </div>
-
           {/* Footer */}
           <div style={{ marginTop: 32, textAlign: 'center', fontSize: '0.8125rem', color: '#94a3b8' }}>
-            <p style={{ marginBottom: 8 }}>
-              By signing up, you agree to our{' '}
-              <a href="/terms" style={{ color: '#64748b', textDecoration: 'underline' }}>Terms</a>
-              {' '}and{' '}
-              <a href="/privacy" style={{ color: '#64748b', textDecoration: 'underline' }}>Privacy Policy</a>
-            </p>
             <p>Built in Cape Town, South Africa</p>
           </div>
         </div>

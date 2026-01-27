@@ -276,13 +276,40 @@ Free CV Scan → Show gaps → Upsell Video → "Your CV gets you considered. Yo
 
 ---
 
-## PRICING STRATEGY
+## PRICING STRATEGY (Updated January 2026)
 
-| Product | Free | Paid |
-|---------|------|------|
-| B2C | 1 CV assessment | Video: R29 single / R79 practice pack / R149 full |
-| B2B | - | R299+/month |
-| B2Recruiter | - | R299+/month |
+> **CORE PRINCIPLE:** HireInbox is an AI Hiring Utility, NOT a marketplace.
+> We charge **per role**, NOT per CV, because employers don't control CV volume.
+
+### B2B Per-Role Pricing
+
+| Product | Price | What's Included |
+|---------|-------|-----------------|
+| **AI CV Screening** | R1,750/role | Unlimited CVs, AI ranking, shortlist, ack emails |
+| **AI Interview (Add-On)** | R1,250/role | Avatar interviews, transcripts, psychometric |
+| **Verification (Add-On)** | R800/role | ID check, criminal check, reference verification |
+| **Full Package** | R3,800/role | All of the above |
+
+### B2C Pricing
+
+| Product | Price |
+|---------|-------|
+| CV Scan | FREE (1x) |
+| CV Rewrite | FREE (1x) |
+| Video Analysis | R99-R199 |
+| AI Coaching | R149-R299 |
+| Position Prep | R199 |
+| Video Pitch | R149 |
+
+### Pricing Constants Location
+
+All pricing is centralized in: `/src/lib/pricing.ts`
+
+**Why Per-Role?**
+1. Employers cannot control CV volume
+2. Per-CV pricing punishes popular employers
+3. Fixed per-role cost is predictable and fair
+4. Value: R1,750 for 200 CVs = R8.75/CV effective rate
 
 ---
 
@@ -345,4 +372,56 @@ Feature Description → PRD → Atomic Tasks → Execute → Commit → Ship
 
 ---
 
-*Last updated: 16 January 2026*
+## GUARDRAILS & ETHICS
+
+> **Tone:** "Less noise. More hires."
+
+### Core Principles
+
+| Principle | Enforcement |
+|-----------|-------------|
+| Respectful language | No "rejected", use "not successful" |
+| AI is assistive only | Humans make final decisions |
+| No auto-outreach | Manual approval required |
+| POPIA compliant | Full audit trail, data rights |
+| Support everywhere | Support button on all screens |
+
+### Language Guidelines
+
+**Never use:** rejected, failed, unqualified, bad, poor
+
+**Use instead:** not successful, did not meet criteria, does not match requirements, area for improvement, needs development
+
+### AI Guidelines
+
+**Must do:**
+- Provide evidence for all recommendations
+- Show confidence levels
+- Allow human override
+- Explain reasoning clearly
+
+**Must not:**
+- Make final hiring decisions automatically
+- Send outreach without human approval
+- Scrape private social media
+
+### POPIA Configuration
+
+| Data Type | Retention |
+|-----------|-----------|
+| Candidate data | 365 days |
+| CV files | 365 days |
+| Audit logs | 730 days |
+| Deleted account data | 30 days grace |
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/guardrails.ts` | Core guardrails configuration |
+| `src/lib/candidate-emails.ts` | POPIA-compliant email templates |
+| `src/components/SupportButton.tsx` | Global support button component |
+
+---
+
+### Last updated: 23 January 2026

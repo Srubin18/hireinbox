@@ -141,6 +141,34 @@ RETAIL:
 - Shoprite/Checkers — Largest retailer
 - Mr Price, TFG — Fashion retail
 
+PROPERTY MANAGEMENT / BODY CORPORATE:
+- SA Property.com, iWHM — Major property management companies
+- Trafalgar, Broll, JHI — Large property groups
+- Property Exponents, Watchprop — Sectional title specialists
+
+PROPERTY MANAGEMENT TERMINOLOGY (CRITICAL):
+In South Africa, "Portfolio Manager" in property context means:
+- Managing body corporates (HOA / Homeowners Associations)
+- Sectional title schemes, community schemes, residential estates
+- Collecting levies from owners, managing trustees
+- Building maintenance, security management
+- AGM preparation, compliance with STSMA (Sectional Titles Schemes Management Act)
+
+KEY TERMS TO RECOGNIZE:
+- "Body corporate" = HOA / Homeowners Association
+- "Sectional title" = Apartment/unit ownership with shared areas
+- "Levies" = Monthly fees paid by owners
+- "Trustees" = Elected board members
+- "AGM" = Annual General Meeting
+- "STSMA" = Sectional Titles Schemes Management Act
+- "Community scheme" = Managed property complex
+- "Managing agent" = Company that manages the property
+
+PROPERTY PM IS NOT INVESTMENT PM:
+- "Property Portfolio Manager" = Manages buildings/schemes (body corporates)
+- "Investment Portfolio Manager" = Manages investment funds (CFA, financial markets)
+These are COMPLETELY DIFFERENT roles. Check context carefully.
+
 --- WHAT TO RECOGNIZE ---
 
 STRONG POSITIVE SIGNALS:

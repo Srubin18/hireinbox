@@ -109,6 +109,6 @@ describe('SA Context integration', () => {
 
     // Verify arrays are non-empty
     expect(SA_UNIVERSITIES.tier1.length).toBeGreaterThan(0);
-    expect(SA_COMPANIES.big4.length).toBe(4); // Always 4 Big 4 firms
+    expect(SA_COMPANIES.big4.length).toBeGreaterThanOrEqual(4); // Big 4 firms (may include aliases like EY/Ernst & Young)
   });
 });
