@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 
@@ -75,6 +75,9 @@ export default function PilotScreening() {
     dealbreakers: '',
   });
   const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
+  const cvFileInputRef = useRef<HTMLInputElement>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -255,6 +258,110 @@ export default function PilotScreening() {
     }
   };
 
+  // CV UPLOAD & SCREEN HANDLER
+  const handleCVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedRoleId) return;
+
+    setUploading(true);
+    setUploadStatus('Extracting text from CV...');
+
+    try {
+      // Step 1: Extract text from CV
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const extractRes = await fetch('/api/extract-text', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const extractData = await extractRes.json();
+      if (!extractData.text || extractData.text.length < 50) {
+        alert('Could not extract enough text from CV. Please try a different file.');
+        setUploading(false);
+        setUploadStatus('');
+        return;
+      }
+
+      setUploadStatus('AI is screening the CV...');
+
+      // Step 2: Screen CV with AI
+      const screenRes = await fetch('/api/screen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roleId: selectedRoleId,
+          cvText: extractData.text,
+        }),
+      });
+
+      const screenData = await screenRes.json();
+      if (!screenData.success || !screenData.assessment) {
+        alert('AI screening failed. Please try again.');
+        setUploading(false);
+        setUploadStatus('');
+        return;
+      }
+
+      const assessment = screenData.assessment;
+      setUploadStatus('Saving candidate...');
+
+      // Step 3: Save candidate to database
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const candidateName = assessment.candidate_name || file.name.replace(/\.(pdf|docx?|txt)$/i, '');
+      const candidateEmail = assessment.candidate_email || `${candidateName.toLowerCase().replace(/\s+/g, '.')}@unknown.com`;
+
+      const { error: insertError } = await supabase
+        .from('candidates')
+        .insert({
+          role_id: selectedRoleId,
+          name: candidateName,
+          email: candidateEmail,
+          phone: assessment.candidate_phone,
+          cv_text: extractData.text,
+          ai_score: assessment.overall_score,
+          ai_match: assessment.recommendation === 'SHORTLIST' ? 'strong' :
+                    assessment.recommendation === 'CONSIDER' ? 'possible' : 'low',
+          ai_recommendation: assessment.recommendation_reason || assessment.recommendation,
+          screening_result: assessment,
+          screened_at: new Date().toISOString(),
+          status: assessment.recommendation === 'SHORTLIST' ? 'shortlist' :
+                  assessment.recommendation === 'CONSIDER' ? 'talent_pool' : 'reject',
+          score: assessment.overall_score,
+          strengths: assessment.summary?.strengths || [],
+          missing: assessment.summary?.weaknesses || [],
+        });
+
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
+
+      setUploadStatus('Done!');
+
+      // Refresh candidates list
+      await fetchCandidates();
+
+      // Reset file input
+      if (cvFileInputRef.current) {
+        cvFileInputRef.current.value = '';
+      }
+
+      setTimeout(() => {
+        setUploadStatus('');
+      }, 2000);
+
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Failed to process CV. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -335,6 +442,16 @@ export default function PilotScreening() {
       </header>
 
       <main className="screening-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Hidden file input for CV upload */}
+        <input
+          ref={cvFileInputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,.txt"
+          onChange={handleCVUpload}
+          style={{ display: 'none' }}
+          disabled={uploading}
+        />
+
         {/* Role Filter */}
         <div style={{
           backgroundColor: '#ffffff',
@@ -458,18 +575,116 @@ export default function PilotScreening() {
             padding: '48px',
             textAlign: 'center',
           }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>
-              No CVs yet for this role
-            </h3>
-            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
-              Forward CVs to: <span style={{ color: '#4F46E5', fontWeight: 600 }}>{selectedRole?.email_alias}+hireinbox@gmail.com</span>
-            </p>
-            <p style={{ fontSize: '13px', color: '#94a3b8' }}>
-              CVs will be automatically screened by AI and appear here
-            </p>
+            {/* UPLOAD CV SECTION */}
+            <div
+              onClick={() => !uploading && cvFileInputRef.current?.click()}
+              style={{
+                padding: '40px',
+                border: '3px dashed #10B981',
+                borderRadius: '16px',
+                backgroundColor: '#F0FDF4',
+                cursor: uploading ? 'not-allowed' : 'pointer',
+                marginBottom: '24px',
+                transition: 'all 0.2s',
+              }}
+            >
+              {uploading ? (
+                <>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    border: '3px solid #e2e8f0',
+                    borderTopColor: '#10B981',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 16px',
+                  }} />
+                  <p style={{ fontSize: '16px', fontWeight: 600, color: '#10B981' }}>
+                    {uploadStatus}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    backgroundColor: '#10B981',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                  }}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  </div>
+                  <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+                    Upload CV to Screen
+                  </h3>
+                  <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>
+                    Click here or drag & drop a CV file
+                  </p>
+                  <p style={{ fontSize: '13px', color: '#94a3b8' }}>
+                    PDF, DOCX, or TXT - AI will screen instantly
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '16px' }}>
+              <strong>Or forward CVs to:</strong> <span style={{ color: '#4F46E5', fontWeight: 600 }}>{selectedRole?.email_alias}+hireinbox@gmail.com</span>
+            </div>
           </div>
         ) : (
           <>
+            {/* UPLOAD CV BUTTON (when candidates exist) */}
+            <div
+              onClick={() => !uploading && cvFileInputRef.current?.click()}
+              style={{
+                padding: '24px',
+                border: '2px dashed #10B981',
+                borderRadius: '12px',
+                backgroundColor: '#F0FDF4',
+                cursor: uploading ? 'not-allowed' : 'pointer',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                transition: 'all 0.2s',
+              }}
+            >
+              {uploading ? (
+                <>
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    border: '3px solid #e2e8f0',
+                    borderTopColor: '#10B981',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                  }} />
+                  <span style={{ fontSize: '15px', fontWeight: 600, color: '#10B981' }}>
+                    {uploadStatus}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span style={{ fontSize: '15px', fontWeight: 600, color: '#10B981' }}>
+                    Upload Another CV to Screen
+                  </span>
+                </>
+              )}
+            </div>
+
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
                 {candidates.length} Candidates
