@@ -96,14 +96,30 @@ export default function PilotScreening() {
       const { data: rolesData } = await supabase
         .from('roles')
         .select('*')
-        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
 
-      if (rolesData && rolesData.length > 0) {
-        setRoles(rolesData);
+      // Filter roles by user_id stored in criteria
+      const userRoles = (rolesData || []).filter(
+        (r: { criteria?: { user_id?: string } }) => r.criteria?.user_id === session.user.id
+      );
+
+      if (userRoles && userRoles.length > 0) {
+        // Map to include location and email_alias from criteria
+        const mappedRoles = userRoles.map((r: { id: string; created_at: string; title: string; criteria?: { location?: string; email_alias?: string; description?: string; required_skills?: string[]; experience_min?: number; experience_max?: number } }) => ({
+          id: r.id,
+          created_at: r.created_at,
+          title: r.title,
+          location: r.criteria?.location || 'South Africa',
+          email_alias: r.criteria?.email_alias || '',
+          description: r.criteria?.description,
+          required_skills: r.criteria?.required_skills,
+          experience_min: r.criteria?.experience_min,
+          experience_max: r.criteria?.experience_max,
+        }));
+        setRoles(mappedRoles);
         // Auto-select first role if none selected
         if (!selectedRoleId) {
-          setSelectedRoleId(rolesData[0].id);
+          setSelectedRoleId(mappedRoles[0].id);
         }
       }
     } catch (err) {
@@ -170,16 +186,22 @@ export default function PilotScreening() {
       const { data, error } = await supabase
         .from('roles')
         .insert({
-          user_id: session.user.id,
           title: newRole.title,
-          location: newRole.location,
-          description: newRole.description,
-          required_skills: newRole.must_have_skills.split(',').map(s => s.trim()).filter(Boolean),
-          experience_min: parseInt(newRole.experience_min) || 0,
-          experience_max: parseInt(newRole.experience_max) || 20,
-          email_alias: emailAlias,
           status: 'active',
-          // Store additional fields in description or separate columns if available
+          criteria: {
+            user_id: session.user.id,
+            email_alias: emailAlias,
+            location: newRole.location,
+            description: newRole.description,
+            required_skills: newRole.must_have_skills.split(',').map(s => s.trim()).filter(Boolean),
+            nice_to_have_skills: newRole.nice_to_have_skills.split(',').map(s => s.trim()).filter(Boolean),
+            qualifications: newRole.qualifications,
+            dealbreakers: newRole.dealbreakers,
+            experience_min: parseInt(newRole.experience_min) || 0,
+            experience_max: parseInt(newRole.experience_max) || 20,
+            seniority: newRole.seniority,
+            employment_type: newRole.employment_type,
+          },
         })
         .select()
         .single();
