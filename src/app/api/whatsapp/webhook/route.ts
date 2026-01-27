@@ -343,19 +343,62 @@ async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
 // TALENT MAPPING: Call our API (Recruiter flow)
 // ============================================================================
 async function runTalentMapping(prompt: string): Promise<any> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hireinbox.co.za';
+  // SIMPLIFIED: Search internal talent pool only (fast)
+  // The full web scraping talent-mapping times out on Vercel
 
-  const response = await fetch(`${baseUrl}/api/talent-mapping`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt })
-  });
+  try {
+    // Get candidates from internal talent pool
+    const { data: candidates, error } = await supabase
+      .from('candidates')
+      .select('id, name, email, skills, cv_text, ai_score, screening_result')
+      .eq('talent_pool_opted_in', true)
+      .limit(50);
 
-  if (!response.ok) {
-    throw new Error(`API returned ${response.status}`);
+    if (error || !candidates || candidates.length === 0) {
+      return {
+        candidates: [],
+        message: 'No candidates in talent pool yet. Candidates join when they scan their CV via WhatsApp or hireinbox.co.za/upload'
+      };
+    }
+
+    // Simple keyword matching for now (fast, no AI timeout)
+    const keywords = prompt.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+
+    const scoredCandidates = candidates.map(c => {
+      const cvLower = (c.cv_text || '').toLowerCase();
+      const skillsLower = (c.skills || []).join(' ').toLowerCase();
+      const combined = cvLower + ' ' + skillsLower;
+
+      // Count keyword matches
+      let matches = 0;
+      for (const kw of keywords) {
+        if (combined.includes(kw)) matches++;
+      }
+
+      const matchScore = Math.min(100, Math.round((matches / Math.max(keywords.length, 1)) * 100));
+
+      return {
+        name: c.name || 'Anonymous',
+        matchScore,
+        currentRole: c.screening_result?.current_title || 'Not specified',
+        company: c.screening_result?.current_company || 'Not specified',
+        location: c.screening_result?.candidate_location || 'South Africa',
+        uniqueValue: c.screening_result?.summary?.fit_assessment?.slice(0, 100) || '',
+        resignationPropensity: { score: 'Medium' }
+      };
+    });
+
+    // Sort by match score
+    scoredCandidates.sort((a, b) => b.matchScore - a.matchScore);
+
+    return {
+      candidates: scoredCandidates.filter(c => c.matchScore > 0).slice(0, 10),
+      totalSearched: candidates.length
+    };
+  } catch (err) {
+    console.error('[TalentMapping] Error:', err);
+    return { candidates: [], error: 'Search failed' };
   }
-
-  return await response.json();
 }
 
 // ============================================================================
