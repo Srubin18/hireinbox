@@ -331,8 +331,10 @@ export default function PilotScreening() {
       });
 
       const screenData = await screenRes.json();
+      console.log('[Screening] Response:', screenData);
       if (!screenData.success || !screenData.assessment) {
-        alert('AI screening failed. Please try again.');
+        const errorMsg = screenData.error || screenData.message || 'Unknown error';
+        alert(`AI screening failed: ${errorMsg}`);
         setUploading(false);
         setUploadStatus('');
         return;
