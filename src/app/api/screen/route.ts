@@ -283,6 +283,8 @@ export async function POST(request: Request) {
 
     if (!assessment || !validateAnalysis(assessment)) {
       console.error(`[${traceId}] Screening validation failed`);
+      console.error(`[${traceId}] Assessment:`, JSON.stringify(assessment).substring(0, 500));
+      console.error(`[${traceId}] Validation check: score=${assessment?.overall_score}, rec=${assessment?.recommendation}, risk_register=${Array.isArray(assessment?.risk_register)}, confidence=${JSON.stringify(assessment?.confidence)}`);
       return Errors.ai('Screening analysis failed. Please try again.', undefined, traceId).toResponse();
     }
 
