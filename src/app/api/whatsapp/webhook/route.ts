@@ -343,73 +343,24 @@ async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
 // TALENT MAPPING: Call our API (Recruiter flow)
 // ============================================================================
 async function runTalentMapping(prompt: string): Promise<any> {
-  // SIMPLIFIED: Search internal talent pool only (fast)
-  console.log('[TalentMapping] Starting search for:', prompt.slice(0, 50));
+  // Call the real talent mapping API (Firecrawl + OpenAI)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hireinbox.co.za';
+  console.log('[TalentMapping] Calling API for:', prompt.slice(0, 50));
 
-  try {
-    // Get candidates from internal talent pool
-    const { data: candidates, error } = await supabase
-      .from('candidates')
-      .select('id, name, email, skills, cv_text, ai_score, screening_result')
-      .eq('talent_pool_opted_in', true)
-      .limit(50);
+  const response = await fetch(`${baseUrl}/api/talent-mapping`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  });
 
-    console.log('[TalentMapping] Query result - error:', error, 'count:', candidates?.length || 0);
-
-    if (error) {
-      console.error('[TalentMapping] Database error:', error);
-      return {
-        candidates: [],
-        message: 'Database error. Please try again.'
-      };
-    }
-
-    if (!candidates || candidates.length === 0) {
-      console.log('[TalentMapping] No candidates in pool');
-      return {
-        candidates: [],
-        message: 'No candidates in talent pool yet. Build your pool at hireinbox.co.za/upload'
-      };
-    }
-
-    // Simple keyword matching for now (fast, no AI timeout)
-    const keywords = prompt.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-
-    const scoredCandidates = candidates.map(c => {
-      const cvLower = (c.cv_text || '').toLowerCase();
-      const skillsLower = (c.skills || []).join(' ').toLowerCase();
-      const combined = cvLower + ' ' + skillsLower;
-
-      // Count keyword matches
-      let matches = 0;
-      for (const kw of keywords) {
-        if (combined.includes(kw)) matches++;
-      }
-
-      const matchScore = Math.min(100, Math.round((matches / Math.max(keywords.length, 1)) * 100));
-
-      return {
-        name: c.name || 'Anonymous',
-        matchScore,
-        currentRole: c.screening_result?.current_title || 'Not specified',
-        company: c.screening_result?.current_company || 'Not specified',
-        location: c.screening_result?.candidate_location || 'South Africa',
-        uniqueValue: c.screening_result?.summary?.fit_assessment?.slice(0, 100) || '',
-        resignationPropensity: { score: 'Medium' }
-      };
-    });
-
-    // Sort by match score
-    scoredCandidates.sort((a, b) => b.matchScore - a.matchScore);
-
-    return {
-      candidates: scoredCandidates.filter(c => c.matchScore > 0).slice(0, 10),
-      totalSearched: candidates.length
-    };
-  } catch (err) {
-    console.error('[TalentMapping] Error:', err);
-    return { candidates: [], error: 'Search failed' };
+  if (!response.ok) {
+    console.error('[TalentMapping] API error:', response.status);
+    throw new Error(`API returned ${response.status}`);
   }
+
+  const result = await response.json();
+  console.log('[TalentMapping] Got', result.candidates?.length || 0, 'candidates');
+  return result;
 }
 
 // ============================================================================
