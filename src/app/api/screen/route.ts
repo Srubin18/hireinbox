@@ -4,6 +4,9 @@ import OpenAI from 'openai';
 import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { Errors, generateTraceId } from '@/lib/api-error';
 
+// Extend timeout to 60 seconds for AI screening
+export const maxDuration = 60;
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
