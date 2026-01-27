@@ -1040,6 +1040,7 @@ const RECRUITER_TESTERS = [
   '27728103109',  // Modicai
   '27646845688',  // Shay Sin Beti
   '27828296655',  // Jann Barron (JB Recruit) - Pilot
+  '27725140422',  // Nina Mans (HNTR) - Pilot
 ];
 
 // Super owner gets both modes with menu
