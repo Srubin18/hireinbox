@@ -565,7 +565,7 @@ export default function PilotDashboard() {
           </p>
           <div style={{ display: 'flex', gap: '12px' }}>
             <a
-              href="mailto:simon@hireinbox.co.za"
+              href="mailto:simon@mafadi.co.za"
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#0284c7',
@@ -579,7 +579,7 @@ export default function PilotDashboard() {
               Contact Simon
             </a>
             <a
-              href="https://wa.me/27834567890"
+              href="https://wa.me/27721172137"
               style={{
                 padding: '10px 20px',
                 backgroundColor: '#ffffff',
