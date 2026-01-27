@@ -611,7 +611,7 @@ export default function PilotTalentMapping() {
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite',
                   }} />
-                  Searching... (this may take 30-60 seconds)
+                  Searching... (this may take 2-5 minutes)
                 </>
               ) : (
                 <>

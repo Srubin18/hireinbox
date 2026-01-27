@@ -446,31 +446,32 @@ export default function PilotScreening() {
     }}>
       {/* Mobile Responsive Styles */}
       <style>{`
-        .screening-main { padding: 24px 32px; }
-        .screening-header { padding: 16px 32px; }
-        .filter-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        .screening-layout { display: flex; min-height: calc(100vh - 65px); }
+        .screening-sidebar { width: 300px; flex-shrink: 0; }
+        .screening-main { flex: 1; padding: 24px 32px; overflow-y: auto; }
         .candidates-grid { display: flex; flex-direction: column; gap: 12px; }
         .modal-content { width: 100%; max-width: 600px; padding: 32px; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
+          .screening-layout { flex-direction: column; }
+          .screening-sidebar { width: 100%; border-right: none !important; border-bottom: 1px solid #e2e8f0; }
           .screening-main { padding: 16px !important; }
-          .screening-header { padding: 12px 16px !important; flex-wrap: wrap; gap: 12px !important; }
-          .filter-row { flex-direction: column !important; align-items: stretch !important; }
-          .filter-row select { width: 100% !important; }
           .modal-content { max-width: 95% !important; padding: 20px !important; margin: 16px; }
         }
       `}</style>
 
       {/* Header */}
-      <header className="screening-header" style={{
+      <header style={{
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
+        padding: '16px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <div onClick={() => router.push('/pilot/dashboard')}><Logo /></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div onClick={() => router.push('/pilot/dashboard')} style={{ cursor: 'pointer' }}><Logo /></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '13px', color: '#64748b' }}>{user?.email}</span>
           <button
             onClick={() => setShowCreateModal(true)}
             style={{
@@ -489,58 +490,102 @@ export default function PilotScreening() {
         </div>
       </header>
 
-      <main className="screening-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Hidden file input for CV upload */}
-        <input
-          ref={cvFileInputRef}
-          type="file"
-          accept=".pdf,.doc,.docx,.txt"
-          onChange={handleCVUpload}
-          style={{ display: 'none' }}
-          disabled={uploading}
-        />
+      {/* Hidden file input for CV upload */}
+      <input
+        ref={cvFileInputRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.txt"
+        onChange={handleCVUpload}
+        style={{ display: 'none' }}
+        disabled={uploading}
+      />
 
-        {/* Role Filter */}
-        <div style={{
+      <div className="screening-layout">
+        {/* LEFT SIDEBAR - Role Selection & Details */}
+        <aside className="screening-sidebar" style={{
           backgroundColor: '#ffffff',
-          borderRadius: '12px',
-          border: '1px solid #e2e8f0',
-          padding: '20px 24px',
-          marginBottom: '24px',
+          borderRight: '1px solid #e2e8f0',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
         }}>
-          <div className="filter-row">
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>
-                SELECT ROLE
-              </label>
-              <select
-                value={selectedRoleId}
-                onChange={(e) => setSelectedRoleId(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '15px',
-                  fontWeight: 500,
-                  border: '2px solid #4F46E5',
-                  borderRadius: '8px',
-                  backgroundColor: '#ffffff',
-                  cursor: 'pointer',
-                }}
-              >
-                {roles.length === 0 ? (
-                  <option value="">No roles - create one first</option>
-                ) : (
-                  roles.map(role => (
-                    <option key={role.id} value={role.id}>
-                      {role.title} ({role.location})
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-
+          {/* Role Selector */}
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Select Role
+            </label>
+            <select
+              value={selectedRoleId}
+              onChange={(e) => setSelectedRoleId(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                fontSize: '14px',
+                fontWeight: 600,
+                border: '2px solid #4F46E5',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer',
+              }}
+            >
+              {roles.length === 0 ? (
+                <option value="">No roles - create one first</option>
+              ) : (
+                roles.map(role => (
+                  <option key={role.id} value={role.id}>
+                    {role.title}
+                  </option>
+                ))
+              )}
+            </select>
           </div>
-        </div>
+
+          {/* Role Details */}
+          {selectedRole && (
+            <div style={{
+              backgroundColor: '#f8fafc',
+              borderRadius: '10px',
+              padding: '16px',
+              fontSize: '13px',
+            }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
+                Role Details
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: '#475569' }}>
+                <div><strong>Title:</strong> {selectedRole.title}</div>
+                <div><strong>Location:</strong> {selectedRole.location}</div>
+                {selectedRole.description && (
+                  <div><strong>Description:</strong> {selectedRole.description}</div>
+                )}
+                {selectedRole.required_skills && selectedRole.required_skills.length > 0 && (
+                  <div><strong>Required:</strong> {selectedRole.required_skills.join(', ')}</div>
+                )}
+                {selectedRole.experience_min !== undefined && (
+                  <div><strong>Experience:</strong> {selectedRole.experience_min}-{selectedRole.experience_max || 20} years</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Candidates Count */}
+          <div style={{
+            backgroundColor: '#EEF2FF',
+            borderRadius: '10px',
+            padding: '16px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '28px', fontWeight: 700, color: '#4F46E5' }}>
+              {candidates.length}
+            </div>
+            <div style={{ fontSize: '13px', color: '#64748b' }}>
+              Candidates Screened
+            </div>
+          </div>
+        </aside>
+
+        {/* RIGHT MAIN AREA */}
+        <main className="screening-main">
 
         {/* Candidates List */}
         {roles.length === 0 ? (
@@ -656,36 +701,28 @@ export default function PilotScreening() {
                       <line x1="12" y1="3" x2="12" y2="15" />
                     </svg>
                   </div>
-                  <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
-                    Upload CV to Screen
-                  </h3>
-                  <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>
-                    Click here or drag & drop a CV file
-                  </p>
-                  <p style={{ fontSize: '13px', color: '#94a3b8' }}>
-                    PDF, DOCX, or TXT - AI will screen instantly
-                  </p>
                   <div style={{
-                    marginTop: '20px',
-                    padding: '16px',
-                    backgroundColor: 'rgba(255,255,255,0.7)',
-                    borderRadius: '8px',
-                    textAlign: 'left',
-                    fontSize: '13px',
-                    color: '#475569',
+                    width: '64px',
+                    height: '64px',
+                    backgroundColor: '#10B981',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
                   }}>
-                    <strong style={{ color: '#0f172a' }}>What happens when you upload:</strong>
-                    <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8' }}>
-                      <li>AI extracts text from your CV file</li>
-                      <li>AI screens against your role requirements</li>
-                      <li>Candidate scored 0-100% with evidence</li>
-                      <li>Recommendation: SHORTLIST / CONSIDER / REJECT</li>
-                      <li>Full report with strengths, risks &amp; interview questions</li>
-                    </ol>
-                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>
-                      Takes 1-5 minutes depending on CV complexity
-                    </p>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
                   </div>
+                  <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>
+                    Upload CV
+                  </h3>
+                  <p style={{ fontSize: '14px', color: '#475569', maxWidth: '320px', margin: '0 auto', lineHeight: '1.6' }}>
+                    Drop a PDF or Word CV here — we&apos;ll scan it and show you a detailed report in 1-5 minutes
+                  </p>
                 </>
               )}
             </div>
@@ -697,21 +734,18 @@ export default function PilotScreening() {
             <div
               onClick={() => !uploading && cvFileInputRef.current?.click()}
               style={{
-                padding: '24px',
+                padding: '20px',
                 border: '2px dashed #10B981',
                 borderRadius: '12px',
                 backgroundColor: '#F0FDF4',
                 cursor: uploading ? 'not-allowed' : 'pointer',
                 marginBottom: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
+                textAlign: 'center',
                 transition: 'all 0.2s',
               }}
             >
               {uploading ? (
-                <>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                   <div style={{
                     width: '24px',
                     height: '24px',
@@ -723,17 +757,22 @@ export default function PilotScreening() {
                   <span style={{ fontSize: '15px', fontWeight: 600, color: '#10B981' }}>
                     {uploadStatus}
                   </span>
-                </>
+                </div>
               ) : (
                 <>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <span style={{ fontSize: '15px', fontWeight: 600, color: '#10B981' }}>
-                    Upload Another CV to Screen
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '6px' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <span style={{ fontSize: '15px', fontWeight: 600, color: '#10B981' }}>
+                      Upload Another CV
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                    Drop a PDF or Word file — results in 1-5 minutes
+                  </p>
                 </>
               )}
             </div>
@@ -825,6 +864,7 @@ export default function PilotScreening() {
           </>
         )}
       </main>
+      </div>{/* End screening-layout */}
 
       {/* Create Role Modal - COMPREHENSIVE */}
       {showCreateModal && (
