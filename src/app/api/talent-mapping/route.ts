@@ -1344,6 +1344,13 @@ CRITICAL: Score each candidate against the FULL SPEC above, not just the summary
 Intelligence quality: ${highValueCount} high-value sources, ${linkedInCount} LinkedIn sources
 ${webContext}
 
+CRITICAL ANTI-HALLUCINATION RULES:
+1. NEVER invent or fabricate candidates - only include REAL people found in the search results
+2. If no real candidates are found, return "candidates": [] (empty array)
+3. Placeholder names like "John Doe", "Jane Smith", "John Smith" are STRICTLY FORBIDDEN
+4. Every candidate MUST have a verifiable source URL from the search results
+5. If you cannot find real candidates, say so honestly - do NOT make up fake people
+
 Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate, you MUST include:
 - verifiedCredentials: array of credentials you can verify from public sources
 - publicFootprint: 'high'|'medium'|'low' based on how visible they are online
