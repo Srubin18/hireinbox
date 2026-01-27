@@ -42,6 +42,7 @@ export default function PilotReports() {
   const router = useRouter();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<{ email: string } | null>(null);
 
   const supabase = createBrowserClient(
@@ -51,6 +52,7 @@ export default function PilotReports() {
 
   const fetchReports = useCallback(async () => {
     try {
+      setError(null);
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
@@ -69,9 +71,12 @@ export default function PilotReports() {
       if (response.ok) {
         const data = await response.json();
         setReports(data.reports || []);
+      } else {
+        setError('Failed to load reports. Please try again.');
       }
     } catch (err) {
       console.error('Error fetching reports:', err);
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -134,11 +139,29 @@ export default function PilotReports() {
       backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
+      {/* Mobile Responsive Styles */}
+      <style>{`
+        .reports-header { padding: 16px 32px; }
+        .reports-main { padding: 32px; }
+        .reports-table { display: table; width: 100%; }
+
+        @media (max-width: 768px) {
+          .reports-header { padding: 12px 16px !important; flex-wrap: wrap; gap: 12px !important; }
+          .reports-main { padding: 16px !important; }
+          .reports-table { display: block !important; }
+          .reports-table thead { display: none !important; }
+          .reports-table tbody { display: block !important; }
+          .reports-table tr { display: block !important; padding: 16px !important; margin-bottom: 12px !important; background: #fff !important; border-radius: 12px !important; border: 1px solid #e2e8f0 !important; }
+          .reports-table td { display: block !important; padding: 4px 0 !important; text-align: left !important; }
+          .reports-table td:before { content: attr(data-label); font-weight: 600; color: #64748b; font-size: 12px; display: block; margin-bottom: 4px; }
+          .reports-actions { justify-content: flex-start !important; margin-top: 12px; }
+        }
+      `}</style>
+
       {/* Header */}
-      <header style={{
+      <header className="reports-header" style={{
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
-        padding: '16px 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -164,7 +187,7 @@ export default function PilotReports() {
         </div>
       </header>
 
-      <main style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto' }}>
+      <main className="reports-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
             Your Talent Reports
@@ -174,7 +197,45 @@ export default function PilotReports() {
           </p>
         </div>
 
-        {reports.length === 0 ? (
+        {/* Error State */}
+        {error && (
+          <div style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span style={{ color: '#dc2626', fontSize: '14px' }}>{error}</span>
+            </div>
+            <button
+              onClick={() => fetchReports()}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!error && reports.length === 0 ? (
           <div style={{
             backgroundColor: '#ffffff',
             borderRadius: '16px',
@@ -227,7 +288,7 @@ export default function PilotReports() {
             border: '1px solid #e2e8f0',
             overflow: 'hidden',
           }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="reports-table" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc' }}>
                   <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '13px', fontWeight: 600, color: '#64748b' }}>
@@ -253,7 +314,7 @@ export default function PilotReports() {
                     key={report.id}
                     style={{ borderTop: '1px solid #e2e8f0' }}
                   >
-                    <td style={{ padding: '16px 24px' }}>
+                    <td data-label="Role" style={{ padding: '16px 24px' }}>
                       <div style={{ fontSize: '15px', fontWeight: 500, color: '#0f172a' }}>
                         {report.role_parsed || 'Search'}
                       </div>
@@ -263,10 +324,10 @@ export default function PilotReports() {
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: '14px', color: '#475569' }}>
+                    <td data-label="Location" style={{ padding: '16px 24px', fontSize: '14px', color: '#475569' }}>
                       {report.location || 'South Africa'}
                     </td>
-                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                    <td data-label="Candidates" style={{ padding: '16px 24px', textAlign: 'center' }}>
                       <span style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -282,15 +343,15 @@ export default function PilotReports() {
                         {report.candidate_count}
                       </span>
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: '14px', color: '#64748b' }}>
+                    <td data-label="Date" style={{ padding: '16px 24px', fontSize: '14px', color: '#64748b' }}>
                       {new Date(report.created_at).toLocaleDateString('en-ZA', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
                       })}
                     </td>
-                    <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <td data-label="" style={{ padding: '16px 24px', textAlign: 'right' }}>
+                      <div className="reports-actions" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                         <button
                           onClick={() => router.push(`/pilot/reports/${report.id}`)}
                           style={{

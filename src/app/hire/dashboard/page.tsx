@@ -396,9 +396,11 @@ export default function EmployerDashboard() {
     return [];
   }
 
-  // DEMO MODE: Load real data via API (bypasses RLS)
+  // LOAD REAL DATA: When role is specified in URL OR demo mode
+  // This ensures pilot users see their actual candidates
   useEffect(() => {
-    if (!isDemo) return;
+    // Load real data if: demo mode OR role specified in URL
+    if (!isDemo && !roleFromUrl) return;
 
     async function loadDemoData() {
       setDemoLoading(true);

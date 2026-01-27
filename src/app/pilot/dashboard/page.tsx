@@ -215,18 +215,46 @@ export default function PilotDashboard() {
       backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
+      {/* Mobile Responsive Styles */}
+      <style>{`
+        .dash-header { padding: 16px 32px; }
+        .dash-main { padding: 32px; }
+        .dash-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .dash-recent { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .dash-support-btns { display: flex; gap: 12px; }
+
+        @media (max-width: 1024px) {
+          .dash-stats { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+
+        @media (max-width: 768px) {
+          .dash-header { padding: 12px 16px !important; flex-wrap: wrap; gap: 12px !important; }
+          .dash-main { padding: 16px !important; }
+          .dash-cards { grid-template-columns: 1fr !important; }
+          .dash-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          .dash-recent { grid-template-columns: 1fr !important; }
+          .dash-support-btns { flex-direction: column !important; }
+          .dash-support-btns a { text-align: center !important; }
+          .user-email { display: none !important; }
+        }
+
+        @media (max-width: 480px) {
+          .dash-stats { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
       {/* Header */}
-      <header style={{
+      <header className="dash-header" style={{
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
-        padding: '16px 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
         <Logo />
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '14px', color: '#64748b' }}>{user?.email}</span>
+          <span className="user-email" style={{ fontSize: '14px', color: '#64748b' }}>{user?.email}</span>
           <button
             onClick={handleLogout}
             style={{
@@ -249,7 +277,7 @@ export default function PilotDashboard() {
       </header>
 
       {/* Main Content */}
-      <main style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto' }}>
+      <main className="dash-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Welcome Section */}
         <div style={{ marginBottom: '32px' }}>
           <h1 style={{
@@ -266,12 +294,7 @@ export default function PilotDashboard() {
         </div>
 
         {/* Main Action Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '24px',
-          marginBottom: '32px',
-        }}>
+        <div className="dash-cards" style={{ marginBottom: '32px' }}>
           {/* Talent Mapping Card */}
           <div
             onClick={() => router.push('/pilot/talent-mapping')}
@@ -376,12 +399,7 @@ export default function PilotDashboard() {
         </div>
 
         {/* Stats Row */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '16px',
-          marginBottom: '32px',
-        }}>
+        <div className="dash-stats" style={{ marginBottom: '32px' }}>
           {[
             { label: 'Talent Searches', value: stats.totalSearches, color: '#4F46E5' },
             { label: 'Candidates Found', value: stats.candidatesFound, color: '#7C3AED' },
@@ -406,11 +424,7 @@ export default function PilotDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '24px',
-        }}>
+        <div className="dash-recent">
           {/* Recent Searches */}
           <div style={{
             backgroundColor: '#ffffff',
@@ -563,7 +577,7 @@ export default function PilotDashboard() {
           <p style={{ fontSize: '14px', color: '#0369a1', marginBottom: '16px' }}>
             You&apos;re part of an exclusive pilot. We&apos;re here to help you get the most out of HireInbox.
           </p>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="dash-support-btns">
             <a
               href="mailto:simon@mafadi.co.za"
               style={{

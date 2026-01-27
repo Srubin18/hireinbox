@@ -113,11 +113,8 @@ export default function PilotScreening() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      // Generate email alias
-      const emailAlias = newRole.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .substring(0, 20);
+      // Generate unique email alias (title + timestamp to prevent collisions)
+      const emailAlias = `${newRole.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 15)}-${Date.now().toString(36)}`;
 
       const { error } = await supabase
         .from('roles')
@@ -186,17 +183,34 @@ export default function PilotScreening() {
       backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
+      {/* Mobile Responsive Styles */}
+      <style>{`
+        .screening-main { padding: 32px; }
+        .how-it-works-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .roles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px; }
+        .modal-content { width: 100%; max-width: 500px; padding: 32px; }
+        .header-content { padding: 16px 32px; }
+
+        @media (max-width: 768px) {
+          .screening-main { padding: 16px !important; }
+          .how-it-works-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .roles-grid { grid-template-columns: 1fr !important; }
+          .modal-content { max-width: 95% !important; padding: 20px !important; margin: 16px; }
+          .header-content { padding: 12px 16px !important; flex-wrap: wrap; gap: 12px !important; }
+          .header-right { flex-wrap: wrap; justify-content: flex-end; }
+        }
+      `}</style>
+
       {/* Header */}
-      <header style={{
+      <header className="header-content" style={{
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
-        padding: '16px 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
         <div onClick={() => router.push('/pilot/dashboard')}><Logo /></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button
             onClick={() => setShowCreateModal(true)}
             style={{
@@ -216,7 +230,7 @@ export default function PilotScreening() {
         </div>
       </header>
 
-      <main style={{ padding: '32px', maxWidth: '1200px', margin: '0 auto' }}>
+      <main className="screening-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* How it works */}
         <div style={{
           backgroundColor: '#f0fdf4',
@@ -228,7 +242,7 @@ export default function PilotScreening() {
           <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#166534', marginBottom: '12px' }}>
             How AI CV Screening Works
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+          <div className="how-it-works-grid">
             <div>
               <div style={{ fontSize: '24px', marginBottom: '8px' }}>1.</div>
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#166534', marginBottom: '4px' }}>Create a Role</div>
@@ -309,7 +323,7 @@ export default function PilotScreening() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
+          <div className="roles-grid">
             {roles.map((role) => (
               <div
                 key={role.id}
@@ -369,12 +383,9 @@ export default function PilotScreening() {
           justifyContent: 'center',
           zIndex: 50,
         }}>
-          <div style={{
+          <div className="modal-content" style={{
             backgroundColor: '#ffffff',
             borderRadius: '16px',
-            padding: '32px',
-            width: '100%',
-            maxWidth: '500px',
             maxHeight: '90vh',
             overflowY: 'auto',
           }}>

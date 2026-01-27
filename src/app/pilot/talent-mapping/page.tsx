@@ -111,6 +111,7 @@ export default function PilotTalentMapping() {
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
   const [industry, setIndustry] = useState('');
   const [salaryBand, setSalaryBand] = useState('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -229,7 +230,8 @@ export default function PilotTalentMapping() {
 
       if (!response.ok) throw new Error('Failed to save');
 
-      alert('Report saved! View it in your Reports section.');
+      setSuccessMessage('Report saved! View it in your Reports section.');
+      setTimeout(() => setSuccessMessage(null), 5000); // Auto-hide after 5s
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save report');
     } finally {
@@ -252,11 +254,74 @@ export default function PilotTalentMapping() {
       backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
+      {/* Mobile Responsive Styles */}
+      <style>{`
+        .tm-main { padding: 32px; }
+        .tm-header { padding: 16px 32px; }
+        .tm-search-grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+        .tm-market-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .tm-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .tm-optional-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        @media (max-width: 1024px) {
+          .tm-search-grid { grid-template-columns: 1fr !important; }
+          .info-panel { display: none !important; }
+        }
+
+        @media (max-width: 768px) {
+          .tm-main { padding: 16px !important; }
+          .tm-header { padding: 12px 16px !important; flex-wrap: wrap; gap: 12px !important; }
+          .tm-market-grid { grid-template-columns: 1fr !important; }
+          .tm-stats-grid { grid-template-columns: 1fr !important; }
+          .tm-optional-grid { grid-template-columns: 1fr !important; }
+          .tm-actions { flex-direction: column !important; }
+          .tm-actions button { width: 100% !important; }
+        }
+      `}</style>
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          padding: '16px 24px',
+          backgroundColor: '#10B981',
+          color: '#ffffff',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          animation: 'slideIn 0.3s ease',
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" fill="#ffffff"/>
+            <path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {successMessage}
+          <button
+            onClick={() => setSuccessMessage(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#ffffff',
+              cursor: 'pointer',
+              marginLeft: '8px',
+              fontSize: '18px',
+            }}
+          >
+            &times;
+          </button>
+        </div>
+      )}
+      <style>{`@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
+
       {/* Header */}
-      <header style={{
+      <header className="tm-header" style={{
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
-        padding: '16px 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -281,12 +346,12 @@ export default function PilotTalentMapping() {
         </div>
       </header>
 
-      <main style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
+      <main className="tm-main" style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Search Section */}
         {!report && (
-          <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px' }}>
+          <div className="tm-search-grid">
             {/* Info Panel - Benefits & Sources */}
-            <div style={{
+            <div className="info-panel" style={{
               backgroundColor: '#ffffff',
               borderRadius: '16px',
               border: '1px solid #e2e8f0',
@@ -439,7 +504,7 @@ export default function PilotTalentMapping() {
             />
 
             {/* Optional Fields: Industry & Salary */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
+            <div className="tm-optional-grid" style={{ marginTop: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                   Industry (Optional)
@@ -581,7 +646,7 @@ export default function PilotTalentMapping() {
                   {report.candidates?.length || 0} candidates found • {report.searchCriteria?.parsed?.location || 'South Africa'}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="tm-actions" style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={handleSaveReport}
                   disabled={saving}
@@ -628,7 +693,7 @@ export default function PilotTalentMapping() {
                 <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
                   Market Intelligence
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div className="tm-market-grid">
                   <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
                     <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Talent Pool</div>
                     <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
@@ -766,10 +831,7 @@ export default function PilotTalentMapping() {
                       {isExpanded && (
                         <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
                           {/* Stats Row */}
-                          <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: '16px',
+                          <div className="tm-stats-grid" style={{
                             padding: '16px',
                             backgroundColor: '#f8fafc',
                             borderRadius: '8px',
