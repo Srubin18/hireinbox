@@ -22,15 +22,46 @@ interface Role {
   experience_max?: number;
 }
 
+interface ScreeningResult {
+  candidate_name?: string;
+  candidate_email?: string;
+  candidate_phone?: string;
+  candidate_location?: string;
+  current_title?: string;
+  current_company?: string;
+  years_experience?: number;
+  education_level?: string;
+  overall_score: number;
+  recommendation: string;
+  recommendation_reason?: string;
+  confidence?: { level: string; reasons?: string[] };
+  evidence_highlights?: Array<{ claim: string; evidence: string }>;
+  hard_requirements?: {
+    met?: string[];
+    not_met?: string[];
+    partial?: string[];
+    unclear?: string[];
+  };
+  risk_register?: Array<{ risk: string; severity: string; evidence: string; interview_question?: string }>;
+  interview_focus?: string[];
+  summary?: {
+    strengths?: Array<{ label: string; evidence: string }>;
+    weaknesses?: Array<{ label: string; evidence: string }>;
+    fit_assessment?: string;
+  };
+}
+
 interface Candidate {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   ai_score: number;
   ai_match: string;
   ai_recommendation: string;
   strengths: string[];
   created_at: string;
+  screening_result?: ScreeningResult;
 }
 
 const Logo = () => (
@@ -75,6 +106,7 @@ export default function PilotScreening() {
     dealbreakers: '',
   });
   const [creating, setCreating] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const cvFileInputRef = useRef<HTMLInputElement>(null);
@@ -149,11 +181,13 @@ export default function PilotScreening() {
           id: c.id,
           name: c.name || c.email?.split('@')[0] || 'Unknown',
           email: c.email || '',
+          phone: c.phone || '',
           ai_score: c.ai_score || 0,
           ai_match: c.ai_match || 'pending',
           ai_recommendation: c.ai_recommendation || '',
           strengths: c.strengths || [],
           created_at: c.created_at,
+          screening_result: c.screening_result,
         })));
       }
     } catch (err) {
@@ -736,18 +770,35 @@ export default function PilotScreening() {
                     )}
                   </div>
 
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{
-                      fontSize: '24px',
-                      fontWeight: 700,
-                      color: getMatchColor(candidate.ai_match),
-                      marginBottom: '4px',
-                    }}>
-                      {candidate.ai_score}%
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: 700,
+                        color: getMatchColor(candidate.ai_match),
+                        marginBottom: '4px',
+                      }}>
+                        {candidate.ai_score}%
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        AI Score
+                      </div>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>
-                      AI Score
-                    </div>
+                    <button
+                      onClick={() => setSelectedCandidate(candidate)}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#4F46E5',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      View
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1058,6 +1109,281 @@ export default function PilotScreening() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* AI SCREENING REPORT MODAL */}
+      {selectedCandidate && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          padding: '16px',
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '700px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            padding: '32px',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>AI Screening Report</h2>
+              </div>
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                style={{
+                  padding: '8px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Candidate Info */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 20px',
+              backgroundColor: '#f8fafc',
+              borderRadius: '12px',
+              marginBottom: '24px',
+            }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
+                  {selectedCandidate.name}
+                </h3>
+                <div style={{ fontSize: '14px', color: '#64748b' }}>
+                  {selectedCandidate.screening_result?.current_title || 'Title not specified'}
+                  {selectedCandidate.screening_result?.current_company && ` at ${selectedCandidate.screening_result.current_company}`}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{
+                  fontSize: '32px',
+                  fontWeight: 700,
+                  color: getMatchColor(selectedCandidate.ai_match),
+                }}>
+                  {selectedCandidate.ai_score}%
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>AI Score</div>
+              </div>
+            </div>
+
+            {/* AI Recommendation Badge */}
+            <div style={{ marginBottom: '24px' }}>
+              <span style={{
+                display: 'inline-block',
+                padding: '8px 16px',
+                backgroundColor: selectedCandidate.screening_result?.recommendation === 'SHORTLIST' ? '#D1FAE5' :
+                                 selectedCandidate.screening_result?.recommendation === 'CONSIDER' ? '#FEF3C7' : '#FEE2E2',
+                color: selectedCandidate.screening_result?.recommendation === 'SHORTLIST' ? '#059669' :
+                       selectedCandidate.screening_result?.recommendation === 'CONSIDER' ? '#D97706' : '#DC2626',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: 600,
+              }}>
+                AI Recommendation: {selectedCandidate.screening_result?.recommendation || 'Pending'}
+              </span>
+            </div>
+
+            {/* Fit Assessment */}
+            {selectedCandidate.screening_result?.summary?.fit_assessment && (
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginBottom: '12px' }}>
+                  Fit Assessment
+                </h4>
+                <div style={{
+                  padding: '16px 20px',
+                  backgroundColor: '#f8fafc',
+                  borderLeft: '4px solid #4F46E5',
+                  borderRadius: '0 8px 8px 0',
+                  fontSize: '14px',
+                  lineHeight: 1.6,
+                  color: '#374151',
+                }}>
+                  {selectedCandidate.screening_result.summary.fit_assessment}
+                </div>
+              </div>
+            )}
+
+            {/* Strengths with Evidence */}
+            {selectedCandidate.screening_result?.summary?.strengths && selectedCandidate.screening_result.summary.strengths.length > 0 && (
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#10B981', marginBottom: '12px' }}>
+                  Strengths (with evidence)
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {selectedCandidate.screening_result.summary.strengths.map((strength, idx) => (
+                    <div key={idx} style={{
+                      padding: '12px 16px',
+                      backgroundColor: '#F0FDF4',
+                      borderLeft: '4px solid #10B981',
+                      borderRadius: '0 8px 8px 0',
+                      fontSize: '14px',
+                      color: '#166534',
+                    }}>
+                      <strong>{strength.label}:</strong> {strength.evidence ? `"${strength.evidence}"` : 'Evidence provided in CV'}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Areas of Concern / Weaknesses */}
+            {selectedCandidate.screening_result?.summary?.weaknesses && selectedCandidate.screening_result.summary.weaknesses.length > 0 && (
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#DC2626', marginBottom: '12px' }}>
+                  Areas of Concern
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {selectedCandidate.screening_result.summary.weaknesses.map((weakness, idx) => (
+                    <div key={idx} style={{
+                      padding: '12px 16px',
+                      backgroundColor: '#FEF2F2',
+                      borderLeft: '4px solid #EF4444',
+                      borderRadius: '0 8px 8px 0',
+                      fontSize: '14px',
+                      color: '#991B1B',
+                    }}>
+                      <strong>{weakness.label}:</strong> {weakness.evidence ? `"${weakness.evidence}"` : 'Not mentioned in CV'}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Risk Register */}
+            {selectedCandidate.screening_result?.risk_register && selectedCandidate.screening_result.risk_register.length > 0 && (
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#F59E0B', marginBottom: '12px' }}>
+                  Risk Register
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {selectedCandidate.screening_result.risk_register.map((risk, idx) => (
+                    <div key={idx} style={{
+                      padding: '12px 16px',
+                      backgroundColor: '#FFFBEB',
+                      borderLeft: `4px solid ${risk.severity === 'HIGH' ? '#DC2626' : risk.severity === 'MEDIUM' ? '#F59E0B' : '#10B981'}`,
+                      borderRadius: '0 8px 8px 0',
+                      fontSize: '14px',
+                      color: '#92400E',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <strong>{risk.risk}</strong>
+                        <span style={{
+                          padding: '2px 8px',
+                          backgroundColor: risk.severity === 'HIGH' ? '#FEE2E2' : risk.severity === 'MEDIUM' ? '#FEF3C7' : '#D1FAE5',
+                          color: risk.severity === 'HIGH' ? '#DC2626' : risk.severity === 'MEDIUM' ? '#D97706' : '#059669',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                        }}>
+                          {risk.severity}
+                        </span>
+                      </div>
+                      <div style={{ color: '#78716C', fontSize: '13px' }}>
+                        {risk.evidence}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Interview Questions */}
+            {selectedCandidate.screening_result?.interview_focus && selectedCandidate.screening_result.interview_focus.length > 0 && (
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#4F46E5', marginBottom: '12px' }}>
+                  Suggested Interview Questions
+                </h4>
+                <div style={{
+                  padding: '16px 20px',
+                  backgroundColor: '#EEF2FF',
+                  borderRadius: '8px',
+                }}>
+                  <ol style={{ margin: 0, paddingLeft: '20px', color: '#3730A3', fontSize: '14px', lineHeight: 1.8 }}>
+                    {selectedCandidate.screening_result.interview_focus.map((q, idx) => (
+                      <li key={idx}>{q}</li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            )}
+
+            {/* Contact Info */}
+            <div style={{
+              padding: '16px 20px',
+              backgroundColor: '#f8fafc',
+              borderRadius: '8px',
+              marginBottom: '24px',
+            }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#64748b', marginBottom: '12px' }}>
+                Contact Information
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '14px' }}>
+                <div>
+                  <span style={{ color: '#64748b' }}>Email: </span>
+                  <a href={`mailto:${selectedCandidate.email}`} style={{ color: '#4F46E5' }}>{selectedCandidate.email}</a>
+                </div>
+                {selectedCandidate.phone && (
+                  <div>
+                    <span style={{ color: '#64748b' }}>Phone: </span>
+                    <span style={{ color: '#0f172a' }}>{selectedCandidate.phone}</span>
+                  </div>
+                )}
+                {selectedCandidate.screening_result?.candidate_location && (
+                  <div>
+                    <span style={{ color: '#64748b' }}>Location: </span>
+                    <span style={{ color: '#0f172a' }}>{selectedCandidate.screening_result.candidate_location}</span>
+                  </div>
+                )}
+                {selectedCandidate.screening_result?.years_experience && (
+                  <div>
+                    <span style={{ color: '#64748b' }}>Experience: </span>
+                    <span style={{ color: '#0f172a' }}>{selectedCandidate.screening_result.years_experience} years</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                style={{
+                  padding: '12px 32px',
+                  backgroundColor: '#4F46E5',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Close Report
+              </button>
+            </div>
           </div>
         </div>
       )}
