@@ -471,7 +471,6 @@ export default function PilotScreening() {
           >
             + Create Role
           </button>
-          <span style={{ fontSize: '14px', color: '#64748b' }}>{user?.email}</span>
         </div>
       </header>
 
