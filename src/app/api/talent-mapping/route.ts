@@ -4,6 +4,9 @@ import FirecrawlApp from '@mendable/firecrawl-js';
 import { createClient } from '@supabase/supabase-js';
 import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
+// Extend timeout to 5 minutes for complex searches
+export const maxDuration = 300;
+
 // Supabase client for usage logging
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
