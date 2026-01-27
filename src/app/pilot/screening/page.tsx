@@ -524,19 +524,6 @@ export default function PilotScreening() {
               </select>
             </div>
 
-            {selectedRole && (
-              <div style={{
-                padding: '12px 16px',
-                backgroundColor: '#f8fafc',
-                borderRadius: '8px',
-                fontSize: '13px',
-              }}>
-                <div style={{ color: '#64748b', marginBottom: '4px' }}>Forward CVs to:</div>
-                <div style={{ color: '#4F46E5', fontWeight: 600, fontFamily: 'monospace' }}>
-                  {selectedRole.email_alias}+hireinbox@gmail.com
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -667,9 +654,6 @@ export default function PilotScreening() {
               )}
             </div>
 
-            <div style={{ fontSize: '13px', color: '#94a3b8', marginTop: '16px' }}>
-              <strong>Or forward CVs to:</strong> <span style={{ color: '#4F46E5', fontWeight: 600 }}>{selectedRole?.email_alias}+hireinbox@gmail.com</span>
-            </div>
           </div>
         ) : (
           <>
