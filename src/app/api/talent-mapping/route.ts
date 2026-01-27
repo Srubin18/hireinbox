@@ -4,9 +4,6 @@ import FirecrawlApp from '@mendable/firecrawl-js';
 import { createClient } from '@supabase/supabase-js';
 import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
-// Extend timeout to 5 minutes for complex searches
-export const maxDuration = 300;
-
 // Supabase client for usage logging
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1063,19 +1060,6 @@ export async function POST(request: Request) {
     if (industry) console.log('[TalentMapping] Specified industry:', industry);
     if (salaryBand) console.log('[TalentMapping] Specified salary band:', salaryBand);
 
-    // DIAGNOSTIC: Quick test to verify Firecrawl is working
-    try {
-      console.log('[TalentMapping] DIAGNOSTIC: Testing Firecrawl API...');
-      const testResult = await firecrawl.search('CEO South Africa', { limit: 3 }) as any;
-      const testData = testResult?.data || testResult?.results || testResult?.web || [];
-      console.log('[TalentMapping] DIAGNOSTIC: Firecrawl test returned', testData.length, 'results');
-      if (testData.length === 0) {
-        console.log('[TalentMapping] DIAGNOSTIC: Full response:', JSON.stringify(testResult).substring(0, 1000));
-      }
-    } catch (diagErr) {
-      console.error('[TalentMapping] DIAGNOSTIC: Firecrawl test FAILED:', diagErr);
-    }
-
     // Build enhanced prompt with explicit fields if provided
     let enhancedPrompt = prompt;
     if (industry || salaryBand) {
@@ -1133,64 +1117,15 @@ Return valid JSON only:
     console.log('[TalentMapping] Generated', searchQueries.length, 'diverse queries');
 
     // Step 3: Execute searches with Firecrawl
-    // SIMPLIFIED: Start with broad searches, then specific
     const webResults: WebSearchResult[] = [];
     const sourceTypeCounts: Record<string, number> = {};
     const searchMethodology: { query: string; sourceType: string; resultsFound: number }[] = [];
 
-    // PRIORITY SEARCH: Simple broad search first (most likely to return results)
-    const broadQueries = [
-      `${parsed.role} ${parsed.location || 'South Africa'}`,
-      `${parsed.role} ${parsed.industry || ''} South Africa`,
-      `${parsed.role} LinkedIn South Africa`,
-    ].filter(q => q.trim().length > 5);
-
-    console.log('[TalentMapping] Running BROAD searches first:', broadQueries);
-
-    for (const broadQuery of broadQueries) {
+    for (const sq of searchQueries) {
       try {
-        console.log(`[TalentMapping] BROAD search: ${broadQuery}`);
-        const results = await firecrawl.search(broadQuery, { limit: 10 }) as any;
-        console.log(`[TalentMapping] BROAD result structure:`, JSON.stringify(results).substring(0, 500));
-
-        const data = results?.data || results?.results || results?.web || [];
-        console.log(`[TalentMapping] BROAD found ${data.length} results`);
-
-        for (const r of data) {
-          if (r?.url && (r?.markdown || r?.content || r?.description || r?.snippet)) {
-            const { type, value, dataSource, howWeFoundYou } = categorizeSource(r.url, r.title || '');
-            sourceTypeCounts[type] = (sourceTypeCounts[type] || 0) + 1;
-            webResults.push({
-              url: r.url,
-              title: r.title || '',
-              content: (r.markdown || r.content || r.description || r.snippet || '').substring(0, 3000),
-              sourceType: type,
-              sourceValue: value,
-              publiclyAvailable: true,
-              dataSource,
-              howWeFoundYou
-            });
-          }
-        }
-
-        searchMethodology.push({
-          query: broadQuery,
-          sourceType: 'broad',
-          resultsFound: data.length
-        });
-      } catch (err) {
-        console.log(`[TalentMapping] BROAD search error:`, err);
-      }
-    }
-
-    console.log(`[TalentMapping] After BROAD searches: ${webResults.length} results`);
-
-    // Run ALL detailed queries (don't limit - some later queries find good candidates)
-    for (const sq of searchQueries) { // Run all queries like before
-      try {
-        console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query.substring(0, 80)}...`);
+        console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query}`);
         const results = await firecrawl.search(sq.query, { limit: 5 }) as any;
-        const data = results?.data || results?.results || results?.web || [];
+        const data = results?.data || results?.web || [];
 
         searchMethodology.push({
           query: sq.query,
@@ -1198,10 +1133,8 @@ Return valid JSON only:
           resultsFound: data.length
         });
 
-        console.log(`[TalentMapping] [${sq.sourceType}] found ${data.length} results`);
-
         for (const r of data) {
-          if (r?.url && (r?.markdown || r?.content || r?.description || r?.snippet)) {
+          if (r?.url && (r?.markdown || r?.content || r?.description)) {
             const { type, value, dataSource, howWeFoundYou } = categorizeSource(r.url, r.title || '');
 
             // Track source diversity
@@ -1210,7 +1143,7 @@ Return valid JSON only:
             webResults.push({
               url: r.url,
               title: r.title || '',
-              content: (r.markdown || r.content || r.description || r.snippet || '').substring(0, 3000),
+              content: (r.markdown || r.content || r.description).substring(0, 3000),
               sourceType: type,
               sourceValue: value,
               publiclyAvailable: true, // POPIA compliance
@@ -1220,7 +1153,7 @@ Return valid JSON only:
           }
         }
       } catch (err) {
-        console.log(`[TalentMapping] Search error for [${sq.sourceType}]:`, err);
+        console.log(`[TalentMapping] Search error for [${sq.sourceType}] (continuing):`, err);
         searchMethodology.push({
           query: sq.query,
           sourceType: sq.sourceType,
@@ -1410,13 +1343,6 @@ CRITICAL: Score each candidate against the FULL SPEC above, not just the summary
 
 Intelligence quality: ${highValueCount} high-value sources, ${linkedInCount} LinkedIn sources
 ${webContext}
-
-CRITICAL ANTI-HALLUCINATION RULES:
-1. NEVER invent or fabricate candidates - only include REAL people found in the search results
-2. If no real candidates are found, return "candidates": [] (empty array)
-3. Placeholder names like "John Doe", "Jane Smith", "John Smith" are STRICTLY FORBIDDEN
-4. Every candidate MUST have a verifiable source URL from the search results
-5. If you cannot find real candidates, say so honestly - do NOT make up fake people
 
 Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate, you MUST include:
 - verifiedCredentials: array of credentials you can verify from public sources
