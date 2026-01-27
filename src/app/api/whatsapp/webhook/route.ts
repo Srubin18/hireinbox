@@ -1078,6 +1078,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // TEMPORARILY DISABLED - Simon requested 2026-01-27
+  // Isolating to debug Firecrawl talent mapping issues
+  console.log('[HireInbox WA] Bot temporarily disabled');
+  return NextResponse.json({ status: 'temporarily_disabled' });
+
   try {
     const rawBody = await request.text();
     const signature = request.headers.get('X-Hub-Signature-256');
