@@ -842,184 +842,60 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string | null> {
 // ============================================================================
 async function handleDocument(sender: string, document: any): Promise<void> {
   const state = getState(sender);
-  const isSuperOwnerUser = isSuperOwner(sender);
+  console.log(`[HireInbox WA] handleDocument - TALENT MAPPING ONLY MODE`);
 
-  console.log(`[HireInbox WA] handleDocument - superOwner: ${isSuperOwnerUser}, flow: ${state.flow}`);
-
-  // Determine if document should be processed as job spec (recruiter) or CV (jobseeker)
-  // - Super owner (Simon): respect their explicit flow choice (they chose 1 or 2)
-  // - EVERYONE ELSE: ALWAYS job spec (recruiter mode only - no job seeker mode)
-  let shouldProcessAsJobSpec: boolean;
-  if (isSuperOwnerUser) {
-    shouldProcessAsJobSpec = state.flow === 'recruiter';
-  } else {
-    shouldProcessAsJobSpec = true; // ALL other users → recruiter mode ONLY
-  }
-
-  console.log(`[HireInbox WA] handleDocument DECISION: shouldProcessAsJobSpec=${shouldProcessAsJobSpec}, flow=${state.flow}`);
-
-  if (shouldProcessAsJobSpec) {
-    const filename = document.filename || 'jobspec.pdf';
-    const mediaId = document.id;
-
-    console.log('[HireInbox WA] Processing as JOB SPEC (recruiter mode)');
-    await sendWhatsAppMessage(sender, '📥 *Downloading your document...*');
-
-    const buffer = await downloadWhatsAppMedia(mediaId);
-    if (!buffer) {
-      await sendWhatsAppMessage(sender,
-        'Couldn\'t download the file. Please paste the text instead.'
-      );
-      return;
-    }
-
-    await sendWhatsAppMessage(sender, '📄 *Extracting job requirements...*');
-
-    const jobSpecText = await extractTextFromPDF(buffer);
-    if (!jobSpecText || jobSpecText.length < 50) {
-      await sendWhatsAppMessage(sender,
-        'Couldn\'t read the PDF. Please paste the job description as text instead.\n\n' +
-        '_Some PDFs are image-only and can\'t be read._'
-      );
-      return;
-    }
-
-    // Now run talent mapping with the extracted text
-    setState(sender, { ...state, step: 'searching', lastSearch: jobSpecText, flow: 'recruiter' });
-
-    const shortPrompt = jobSpecText.length > 100 ? jobSpecText.slice(0, 100) + '...' : jobSpecText;
-    await sendWhatsAppMessage(sender,
-      `🔍 *Searching for candidates matching:*\n_"${shortPrompt}"_\n\n1-3 minutes...`
-    );
-
-    try {
-      const results = await runTalentMapping(jobSpecText);
-      setState(sender, { ...state, step: 'results_shown', lastSearch: jobSpecText, lastResults: results, flow: 'recruiter' });
-      await sendWhatsAppMessage(sender, formatCandidatesForWhatsApp(results));
-
-      // Log usage
-      try {
-        await supabase.from('pilot_usage_log').insert({
-          phone_number: sender,
-          action: 'whatsapp_talent_mapping_pdf',
-          details: { promptLength: jobSpecText.length, candidateCount: results.candidates?.length || 0 },
-          estimated_cost: 0.72
-        });
-      } catch { /* ignore */ }
-
-    } catch (error) {
-      console.error('[HireInbox WA] PDF talent mapping failed:', error);
-      await sendWhatsAppMessage(sender, 'Search failed. Try again or paste the job description as text.');
-    }
-    return;
-  }
-
-  // Job seeker - process CV
-  console.log('[HireInbox WA] Processing as CV (jobseeker mode)');
-  const filename = document.filename || 'cv.pdf';
-  const mimeType = document.mime_type || '';
+  // SIMPLIFIED: All documents are job specs for talent mapping
+  const filename = document.filename || 'jobspec.pdf';
   const mediaId = document.id;
 
-  // Validate file type
-  const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-  const validExtensions = ['.pdf', '.doc', '.docx'];
+  console.log('[HireInbox WA] Processing as JOB SPEC (talent mapping)');
+  await sendWhatsAppMessage(sender, '📥 *Downloading your document...*');
 
-  const hasValidMime = validTypes.some(t => mimeType.includes(t));
-  const hasValidExt = validExtensions.some(e => filename.toLowerCase().endsWith(e));
-
-  if (!hasValidMime && !hasValidExt) {
-    await sendWhatsAppMessage(sender,
-      'Please send a PDF or Word document (.pdf, .doc, .docx)\n\n' +
-      'Or you can paste your CV text directly.'
-    );
-    return;
-  }
-
-  // Check free scan limit
-  const scansUsed = await getFreeScansUsed(sender);
-  if (scansUsed >= 1) {
-    await sendWhatsAppMessage(sender,
-      '😅 You\'ve used your free scan!\n\n' +
-      'Get unlimited CV scans at *hireinbox.co.za*\n\n' +
-      'Or contact simon@hireinbox.co.za for access.'
-    );
-    return;
-  }
-
-  setState(sender, { ...state, step: 'downloading', flow: 'jobseeker' });
-  await sendWhatsAppMessage(sender,
-    '📥 *Downloading your CV...*'
-  );
-
-  // Download the file
-  console.log(`[HireInbox WA] Starting media download for job seeker CV: ${mediaId}`);
   const buffer = await downloadWhatsAppMedia(mediaId);
   if (!buffer) {
-    console.error(`[HireInbox WA] Media download failed for: ${mediaId}`);
     await sendWhatsAppMessage(sender,
-      'Couldn\'t download your file. Please try again or paste your CV text instead.\n\n' +
-      '_Tip: You can also copy-paste your CV text directly into the chat._'
+      'Couldn\'t download the file. Please paste the text instead.'
     );
     return;
   }
-  console.log(`[HireInbox WA] Media download successful: ${buffer.length} bytes`);
 
-  setState(sender, { ...state, step: 'analyzing', flow: 'jobseeker' });
+  await sendWhatsAppMessage(sender, '📄 *Extracting job requirements...*');
+
+  const jobSpecText = await extractTextFromPDF(buffer);
+  if (!jobSpecText || jobSpecText.length < 50) {
+    await sendWhatsAppMessage(sender,
+      'Couldn\'t read the PDF. Please paste the job description as text instead.\n\n' +
+      '_Some PDFs are image-only and can\'t be read._'
+    );
+    return;
+  }
+
+  // Now run talent mapping with the extracted text
+  setState(sender, { ...state, step: 'searching', lastSearch: jobSpecText, flow: 'recruiter' });
+
+  const shortPrompt = jobSpecText.length > 100 ? jobSpecText.slice(0, 100) + '...' : jobSpecText;
   await sendWhatsAppMessage(sender,
-    '📄 *Analyzing your CV...*\n\nThis takes about 30 seconds.'
+    `🔍 *Searching for candidates matching:*\n_"${shortPrompt}"_\n\n1-3 minutes...`
   );
 
   try {
-    const result = await analyzeCVFromBuffer(buffer, filename);
+    const results = await runTalentMapping(jobSpecText);
+    setState(sender, { ...state, step: 'results_shown', lastSearch: jobSpecText, lastResults: results, flow: 'recruiter' });
+    await sendWhatsAppMessage(sender, formatCandidatesForWhatsApp(results));
 
-    if (!result.success || !result.analysis) {
-      console.error('[HireInbox WA] CV analysis returned no result:', result);
-      throw new Error('Analysis returned no result');
-    }
-
-    const analysis = result.analysis;
-    const cvText = result.originalCV || '';
-
-    // Log the scan
-    await logCVScan(sender, analysis);
-
-    // Send results
-    await sendWhatsAppMessage(sender, formatCVAnalysisForWhatsApp(analysis));
-
-    // Offer talent pool
-    setState(sender, {
-      ...state,
-      step: 'awaiting_optin',
-      flow: 'jobseeker',
-      lastCVAnalysis: analysis,
-      candidateName: analysis.candidate_name,
-      cvText: cvText
-    });
-
-    await sendWhatsAppMessage(sender,
-      '*Join our Talent Pool?*\n\n' +
-      'Recruiters search our pool for candidates daily.\n' +
-      'We\'ll notify you when there\'s a match.\n\n' +
-      'Reply *YES* to join or *NO* to skip.'
-    );
+    // Log usage
+    try {
+      await supabase.from('pilot_usage_log').insert({
+        phone_number: sender,
+        action: 'whatsapp_talent_mapping_pdf',
+        details: { promptLength: jobSpecText.length, candidateCount: results.candidates?.length || 0 },
+        estimated_cost: 0.72
+      });
+    } catch { /* ignore */ }
 
   } catch (error) {
-    console.error('[HireInbox WA] CV document analysis failed:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-    // Provide more specific error messages
-    let userMessage = 'Couldn\'t read your CV. Please:\n' +
-      '- Try a different PDF\n' +
-      '- Or paste your CV text instead\n\n' +
-      '_Some PDFs are image-only and can\'t be read_';
-
-    if (errorMessage.includes('Rate limit') || errorMessage.includes('429')) {
-      userMessage = 'We\'re experiencing high demand. Please try again in a minute.';
-    } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
-      userMessage = 'Analysis took too long. Please try again with a smaller CV file.';
-    }
-
-    await sendWhatsAppMessage(sender, userMessage);
+    console.error('[HireInbox WA] PDF talent mapping failed:', error);
+    await sendWhatsAppMessage(sender, 'Search failed. Try again or paste the job description as text.');
   }
 }
 
@@ -1173,17 +1049,8 @@ async function handleOwnerMessage(sender: string, text: string): Promise<void> {
 // MAIN MESSAGE ROUTER
 // ============================================================================
 async function handleMessage(sender: string, text: string): Promise<void> {
-  // Super owner (Simon) gets dual-mode access with menu
-  if (isSuperOwner(sender)) {
-    await handleOwnerMessage(sender, text);
-    return;
-  }
-
-  // EVERYONE ELSE: Recruiter flow ONLY (no job seeker option)
-  // This includes:
-  // - Recruiter testers (hardcoded list)
-  // - Database authorized numbers
-  // - Any other user who messages
+  // TALENT MAPPING ONLY - Everyone gets recruiter flow
+  // Simplified for pilot launch
   await handleRecruiterMessage(sender, text);
 }
 
@@ -1247,41 +1114,22 @@ export async function POST(request: NextRequest) {
             const isSuperOwnerCheck = isSuperOwner(sender);
             console.log(`[HireInbox WA] isSuperOwner result: ${isSuperOwnerCheck}`);
 
-            // SUPER OWNER (Simon) only: Ask what the document is for (both modes)
-            if (isSuperOwnerCheck) {
-              const state = getState(sender);
-              // Save the document info and ask what it's for
-              setState(sender, {
-                ...state,
-                step: 'pending_document',
-                pendingDocument: message.document
-              });
-              await sendWhatsAppMessage(sender,
-                '📄 Got your document!\n\n' +
-                'What would you like to do?\n\n' +
-                '*1.* Analyze as *Job Spec* (find matching candidates)\n' +
-                '*2.* Analyze as *My CV* (get feedback)\n\n' +
-                'Reply *1* or *2*'
-              );
-              continue;
-            }
-            // Everyone else: process document normally (recruiters → job spec, others → CV)
+            // TALENT MAPPING ONLY - All documents are job specs
             await handleDocument(sender, message.document);
           }
 
-          // Handle images (sometimes people send CV screenshots)
+          // Handle images
           if (message.type === 'image') {
             await sendWhatsAppMessage(sender,
-              'I can\'t read images of CVs yet.\n\n' +
-              'Please send a *PDF* or *paste your CV text*.'
+              'I can\'t read images yet.\n\n' +
+              'Please send a *PDF job spec* or *type your job description*.'
             );
           }
 
           if (message.type === 'audio') {
             await sendWhatsAppMessage(sender,
               'Got your voice note! 🎙️\n\n' +
-              'For job seekers: Please send your CV as a PDF or paste the text.\n\n' +
-              'For recruiters: Please type your search query.'
+              'Please type your job description or send a PDF to search for candidates.'
             );
           }
         }
