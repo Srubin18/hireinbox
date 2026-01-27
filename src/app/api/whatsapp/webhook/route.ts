@@ -344,7 +344,7 @@ async function downloadWhatsAppMedia(mediaId: string): Promise<Buffer | null> {
 // ============================================================================
 async function runTalentMapping(prompt: string): Promise<any> {
   // SIMPLIFIED: Search internal talent pool only (fast)
-  // The full web scraping talent-mapping times out on Vercel
+  console.log('[TalentMapping] Starting search for:', prompt.slice(0, 50));
 
   try {
     // Get candidates from internal talent pool
@@ -354,10 +354,21 @@ async function runTalentMapping(prompt: string): Promise<any> {
       .eq('talent_pool_opted_in', true)
       .limit(50);
 
-    if (error || !candidates || candidates.length === 0) {
+    console.log('[TalentMapping] Query result - error:', error, 'count:', candidates?.length || 0);
+
+    if (error) {
+      console.error('[TalentMapping] Database error:', error);
       return {
         candidates: [],
-        message: 'No candidates in talent pool yet. Candidates join when they scan their CV via WhatsApp or hireinbox.co.za/upload'
+        message: 'Database error. Please try again.'
+      };
+    }
+
+    if (!candidates || candidates.length === 0) {
+      console.log('[TalentMapping] No candidates in pool');
+      return {
+        candidates: [],
+        message: 'No candidates in talent pool yet. Build your pool at hireinbox.co.za/upload'
       };
     }
 
