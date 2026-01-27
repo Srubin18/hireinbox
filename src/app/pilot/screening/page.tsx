@@ -164,38 +164,44 @@ export default function PilotScreening() {
     }
   }, [supabase, router, selectedRoleId]);
 
-  // Fetch candidates for selected role
+  // Fetch candidates for selected role (via server API to bypass RLS)
   const fetchCandidates = useCallback(async () => {
     if (!selectedRoleId) return;
 
     setLoadingCandidates(true);
     try {
-      const { data: candidatesData } = await supabase
-        .from('candidates')
-        .select('*')
-        .eq('role_id', selectedRoleId)
-        .order('ai_score', { ascending: false });
+      const res = await fetch(`/api/candidates/list?role_id=${selectedRoleId}`);
+      const data = await res.json();
 
-      if (candidatesData) {
-        setCandidates(candidatesData.map(c => ({
-          id: c.id,
-          name: c.name || c.email?.split('@')[0] || 'Unknown',
-          email: c.email || '',
-          phone: c.phone || '',
-          ai_score: c.ai_score || 0,
-          ai_match: c.ai_match || 'pending',
-          ai_recommendation: c.ai_recommendation || '',
-          strengths: c.strengths || [],
-          created_at: c.created_at,
-          screening_result: c.screening_result,
-        })));
+      if (data.success && data.candidates) {
+        setCandidates(data.candidates.map((c: Record<string, unknown>) => {
+          // Derive ai_match from status or ai_score (not stored in DB)
+          let ai_match = 'pending';
+          const score = (c.ai_score as number) || 0;
+          if (c.status === 'shortlist' || score >= 80) ai_match = 'strong';
+          else if (c.status === 'talent_pool' || score >= 60) ai_match = 'possible';
+          else if (score > 0) ai_match = 'low';
+
+          return {
+            id: c.id as string,
+            name: (c.name as string) || (c.email as string)?.split('@')[0] || 'Unknown',
+            email: (c.email as string) || '',
+            phone: (c.phone as string) || '',
+            ai_score: score,
+            ai_match,
+            ai_recommendation: (c.ai_recommendation as string) || '',
+            strengths: (c.strengths as string[]) || [],
+            created_at: c.created_at as string,
+            screening_result: c.screening_result as ScreeningResult,
+          };
+        }));
       }
     } catch (err) {
       console.error('Error fetching candidates:', err);
     } finally {
       setLoadingCandidates(false);
     }
-  }, [supabase, selectedRoleId]);
+  }, [selectedRoleId]);
 
   useEffect(() => {
     fetchRoles();
@@ -341,41 +347,48 @@ export default function PilotScreening() {
       }
 
       const assessment = screenData.assessment;
+      console.log('[Upload] Assessment received, saving candidate...');
       setUploadStatus('Saving candidate...');
 
       // Step 3: Save candidate to database
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('[Upload] Session:', session ? 'authenticated' : 'NOT authenticated');
       if (!session) throw new Error('Not authenticated');
 
       const candidateName = assessment.candidate_name || file.name.replace(/\.(pdf|docx?|txt)$/i, '');
       const candidateEmail = assessment.candidate_email || `${candidateName.toLowerCase().replace(/\s+/g, '.')}@unknown.com`;
+      console.log('[Upload] Creating candidate:', candidateName, candidateEmail);
 
-      const { error: insertError } = await supabase
-        .from('candidates')
-        .insert({
+      // Use server-side API to insert (bypasses RLS)
+      const createRes = await fetch('/api/candidates/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           role_id: selectedRoleId,
           name: candidateName,
           email: candidateEmail,
           phone: assessment.candidate_phone,
           cv_text: extractData.text,
           ai_score: assessment.overall_score,
-          ai_match: assessment.recommendation === 'SHORTLIST' ? 'strong' :
-                    assessment.recommendation === 'CONSIDER' ? 'possible' : 'low',
           ai_recommendation: assessment.recommendation_reason || assessment.recommendation,
+          ai_reasoning: assessment.summary?.fit_assessment || assessment.recommendation_reason,
           screening_result: assessment,
-          screened_at: new Date().toISOString(),
           status: assessment.recommendation === 'SHORTLIST' ? 'shortlist' :
                   assessment.recommendation === 'CONSIDER' ? 'talent_pool' : 'reject',
           score: assessment.overall_score,
           strengths: assessment.summary?.strengths || [],
           missing: assessment.summary?.weaknesses || [],
-        });
+        }),
+      });
 
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        throw insertError;
+      const createData = await createRes.json();
+      console.log('[Upload] Create response:', createData);
+      if (!createData.success) {
+        console.error('[Upload] Insert error:', createData.error);
+        throw new Error(createData.error || 'Failed to save candidate');
       }
 
+      console.log('[Upload] Candidate saved successfully!');
       setUploadStatus('Done!');
 
       // Refresh candidates list
@@ -652,6 +665,27 @@ export default function PilotScreening() {
                   <p style={{ fontSize: '13px', color: '#94a3b8' }}>
                     PDF, DOCX, or TXT - AI will screen instantly
                   </p>
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '16px',
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    borderRadius: '8px',
+                    textAlign: 'left',
+                    fontSize: '13px',
+                    color: '#475569',
+                  }}>
+                    <strong style={{ color: '#0f172a' }}>What happens when you upload:</strong>
+                    <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.8' }}>
+                      <li>AI extracts text from your CV file</li>
+                      <li>AI screens against your role requirements</li>
+                      <li>Candidate scored 0-100% with evidence</li>
+                      <li>Recommendation: SHORTLIST / CONSIDER / REJECT</li>
+                      <li>Full report with strengths, risks &amp; interview questions</li>
+                    </ol>
+                    <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>
+                      Takes 1-5 minutes depending on CV complexity
+                    </p>
+                  </div>
                 </>
               )}
             </div>
