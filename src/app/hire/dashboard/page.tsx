@@ -264,13 +264,14 @@ export default function EmployerDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDemo = searchParams.get('demo') === 'true';
+  const roleFromUrl = searchParams.get('role');
 
   const [candidates, setCandidates] = useState<Candidate[]>(sampleCandidates);
   const [roles, setRoles] = useState<Role[]>(sampleRoles);
   const [demoLoading, setDemoLoading] = useState(false);
   const [fetchingEmails, setFetchingEmails] = useState(false);
   const [lastFetchResult, setLastFetchResult] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>('1');
+  const [selectedRole, setSelectedRole] = useState<string>(roleFromUrl || '1');
   const [activeNav, setActiveNav] = useState<NavSection>('inbox');
   const [filterPass, setFilterPass] = useState<HiringPass | 'all'>('all');
   const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set());
@@ -435,7 +436,10 @@ export default function EmployerDashboard() {
         });
         setRoles(mappedRoles);
         if (mappedRoles.length > 0) {
-          setSelectedRole(mappedRoles[0].id);
+          // If role specified in URL, use that; otherwise use first role
+          const urlRole = roleFromUrl;
+          const roleExists = urlRole && mappedRoles.some(r => r.id === urlRole);
+          setSelectedRole(roleExists ? urlRole : mappedRoles[0].id);
         }
 
         // Map candidates
@@ -715,14 +719,53 @@ export default function EmployerDashboard() {
     pending: roleCandidates.filter(c => c.pass < 2).length,
   };
 
+  // Mobile menu state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflowX: 'hidden'
     }}>
+      {/* Mobile Responsive Styles */}
+      <style>{`
+        html, body { overflow-x: hidden; }
+        .desktop-sidebar { display: flex; }
+        .mobile-header { display: none; }
+        .mobile-overlay { display: none; }
+        .main-content { margin-left: 260px; }
+        .candidate-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+        .stats-grid { grid-template-columns: repeat(4, 1fr); }
+
+        @media (max-width: 1024px) {
+          .desktop-sidebar {
+            position: fixed !important;
+            left: ${mobileMenuOpen ? '0' : '-280px'} !important;
+            transition: left 0.3s ease;
+            z-index: 1001;
+          }
+          .mobile-header { display: flex !important; }
+          .mobile-overlay {
+            display: ${mobileMenuOpen ? 'block' : 'none'} !important;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+          }
+          .main-content { margin-left: 0 !important; padding: 16px !important; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+        }
+
+        @media (max-width: 640px) {
+          .candidate-grid { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: 1fr !important; }
+          .stat-card { padding: 16px !important; }
+        }
+      `}</style>
       {/* DEMO MODE BANNER */}
       {isDemo && (
         <div style={{
@@ -774,10 +817,57 @@ export default function EmployerDashboard() {
         </div>
       )}
 
+      {/* Mobile Header */}
+      <header className="mobile-header" style={{
+        display: 'none',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '12px 16px',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: isDemo ? '52px' : 0,
+        zIndex: 100
+      }}>
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          style={{ padding: '8px', background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <Logo />
+        <select
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            border: '1px solid #e2e8f0',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 600,
+            maxWidth: '140px'
+          }}
+        >
+          {roles.map(role => (
+            <option key={role.id} value={role.id}>{role.title}</option>
+          ))}
+        </select>
+      </header>
+
+      {/* Mobile Overlay */}
+      <div
+        className="mobile-overlay"
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
       {/* Main content wrapper with flex */}
       <div style={{ display: 'flex', flex: 1, marginTop: isDemo ? '52px' : 0 }}>
       {/* Sidebar */}
-      <aside style={{
+      <aside className="desktop-sidebar" style={{
         width: '260px',
         backgroundColor: '#ffffff',
         borderRight: '1px solid #e2e8f0',
@@ -938,10 +1028,10 @@ export default function EmployerDashboard() {
       </aside>
 
       {/* Main content */}
-      <main style={{ marginLeft: '260px', flex: 1, padding: '24px' }}>
+      <main className="main-content" style={{ marginLeft: '260px', flex: 1, padding: '24px' }}>
         {/* Stats cards - show for candidate views */}
         {['inbox', 'screening', 'interviews', 'verification', 'pipeline'].includes(activeNav) && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
             {[
               { label: 'Total Candidates', value: stats.total, color: '#4F46E5' },
               { label: 'New Today', value: stats.newToday, color: '#10b981' },
