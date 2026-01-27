@@ -843,23 +843,17 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string | null> {
 async function handleDocument(sender: string, document: any): Promise<void> {
   const state = getState(sender);
   const isSuperOwnerUser = isSuperOwner(sender);
-  const isRecruiterTesterUser = isRecruiterTester(sender);
-  const authorized = await isAuthorized(sender);
 
-  console.log(`[HireInbox WA] handleDocument - superOwner: ${isSuperOwnerUser}, recruiterTester: ${isRecruiterTesterUser}, authorized: ${authorized}, flow: ${state.flow}`);
+  console.log(`[HireInbox WA] handleDocument - superOwner: ${isSuperOwnerUser}, flow: ${state.flow}`);
 
   // Determine if document should be processed as job spec (recruiter) or CV (jobseeker)
   // - Super owner (Simon): respect their explicit flow choice (they chose 1 or 2)
-  // - Recruiter testers: ALWAYS job spec (recruiter mode only)
-  // - DB authorized: job spec
-  // - Everyone else: CV (jobseeker)
+  // - EVERYONE ELSE: ALWAYS job spec (recruiter mode only - no job seeker mode)
   let shouldProcessAsJobSpec: boolean;
   if (isSuperOwnerUser) {
     shouldProcessAsJobSpec = state.flow === 'recruiter';
-  } else if (isRecruiterTesterUser) {
-    shouldProcessAsJobSpec = true; // Recruiter testers ONLY get recruiter mode
   } else {
-    shouldProcessAsJobSpec = authorized;
+    shouldProcessAsJobSpec = true; // ALL other users → recruiter mode ONLY
   }
 
   console.log(`[HireInbox WA] handleDocument DECISION: shouldProcessAsJobSpec=${shouldProcessAsJobSpec}, flow=${state.flow}`);
@@ -1044,6 +1038,7 @@ const RECRUITER_TESTERS = [
   '27823093387',  // Marcel
   '27814877909',  // Bernard
   '27728103109',  // Modicai
+  '27646845688',  // Shay Sin Beti
 ];
 
 // Super owner gets both modes with menu
@@ -1182,20 +1177,12 @@ async function handleMessage(sender: string, text: string): Promise<void> {
     return;
   }
 
-  // Recruiter testers get recruiter mode only (no menu)
-  if (isRecruiterTester(sender)) {
-    await handleRecruiterMessage(sender, text);
-    return;
-  }
-
-  // Check if recruiter (from database) or job seeker
-  const authorized = await isAuthorized(sender);
-
-  if (authorized) {
-    await handleRecruiterMessage(sender, text);
-  } else {
-    await handleJobSeekerMessage(sender, text);
-  }
+  // EVERYONE ELSE: Recruiter flow ONLY (no job seeker option)
+  // This includes:
+  // - Recruiter testers (hardcoded list)
+  // - Database authorized numbers
+  // - Any other user who messages
+  await handleRecruiterMessage(sender, text);
 }
 
 // ============================================================================
