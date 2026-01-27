@@ -1185,10 +1185,8 @@ Return valid JSON only:
 
     console.log(`[TalentMapping] After BROAD searches: ${webResults.length} results`);
 
-    // Only run detailed queries if broad search returned results
-    const runDetailedQueries = webResults.length > 0 || true; // Always try for now
-
-    for (const sq of runDetailedQueries ? searchQueries.slice(0, 15) : []) { // Limit to 15 queries
+    // Run ALL detailed queries (don't limit - some later queries find good candidates)
+    for (const sq of searchQueries) { // Run all queries like before
       try {
         console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query.substring(0, 80)}...`);
         const results = await firecrawl.search(sq.query, { limit: 5 }) as any;
