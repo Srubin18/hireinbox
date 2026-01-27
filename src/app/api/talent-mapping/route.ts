@@ -1063,6 +1063,19 @@ export async function POST(request: Request) {
     if (industry) console.log('[TalentMapping] Specified industry:', industry);
     if (salaryBand) console.log('[TalentMapping] Specified salary band:', salaryBand);
 
+    // DIAGNOSTIC: Quick test to verify Firecrawl is working
+    try {
+      console.log('[TalentMapping] DIAGNOSTIC: Testing Firecrawl API...');
+      const testResult = await firecrawl.search('CEO South Africa', { limit: 3 }) as any;
+      const testData = testResult?.data || testResult?.results || testResult?.web || [];
+      console.log('[TalentMapping] DIAGNOSTIC: Firecrawl test returned', testData.length, 'results');
+      if (testData.length === 0) {
+        console.log('[TalentMapping] DIAGNOSTIC: Full response:', JSON.stringify(testResult).substring(0, 1000));
+      }
+    } catch (diagErr) {
+      console.error('[TalentMapping] DIAGNOSTIC: Firecrawl test FAILED:', diagErr);
+    }
+
     // Build enhanced prompt with explicit fields if provided
     let enhancedPrompt = prompt;
     if (industry || salaryBand) {
@@ -1120,15 +1133,66 @@ Return valid JSON only:
     console.log('[TalentMapping] Generated', searchQueries.length, 'diverse queries');
 
     // Step 3: Execute searches with Firecrawl
+    // SIMPLIFIED: Start with broad searches, then specific
     const webResults: WebSearchResult[] = [];
     const sourceTypeCounts: Record<string, number> = {};
     const searchMethodology: { query: string; sourceType: string; resultsFound: number }[] = [];
 
-    for (const sq of searchQueries) {
+    // PRIORITY SEARCH: Simple broad search first (most likely to return results)
+    const broadQueries = [
+      `${parsed.role} ${parsed.location || 'South Africa'}`,
+      `${parsed.role} ${parsed.industry || ''} South Africa`,
+      `${parsed.role} LinkedIn South Africa`,
+    ].filter(q => q.trim().length > 5);
+
+    console.log('[TalentMapping] Running BROAD searches first:', broadQueries);
+
+    for (const broadQuery of broadQueries) {
       try {
-        console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query}`);
+        console.log(`[TalentMapping] BROAD search: ${broadQuery}`);
+        const results = await firecrawl.search(broadQuery, { limit: 10 }) as any;
+        console.log(`[TalentMapping] BROAD result structure:`, JSON.stringify(results).substring(0, 500));
+
+        const data = results?.data || results?.results || results?.web || [];
+        console.log(`[TalentMapping] BROAD found ${data.length} results`);
+
+        for (const r of data) {
+          if (r?.url && (r?.markdown || r?.content || r?.description || r?.snippet)) {
+            const { type, value, dataSource, howWeFoundYou } = categorizeSource(r.url, r.title || '');
+            sourceTypeCounts[type] = (sourceTypeCounts[type] || 0) + 1;
+            webResults.push({
+              url: r.url,
+              title: r.title || '',
+              content: (r.markdown || r.content || r.description || r.snippet || '').substring(0, 3000),
+              sourceType: type,
+              sourceValue: value,
+              publiclyAvailable: true,
+              dataSource,
+              howWeFoundYou
+            });
+          }
+        }
+
+        searchMethodology.push({
+          query: broadQuery,
+          sourceType: 'broad',
+          resultsFound: data.length
+        });
+      } catch (err) {
+        console.log(`[TalentMapping] BROAD search error:`, err);
+      }
+    }
+
+    console.log(`[TalentMapping] After BROAD searches: ${webResults.length} results`);
+
+    // Only run detailed queries if broad search returned results
+    const runDetailedQueries = webResults.length > 0 || true; // Always try for now
+
+    for (const sq of runDetailedQueries ? searchQueries.slice(0, 15) : []) { // Limit to 15 queries
+      try {
+        console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query.substring(0, 80)}...`);
         const results = await firecrawl.search(sq.query, { limit: 5 }) as any;
-        const data = results?.data || results?.web || [];
+        const data = results?.data || results?.results || results?.web || [];
 
         searchMethodology.push({
           query: sq.query,
@@ -1136,8 +1200,10 @@ Return valid JSON only:
           resultsFound: data.length
         });
 
+        console.log(`[TalentMapping] [${sq.sourceType}] found ${data.length} results`);
+
         for (const r of data) {
-          if (r?.url && (r?.markdown || r?.content || r?.description)) {
+          if (r?.url && (r?.markdown || r?.content || r?.description || r?.snippet)) {
             const { type, value, dataSource, howWeFoundYou } = categorizeSource(r.url, r.title || '');
 
             // Track source diversity
@@ -1146,7 +1212,7 @@ Return valid JSON only:
             webResults.push({
               url: r.url,
               title: r.title || '',
-              content: (r.markdown || r.content || r.description).substring(0, 3000),
+              content: (r.markdown || r.content || r.description || r.snippet || '').substring(0, 3000),
               sourceType: type,
               sourceValue: value,
               publiclyAvailable: true, // POPIA compliance
@@ -1156,7 +1222,7 @@ Return valid JSON only:
           }
         }
       } catch (err) {
-        console.log(`[TalentMapping] Search error for [${sq.sourceType}] (continuing):`, err);
+        console.log(`[TalentMapping] Search error for [${sq.sourceType}]:`, err);
         searchMethodology.push({
           query: sq.query,
           sourceType: sq.sourceType,
