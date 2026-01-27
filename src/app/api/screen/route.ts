@@ -276,10 +276,11 @@ export async function POST(request: Request) {
     console.log(`[${traceId}] Screening started for role: ${role.title}, CV length: ${cvContent.length}`);
 
     const completion = await openai.chat.completions.create({
-      model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', // V3 BRAIN
+      model: 'gpt-4o-mini', // Using base model - fine-tuned model has issues
       temperature: 0,
       max_tokens: 4000,
-      messages: [{ role: 'system', content: TALENT_SCOUT_PROMPT }, { role: 'user', content: userPrompt }]
+      response_format: { type: "json_object" },
+      messages: [{ role: 'system', content: TALENT_SCOUT_PROMPT + '\n\nRESPOND WITH VALID JSON ONLY.' }, { role: 'user', content: userPrompt }]
     });
 
     console.log(`[${traceId}] OpenAI response received`);
@@ -289,7 +290,7 @@ export async function POST(request: Request) {
 
     if (!assessment || !validateAnalysis(assessment)) {
       const retry = await openai.chat.completions.create({
-        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', temperature: 0, max_tokens: 4000, // V3 BRAIN
+        model: 'gpt-4o-mini', temperature: 0, max_tokens: 4000, response_format: { type: "json_object" },
         messages: [
           { role: 'system', content: TALENT_SCOUT_PROMPT },
           { role: 'user', content: userPrompt },
