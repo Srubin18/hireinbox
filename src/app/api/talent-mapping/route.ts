@@ -249,12 +249,6 @@ interface EnrichedCandidate {
     timing: string;
     leverage: string;
   };
-  requirementsMet: {
-    role?: { required: string; found: string; met: boolean };
-    location?: { required: string; found: string; met: boolean };
-    skills?: Array<{ skill: string; evidence: string; met: boolean }>;
-    allRequirementsMet: boolean;
-  };
   matchScore: number;
   matchReasons: string[];
   potentialConcerns: string[];
@@ -396,35 +390,8 @@ function generateIntelligenceQueries(parsed: any): { query: string; sourceType: 
   const role = parsed.role || '';
   const location = parsed.location || 'South Africa';
   const industry = parsed.industry || '';
-  const mustHaves = parsed.mustHaves || [];
-  const specificExpertise = parsed.specificExpertise || [];
 
   const queries: { query: string; sourceType: WebSearchResult['sourceType']; purpose: string; dataSource: string; howWeFoundYou: string }[] = [];
-
-  // ==============================
-  // SKILL-SPECIFIC SEARCHES (CRITICAL)
-  // Search for each required skill explicitly
-  // ==============================
-  const allRequiredSkills = [...mustHaves, ...specificExpertise].filter(s => s && s.length > 2);
-
-  for (const skill of allRequiredSkills.slice(0, 5)) { // Top 5 required skills
-    queries.push({
-      query: `"${role}" "${skill}" ${location} South Africa`,
-      sourceType: 'news',
-      purpose: `Find candidates with specific skill: ${skill}`,
-      dataSource: 'Skill-specific search',
-      howWeFoundYou: `Found through search for ${skill} expertise`
-    });
-
-    // Also search LinkedIn for this skill combination
-    queries.push({
-      query: `"${role}" "${skill}" ${location} site:linkedin.com/in`,
-      sourceType: 'linkedin',
-      purpose: `LinkedIn profiles with ${skill}`,
-      dataSource: 'LinkedIn profile search',
-      howWeFoundYou: `Your LinkedIn profile mentions ${skill}`
-    });
-  }
 
   // ==============================
   // ORIGINAL QUERIES (Enhanced)
@@ -1199,44 +1166,9 @@ Return valid JSON only:
       messages: [
         {
           role: 'system',
-          content: `You are a premium South African executive search intelligence analyst. Your job is to find candidates that EXACTLY match what the recruiter asked for.
+          content: `You are a premium South African executive search intelligence analyst. Your job is to find HIDDEN candidates that recruiters cannot easily find themselves.
 
 ${SA_CONTEXT_PROMPT}
-
-**STRICT MATCHING RULES - NON-NEGOTIABLE:**
-===========================================
-1. REQUIRED SKILLS ARE MANDATORY - If the recruiter asks for "SEO experience", EVERY candidate MUST have evidence of SEO. No exceptions.
-2. JOB TITLE MUST MATCH - If they ask for "Marketing Manager", don't return "Chief Creative Officer" or "CMO". The title must be equivalent.
-3. LOCATION MUST MATCH - If they say "Cape Town", only return Cape Town candidates.
-4. EXPERIENCE MUST MATCH - If they say "3+ years", don't return juniors.
-
-**DISQUALIFICATION RULES:**
-- Missing a REQUIRED skill = DISQUALIFY (do not include in results)
-- Wrong job title level = DISQUALIFY
-- Wrong location = DISQUALIFY
-- If you cannot find evidence of a required skill, DO NOT INCLUDE the candidate
-
-**MATCH SCORE RULES:**
-- 90-100: ALL requirements met with STRONG evidence
-- 70-89: ALL requirements met with some evidence
-- 50-69: MOST requirements met (only use if you explain what's missing)
-- Below 50: DO NOT RETURN - these candidates don't match
-
-**REQUIREMENTS CHECKLIST:**
-For EACH candidate, you MUST include a "requirementsMet" field showing:
-{
-  "requirementsMet": {
-    "role": { "required": "Marketing Manager", "found": "Marketing Manager", "met": true },
-    "location": { "required": "Cape Town", "found": "Cape Town", "met": true },
-    "skills": [
-      { "skill": "SEO", "evidence": "Led SEO strategy at Company X", "met": true },
-      { "skill": "3+ years", "evidence": "5 years in marketing roles", "met": true }
-    ],
-    "allRequirementsMet": true
-  }
-}
-
-If allRequirementsMet is FALSE, do NOT include the candidate unless you explain why they're still worth considering.
 
 CRITICAL VALUE PROPOSITION:
 1. HIDDEN CANDIDATES - Prioritize people found on company pages, news, conferences - NOT just LinkedIn profiles
@@ -1472,17 +1404,9 @@ Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate,
         "timing": "Good/bad time to reach out",
         "leverage": "What would interest them"
       },
-      "requirementsMet": {
-        "role": { "required": "exact title from spec", "found": "what candidate has", "met": true|false },
-        "location": { "required": "location from spec", "found": "candidate location", "met": true|false },
-        "skills": [
-          { "skill": "required skill name", "evidence": "where you found proof OR 'NOT FOUND'", "met": true|false }
-        ],
-        "allRequirementsMet": true|false
-      },
       "matchScore": 1-100,
-      "matchReasons": ["why they match - MUST reference evidence"],
-      "potentialConcerns": ["any concerns - include missing skills here"],
+      "matchReasons": ["why they match"],
+      "potentialConcerns": ["any concerns"],
       "confidence": "high|medium|low",
       "uniqueValue": "What makes this candidate special/hard to find",
       "dataSource": "Primary source where we found them",
@@ -1500,14 +1424,7 @@ Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate,
   ]
 }
 
-**STRICT MATCHING - FOLLOW THESE RULES:**
-1. ONLY return candidates who meet ALL required criteria (role, location, skills)
-2. If you cannot find evidence of a required skill (like SEO), DO NOT include that candidate
-3. Better to return 3 perfect matches than 8 poor matches
-4. For EACH candidate, fill out the "requirementsMet" checklist showing evidence for EACH requirement
-5. If a skill was requested but you found NO evidence, mark it as "met": false and do NOT give high match score
-
-Generate 3-8 candidates. Quality over quantity. ONLY include candidates where allRequirementsMet = true, unless you explicitly explain why a partial match is still valuable.`
+Generate 5-8 candidates. PRIORITIZE candidates found through non-LinkedIn sources. For each candidate, explain WHY they're valuable (hidden intel, not just a LinkedIn search).`
         }
       ],
       temperature: 0.7,
@@ -1698,7 +1615,6 @@ Return JSON array only.`
         availabilitySignals: c.availabilitySignals || { score: 5, signals: ['Unknown'], interpretation: 'Insufficient data' },
         careerTrajectory: c.careerTrajectory || { direction: 'unknown', evidence: 'Unknown' },
         approachStrategy: c.approachStrategy || { angle: 'Standard outreach', timing: 'Anytime', leverage: 'Role opportunity' },
-        requirementsMet: c.requirementsMet || { allRequirementsMet: false, skills: [] },
         matchScore: c.matchScore || 70,
         matchReasons: c.matchReasons || ['Potential fit'],
         potentialConcerns: c.potentialConcerns || [],
