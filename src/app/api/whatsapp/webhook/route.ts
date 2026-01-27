@@ -862,10 +862,13 @@ async function handleDocument(sender: string, document: any): Promise<void> {
     shouldProcessAsJobSpec = authorized;
   }
 
+  console.log(`[HireInbox WA] handleDocument DECISION: shouldProcessAsJobSpec=${shouldProcessAsJobSpec}, flow=${state.flow}`);
+
   if (shouldProcessAsJobSpec) {
     const filename = document.filename || 'jobspec.pdf';
     const mediaId = document.id;
 
+    console.log('[HireInbox WA] Processing as JOB SPEC (recruiter mode)');
     await sendWhatsAppMessage(sender, '📥 *Downloading your document...*');
 
     const buffer = await downloadWhatsAppMedia(mediaId);
@@ -918,6 +921,7 @@ async function handleDocument(sender: string, document: any): Promise<void> {
   }
 
   // Job seeker - process CV
+  console.log('[HireInbox WA] Processing as CV (jobseeker mode)');
   const filename = document.filename || 'cv.pdf';
   const mimeType = document.mime_type || '';
   const mediaId = document.id;
@@ -1042,14 +1046,23 @@ const RECRUITER_TESTERS = [
   '27728103109',  // Modicai
 ];
 
+// Normalize phone number (remove +, spaces, leading zeros after country code)
+function normalizePhone(phone: string): string {
+  return phone.replace(/[+\s-]/g, '');
+}
+
 // Super owner gets both modes with menu
 function isSuperOwner(phoneNumber: string): boolean {
-  return phoneNumber === SUPER_OWNER;
+  const normalized = normalizePhone(phoneNumber);
+  const result = normalized === SUPER_OWNER || normalized.endsWith(SUPER_OWNER.slice(-9));
+  console.log(`[HireInbox WA] isSuperOwner check: ${phoneNumber} -> ${normalized} === ${SUPER_OWNER} = ${result}`);
+  return result;
 }
 
 // Recruiter testers get recruiter mode only (no menu, no jobseeker)
 function isRecruiterTester(phoneNumber: string): boolean {
-  return RECRUITER_TESTERS.includes(phoneNumber);
+  const normalized = normalizePhone(phoneNumber);
+  return RECRUITER_TESTERS.some(t => normalized === t || normalized.endsWith(t.slice(-9)));
 }
 
 // Legacy function - now only returns true for super owner
@@ -1245,8 +1258,12 @@ export async function POST(request: NextRequest) {
 
           // Handle document uploads (CV PDFs for job seekers, Job specs for recruiters)
           if (message.type === 'document' && message.document) {
+            console.log(`[HireInbox WA] Document received from: ${sender}`);
+            const isSuperOwnerCheck = isSuperOwner(sender);
+            console.log(`[HireInbox WA] isSuperOwner result: ${isSuperOwnerCheck}`);
+
             // SUPER OWNER (Simon) only: Ask what the document is for (both modes)
-            if (isSuperOwner(sender)) {
+            if (isSuperOwnerCheck) {
               const state = getState(sender);
               // Save the document info and ask what it's for
               setState(sender, {
