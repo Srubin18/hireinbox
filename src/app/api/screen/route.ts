@@ -254,12 +254,16 @@ export async function POST(request: Request) {
     const roleContext = buildRoleContext(role);
     const userPrompt = 'ROLE CONTEXT:\n' + roleContext + '\n\nCV TO EVALUATE:\n' + cvContent + '\n\nINSTRUCTIONS:\n1. Every strength MUST have evidence. No evidence = don\'t include it.\n2. Apply RULE 7 exception for near-miss candidates with 2+ exceptional indicators.\n3. If exception applies: recommendation MUST be CONSIDER, score 60-75, exception_applied=true.\n\nRespond with valid JSON only.';
 
+    console.log(`[${traceId}] Screening started for role: ${role.title}, CV length: ${cvContent.length}`);
+
     const completion = await openai.chat.completions.create({
       model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', // V3 BRAIN
       temperature: 0,
       max_tokens: 4000,
       messages: [{ role: 'system', content: TALENT_SCOUT_PROMPT }, { role: 'user', content: userPrompt }]
     });
+
+    console.log(`[${traceId}] OpenAI response received`);
 
     const responseText = completion.choices[0]?.message?.content || '';
     let assessment = parseAIResponse(responseText);
@@ -303,6 +307,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, assessment, role: { id: role.id, title: role.title }, traceId });
   } catch (error) {
     console.error(`[${traceId}] Screening error:`, error);
+    console.error(`[${traceId}] Error type:`, error instanceof Error ? error.constructor.name : typeof error);
+    console.error(`[${traceId}] Error message:`, error instanceof Error ? error.message : String(error));
     // SECURITY: Do not expose internal error details to client
     const isOpenAIError = error instanceof Error && error.message.includes('OpenAI');
     const userMessage = isOpenAIError
