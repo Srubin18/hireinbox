@@ -1046,23 +1046,19 @@ const RECRUITER_TESTERS = [
   '27728103109',  // Modicai
 ];
 
-// Normalize phone number (remove +, spaces, leading zeros after country code)
-function normalizePhone(phone: string): string {
-  return phone.replace(/[+\s-]/g, '');
-}
-
 // Super owner gets both modes with menu
 function isSuperOwner(phoneNumber: string): boolean {
-  const normalized = normalizePhone(phoneNumber);
-  const result = normalized === SUPER_OWNER || normalized.endsWith(SUPER_OWNER.slice(-9));
-  console.log(`[HireInbox WA] isSuperOwner check: ${phoneNumber} -> ${normalized} === ${SUPER_OWNER} = ${result}`);
+  // Match Simon's number in ANY format - just check if it contains 721172137
+  const simonDigits = '721172137';
+  const result = phoneNumber.includes(simonDigits);
+  console.log(`[HireInbox WA] isSuperOwner: "${phoneNumber}" includes "${simonDigits}" = ${result}`);
   return result;
 }
 
 // Recruiter testers get recruiter mode only (no menu, no jobseeker)
 function isRecruiterTester(phoneNumber: string): boolean {
-  const normalized = normalizePhone(phoneNumber);
-  return RECRUITER_TESTERS.some(t => normalized === t || normalized.endsWith(t.slice(-9)));
+  // Check last 9 digits of each tester number
+  return RECRUITER_TESTERS.some(t => phoneNumber.includes(t.slice(-9)));
 }
 
 // Legacy function - now only returns true for super owner
