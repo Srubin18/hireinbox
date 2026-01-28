@@ -10,26 +10,16 @@ import { createServerClient, CookieOptions } from '@supabase/ssr';
 // ===== CONFIGURATION =====
 
 // Public routes that don't require authentication
+// IMPORTANT: Only homepage and auth pages are public. All other pages require sign-in.
 const PUBLIC_ROUTES = [
-  '/',                 // Homepage (public demo)
-  '/hire',             // B2B landing & all hire pages
-  '/candidates',       // B2C landing
-  '/upload',           // B2C CV upload (public)
+  '/',                 // Homepage ONLY (public landing with Sign In button)
   '/login',            // Auth pages
   '/signup',
   '/auth/callback',
   '/auth/reset-password',
-  '/pricing',          // Pricing page
-  '/about',            // About page
-  '/faq',              // FAQ page
-  '/talent-pool',      // Talent pool (all pages)
+  '/about',            // Legal/info pages (accessible from homepage footer)
   '/terms',            // Legal
   '/privacy',          // Legal
-  '/admin',            // Admin dashboard (demo)
-  '/api/analyze-cv',   // B2C API (public)
-  '/api/analyze-video', // B2C API (public)
-  '/api/rewrite-cv',   // B2C API (public)
-  '/api/talent-pool',  // Talent pool API (public)
 ];
 
 // Static files and API routes that should always pass through
@@ -605,6 +595,29 @@ export async function middleware(request: NextRequest) {
   // If session exists and trying to access auth pages, redirect to dashboard
   if (session && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/hire/dashboard', request.url));
+  }
+
+  // CRITICAL: Redirect to login if no session on protected routes
+  if (!session) {
+    // For API routes, return 401 Unauthorized
+    if (pathname.startsWith('/api/')) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Authentication required' }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+            ...SECURITY_HEADERS,
+          },
+        }
+      );
+    }
+
+    // For page routes, redirect to login with return URL
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;

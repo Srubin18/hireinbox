@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation';
 
 // ============================================
 // HIREINBOX ROOT PAGE
+// PUBLIC LANDING - Sign In required for all other pages
 // Intent selection only. No selling. No pricing.
 // Calm tone. SEO-safe routing.
 //
 // Routes:
-// - "I'm hiring" → /hire (B2B)
-// - "I'm looking for work" → /candidates (B2C)
+// - "I'm hiring" → /login (then /hire)
+// - "I'm looking for work" → /login (then /candidates)
 // ============================================
 
 const Logo = ({ size = 48 }: { size?: number }) => (
@@ -30,21 +31,21 @@ export default function RootPage() {
       id: 'hiring',
       label: "I'm hiring",
       description: 'Find and screen candidates for your roles',
-      route: '/hire',
+      route: '/login?redirect=/hire',
       primary: true
     },
     {
       id: 'looking',
       label: "I'm looking for work",
       description: 'Get your CV reviewed and find opportunities',
-      route: '/candidates',
+      route: '/login?redirect=/candidates',
       primary: false
     },
     {
       id: 'talent-pool',
       label: 'Talent Pool',
       description: 'Join as a candidate or browse talent as a business',
-      route: '/talent-pool',
+      route: '/login?redirect=/talent-pool',
       primary: false
     }
   ];
@@ -55,38 +56,97 @@ export default function RootPage() {
       backgroundColor: '#ffffff',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '32px'
+      flexDirection: 'column'
     }}>
-      {/* Logo and brand */}
+      {/* Header with Sign In button */}
+      <header style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '20px 32px',
+        borderBottom: '1px solid #f1f5f9'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Logo size={40} />
+          <span style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            <span style={{ color: '#0f172a' }}>Hire</span>
+            <span style={{ color: '#4F46E5' }}>Inbox</span>
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <a
+            href="/login"
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#4F46E5',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease'
+            }}
+          >
+            Sign In
+          </a>
+          <a
+            href="/signup"
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#ffffff',
+              color: '#4F46E5',
+              border: '2px solid #4F46E5',
+              borderRadius: '10px',
+              fontSize: '0.9375rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Create Account
+          </a>
+        </div>
+      </header>
+
+      {/* Main content */}
       <div style={{
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        marginBottom: '64px'
+        justifyContent: 'center',
+        padding: '32px'
       }}>
-        <Logo size={72} />
-        <h1 style={{
-          fontSize: '36px',
-          fontWeight: 700,
-          color: '#0f172a',
-          marginTop: '24px',
-          marginBottom: '8px',
-          letterSpacing: '-0.02em'
+        {/* Logo and brand */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: '64px'
         }}>
-          <span>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
-        </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#64748b',
-          fontWeight: 500,
-          margin: 0
-        }}>
-          Less noise. More hires.
-        </p>
-      </div>
+          <Logo size={72} />
+          <h1 style={{
+            fontSize: '36px',
+            fontWeight: 700,
+            color: '#0f172a',
+            marginTop: '24px',
+            marginBottom: '8px',
+            letterSpacing: '-0.02em'
+          }}>
+            <span>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#64748b',
+            fontWeight: 500,
+            margin: 0
+          }}>
+            Less noise. More hires.
+          </p>
+        </div>
 
       {/* Intent selection */}
       <div style={{
@@ -147,10 +207,12 @@ export default function RootPage() {
         ))}
       </div>
 
+      </div>
+
       {/* Footer */}
-      <div style={{
-        position: 'fixed',
-        bottom: '24px',
+      <footer style={{
+        padding: '20px 32px',
+        borderTop: '1px solid #f1f5f9',
         display: 'flex',
         gap: '24px',
         color: '#94a3b8',
@@ -158,13 +220,10 @@ export default function RootPage() {
         flexWrap: 'wrap',
         justifyContent: 'center'
       }}>
-        <a href="/faq" style={{ color: '#94a3b8', textDecoration: 'none' }}>FAQ</a>
         <a href="/about" style={{ color: '#94a3b8', textDecoration: 'none' }}>About</a>
-        <a href="/login" style={{ color: '#94a3b8', textDecoration: 'none' }}>Login</a>
-        <a href="/signup" style={{ color: '#94a3b8', textDecoration: 'none' }}>Create account</a>
         <a href="/terms" style={{ color: '#94a3b8', textDecoration: 'none' }}>Terms</a>
         <a href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none' }}>Privacy</a>
-      </div>
+      </footer>
     </div>
   );
 }
