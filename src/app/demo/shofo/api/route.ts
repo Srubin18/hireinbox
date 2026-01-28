@@ -1045,7 +1045,7 @@ export async function POST(request: Request) {
   console.log('[Firecrawl] Getting company intelligence...');
   const companyNames = candidates
     .map(c => c.profile.currentRole?.company)
-    .filter(Boolean)
+    .filter((name): name is string => Boolean(name))
     .slice(0, 3);
   const companyIntel = await getCompanyIntelligence(companyNames.length > 0 ? companyNames : ['Standard Bank', 'Takealot']);
 
