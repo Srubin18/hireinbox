@@ -36,7 +36,9 @@ export default function PilotLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+
+  // SIGNUP DISABLED FOR PILOT - Uncomment to re-enable signup feature
+  // const [mode, setMode] = useState<'login' | 'signup'>('login');
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,28 +51,31 @@ export default function PilotLogin() {
     setError(null);
 
     try {
-      if (mode === 'login') {
+      // SIGNUP DISABLED - Only login is active during pilot
+      // Uncomment the if/else block below to re-enable signup
+
+      // if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              user_type: 'pilot_recruiter',
-            },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/pilot/dashboard`,
-          },
-        });
-        if (error) throw error;
-        setError('Check your email to confirm your account');
-        setLoading(false);
-        return;
-      }
+      // } else {
+      //   const { error } = await supabase.auth.signUp({
+      //     email,
+      //     password,
+      //     options: {
+      //       data: {
+      //         user_type: 'pilot_recruiter',
+      //       },
+      //       emailRedirectTo: `${window.location.origin}/auth/callback?next=/pilot/dashboard`,
+      //     },
+      //   });
+      //   if (error) throw error;
+      //   setError('Check your email to confirm your account');
+      //   setLoading(false);
+      //   return;
+      // }
 
       router.push('/pilot/dashboard');
     } catch (err) {
@@ -162,12 +167,14 @@ export default function PilotLogin() {
             color: '#0f172a',
             marginBottom: '8px',
           }}>
-            {mode === 'login' ? 'Welcome back' : 'Join the pilot'}
+            {/* SIGNUP DISABLED - Change 'Welcome back' to dynamic text when re-enabling signup */}
+            {/* {mode === 'login' ? 'Welcome back' : 'Join the pilot'} */}
+            Welcome back
           </h2>
           <p style={{ fontSize: '15px', color: '#64748b', marginBottom: '32px' }}>
-            {mode === 'login'
-              ? 'Sign in to access your recruitment dashboard'
-              : 'Create your account to get started'}
+            {/* SIGNUP DISABLED - Change text when re-enabling signup */}
+            {/* {mode === 'login' ? 'Sign in to access your recruitment dashboard' : 'Create your account to get started'} */}
+            Sign in to access your recruitment dashboard
           </p>
 
           {error && (
@@ -259,11 +266,14 @@ export default function PilotLogin() {
                 transition: 'all 0.2s',
               }}
             >
-              {loading ? 'Please wait...' : (mode === 'login' ? 'Sign in' : 'Create account')}
+              {/* SIGNUP DISABLED - Change button text when re-enabling signup */}
+              {/* {loading ? 'Please wait...' : (mode === 'login' ? 'Sign in' : 'Create account')} */}
+              {loading ? 'Please wait...' : 'Sign in'}
             </button>
           </form>
 
-          <div style={{
+          {/* SIGNUP DISABLED - Uncomment block below to re-enable signup toggle */}
+          {/* <div style={{
             marginTop: '24px',
             textAlign: 'center',
             fontSize: '14px',
@@ -302,6 +312,16 @@ export default function PilotLogin() {
                 </button>
               </>
             )}
+          </div> */}
+
+          {/* PILOT ONLY - Remove this when re-enabling signup */}
+          <div style={{
+            marginTop: '24px',
+            textAlign: 'center',
+            fontSize: '14px',
+            color: '#64748b',
+          }}>
+            Access is by invitation only. Contact us for access.
           </div>
 
           <div style={{
