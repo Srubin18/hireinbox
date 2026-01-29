@@ -31,7 +31,16 @@ export const payfastConfig = isProduction ? PAYFAST_CONFIG.production : PAYFAST_
 
 // ============================================
 // PRODUCTS & PRICING
+// NEW: Per-Role Pricing Model (Jan 2026)
+//
+// PHILOSOPHY:
+// - HireInbox is an AI Hiring Utility, NOT a marketplace
+// - We charge PER ROLE, not per CV
+// - Employers don't control CV volume, so per-CV is unfair
+// - Per-role pricing is predictable and feels fair
 // ============================================
+
+import { B2B_PRICING, B2C_PRICING } from './pricing';
 
 export interface Product {
   id: string;
@@ -41,22 +50,169 @@ export interface Product {
   priceDisplay: string; // Human readable
   type: 'subscription' | 'once_off';
   billingCycle?: 'monthly' | 'annual';
-  cvLimit: number; // -1 for unlimited
-  features: string[];
+  rolesIncluded?: number; // -1 for unlimited, used in per-role model
+  features: readonly string[] | string[];
   popular?: boolean;
-  tier: 'b2c' | 'b2b_starter' | 'b2b_growth' | 'b2b_business';
+  tier: 'b2c' | 'b2b_screening' | 'b2b_interview' | 'b2b_verification' | 'b2b_subscription';
 }
 
 export const PRODUCTS: Record<string, Product> = {
-  // B2C Single Scan
+  // === B2B PER-ROLE PRODUCTS ===
+
+  // AI CV Screening - Base Product
+  b2b_cv_screening: {
+    id: 'b2b_cv_screening',
+    name: 'AI CV Screening',
+    description: 'Unlimited CVs for one role with AI ranking & scoring',
+    price: B2B_PRICING.CV_SCREENING.price * 100, // R1,750 in cents
+    priceDisplay: B2B_PRICING.CV_SCREENING.priceDisplay,
+    type: 'once_off',
+    rolesIncluded: 1,
+    tier: 'b2b_screening',
+    popular: true,
+    features: B2B_PRICING.CV_SCREENING.includes,
+  },
+
+  // AI Interview Add-On
+  b2b_ai_interview: {
+    id: 'b2b_ai_interview',
+    name: 'AI Interview Add-On',
+    description: 'Avatar screening interviews with psychometric assessment',
+    price: B2B_PRICING.AI_INTERVIEW.price * 100, // R1,250 in cents
+    priceDisplay: B2B_PRICING.AI_INTERVIEW.priceDisplay,
+    type: 'once_off',
+    rolesIncluded: 1,
+    tier: 'b2b_interview',
+    features: B2B_PRICING.AI_INTERVIEW.includes,
+  },
+
+  // Verification Bundle Add-On
+  b2b_verification: {
+    id: 'b2b_verification',
+    name: 'Verification Bundle',
+    description: 'ID check, credit check, reference verification',
+    price: B2B_PRICING.VERIFICATION_BUNDLE.price * 100, // R800 in cents
+    priceDisplay: B2B_PRICING.VERIFICATION_BUNDLE.priceDisplay,
+    type: 'once_off',
+    rolesIncluded: 1,
+    tier: 'b2b_verification',
+    features: B2B_PRICING.VERIFICATION_BUNDLE.includes,
+  },
+
+  // Full Package
+  b2b_full_package: {
+    id: 'b2b_full_package',
+    name: 'Full Package',
+    description: 'Screening + AI Interview + Verification Bundle',
+    price: (B2B_PRICING.CV_SCREENING.price + B2B_PRICING.AI_INTERVIEW.price + B2B_PRICING.VERIFICATION_BUNDLE.price) * 100, // R3,800 in cents
+    priceDisplay: `R${(B2B_PRICING.CV_SCREENING.price + B2B_PRICING.AI_INTERVIEW.price + B2B_PRICING.VERIFICATION_BUNDLE.price).toLocaleString()}`,
+    type: 'once_off',
+    rolesIncluded: 1,
+    tier: 'b2b_screening',
+    features: [
+      ...B2B_PRICING.CV_SCREENING.includes,
+      ...B2B_PRICING.AI_INTERVIEW.includes,
+      ...B2B_PRICING.VERIFICATION_BUNDLE.includes,
+    ],
+  },
+
+  // === B2B SUBSCRIPTIONS (Phase 3) ===
+
+  b2b_sub_starter: {
+    id: 'b2b_sub_starter',
+    name: 'Starter Subscription',
+    description: '3 active roles with all add-ons included',
+    price: B2B_PRICING.SUBSCRIPTIONS.STARTER.price * 100, // R5,000/month in cents
+    priceDisplay: B2B_PRICING.SUBSCRIPTIONS.STARTER.priceDisplay,
+    type: 'subscription',
+    billingCycle: 'monthly',
+    rolesIncluded: 3,
+    tier: 'b2b_subscription',
+    features: B2B_PRICING.SUBSCRIPTIONS.STARTER.includes,
+  },
+
+  b2b_sub_growth: {
+    id: 'b2b_sub_growth',
+    name: 'Growth Subscription',
+    description: '10 active roles with all add-ons and priority support',
+    price: B2B_PRICING.SUBSCRIPTIONS.GROWTH.price * 100, // R10,000/month in cents
+    priceDisplay: B2B_PRICING.SUBSCRIPTIONS.GROWTH.priceDisplay,
+    type: 'subscription',
+    billingCycle: 'monthly',
+    rolesIncluded: 10,
+    tier: 'b2b_subscription',
+    popular: true,
+    features: B2B_PRICING.SUBSCRIPTIONS.GROWTH.includes,
+  },
+
+  b2b_sub_enterprise: {
+    id: 'b2b_sub_enterprise',
+    name: 'Enterprise Subscription',
+    description: 'Unlimited roles with dedicated account manager',
+    price: B2B_PRICING.SUBSCRIPTIONS.ENTERPRISE.price * 100, // R15,000/month in cents
+    priceDisplay: B2B_PRICING.SUBSCRIPTIONS.ENTERPRISE.priceDisplay,
+    type: 'subscription',
+    billingCycle: 'monthly',
+    rolesIncluded: -1, // Unlimited
+    tier: 'b2b_subscription',
+    features: B2B_PRICING.SUBSCRIPTIONS.ENTERPRISE.includes,
+  },
+
+  // === B2C PRODUCTS ===
+
+  b2c_video_analysis: {
+    id: 'b2c_video_analysis',
+    name: 'Video Analysis',
+    description: 'AI analysis of your video presence',
+    price: B2C_PRICING.VIDEO_ANALYSIS.priceRange.min * 100, // R99 in cents
+    priceDisplay: B2C_PRICING.VIDEO_ANALYSIS.priceDisplay,
+    type: 'once_off',
+    tier: 'b2c',
+    features: B2C_PRICING.VIDEO_ANALYSIS.includes,
+  },
+
+  b2c_ai_coaching: {
+    id: 'b2c_ai_coaching',
+    name: 'AI Avatar Coaching',
+    description: 'Practice interviews with AI',
+    price: B2C_PRICING.AI_AVATAR_COACHING.priceRange.min * 100, // R149 in cents
+    priceDisplay: B2C_PRICING.AI_AVATAR_COACHING.priceDisplay,
+    type: 'once_off',
+    tier: 'b2c',
+    features: B2C_PRICING.AI_AVATAR_COACHING.includes,
+  },
+
+  b2c_position_prep: {
+    id: 'b2c_position_prep',
+    name: 'Position-Specific Prep',
+    description: 'What does this employer want?',
+    price: B2C_PRICING.POSITION_SPECIFIC_PREP.price * 100, // R199 in cents
+    priceDisplay: B2C_PRICING.POSITION_SPECIFIC_PREP.priceDisplay,
+    type: 'once_off',
+    tier: 'b2c',
+    features: B2C_PRICING.POSITION_SPECIFIC_PREP.includes,
+  },
+
+  b2c_video_pitch: {
+    id: 'b2c_video_pitch',
+    name: 'Video Pitch',
+    description: 'Create video pitch for applications',
+    price: B2C_PRICING.VIDEO_PITCH.price * 100, // R149 in cents
+    priceDisplay: B2C_PRICING.VIDEO_PITCH.priceDisplay,
+    type: 'once_off',
+    tier: 'b2c',
+    features: B2C_PRICING.VIDEO_PITCH.includes,
+  },
+
+  // === LEGACY PRODUCTS (deprecated, kept for backwards compatibility) ===
+
   b2c_single: {
     id: 'b2c_single',
-    name: 'CV Scan',
+    name: 'CV Scan (Legacy)',
     description: 'Single CV analysis with AI feedback',
     price: 2900, // R29.00
     priceDisplay: 'R29',
     type: 'once_off',
-    cvLimit: 1,
     tier: 'b2c',
     features: [
       'AI-powered CV analysis',
@@ -64,79 +220,6 @@ export const PRODUCTS: Record<string, Product> = {
       'Detailed feedback',
       'Improvement suggestions',
       'ATS compatibility check',
-    ],
-  },
-
-  // B2B Starter
-  b2b_starter: {
-    id: 'b2b_starter',
-    name: 'Starter',
-    description: 'Perfect for small businesses',
-    price: 39900, // R399.00
-    priceDisplay: 'R399/month',
-    type: 'subscription',
-    billingCycle: 'monthly',
-    cvLimit: 50,
-    tier: 'b2b_starter',
-    features: [
-      '50 CV screenings/month',
-      'Email inbox integration',
-      'AI-powered screening',
-      'Evidence-based scoring',
-      'Candidate management',
-      'Email support',
-    ],
-  },
-
-  // B2B Growth
-  b2b_growth: {
-    id: 'b2b_growth',
-    name: 'Growth',
-    description: 'For growing recruitment teams',
-    price: 199900, // R1,999.00
-    priceDisplay: 'R1,999/month',
-    type: 'subscription',
-    billingCycle: 'monthly',
-    cvLimit: 250,
-    tier: 'b2b_growth',
-    popular: true,
-    features: [
-      '250 CV screenings/month',
-      'Email inbox integration',
-      'AI-powered screening',
-      'Evidence-based scoring',
-      'Candidate management',
-      'Multiple roles',
-      'Team members (5)',
-      'Priority support',
-      'Custom email templates',
-    ],
-  },
-
-  // B2B Business
-  b2b_business: {
-    id: 'b2b_business',
-    name: 'Business',
-    description: 'For high-volume recruiters',
-    price: 499900, // R4,999.00
-    priceDisplay: 'R4,999/month',
-    type: 'subscription',
-    billingCycle: 'monthly',
-    cvLimit: -1, // Unlimited
-    tier: 'b2b_business',
-    features: [
-      'Unlimited CV screenings',
-      'Email inbox integration',
-      'AI-powered screening',
-      'Evidence-based scoring',
-      'Candidate management',
-      'Unlimited roles',
-      'Unlimited team members',
-      'Priority support',
-      'Custom email templates',
-      'API access',
-      'Custom integrations',
-      'Dedicated account manager',
     ],
   },
 };

@@ -108,6 +108,63 @@
 
 ---
 
+## Entry 005 - 26 Jan 2026
+
+### Task: PDF Parsing on Vercel Production
+
+**Problem:**
+CV PDFs were parsing correctly locally (12,600+ chars from Meagan Kahn CV) but returning empty/short text on Vercel production, causing 0% AI screening scores.
+
+**What was tried:**
+1. `pdf-parse` alone - FAILED on Vercel (works locally)
+2. `unpdf` as primary - PARTIAL (designed for serverless but still had issues)
+3. ConvertAPI (cloud API) - EXPIRED (API key no longer valid)
+
+**What failed and why:**
+- `pdf-parse` on Vercel: Uses Node.js-specific features (`fs`, `path`) that don't bundle correctly in serverless. Also has a bug where it looks for `./test/data/05-versions-space.pdf` on startup.
+- Root cause: Next.js bundles these packages, breaking their Node.js-specific code paths.
+
+**What worked:**
+1. Added `serverExternalPackages` in `next.config.ts`:
+   ```typescript
+   serverExternalPackages: [
+     'pdf-parse',
+     'unpdf',
+     'pdfjs-dist',
+     'pdf2json',
+     'mammoth',
+   ],
+   ```
+   This tells Next.js to NOT bundle these packages and instead load them as native Node modules at runtime.
+
+2. Improved `extractPDFText()` with 3 fallback methods:
+   - Method 1: `unpdf` (serverless-optimized, primary)
+   - Method 2: `pdf-parse` (fallback)
+   - Method 3: `pdf2json` (second fallback)
+
+3. Added diagnostic logging:
+   - PDF header validation (`%PDF-` magic bytes)
+   - Buffer size validation
+   - Detailed error messages with stack traces
+   - Success/failure logging for each method
+
+**Key files changed:**
+- `/next.config.ts` - Added serverExternalPackages
+- `/src/app/api/fetch-emails/route.ts` - Improved extractPDFText function
+
+**Patterns to reuse:**
+- ANY package using Node.js-specific features (fs, path, crypto native) needs `serverExternalPackages` on Vercel
+- Always validate input before processing (check PDF magic bytes, buffer size)
+- Multiple fallback methods for critical functionality
+- Extensive logging in production for serverless debugging (check Vercel Function Logs)
+- Test locally AND on Vercel - they behave differently
+
+**Reference:**
+- https://github.com/vercel/community/discussions/5278
+- https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages
+
+---
+
 ## Template for Future Entries
 
 ```markdown

@@ -17,7 +17,13 @@ const PAYFAST_URL = PAYFAST_SANDBOX
   ? 'https://sandbox.payfast.co.za/eng/process'
   : 'https://www.payfast.co.za/eng/process';
 
-// Plan configurations
+// Import centralized pricing
+import { B2B_PRICING, B2C_PRICING } from '@/lib/pricing';
+
+// Plan configurations - Per-Role Model
+// NOTE: This is the NEW per-role pricing model (Jan 2026)
+// HireInbox is an AI Hiring Utility, NOT a marketplace
+// We charge per-role, not per-CV, because employers don't control CV volume
 const PLANS: Record<string, {
   name: string;
   amount: number;
@@ -25,39 +31,105 @@ const PLANS: Record<string, {
   frequency?: number; // 3 = monthly, 4 = quarterly, 5 = biannually, 6 = annually
   cycles?: number; // 0 = indefinite
   assessments?: number;
+  roles?: number; // Number of roles included
 }> = {
+  // === B2B PER-ROLE PRODUCTS ===
+  'b2b-cv-screening': {
+    name: 'AI CV Screening (1 Role)',
+    amount: B2B_PRICING.CV_SCREENING.price, // R1,750
+    type: 'once',
+    roles: 1
+  },
+  'b2b-ai-interview': {
+    name: 'AI Interview Add-On (1 Role)',
+    amount: B2B_PRICING.AI_INTERVIEW.price, // R1,250
+    type: 'once',
+    roles: 1
+  },
+  'b2b-verification': {
+    name: 'Verification Bundle (1 Role)',
+    amount: B2B_PRICING.VERIFICATION_BUNDLE.price, // R800
+    type: 'once',
+    roles: 1
+  },
+  'b2b-full-package': {
+    name: 'Full Package (Screening + Interview + Verification)',
+    amount: B2B_PRICING.CV_SCREENING.price + B2B_PRICING.AI_INTERVIEW.price + B2B_PRICING.VERIFICATION_BUNDLE.price, // R3,800
+    type: 'once',
+    roles: 1
+  },
+
+  // === B2B SUBSCRIPTIONS (Phase 3) ===
+  'b2b-sub-starter': {
+    name: 'HireInbox Starter Subscription',
+    amount: B2B_PRICING.SUBSCRIPTIONS.STARTER.price, // R5,000/month
+    type: 'subscription',
+    frequency: 3, // Monthly
+    cycles: 0,
+    roles: 3
+  },
+  'b2b-sub-growth': {
+    name: 'HireInbox Growth Subscription',
+    amount: B2B_PRICING.SUBSCRIPTIONS.GROWTH.price, // R10,000/month
+    type: 'subscription',
+    frequency: 3, // Monthly
+    cycles: 0,
+    roles: 10
+  },
+  'b2b-sub-enterprise': {
+    name: 'HireInbox Enterprise Subscription',
+    amount: B2B_PRICING.SUBSCRIPTIONS.ENTERPRISE.price, // R15,000/month
+    type: 'subscription',
+    frequency: 3, // Monthly
+    cycles: 0,
+    roles: -1 // Unlimited
+  },
+
+  // === B2C PRODUCTS ===
+  'b2c-video-analysis': {
+    name: 'Video Analysis',
+    amount: B2C_PRICING.VIDEO_ANALYSIS.priceRange.min, // R99
+    type: 'once',
+    assessments: 1
+  },
+  'b2c-ai-coaching': {
+    name: 'AI Avatar Coaching',
+    amount: B2C_PRICING.AI_AVATAR_COACHING.priceRange.min, // R149
+    type: 'once',
+    assessments: 1
+  },
+  'b2c-position-prep': {
+    name: 'Position-Specific Prep',
+    amount: B2C_PRICING.POSITION_SPECIFIC_PREP.price, // R199
+    type: 'once',
+    assessments: 1
+  },
+  'b2c-video-pitch': {
+    name: 'Video Pitch',
+    amount: B2C_PRICING.VIDEO_PITCH.price, // R149
+    type: 'once',
+    assessments: 1
+  },
+
+  // === LEGACY (kept for backwards compatibility, will be removed) ===
   'b2c-single': {
-    name: 'CV Analysis',
+    name: 'CV Analysis (Legacy)',
     amount: 29.00,
     type: 'once',
     assessments: 1
   },
   'b2b-starter': {
-    name: 'HireInbox Starter',
+    name: 'HireInbox Starter (Legacy)',
     amount: 299.00,
     type: 'subscription',
-    frequency: 3, // Monthly
-    cycles: 0
-  },
-  'b2b-starter-annual': {
-    name: 'HireInbox Starter (Annual)',
-    amount: 2868.00, // R239/month x 12
-    type: 'subscription',
-    frequency: 6, // Annually
+    frequency: 3,
     cycles: 0
   },
   'b2b-pro': {
-    name: 'HireInbox Pro',
+    name: 'HireInbox Pro (Legacy)',
     amount: 999.00,
     type: 'subscription',
-    frequency: 3, // Monthly
-    cycles: 0
-  },
-  'b2b-pro-annual': {
-    name: 'HireInbox Pro (Annual)',
-    amount: 9588.00, // R799/month x 12
-    type: 'subscription',
-    frequency: 6, // Annually
+    frequency: 3,
     cycles: 0
   }
 };
