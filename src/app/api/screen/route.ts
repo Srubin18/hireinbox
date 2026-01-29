@@ -62,28 +62,35 @@ Only suggest alt roles if there is concrete evidence.
 EXCEPTION RULE (DOMINANT)
 =============================
 
-RULE 7 — NEAR-MISS EXCEPTION (DOMINANT OVERRIDE)
-This rule OVERRIDES strict minimum-experience rejection logic.
+RULE 7 — NEAR-MISS EXCEPTION (STRICT - USE SPARINGLY)
+This rule OVERRIDES strict minimum-experience rejection logic ONLY IN RARE CASES.
 
-Definition:
-- Experience requirement miss is within 6–12 months (e.g., requirement 3.0 years and candidate has 2.0–2.9 years AND strong evidence of trajectory).
+STRICT REQUIREMENTS FOR EXCEPTION:
+1. Experience gap must be ≤1 year (12 months max)
+   - Example: 8 years required, candidate has 7+ years = eligible
+   - Example: 8 years required, candidate has 6 years = NOT eligible (REJECT)
+   - CRITICAL: If gap is >1 year, exception CANNOT apply - must REJECT
 
-Exceptional indicators (need 2+):
-- >120% targets achieved (e.g., "142%")
-- Awards / top-performer
-- Rapid promotion
-- Leadership signal with evidence (e.g., "managed 5 reps", "team lead")
-- Clear trajectory (consistent progression + metrics)
-- Major deals closed with metrics
+2. AND candidate must have 3+ of these exceptional indicators:
+   - >150% targets achieved with metrics
+   - Industry awards or "top performer" recognition
+   - Rapid promotion (2+ promotions in 3 years)
+   - Leadership of 5+ people with evidence
+   - Consistent year-over-year growth metrics (3+ years)
+   - Major transformational impact (quantified)
 
-If this exception triggers:
-- recommendation MUST be "CONSIDER"
-- recommendation MUST NOT be "REJECT" (REJECT IS FORBIDDEN)
-- hard_requirements.experience must go under "partial" with explanation
-- recommendation_reason MUST explicitly state: "Exception applied"
+FORBIDDEN: Exception CANNOT apply if:
+- Experience gap >1 year
+- Fewer than 3 exceptional indicators with strong evidence
+- Missing critical hard requirements (not just experience)
+
+If exception DOES trigger (rare):
+- recommendation MUST be "CONSIDER" (score 60-75)
+- hard_requirements.experience goes under "partial"
+- recommendation_reason MUST state: "Exception applied: [specific indicators]"
 
 If exception does NOT trigger:
-Apply normal strict logic.
+Apply strict logic - REJECT if requirements not met.
 
 =============================
 SCORING CALIBRATION
@@ -276,7 +283,7 @@ export async function POST(request: Request) {
     console.log(`[${traceId}] Screening started for role: ${role.title}, CV length: ${cvContent.length}`);
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Using base model - fine-tuned model has issues
+      model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', // V3 BRAIN - Fine-tuned on 6,000 SA recruitment examples
       temperature: 0,
       max_tokens: 4000,
       response_format: { type: "json_object" },
@@ -290,7 +297,7 @@ export async function POST(request: Request) {
 
     if (!assessment || !validateAnalysis(assessment)) {
       const retry = await openai.chat.completions.create({
-        model: 'gpt-4o-mini', temperature: 0, max_tokens: 4000, response_format: { type: "json_object" },
+        model: 'ft:gpt-4o-mini-2024-07-18:personal:hireinbox-v3:CqlakGfJ', temperature: 0, max_tokens: 4000, response_format: { type: "json_object" },
         messages: [
           { role: 'system', content: TALENT_SCOUT_PROMPT },
           { role: 'user', content: userPrompt },
@@ -322,6 +329,33 @@ export async function POST(request: Request) {
 
     if (!assessment.risk_register) assessment.risk_register = [];
     if (!assessment.evidence_highlights) assessment.evidence_highlights = [];
+
+    // HARD ENFORCEMENT: Override AI if critical requirements not met
+    const facts = role.facts as Record<string, unknown> | undefined;
+    const criteria = role.criteria as Record<string, unknown> | undefined;
+    const minExp = (facts?.min_experience_years || facts?.experience_min || criteria?.min_experience_years || criteria?.experience_min) as number | undefined;
+    const candidateExp = assessment.years_experience as number | null;
+
+    console.log(`[${traceId}] ENFORCEMENT CHECK: minExp=${minExp}, candidateExp=${candidateExp}`);
+
+    if (minExp && candidateExp !== null && candidateExp > 0) {
+      const experienceGap = minExp - candidateExp;
+      console.log(`[${traceId}] Experience gap: ${experienceGap} years (min required: ${minExp}, candidate has: ${candidateExp})`);
+
+      // If candidate is more than 1 year below minimum, FORCE REJECT
+      if (experienceGap > 1) {
+        console.log(`[${traceId}] HARD ENFORCEMENT TRIGGERED: Gap of ${experienceGap} years exceeds 1 year threshold - FORCING REJECT`);
+        assessment.overall_score = Math.min(assessment.overall_score as number, 55); // Cap at 55
+        assessment.recommendation = 'REJECT';
+        assessment.recommendation_reason = `Does not meet minimum experience requirement. Has ${candidateExp} years of experience but role requires ${minExp}+ years. Gap of ${experienceGap} years is too significant.`;
+        assessment.exception_applied = false;
+        assessment.exception_reason = null;
+      } else {
+        console.log(`[${traceId}] No enforcement needed - gap of ${experienceGap} years is within acceptable range`);
+      }
+    } else {
+      console.log(`[${traceId}] Enforcement skipped - missing data (minExp=${minExp}, candidateExp=${candidateExp})`);
+    }
 
     if (candidateId && candidate) {
       const status = mapRecommendationToStatus(assessment.recommendation as string);

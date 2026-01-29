@@ -1011,6 +1011,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please describe who you are looking for' }, { status: 400 });
     }
 
+    // Check if Firecrawl API key is configured
+    if (!process.env.FIRECRAWL_API_KEY) {
+      console.error('[TalentMapping] FIRECRAWL_API_KEY not configured');
+      return NextResponse.json({
+        error: 'Talent Mapping feature is not configured. Please contact support.',
+        details: 'FIRECRAWL_API_KEY environment variable is required'
+      }, { status: 503 });
+    }
+
     // Try to get user email from auth header for usage tracking
     let userEmail: string | null = null;
     const authHeader = request.headers.get('authorization');
