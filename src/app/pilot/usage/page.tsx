@@ -9,16 +9,19 @@ interface MonthlyData {
   month: string;
   monthLabel: string;
   talentSearches: number;
+  candidatesFound: number;
   rolesCreated: number;
 }
 
 interface UsageStats {
   currentMonth: {
     talentSearches: number;
+    candidatesFound: number;
     rolesCreated: number;
   };
   allTime: {
     talentSearches: number;
+    candidatesFound: number;
     rolesCreated: number;
   };
   monthlyHistory: MonthlyData[];
@@ -145,7 +148,7 @@ export default function UsagePage() {
     return <div>Error: No data for selected month</div>;
   }
 
-  // Calculate billing
+  // Calculate billing based on successful searches (searches that found candidates)
   const talentSearchBatches = Math.ceil(monthData.talentSearches / 20);
   const searchesRemaining = (talentSearchBatches * 20) - monthData.talentSearches;
   const talentSearchCost = talentSearchBatches * 4999;
@@ -250,7 +253,7 @@ export default function UsagePage() {
               </div>
               <div>
                 <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>
-                  Talent Searches
+                  Successful Talent Searches
                 </h2>
                 <div style={{ fontSize: '40px', fontWeight: 700, color: '#4F46E5', lineHeight: 1 }}>
                   {monthData.talentSearches}
@@ -269,7 +272,7 @@ export default function UsagePage() {
               lineHeight: 1.6,
             }}>
               Up to 20 talent searches per month for <strong>R4,999</strong>.
-              Additional billing for the next 20 searches.
+              Additional billing for the next 20 searches. Only searches that find candidates are counted.
               {talentSearchBatches > 0 && (
                 <div style={{ marginTop: '8px', color: '#4F46E5', fontWeight: 600 }}>
                   Current: R{talentSearchCost.toLocaleString()} ({talentSearchBatches} batch{talentSearchBatches > 1 ? 'es' : ''})

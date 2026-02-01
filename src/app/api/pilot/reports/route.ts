@@ -116,6 +116,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to save report' }, { status: 500 });
     }
 
+    // Link the billing event to this saved report (billing event was created when search ran)
+    // Find the most recent billing event without a related_id and link it to this report
+    try {
+      const { error: updateError } = await supabase
+        .from('pilot_billing_events')
+        .update({ related_id: reportData.id })
+        .eq('user_id', user.id)
+        .eq('event_type', 'talent_search')
+        .is('related_id', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (updateError) {
+        console.error('[Reports] Failed to link billing event:', updateError);
+      } else {
+        console.log('[Reports] Linked billing event to report:', reportData.id);
+      }
+    } catch (linkError) {
+      console.error('[Reports] Failed to link billing event:', linkError);
+      // Don't fail the request if linking fails
+    }
+
     // Insert individual candidates for tracking and feedback
     if (report_data.candidates && Array.isArray(report_data.candidates)) {
       const candidateInserts = report_data.candidates.map((candidate: any) => ({

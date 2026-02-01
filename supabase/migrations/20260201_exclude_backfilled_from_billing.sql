@@ -1,4 +1,9 @@
--- Create a function to summarize usage by month
+-- ============================================
+-- EXCLUDE BACKFILLED RECORDS FROM BILLING CALCULATIONS
+-- Only count real searches/roles created after tracking started
+-- ============================================
+
+-- Update the usage summary function to exclude backfilled records
 CREATE OR REPLACE FUNCTION get_monthly_usage_summary(p_user_id UUID)
 RETURNS TABLE (
   event_month TEXT,
@@ -20,3 +25,5 @@ BEGIN
   ORDER BY pbe.event_month;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION get_monthly_usage_summary IS 'Summarizes billable usage by month, excluding backfilled historical data';

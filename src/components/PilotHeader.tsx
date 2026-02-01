@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 interface PilotHeaderProps {
   user?: { email: string } | null;
   onLogout: () => void;
-  currentPage?: 'dashboard' | 'talent-mapping' | 'screening' | 'reports' | 'usage';
+  currentPage?: 'dashboard' | 'talent-mapping' | 'screening' | 'reports' | 'usage' | 'search-history';
 }
 
 const Logo = () => (
