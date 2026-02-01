@@ -4,6 +4,244 @@ import FirecrawlApp from '@mendable/firecrawl-js';
 import { createClient } from '@supabase/supabase-js';
 import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 
+// ============================================
+// SUPERIOR INTELLIGENCE STACK INTEGRATIONS
+// ============================================
+
+// GDELT API - Global news sentiment & company intelligence
+const GDELT_DOC_API = 'https://api.gdeltproject.org/api/v2/doc/doc';
+
+interface GDELTArticle {
+  url: string;
+  title: string;
+  source: string;
+  publishDate: string;
+  tone: number;
+  themes: string[];
+  organizations: string[];
+}
+
+interface CompanySignals {
+  companyName: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  averageTone: number;
+  layoffSignals: boolean;
+  growthSignals: boolean;
+  recentNews: { title: string; tone: number; url: string }[];
+  riskLevel: 'high' | 'medium' | 'low';
+}
+
+// Fetch GDELT news for company/industry intelligence
+async function fetchGDELTIntelligence(query: string, timespan: string = '30d'): Promise<GDELTArticle[]> {
+  try {
+    const params = new URLSearchParams({
+      query: `${query} sourcelang:english`,
+      mode: 'ArtList',
+      maxrecords: '50',
+      timespan: timespan,
+      format: 'json',
+      sort: 'DateDesc'
+    });
+
+    const response = await fetch(`${GDELT_DOC_API}?${params.toString()}`, {
+      signal: AbortSignal.timeout(10000) // 10s timeout
+    });
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    if (!data.articles) return [];
+
+    return data.articles.map((article: any) => ({
+      url: article.url || '',
+      title: article.title || '',
+      source: article.domain || '',
+      publishDate: article.seendate || '',
+      tone: article.tone || 0,
+      themes: article.themes ? article.themes.split(';') : [],
+      organizations: article.organizations ? article.organizations.split(';') : []
+    }));
+  } catch (error) {
+    console.error('[GDELT] Fetch error:', error);
+    return [];
+  }
+}
+
+// Get company signals from GDELT (layoffs, growth, etc)
+async function getCompanySignals(companyName: string): Promise<CompanySignals> {
+  const articles = await fetchGDELTIntelligence(`"${companyName}" South Africa`, '90d');
+
+  if (articles.length === 0) {
+    return {
+      companyName,
+      sentiment: 'neutral',
+      averageTone: 0,
+      layoffSignals: false,
+      growthSignals: false,
+      recentNews: [],
+      riskLevel: 'low'
+    };
+  }
+
+  const avgTone = articles.reduce((sum, a) => sum + a.tone, 0) / articles.length;
+
+  // Check for layoff/restructuring signals
+  const layoffKeywords = ['layoff', 'retrench', 'cut', 'redundan', 'downsiz', 'restructur'];
+  const growthKeywords = ['hiring', 'expansion', 'growth', 'invest', 'new jobs', 'recruit'];
+
+  const layoffSignals = articles.some(a =>
+    layoffKeywords.some(kw => (a.title + a.themes.join(' ')).toLowerCase().includes(kw))
+  );
+
+  const growthSignals = articles.some(a =>
+    growthKeywords.some(kw => (a.title + a.themes.join(' ')).toLowerCase().includes(kw))
+  );
+
+  return {
+    companyName,
+    sentiment: avgTone > 1 ? 'positive' : avgTone < -1 ? 'negative' : 'neutral',
+    averageTone: Math.round(avgTone * 100) / 100,
+    layoffSignals,
+    growthSignals,
+    recentNews: articles.slice(0, 5).map(a => ({ title: a.title, tone: a.tone, url: a.url })),
+    riskLevel: layoffSignals ? 'high' : avgTone < -2 ? 'medium' : 'low'
+  };
+}
+
+// Get industry-wide signals from GDELT
+async function getIndustrySignals(industry: string): Promise<{
+  hiringTrend: 'increasing' | 'stable' | 'decreasing';
+  layoffActivity: 'high' | 'medium' | 'low';
+  companiesHiring: string[];
+  companiesRestructuring: string[];
+}> {
+  const articles = await fetchGDELTIntelligence(`${industry} South Africa employment jobs`, '30d');
+
+  const hiringArticles = articles.filter(a =>
+    ['hiring', 'recruit', 'jobs', 'expansion'].some(kw => a.title.toLowerCase().includes(kw))
+  );
+  const layoffArticles = articles.filter(a =>
+    ['layoff', 'retrench', 'cut'].some(kw => a.title.toLowerCase().includes(kw))
+  );
+
+  // Extract company names from articles
+  const companiesHiring = [...new Set(hiringArticles.flatMap(a => a.organizations).filter(o => o.length > 2))].slice(0, 5);
+  const companiesRestructuring = [...new Set(layoffArticles.flatMap(a => a.organizations).filter(o => o.length > 2))].slice(0, 5);
+
+  return {
+    hiringTrend: hiringArticles.length > layoffArticles.length * 2 ? 'increasing' :
+                 layoffArticles.length > hiringArticles.length ? 'decreasing' : 'stable',
+    layoffActivity: layoffArticles.length > 10 ? 'high' : layoffArticles.length > 3 ? 'medium' : 'low',
+    companiesHiring,
+    companiesRestructuring
+  };
+}
+
+// SHOFO API - SA salary benchmarks (key in .env.local)
+const SHOFO_API_KEY = process.env.SHOFO_API_KEY;
+
+interface ShofoSalaryData {
+  role: string;
+  location: string;
+  minSalary: number;
+  maxSalary: number;
+  medianSalary: number;
+  currency: string;
+  sampleSize: number;
+  lastUpdated: string;
+}
+
+// Get salary benchmarks from Shofo
+async function getShofoSalaryBenchmark(role: string, location: string = 'Johannesburg'): Promise<ShofoSalaryData | null> {
+  try {
+    const url = new URL('https://api.shofo.ai/api/salary/benchmark');
+    url.searchParams.set('role', role);
+    url.searchParams.set('location', location);
+    url.searchParams.set('country', 'South Africa');
+
+    const response = await fetch(url.toString(), {
+      headers: { 'X-API-Key': SHOFO_API_KEY },
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (!response.ok) {
+      console.log('[Shofo] API returned:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data.success && data.data) {
+      return {
+        role: data.data.role || role,
+        location: data.data.location || location,
+        minSalary: data.data.min_salary || 0,
+        maxSalary: data.data.max_salary || 0,
+        medianSalary: data.data.median_salary || 0,
+        currency: 'ZAR',
+        sampleSize: data.data.sample_size || 0,
+        lastUpdated: new Date().toISOString()
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('[Shofo] Fetch error:', error);
+    return null;
+  }
+}
+
+// Get market salary data for a role
+async function getMarketSalaryData(role: string, location: string, seniority: string): Promise<{
+  benchmark: ShofoSalaryData | null;
+  marketPosition: string;
+  competitiveRange: { min: number; max: number };
+}> {
+  const benchmark = await getShofoSalaryBenchmark(role, location);
+
+  // If no Shofo data, use our internal benchmarks
+  if (!benchmark) {
+    // Fallback to internal SA salary benchmarks
+    const seniorityMultipliers: Record<string, number> = {
+      'junior': 0.6,
+      'mid': 1.0,
+      'senior': 1.4,
+      'executive': 2.0
+    };
+
+    const baseRanges: Record<string, { min: number; max: number }> = {
+      'director': { min: 900000, max: 2500000 },
+      'manager': { min: 450000, max: 900000 },
+      'consultant': { min: 350000, max: 700000 },
+      'engineer': { min: 400000, max: 1000000 },
+      'developer': { min: 350000, max: 900000 },
+      'analyst': { min: 300000, max: 600000 },
+      'default': { min: 300000, max: 800000 }
+    };
+
+    const roleKey = Object.keys(baseRanges).find(k => role.toLowerCase().includes(k)) || 'default';
+    const base = baseRanges[roleKey];
+    const multiplier = seniorityMultipliers[seniority] || 1.0;
+
+    return {
+      benchmark: null,
+      marketPosition: 'Estimated from internal benchmarks',
+      competitiveRange: {
+        min: Math.round(base.min * multiplier),
+        max: Math.round(base.max * multiplier)
+      }
+    };
+  }
+
+  return {
+    benchmark,
+    marketPosition: `Based on ${benchmark.sampleSize} market data points`,
+    competitiveRange: {
+      min: benchmark.minSalary,
+      max: benchmark.maxSalary
+    }
+  };
+}
+
 // Supabase client for usage logging
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1432,7 +1670,7 @@ export async function POST(request: Request) {
 
     // Step 1: Parse search criteria with OpenAI
     const parseResponse = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-2024-08-06', // PINNED to avoid model drift
       messages: [
         {
           role: 'system',
@@ -1472,6 +1710,32 @@ Return valid JSON only:
     // Apply explicit overrides if provided by recruiter
     if (industry) parsed.industry = industry;
     console.log('[TalentMapping] Parsed:', parsed);
+
+    // Step 1.5: SUPERIOR INTELLIGENCE STACK - Gather market intelligence in parallel
+    console.log('[TalentMapping] Fetching GDELT + Shofo intelligence...');
+
+    const [industrySignals, salaryData] = await Promise.all([
+      // GDELT: Industry-wide hiring/layoff signals
+      getIndustrySignals(parsed.industry || 'business').catch(e => {
+        console.error('[GDELT] Industry signals error:', e);
+        return { hiringTrend: 'stable' as const, layoffActivity: 'low' as const, companiesHiring: [], companiesRestructuring: [] };
+      }),
+      // Shofo: Market salary benchmarks
+      getMarketSalaryData(parsed.role || 'professional', parsed.location || 'Johannesburg', parsed.seniority || 'mid').catch(e => {
+        console.error('[Shofo] Salary data error:', e);
+        return { benchmark: null, marketPosition: 'Estimated', competitiveRange: { min: 400000, max: 800000 } };
+      })
+    ]);
+
+    console.log('[TalentMapping] GDELT Industry signals:', industrySignals);
+    console.log('[TalentMapping] Shofo Salary data:', salaryData.competitiveRange);
+
+    // Store intelligence for later use in synthesis
+    const superiorIntelligence = {
+      gdelt: industrySignals,
+      shofo: salaryData,
+      timestamp: new Date().toISOString()
+    };
 
     // Check if Firecrawl is available - if not, use demo mode
     const fc = getFirecrawl();
@@ -1600,14 +1864,36 @@ Return valid JSON only:
     );
 
     // Step 4: Synthesize with GPT-4o - FOCUS ON INFERENCE
+    // Build SUPERIOR INTELLIGENCE context from GDELT + Shofo
+    const superiorIntelligenceContext = `
+=== SUPERIOR INTELLIGENCE STACK DATA ===
+
+GDELT MARKET SIGNALS (Real-time news intelligence):
+- Industry Hiring Trend: ${superiorIntelligence.gdelt.hiringTrend}
+- Layoff Activity Level: ${superiorIntelligence.gdelt.layoffActivity}
+- Companies Currently Hiring: ${superiorIntelligence.gdelt.companiesHiring.join(', ') || 'None detected'}
+- Companies Restructuring/Layoffs: ${superiorIntelligence.gdelt.companiesRestructuring.join(', ') || 'None detected'}
+
+SHOFO SALARY BENCHMARKS (SA Market Data):
+- Competitive Salary Range: R${superiorIntelligence.shofo.competitiveRange.min.toLocaleString()} - R${superiorIntelligence.shofo.competitiveRange.max.toLocaleString()}
+- Market Position: ${superiorIntelligence.shofo.marketPosition}
+${superiorIntelligence.shofo.benchmark ? `- Based on ${superiorIntelligence.shofo.benchmark.sampleSize} data points` : '- Estimated from internal benchmarks'}
+
+USE THIS DATA TO:
+1. Prioritize candidates at companies showing RESTRUCTURING/LAYOFF signals (higher move likelihood)
+2. De-prioritize candidates at companies showing GROWTH/HIRING (likely staying)
+3. Use salary benchmarks to assess if candidates are likely underpaid (more likely to move)
+=== END SUPERIOR INTELLIGENCE ===
+`;
+
     const webContext = sortedResults.length > 0
-      ? `\n\nINTELLIGENCE GATHERED (${sortedResults.length} sources):\n${sortedResults.slice(0, 20).map((r, i) =>
+      ? `${superiorIntelligenceContext}\n\nINTELLIGENCE GATHERED (${sortedResults.length} sources):\n${sortedResults.slice(0, 20).map((r, i) =>
           `[${i+1}] [${r.sourceType.toUpperCase()}] ${r.url}\nSource: ${r.dataSource}\n${r.title}\n${r.content.substring(0, 2000)}\n---`
         ).join('\n')}`
-      : '\n\n(Limited web results - provide market intelligence based on SA industry knowledge)';
+      : `${superiorIntelligenceContext}\n\n(Limited web results - provide market intelligence based on SA industry knowledge and GDELT/Shofo data above)`;
 
     const synthesisResponse = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-2024-08-06', // PINNED to avoid model drift
       messages: [
         {
           role: 'system',
@@ -2266,12 +2552,27 @@ Return JSON array only.`
 
       // Methodology explanation
       searchMethodology: {
-        description: 'Multi-source intelligence gathering using specialized South African data sources',
+        description: 'Multi-source intelligence gathering using SUPERIOR INTELLIGENCE STACK',
         queriesExecuted: searchMethodology.length,
         sourceTypesSearched: [...new Set(searchMethodology.map(s => s.sourceType))],
         totalResultsAnalyzed: sortedResults.length,
-        aiModel: 'gpt-4o',
+        aiModel: 'gpt-4o-2024-08-06 (pinned)',
         searchEngine: 'Firecrawl',
+        intelligenceStack: {
+          gdelt: {
+            enabled: true,
+            hiringTrend: superiorIntelligence.gdelt.hiringTrend,
+            layoffActivity: superiorIntelligence.gdelt.layoffActivity,
+            companiesHiring: superiorIntelligence.gdelt.companiesHiring,
+            companiesRestructuring: superiorIntelligence.gdelt.companiesRestructuring
+          },
+          shofo: {
+            enabled: true,
+            salaryRange: superiorIntelligence.shofo.competitiveRange,
+            marketPosition: superiorIntelligence.shofo.marketPosition,
+            hasLiveData: !!superiorIntelligence.shofo.benchmark
+          }
+        },
         timestamp: searchTimestamp
       },
 
