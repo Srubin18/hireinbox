@@ -2244,6 +2244,7 @@ IMPORTANT: For EACH candidate, you MUST include:
       "name": "REAL full name from sources (e.g., 'Sarah Johnson' NOT invented)",
       "currentRole": "REAL job title from sources",
       "company": "REAL company name from sources (NOT 'XYZ Corp')",
+      "linkedinUrl": "REQUIRED - https://linkedin.com/in/their-profile (search for their LinkedIn profile URL)",
       "industry": "Sector",
       "location": "City",
       "discoveryMethod": "How we found them (e.g., 'Company team page', 'News article about appointment', 'Conference speaker')",
@@ -2337,7 +2338,16 @@ IMPORTANT: For EACH candidate, you MUST include:
 CRITICAL: Generate MINIMUM 6 candidates (aim for 6-10). This is a PREMIUM report.
 PRIORITIZE candidates found through non-LinkedIn sources (company pages, news, conferences, awards).
 For each candidate, provide COMPREHENSIVE intelligence - explain WHY they're valuable and hard to find.
-Include detailed approach strategies, salary expectations, and likelihood to move analysis.`;
+Include detailed approach strategies, salary expectations, and likelihood to move analysis.
+
+##############################################################################
+# HARDLOCK: LINKEDIN URL IS MANDATORY FOR EVERY CANDIDATE
+##############################################################################
+EVERY candidate MUST have a linkedinUrl field with their actual LinkedIn profile URL.
+Format: https://linkedin.com/in/firstname-lastname-xxxxx
+If you cannot find their exact LinkedIn URL, search for it using their name and company.
+DO NOT leave linkedinUrl empty or null - this is a STRICT REQUIREMENT.
+If absolutely no LinkedIn exists, state "https://linkedin.com/search/results/people/?keywords=FirstName%20LastName%20Company"`;
 
     // ============================================
     // CLAUDE OPUS 4.5 - PREMIUM SYNTHESIS
