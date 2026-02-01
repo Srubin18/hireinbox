@@ -137,32 +137,21 @@ export default function PilotDashboard() {
         }));
       }
 
-      // Fetch recent roles for CV screening
-      const { data: roles } = await supabase
-        .from('roles')
-        .select(`
-          id,
-          created_at,
-          title,
-          candidates:candidates(count)
-        `)
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Fetch CV screening stats from API (uses service role to bypass RLS)
+      const statsResponse = await fetch('/api/pilot/dashboard-stats', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
 
-      if (roles) {
-        const formattedRoles = roles.map(r => ({
-          id: r.id,
-          created_at: r.created_at,
-          title: r.title,
-          candidate_count: (r.candidates as unknown as { count: number }[])?.[0]?.count || 0,
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setRecentRoles(statsData.recentRoles.map((r: any) => ({
+          ...r,
           pending_review: 0,
-        }));
-        setRecentRoles(formattedRoles);
+        })));
         setStats(prev => ({
           ...prev,
-          rolesActive: formattedRoles.length,
-          cvsScreened: formattedRoles.reduce((sum, r) => sum + r.candidate_count, 0),
+          rolesActive: statsData.activeRoles,
+          cvsScreened: statsData.cvsScreened,
         }));
       }
 
