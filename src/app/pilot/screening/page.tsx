@@ -275,33 +275,35 @@ export default function PilotScreening() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      // Generate unique email alias
-      const emailAlias = `${newRole.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 15)}-${Date.now().toString(36)}`;
-
-      const { data, error } = await supabase
-        .from('roles')
-        .insert({
+      // Call API endpoint (which logs billing event)
+      const response = await fetch('/api/roles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
           title: newRole.title,
-          status: 'active',
-          criteria: {
-            user_id: session.user.id,
-            email_alias: emailAlias,
-            location: newRole.location,
-            description: newRole.description,
-            required_skills: newRole.must_have_skills.split(',').map(s => s.trim()).filter(Boolean),
-            nice_to_have_skills: newRole.nice_to_have_skills.split(',').map(s => s.trim()).filter(Boolean),
-            qualifications: newRole.qualifications,
-            dealbreakers: newRole.dealbreakers,
-            experience_min: parseInt(newRole.experience_min) || 0,
-            experience_max: parseInt(newRole.experience_max) || 20,
-            seniority: newRole.seniority,
-            employment_type: newRole.employment_type,
-          },
-        })
-        .select()
-        .single();
+          description: newRole.description,
+          department: '',
+          location: newRole.location,
+          experienceMin: newRole.experience_min,
+          experienceMax: newRole.experience_max,
+          seniorityLevel: newRole.seniority,
+          employmentType: newRole.employment_type,
+          workArrangement: 'Onsite',
+          qualifications: newRole.qualifications,
+          mustHaveSkills: newRole.must_have_skills,
+          niceToHaveSkills: newRole.nice_to_have_skills,
+          dealbreakers: newRole.dealbreakers,
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to create role');
+      }
+
+      const result = await response.json();
 
       setShowCreateModal(false);
       setNewRole({
@@ -321,8 +323,8 @@ export default function PilotScreening() {
 
       // Refresh and select new role
       await fetchRoles();
-      if (data) {
-        setSelectedRoleId(data.id);
+      if (result.role) {
+        setSelectedRoleId(result.role.id);
       }
     } catch (err) {
       console.error('Error creating role:', err);

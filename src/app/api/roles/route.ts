@@ -63,6 +63,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
+    // Generate unique email alias for pilot users
+    const emailAlias = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 15)}-${Date.now().toString(36)}`;
+
     // Build the role object
     const roleData = {
       title: title.trim(),
@@ -91,8 +94,19 @@ export async function POST(request: Request) {
         disqualifiers: dealbreakers || ''
       },
       criteria: {
-        min_experience_years: experienceMin ? parseInt(experienceMin) : 0,
+        user_id: userId, // Track which user created this role
+        email_alias: emailAlias,
+        location: location,
+        description: description,
         required_skills: mustHaveSkills ? mustHaveSkills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        nice_to_have_skills: niceToHaveSkills ? niceToHaveSkills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        qualifications: qualifications,
+        dealbreakers: dealbreakers,
+        experience_min: experienceMin ? parseInt(experienceMin) : 0,
+        experience_max: experienceMax ? parseInt(experienceMax) : null,
+        seniority: seniorityLevel,
+        employment_type: employmentType,
+        min_experience_years: experienceMin ? parseInt(experienceMin) : 0,
         locations: location ? [location] : []
       }
     };
