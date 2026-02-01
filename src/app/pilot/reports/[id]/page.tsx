@@ -95,6 +95,7 @@ export default function ReportView() {
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
   const [viewFilter, setViewFilter] = useState<'shortlist' | 'archived'>('shortlist');
   const [candidatesFromDB, setCandidatesFromDB] = useState<Candidate[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
@@ -379,57 +380,62 @@ export default function ReportView() {
           </div>
         </div>
 
-        {/* Market Intelligence */}
-        {marketIntelligence && (
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
-              Market Intelligence
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-              <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Talent Pool</div>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
-                  {marketIntelligence.talentPoolSize}
-                </div>
-              </div>
-              <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Salary Trends</div>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
-                  {marketIntelligence.salaryTrends}
-                </div>
-              </div>
-              <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Market</div>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>
-                  {marketIntelligence.marketTightness}
-                </div>
-              </div>
-            </div>
-
-            {/* Competitor Brain Drain */}
-            {report.report_data.competitiveIntelligence?.competitorBrainDrain && (
-              <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#92400e', marginBottom: '8px' }}>
-                  Competitor Brain Drain Alert
-                </div>
-                <div style={{ fontSize: '13px', color: '#78350f' }}>
-                  {report.report_data.competitiveIntelligence.competitorBrainDrain.recommendation}
-                </div>
-                {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers?.length > 0 && (
-                  <div style={{ marginTop: '8px', fontSize: '13px', color: '#78350f' }}>
-                    <strong>Target these employers:</strong> {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers.join(', ')}
+        {/* Market Intelligence - HIDDEN per Simon's request (salary range not needed) */}
+        {/* To restore: change SHOW_MARKET_INTELLIGENCE to true */}
+        {(() => {
+          const SHOW_MARKET_INTELLIGENCE = false;
+          if (!SHOW_MARKET_INTELLIGENCE || !marketIntelligence) return null;
+          return (
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              border: '1px solid #e2e8f0',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
+                Market Intelligence
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Talent Pool</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                    {marketIntelligence.talentPoolSize}
                   </div>
-                )}
+                </div>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Salary Trends</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                    {marketIntelligence.salaryTrends}
+                  </div>
+                </div>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Market</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>
+                    {marketIntelligence.marketTightness}
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Competitor Brain Drain */}
+              {report.report_data.competitiveIntelligence?.competitorBrainDrain && (
+                <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#92400e', marginBottom: '8px' }}>
+                    Competitor Brain Drain Alert
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#78350f' }}>
+                    {report.report_data.competitiveIntelligence.competitorBrainDrain.recommendation}
+                  </div>
+                  {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers?.length > 0 && (
+                    <div style={{ marginTop: '8px', fontSize: '13px', color: '#78350f' }}>
+                      <strong>Target these employers:</strong> {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Candidates Grid */}
         <div style={{
