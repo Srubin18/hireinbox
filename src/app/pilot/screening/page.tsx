@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import PilotHeader from '@/components/PilotHeader';
 
 // ============================================
 // HIREINBOX PILOT - CV SCREENING
@@ -65,25 +66,6 @@ interface Candidate {
   status?: string;
   user_feedback?: string;
 }
-
-const Logo = () => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-      <rect width="48" height="48" rx="12" fill="#4F46E5"/>
-      <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
-      <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
-      <circle cx="36" cy="12" r="9" fill="#10B981"/>
-      <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-    <div>
-      <div style={{ fontSize: '16px', fontWeight: 700 }}>
-        <span style={{ color: '#4F46E5' }}>Hyred</span>
-      </div>
-      <div style={{ fontSize: '11px', color: '#64748b' }}>CV Screening</div>
-    </div>
-  </div>
-);
-
 export default function PilotScreening() {
   const router = useRouter();
   const [roles, setRoles] = useState<Role[]>([]);
@@ -119,6 +101,11 @@ export default function PilotScreening() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/pilot');
+  };
 
   // Fetch roles
   const fetchRoles = useCallback(async () => {
@@ -526,34 +513,7 @@ export default function PilotScreening() {
       `}</style>
 
       {/* Header */}
-      <header style={{
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        padding: '16px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div onClick={() => router.push('/pilot/dashboard')} style={{ cursor: 'pointer' }}><Logo /></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '13px', color: '#64748b' }}>{user?.email}</span>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#10B981',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            + Create Role
-          </button>
-        </div>
-      </header>
+      <PilotHeader user={user} onLogout={handleLogout} currentPage="screening" />
 
       {/* Hidden file input for CV upload */}
       <input
@@ -575,6 +535,24 @@ export default function PilotScreening() {
           flexDirection: 'column',
           gap: '20px',
         }}>
+          {/* Create Role Button */}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              padding: '12px 16px',
+              backgroundColor: '#10B981',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              width: '100%',
+            }}
+          >
+            + Create Role
+          </button>
+
           {/* Role Selector */}
           <div>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

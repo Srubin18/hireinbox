@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import PilotHeader from '@/components/PilotHeader';
 
 // ============================================
 // HIREINBOX PILOT - INDIVIDUAL REPORT VIEW
@@ -68,25 +69,6 @@ interface Report {
     };
   };
 }
-
-const Logo = () => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-      <rect width="48" height="48" rx="12" fill="#4F46E5"/>
-      <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
-      <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
-      <circle cx="36" cy="12" r="9" fill="#10B981"/>
-      <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-    <div>
-      <div style={{ fontSize: '16px', fontWeight: 700 }}>
-        <span style={{ color: '#4F46E5' }}>Hyred</span>
-      </div>
-      <div style={{ fontSize: '11px', color: '#64748b' }}>Report View</div>
-    </div>
-  </div>
-);
-
 export default function ReportView() {
   const router = useRouter();
   const params = useParams();
@@ -101,11 +83,17 @@ export default function ReportView() {
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [processingCandidateId, setProcessingCandidateId] = useState<string | null>(null);
   const [hasDBCandidates, setHasDBCandidates] = useState<boolean | null>(null);
+  const [user, setUser] = useState<{ email: string } | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/pilot');
+  };
 
   const fetchReport = useCallback(async () => {
     try {
@@ -115,6 +103,8 @@ export default function ReportView() {
         router.push('/pilot');
         return;
       }
+
+      setUser({ email: session.user.email || '' });
 
       const response = await fetch(`/api/pilot/reports?id=${reportId}`, {
         headers: {
@@ -317,47 +307,7 @@ export default function ReportView() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
       {/* Header */}
-      <header style={{
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        padding: '16px 32px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div onClick={() => router.push('/pilot/dashboard')}><Logo /></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            onClick={() => router.push('/pilot/reports')}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#f1f5f9',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              color: '#475569',
-              cursor: 'pointer',
-            }}
-          >
-            All Reports
-          </button>
-          <button
-            onClick={() => router.push('/pilot/talent-mapping')}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#4F46E5',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            + New Search
-          </button>
-        </div>
-      </header>
+      <PilotHeader user={user} onLogout={handleLogout} currentPage="reports" />
 
       <main style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
         {/* Report Header */}
