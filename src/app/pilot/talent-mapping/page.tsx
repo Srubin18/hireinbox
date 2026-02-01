@@ -958,6 +958,12 @@ export default function PilotTalentMapping() {
                     >
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <div style={{ flex: 1 }}>
+                          {/* Feedback instruction */}
+                          {candidatesFromDB.length > 0 && candidate.id && (
+                            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '8px', fontWeight: 500 }}>
+                              Did the AI find a good match?
+                            </div>
+                          )}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                             {/* Feedback Buttons - Only show if candidate is from database (has UUID) */}
                             {candidatesFromDB.length > 0 && candidate.id && (

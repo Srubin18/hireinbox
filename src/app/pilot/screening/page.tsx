@@ -943,12 +943,16 @@ export default function PilotScreening() {
                     )}
 
                     {/* Feedback Buttons */}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFeedback(candidate.id, 'good');
-                        }}
+                    <div style={{ marginTop: '16px' }}>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '8px', fontWeight: 500 }}>
+                        Did the AI classify this candidate correctly?
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFeedback(candidate.id, 'good');
+                          }}
                         style={{
                           padding: '6px 12px',
                           backgroundColor: candidate.user_feedback === 'good' ? '#10B981' : '#f1f5f9',
@@ -988,6 +992,7 @@ export default function PilotScreening() {
                       >
                         👎 Bad
                       </button>
+                      </div>
                     </div>
                   </div>
 
