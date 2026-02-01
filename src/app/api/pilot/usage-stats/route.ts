@@ -31,17 +31,19 @@ export async function GET(request: Request) {
     }
 
     // Transform DB results into the format the frontend expects
-    const eventsByMonth: Record<string, { talent_searches: number; roles_created: number }> = {};
+    const eventsByMonth: Record<string, { talent_searches: number; candidates_found: number; roles_created: number }> = {};
 
     (monthlySummary || []).forEach((row: any) => {
       eventsByMonth[row.event_month] = {
         talent_searches: parseInt(row.talent_searches) || 0,
+        candidates_found: parseInt(row.candidates_found) || 0,
         roles_created: parseInt(row.roles_created) || 0,
       };
     });
 
     // Calculate all-time totals from the summary
     const allTimeTalentSearches = (monthlySummary || []).reduce((sum: number, row: any) => sum + (parseInt(row.talent_searches) || 0), 0);
+    const allTimeCandidatesFound = (monthlySummary || []).reduce((sum: number, row: any) => sum + (parseInt(row.candidates_found) || 0), 0);
     const allTimeRolesCreated = (monthlySummary || []).reduce((sum: number, row: any) => sum + (parseInt(row.roles_created) || 0), 0);
 
     // Build monthly history (last 6 months)
@@ -49,6 +51,7 @@ export async function GET(request: Request) {
       month: string;
       monthLabel: string;
       talentSearches: number;
+      candidatesFound: number;
       rolesCreated: number;
     }> = [];
 
@@ -62,27 +65,30 @@ export async function GET(request: Request) {
       const monthKey = `${year}-${month}`;
       const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
-      const monthData = eventsByMonth[monthKey] || { talent_searches: 0, roles_created: 0 };
+      const monthData = eventsByMonth[monthKey] || { talent_searches: 0, candidates_found: 0, roles_created: 0 };
 
       monthlyHistory.push({
         month: monthKey,
         monthLabel,
         talentSearches: monthData.talent_searches,
+        candidatesFound: monthData.candidates_found,
         rolesCreated: monthData.roles_created,
       });
     }
 
     // Current month stats - format manually to avoid timezone issues
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const currentMonthData = eventsByMonth[currentMonthKey] || { talent_searches: 0, roles_created: 0 };
+    const currentMonthData = eventsByMonth[currentMonthKey] || { talent_searches: 0, candidates_found: 0, roles_created: 0 };
 
     return NextResponse.json({
       currentMonth: {
         talentSearches: currentMonthData.talent_searches,
+        candidatesFound: currentMonthData.candidates_found,
         rolesCreated: currentMonthData.roles_created,
       },
       allTime: {
         talentSearches: allTimeTalentSearches,
+        candidatesFound: allTimeCandidatesFound,
         rolesCreated: allTimeRolesCreated,
       },
       monthlyHistory,

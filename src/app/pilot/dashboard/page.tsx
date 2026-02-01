@@ -68,6 +68,9 @@ export default function PilotDashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  const [allSearches, setAllSearches] = useState<any[]>([]);
+  const [searchView, setSearchView] = useState<'saved' | 'all'>('saved');
+  const [selectedUnsavedSearch, setSelectedUnsavedSearch] = useState<any>(null);
   const [recentRoles, setRecentRoles] = useState<RecentRole[]>([]);
   const [stats, setStats] = useState({
     totalSearches: 0,
@@ -94,21 +97,77 @@ export default function PilotDashboard() {
 
       setUser({ email: session.user.email || '' });
 
-      // Fetch recent talent mapping searches
+      // Fetch recent talent mapping searches (saved reports)
       const { data: searches } = await supabase
         .from('talent_mapping_reports')
         .select('id, created_at, search_prompt, candidate_count, role_parsed')
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .order('created_at', { ascending: false });
 
       if (searches) {
         setRecentSearches(searches);
+      }
+
+      // Get actual successful search count and candidates found from billing events
+      // Exclude backfilled records (old data migrated from talent_mapping_reports)
+      const { data: billingEvents } = await supabase
+        .from('pilot_billing_events')
+        .select('id, created_at, event_date, related_id, metadata')
+        .eq('user_id', session.user.id)
+        .eq('event_type', 'talent_search')
+        .order('created_at', { ascending: false });
+
+      if (billingEvents) {
+        // Filter out backfilled records - only count real searches
+        const realSearches = billingEvents.filter(event => !event.metadata?.backfilled);
+
+        const totalSearches = realSearches.length; // Count of successful searches
+        const candidatesFound = realSearches.reduce((sum, event) => {
+          return sum + (event.metadata?.candidates_found || 0);
+        }, 0);
+
         setStats(prev => ({
           ...prev,
-          totalSearches: searches.length,
-          candidatesFound: searches.reduce((sum, s) => sum + (s.candidate_count || 0), 0),
+          totalSearches,
+          candidatesFound,
         }));
+
+        // Store all searches for the "All Searches" view
+        const formattedAllSearches = realSearches.map(search => ({
+          id: search.id,
+          billing_event_id: search.id,
+          created_at: search.created_at,
+          role_parsed: search.metadata?.role || 'Search',
+          candidate_count: search.metadata?.candidates_found || 0,
+          is_saved: !!search.related_id,
+          saved_report_id: search.related_id,
+          report_data: search.metadata?.report_data, // Full results for unsaved searches
+        }));
+
+        // Add saved reports that don't have billing events (older saves before we started tracking)
+        if (searches && searches.length > 0) {
+          const billingEventReportIds = new Set(realSearches.map(s => s.related_id).filter(Boolean));
+          const savedReportsWithoutBillingEvents = searches
+            .filter(savedReport => !billingEventReportIds.has(savedReport.id))
+            .map(savedReport => ({
+              id: savedReport.id,
+              billing_event_id: null,
+              created_at: savedReport.created_at,
+              role_parsed: savedReport.role_parsed || 'Search',
+              candidate_count: savedReport.candidate_count || 0,
+              is_saved: true,
+              saved_report_id: savedReport.id,
+              report_data: null,
+            }));
+
+          // Merge and sort by date
+          const allSearchesMerged = [...formattedAllSearches, ...savedReportsWithoutBillingEvents]
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+          setAllSearches(allSearchesMerged);
+        } else {
+          setAllSearches(formattedAllSearches);
+        }
       }
 
       // Fetch CV screening stats from API (uses service role to bypass RLS)
@@ -185,6 +244,22 @@ export default function PilotDashboard() {
         .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .dash-recent { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
         .dash-support-btns { display: flex; gap: 12px; }
+
+        /* Scrollbar styling */
+        .dash-recent ::-webkit-scrollbar {
+          width: 6px;
+        }
+        .dash-recent ::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 3px;
+        }
+        .dash-recent ::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        .dash-recent ::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
 
         @media (max-width: 1024px) {
           .dash-stats { grid-template-columns: repeat(2, 1fr) !important; }
@@ -372,54 +447,153 @@ export default function PilotDashboard() {
               <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
                 Recent Talent Searches
               </h3>
-              <button
-                onClick={() => router.push('/pilot/reports')}
-                style={{
-                  padding: '6px 12px',
-                  backgroundColor: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  color: '#475569',
-                  cursor: 'pointer',
-                }}
-              >
-                View all
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => setSearchView('saved')}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: searchView === 'saved' ? '#4F46E5' : '#f1f5f9',
+                    color: searchView === 'saved' ? '#ffffff' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Saved
+                </button>
+                <button
+                  onClick={() => setSearchView('all')}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: searchView === 'all' ? '#4F46E5' : '#f1f5f9',
+                    color: searchView === 'all' ? '#ffffff' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  All Searches
+                </button>
+              </div>
             </div>
 
-            {recentSearches.length === 0 ? (
-              <div style={{
-                padding: '32px',
-                textAlign: 'center',
-                color: '#64748b',
-                fontSize: '14px',
-              }}>
-                <div style={{ marginBottom: '12px', opacity: 0.5 }}>{Icons.search}</div>
-                No searches yet. Start your first talent mapping!
-              </div>
+            {searchView === 'saved' ? (
+              recentSearches.length === 0 ? (
+                <div style={{
+                  padding: '32px',
+                  textAlign: 'center',
+                  color: '#64748b',
+                  fontSize: '14px',
+                }}>
+                  <div style={{ marginBottom: '12px', opacity: 0.5 }}>{Icons.search}</div>
+                  No saved reports yet. Run a search and save the report!
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  maxHeight: '440px',
+                  overflowY: 'auto',
+                  paddingRight: '4px',
+                }}>
+                  {recentSearches.map((search) => (
+                    <div
+                      key={search.id}
+                      onClick={() => router.push(`/pilot/reports/${search.id}`)}
+                      style={{
+                        padding: '12px 16px',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ fontSize: '14px', fontWeight: 500, color: '#0f172a', marginBottom: '4px' }}>
+                        {search.role_parsed || 'Search'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        {search.candidate_count || 0} candidates • {new Date(search.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {recentSearches.map((search) => (
-                  <div
-                    key={search.id}
-                    onClick={() => router.push(`/pilot/reports/${search.id}`)}
-                    style={{
-                      padding: '12px 16px',
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <div style={{ fontSize: '14px', fontWeight: 500, color: '#0f172a', marginBottom: '4px' }}>
-                      {search.role_parsed || 'Search'}
+              allSearches.length === 0 ? (
+                <div style={{
+                  padding: '32px',
+                  textAlign: 'center',
+                  color: '#64748b',
+                  fontSize: '14px',
+                }}>
+                  <div style={{ marginBottom: '12px', opacity: 0.5 }}>{Icons.search}</div>
+                  No searches yet. Start your first talent mapping!
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  maxHeight: '440px',
+                  overflowY: 'auto',
+                  paddingRight: '4px',
+                }}>
+                  {allSearches.map((search) => (
+                    <div
+                      key={search.billing_event_id || search.id}
+                      onClick={() => {
+                        if (search.is_saved && search.saved_report_id) {
+                          router.push(`/pilot/reports/${search.saved_report_id}`);
+                        } else if (search.billing_event_id) {
+                          router.push(`/pilot/search-history?id=${search.billing_event_id}`);
+                        }
+                      }}
+                      style={{
+                        padding: '12px 16px',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 500, color: '#0f172a' }}>
+                          {search.role_parsed || 'Search'}
+                        </div>
+                        {search.is_saved ? (
+                          <span style={{
+                            padding: '2px 8px',
+                            backgroundColor: '#d1fae5',
+                            color: '#065f46',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                          }}>
+                            SAVED
+                          </span>
+                        ) : (
+                          <span style={{
+                            padding: '2px 8px',
+                            backgroundColor: '#fef3c7',
+                            color: '#92400e',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                          }}>
+                            NOT SAVED
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        {search.candidate_count || 0} candidates • {new Date(search.created_at).toLocaleDateString()}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>
-                      {search.candidate_count || 0} candidates • {new Date(search.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             )}
           </div>
 
@@ -466,7 +640,14 @@ export default function PilotDashboard() {
                 No roles yet. Create your first screening role!
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                maxHeight: '440px',
+                overflowY: 'auto',
+                paddingRight: '4px',
+              }}>
                 {recentRoles.map((role) => (
                   <div
                     key={role.id}

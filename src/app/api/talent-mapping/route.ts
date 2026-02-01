@@ -2797,8 +2797,9 @@ Return JSON array only.`
       estimatedCost
     );
 
-    // Log billing event (talent search run)
-    if (userId) {
+    // Log billing event with full results - bill when candidates are found
+    // Store full report data so user can access results later via Search History
+    if (userId && enrichedCandidates.length > 0) {
       try {
         const eventDate = new Date();
         const eventMonth = eventDate.toISOString().slice(0, 7); // YYYY-MM
@@ -2811,14 +2812,16 @@ Return JSON array only.`
             event_date: eventDate.toISOString().split('T')[0], // YYYY-MM-DD
             event_month: eventMonth,
             metadata: {
-              search_prompt: prompt.substring(0, 200), // First 200 chars
+              search_prompt: prompt.substring(0, 200),
               role: parsed.role,
               location: parsed.location,
               candidates_found: enrichedCandidates.length,
+              // Store full report data for search history
+              report_data: result,
             }
           });
 
-        console.log('[TalentMapping] Logged billing event for user:', userId);
+        console.log('[TalentMapping] Logged billing event with full results for user:', userId);
       } catch (billingError) {
         console.error('[TalentMapping] Failed to log billing event:', billingError);
         // Don't fail the request if billing logging fails
