@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 // ============================================
-// HireInbox Onboarding - Smooth multi-step wizard
+// Hyred Onboarding - Smooth multi-step wizard
 // Creates a welcoming first-time experience
 // ============================================
 
@@ -325,7 +325,7 @@ function OnboardingPageContent() {
                 marginBottom: 12,
                 letterSpacing: '-0.02em'
               }}>
-                Welcome to HireInbox{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!
+                Welcome to Hyred{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}!
               </h1>
               <p style={{
                 fontSize: '1.125rem',
@@ -333,7 +333,7 @@ function OnboardingPageContent() {
                 marginBottom: 40,
                 lineHeight: 1.6
               }}>
-                Let&apos;s set things up so you get the most out of HireInbox.
+                Let&apos;s set things up so you get the most out of Hyred.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

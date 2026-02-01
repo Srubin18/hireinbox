@@ -36,7 +36,7 @@ const Logo = () => (
     </svg>
     <div>
       <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
         <span style={{ color: '#64748b', fontWeight: 500, fontSize: '14px', marginLeft: '8px' }}>Recruiter</span>
       </div>
     </div>

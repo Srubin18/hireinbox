@@ -214,7 +214,7 @@ const Logo = () => (
     </svg>
     <div>
       <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
       </div>
     </div>
   </div>
@@ -1208,7 +1208,7 @@ export default function EmployerDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>HireInbox Public Pool</h3>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', margin: 0 }}>Hyred Public Pool</h3>
                     <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0' }}>Job seekers on our marketplace</p>
                   </div>
                 </div>
@@ -2118,7 +2118,7 @@ export default function EmployerDashboard() {
                   Step 2: Connect Your Email
                 </h2>
                 <p style={{ fontSize: '16px', color: '#64748b', margin: '0 0 32px', lineHeight: '1.6' }}>
-                  Connect your job inbox so HireInbox can automatically screen incoming CVs.
+                  Connect your job inbox so Hyred can automatically screen incoming CVs.
                   We support Gmail, Outlook, and other major email providers.
                 </p>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px' }}>
@@ -2366,7 +2366,7 @@ export default function EmployerDashboard() {
                     <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" style={{ color: '#4F46E5' }}>myaccount.google.com/apppasswords</a></li>
                     <li>Sign in with your Google account</li>
                     <li>Select &quot;Mail&quot; and &quot;Other (Custom name)&quot;</li>
-                    <li>Enter &quot;HireInbox&quot; as the name</li>
+                    <li>Enter &quot;Hyred&quot; as the name</li>
                     <li>Click &quot;Generate&quot; and copy the 16-character password</li>
                   </ol>
                 </div>

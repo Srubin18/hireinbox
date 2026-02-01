@@ -119,7 +119,7 @@ export default function DashboardPage() {
             color: '#0f172a',
             marginBottom: 8
           }}>
-            Welcome to HireInbox
+            Welcome to Hyred
           </h1>
           <p style={{
             fontSize: '1rem',
@@ -275,7 +275,7 @@ export default function DashboardPage() {
             color: '#64748b',
             marginBottom: 16
           }}>
-            Generate a link to share with job seekers so they can get instant CV feedback from HireInbox's AI
+            Generate a link to share with job seekers so they can get instant CV feedback from Hyred's AI
           </p>
           <button
             onClick={() => router.push('/upload')}

@@ -645,7 +645,7 @@ export default function FeedbackPage({ params }: { params: Promise<PageParams> }
           borderTop: '1px solid #E2E8F0'
         }}>
           <p style={{ fontSize: '0.8125rem', color: '#94A3B8', marginBottom: 8 }}>
-            Powered by HireInbox - AI-assisted hiring for South African businesses
+            Powered by Hyred - AI-assisted hiring for South African businesses
           </p>
           <p style={{ fontSize: '0.75rem', color: '#CBD5E1', margin: 0 }}>
             This feedback is generated using AI and is provided for informational purposes only.

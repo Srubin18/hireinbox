@@ -20,7 +20,7 @@ const Logo = () => (
     </svg>
     <div>
       <div style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
       </div>
       <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Less noise. Better hires.</div>
     </div>
@@ -86,7 +86,7 @@ export default function HomePage() {
           Screen CVs in seconds.<br/>Hire the right people.
         </h1>
         <p className="hero-subtitle" style={{ fontSize: '18px', color: '#475569', margin: '0 0 48px', lineHeight: 1.6 }}>
-          HireInbox uses explainable AI to screen candidates with evidence. No more guessing. No more bias. Just better hires.
+          Hyred uses explainable AI to screen candidates with evidence. No more guessing. No more bias. Just better hires.
         </p>
         <div className="hero-buttons" style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
@@ -132,7 +132,7 @@ export default function HomePage() {
       <section className="section-padding" style={{ backgroundColor: '#f9fafb' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <h2 className="section-title" style={{ fontWeight: 700, textAlign: 'center', color: '#0f172a' }}>
-            Why HireInbox?
+            Why Hyred?
           </h2>
 
           <div className="feature-grid" style={{ display: 'grid', gap: '32px' }}>
@@ -267,7 +267,7 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-            HireInbox · 2026 · Built for South African SMEs
+            Hyred · 2026 · Built for South African SMEs
           </div>
         </div>
       </footer>

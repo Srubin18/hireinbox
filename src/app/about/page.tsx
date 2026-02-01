@@ -74,7 +74,7 @@ export default function AboutPage() {
           color: '#0f172a',
           marginBottom: '24px'
         }}>
-          About HireInbox
+          About Hyred
         </h1>
 
         <p style={{
@@ -83,7 +83,7 @@ export default function AboutPage() {
           lineHeight: 1.7,
           marginBottom: '24px'
         }}>
-          HireInbox is an AI-powered CV screening tool built for the South African market. We help employers save time by automatically screening CVs against job requirements, with clear reasoning for every decision.
+          Hyred is an AI-powered CV screening tool built for the South African market. We help employers save time by automatically screening CVs against job requirements, with clear reasoning for every decision.
         </p>
 
         <p style={{
@@ -128,7 +128,7 @@ export default function AboutPage() {
             lineHeight: 1.6,
             margin: 0
           }}>
-            I built HireInbox after seeing how much time recruiters spend reading CVs that don&apos;t fit. The AI does the first pass. You make the final call.
+            I built Hyred after seeing how much time recruiters spend reading CVs that don&apos;t fit. The AI does the first pass. You make the final call.
           </p>
         </div>
 

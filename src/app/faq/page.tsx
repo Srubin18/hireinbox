@@ -16,20 +16,20 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
-    question: 'What is HireInbox?',
-    answer: 'HireInbox is an AI-powered recruitment platform built specifically for the South African market. We help employers screen CVs faster using explainable AI that shows its reasoning, and we help job seekers improve their CVs and interview skills. Our AI understands local qualifications like CA(SA), BCom degrees, and recognises South African companies and institutions.'
+    question: 'What is Hyred?',
+    answer: 'Hyred is an AI-powered recruitment platform built specifically for the South African market. We help employers screen CVs faster using explainable AI that shows its reasoning, and we help job seekers improve their CVs and interview skills. Our AI understands local qualifications like CA(SA), BCom degrees, and recognises South African companies and institutions.'
   },
   {
     question: 'How does CV screening work for employers?',
-    answer: 'When candidates apply for your roles, their CVs flow into your HireInbox dashboard where our AI automatically screens them against your job requirements. Each candidate receives a score from 0-100 with detailed reasoning that explains exactly why they scored that way. You\'ll see a ranked shortlist with the AI\'s analysis of each candidate\'s strengths, potential gaps, and suggested interview focus areas - all backed by direct evidence quoted from the CV itself.'
+    answer: 'When candidates apply for your roles, their CVs flow into your Hyred dashboard where our AI automatically screens them against your job requirements. Each candidate receives a score from 0-100 with detailed reasoning that explains exactly why they scored that way. You\'ll see a ranked shortlist with the AI\'s analysis of each candidate\'s strengths, potential gaps, and suggested interview focus areas - all backed by direct evidence quoted from the CV itself.'
   },
   {
-    question: 'Can I use HireInbox with external job boards?',
-    answer: 'Yes. When you post jobs on external job boards, you can direct applications to flow into HireInbox. CVs submitted through these channels will automatically appear in your dashboard for AI screening. This means you can advertise widely while keeping all your applications organised and screened in one central place.'
+    question: 'Can I use Hyred with external job boards?',
+    answer: 'Yes. When you post jobs on external job boards, you can direct applications to flow into Hyred. CVs submitted through these channels will automatically appear in your dashboard for AI screening. This means you can advertise widely while keeping all your applications organised and screened in one central place.'
   },
   {
     question: 'What if I\'m hiring for multiple roles at once?',
-    answer: 'HireInbox handles multiple concurrent roles seamlessly. Our AI intelligently routes applications to the correct role based on context. If it\'s ever unclear which role an application is for, it goes to an "Unassigned" queue where you can manually assign it. This works smoothly even if you have 10 or more positions open simultaneously.'
+    answer: 'Hyred handles multiple concurrent roles seamlessly. Our AI intelligently routes applications to the correct role based on context. If it\'s ever unclear which role an application is for, it goes to an "Unassigned" queue where you can manually assign it. This works smoothly even if you have 10 or more positions open simultaneously.'
   },
   {
     question: 'What are AI Interviews and how do they work?',
@@ -48,7 +48,7 @@ const faqs: FAQItem[] = [
     answer: 'Yes. Every job seeker gets one free CV scan with detailed, actionable feedback on structure, clarity, presentation, and content. We show you exactly what\'s working well and what specific improvements would make the biggest difference. If you want to go further, premium services like personalised video analysis and professional CV rewriting are available.'
   },
   {
-    question: 'How much does HireInbox cost for employers?',
+    question: 'How much does Hyred cost for employers?',
     answer: 'We charge per role, not per CV, so you get predictable costs regardless of how many applications you receive. AI CV Screening is R1,750 per role and includes screening for up to 200 CVs. You can add AI Interviews for R1,250 per role, or add Verification services (ID, credit, references) for R800 per role. The complete package with everything included is R3,800 per role.'
   },
   {
@@ -65,7 +65,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'How does the AI make decisions? Can you explain them?',
-    answer: 'Explainability is fundamental to how HireInbox works. Every AI recommendation includes the specific evidence it used to reach that conclusion: direct quotes from the CV, qualifications that were matched or missing, experience that aligned or fell short. This is not a black box. You can see exactly why each candidate scored the way they did, understand the reasoning, and confidently defend that decision to anyone who asks.'
+    answer: 'Explainability is fundamental to how Hyred works. Every AI recommendation includes the specific evidence it used to reach that conclusion: direct quotes from the CV, qualifications that were matched or missing, experience that aligned or fell short. This is not a black box. You can see exactly why each candidate scored the way they did, understand the reasoning, and confidently defend that decision to anyone who asks.'
   }
 ];
 
@@ -162,7 +162,7 @@ export default function FAQPage() {
           color: '#64748b',
           lineHeight: 1.6
         }}>
-          Everything you need to know about HireInbox. Can&apos;t find what you&apos;re looking for?{' '}
+          Everything you need to know about Hyred. Can&apos;t find what you&apos;re looking for?{' '}
           <a href="mailto:hello@hireinbox.co.za" style={{ color: '#4F46E5', textDecoration: 'none' }}>Get in touch</a>.
         </p>
       </section>
@@ -282,7 +282,7 @@ export default function FAQPage() {
         textAlign: 'center'
       }}>
         <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-          HireInbox · 2026 · Built in South Africa
+          Hyred · 2026 · Built in South Africa
         </p>
       </footer>
     </div>

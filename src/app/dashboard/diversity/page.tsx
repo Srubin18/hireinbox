@@ -465,7 +465,7 @@ export default function DiversityDashboard() {
               color: 'white',
             }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 16 }}>
-                Why HireInbox is Fair by Design
+                Why Hyred is Fair by Design
               </h2>
               <div style={{
                 display: 'grid',
@@ -543,7 +543,7 @@ export default function DiversityDashboard() {
           gap: 16,
         }}>
           <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-            HireInbox Diversity Dashboard - Privacy-first aggregate analytics for fair hiring
+            Hyred Diversity Dashboard - Privacy-first aggregate analytics for fair hiring
           </p>
           <div style={{ display: 'flex', gap: 16 }}>
             <a

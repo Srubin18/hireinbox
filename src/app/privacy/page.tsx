@@ -91,7 +91,7 @@ export default function PrivacyPage() {
           {/* Introduction */}
           <section style={{ marginBottom: 32 }}>
             <p style={{ color: '#475569', fontSize: '1.05rem' }}>
-              HireInbox (Pty) Ltd (&quot;HireInbox&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered CV screening platform.
+              Hyred (Pty) Ltd (&quot;Hyred&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered CV screening platform.
             </p>
             <p style={{ color: '#475569', fontSize: '1.05rem', marginTop: 16 }}>
               We comply with the Protection of Personal Information Act 4 of 2013 (&quot;POPIA&quot;) and other applicable South African data protection laws.
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
               3. AI Processing and Automated Decision-Making
             </h2>
             <p style={{ color: '#475569', marginBottom: 16 }}>
-              HireInbox uses artificial intelligence to analyze CVs and provide screening recommendations. We are transparent about how our AI works:
+              Hyred uses artificial intelligence to analyze CVs and provide screening recommendations. We are transparent about how our AI works:
             </p>
             <ul style={{ color: '#475569', paddingLeft: 24, marginBottom: 16 }}>
               <li style={{ marginBottom: 8 }}><strong>Evidence-Based Analysis:</strong> Our AI provides reasoning with direct quotes from CVs, ensuring transparency.</li>
@@ -293,7 +293,7 @@ export default function PrivacyPage() {
               border: '1px solid #e2e8f0'
             }}>
               <p style={{ color: '#475569', margin: 0, marginBottom: 8 }}>
-                <strong>HireInbox (Pty) Ltd</strong>
+                <strong>Hyred (Pty) Ltd</strong>
               </p>
               <p style={{ color: '#475569', margin: 0, marginBottom: 8 }}>
                 Email: <a href="mailto:privacy@hireinbox.co.za" style={{ color: '#4F46E5' }}>privacy@hireinbox.co.za</a>
@@ -326,7 +326,7 @@ export default function PrivacyPage() {
           gap: 16
         }}>
           <p style={{ color: '#94a3b8', margin: 0, fontSize: 14 }}>
-            &copy; {new Date().getFullYear()} HireInbox (Pty) Ltd. All rights reserved.
+            &copy; {new Date().getFullYear()} Hyred (Pty) Ltd. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: 24 }}>
             <Link href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14 }}>Privacy Policy</Link>

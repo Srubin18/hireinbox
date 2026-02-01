@@ -203,7 +203,7 @@ export default function AIStaffPage() {
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          New from HireInbox
+          New from Hyred
         </div>
 
         <h1 style={{
@@ -677,7 +677,7 @@ export default function AIStaffPage() {
         color: '#94a3b8',
         fontSize: '13px'
       }}>
-        HireInbox — Less noise. More hires.
+        Hyred — Less noise. More hires.
       </footer>
     </div>
   );

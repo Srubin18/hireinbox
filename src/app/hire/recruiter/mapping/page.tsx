@@ -137,7 +137,7 @@ interface MappingResult {
 }
 
 const Logo = () => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} aria-label="HireInbox" role="img">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} aria-label="Hyred" role="img">
     <svg width="36" height="36" viewBox="0 0 48 48" fill="none" aria-hidden="true">
       <rect width="48" height="48" rx="12" fill="#4F46E5"/>
       <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
@@ -147,7 +147,7 @@ const Logo = () => (
     </svg>
     <div aria-hidden="true">
       <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
       </div>
     </div>
   </div>
@@ -1128,7 +1128,7 @@ Best regards,
               fontSize: '13px',
               color: '#92400e'
             }}>
-              Note: You will need to send this message manually via your own email or LinkedIn. HireInbox does not send automated outreach.
+              Note: You will need to send this message manually via your own email or LinkedIn. Hyred does not send automated outreach.
             </div>
             <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
               <button

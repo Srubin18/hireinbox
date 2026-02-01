@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "HireInbox - AI CV Screening for South African SMEs",
-    template: "%s | HireInbox",
+    default: "Hyred - AI CV Screening for South African SMEs",
+    template: "%s | Hyred",
   },
   description: "Screen CVs in seconds with explainable AI. Less noise. Better hires. Built for South African businesses with POPIA-compliant evidence-based decisions.",
   keywords: [
@@ -36,32 +36,32 @@ export const metadata: Metadata = {
     "POPIA compliant",
     "explainable AI",
   ],
-  authors: [{ name: "HireInbox", url: "https://hireinbox.co.za" }],
-  creator: "HireInbox",
-  publisher: "HireInbox",
+  authors: [{ name: "Hyred", url: "https://hireinbox.co.za" }],
+  creator: "Hyred",
+  publisher: "Hyred",
   metadataBase: new URL("https://hireinbox.co.za"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "HireInbox - AI CV Screening for South African SMEs",
+    title: "Hyred - AI CV Screening for South African SMEs",
     description: "Screen CVs in seconds with explainable AI. Less noise. Better hires. Built for South African businesses.",
     type: "website",
     locale: "en_ZA",
-    siteName: "HireInbox",
+    siteName: "Hyred",
     url: "https://hireinbox.co.za",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "HireInbox - AI CV Screening",
+        alt: "Hyred - AI CV Screening",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "HireInbox - AI CV Screening for South African SMEs",
+    title: "Hyred - AI CV Screening for South African SMEs",
     description: "Screen CVs in seconds with explainable AI. Less noise. Better hires.",
     images: ["/og-image.png"],
   },
@@ -109,7 +109,7 @@ export default function RootLayout({
                 {
                   "@type": "Organization",
                   "@id": "https://hireinbox.co.za/#organization",
-                  "name": "HireInbox",
+                  "name": "Hyred",
                   "url": "https://hireinbox.co.za",
                   "logo": {
                     "@type": "ImageObject",
@@ -126,7 +126,7 @@ export default function RootLayout({
                 {
                   "@type": "SoftwareApplication",
                   "@id": "https://hireinbox.co.za/#application",
-                  "name": "HireInbox",
+                  "name": "Hyred",
                   "applicationCategory": "BusinessApplication",
                   "operatingSystem": "Web Browser",
                   "description": "AI CV Screening for South African SMEs - Screen CVs in seconds with explainable AI decisions",
@@ -152,7 +152,7 @@ export default function RootLayout({
                   "@type": "WebSite",
                   "@id": "https://hireinbox.co.za/#website",
                   "url": "https://hireinbox.co.za",
-                  "name": "HireInbox",
+                  "name": "Hyred",
                   "publisher": {
                     "@id": "https://hireinbox.co.za/#organization"
                   },

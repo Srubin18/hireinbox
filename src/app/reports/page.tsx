@@ -1003,7 +1003,7 @@ export default function ReportsPage() {
       {/* Footer */}
       <footer style={styles.footer} className="no-print">
         <p style={{ margin: 0, color: '#64748b' }}>
-          HireInbox Reports - Generated {new Date().toLocaleDateString('en-ZA')}
+          Hyred Reports - Generated {new Date().toLocaleDateString('en-ZA')}
         </p>
       </footer>
     </div>
