@@ -160,7 +160,7 @@ async function getShofoSalaryBenchmark(role: string, location: string = 'Johanne
     url.searchParams.set('country', 'South Africa');
 
     const response = await fetch(url.toString(), {
-      headers: { 'X-API-Key': SHOFO_API_KEY },
+      headers: { 'X-API-Key': SHOFO_API_KEY || '' },
       signal: AbortSignal.timeout(10000)
     });
 

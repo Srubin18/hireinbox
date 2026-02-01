@@ -56,6 +56,7 @@ interface Candidate {
 }
 
 interface TalentReport {
+  id?: string;
   candidates: Candidate[];
   marketIntelligence: {
     talentPoolSize: string;
