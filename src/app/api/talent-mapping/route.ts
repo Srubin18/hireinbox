@@ -2360,17 +2360,48 @@ If absolutely no LinkedIn exists, state "https://linkedin.com/search/results/peo
       messages: [{ role: 'user', content: userPrompt }],
     });
 
-    const reportText = claudeResponse.content[0].type === 'text'
+    let reportText = claudeResponse.content[0].type === 'text'
       ? claudeResponse.content[0].text
       : '{}';
 
     console.log('[TalentMapping] Claude Opus 4.5 premium report generated');
+
+    // Extract JSON from response (handle markdown code blocks)
     let report: any;
     try {
+      // Try direct parse first
       report = JSON.parse(reportText);
     } catch {
-      console.error('[TalentMapping] Failed to parse report');
-      throw new Error('Failed to generate report');
+      // Try extracting JSON from markdown code block
+      const jsonMatch = reportText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        try {
+          report = JSON.parse(jsonMatch[1].trim());
+          console.log('[TalentMapping] Extracted JSON from markdown block');
+        } catch {
+          console.error('[TalentMapping] Failed to parse extracted JSON');
+          console.error('[TalentMapping] Raw response (first 500 chars):', reportText.substring(0, 500));
+          throw new Error('Failed to generate report - invalid JSON from Claude');
+        }
+      } else {
+        // Try to find JSON object in response
+        const jsonStart = reportText.indexOf('{');
+        const jsonEnd = reportText.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          try {
+            report = JSON.parse(reportText.substring(jsonStart, jsonEnd + 1));
+            console.log('[TalentMapping] Extracted JSON from raw response');
+          } catch {
+            console.error('[TalentMapping] Failed to parse report');
+            console.error('[TalentMapping] Raw response (first 500 chars):', reportText.substring(0, 500));
+            throw new Error('Failed to generate report - invalid JSON');
+          }
+        } else {
+          console.error('[TalentMapping] No JSON found in response');
+          console.error('[TalentMapping] Raw response (first 500 chars):', reportText.substring(0, 500));
+          throw new Error('Failed to generate report - no JSON in response');
+        }
+      }
     }
 
     // ============================================
