@@ -11,11 +11,14 @@ import { createBrowserClient } from '@supabase/ssr';
 // ============================================
 
 interface Candidate {
+  id?: string;
   name: string;
   currentRole: string;
   company: string;
   location: string;
   matchScore: number;
+  status?: string;
+  user_feedback?: string;
   resignationPropensity?: {
     score: string;
     factors: Array<{ factor: string; impact: string; evidence: string }>;
@@ -92,6 +95,11 @@ export default function ReportView() {
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [viewFilter, setViewFilter] = useState<'shortlist' | 'archived'>('shortlist');
+  const [candidatesFromDB, setCandidatesFromDB] = useState<Candidate[]>([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [processingCandidateId, setProcessingCandidateId] = useState<string | null>(null);
+  const [hasDBCandidates, setHasDBCandidates] = useState<boolean | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -130,8 +138,130 @@ export default function ReportView() {
   useEffect(() => {
     if (reportId) {
       fetchReport();
+      fetchCandidatesFromDB();
     }
   }, [reportId, fetchReport]);
+
+  useEffect(() => {
+    if (reportId) {
+      fetchCandidatesFromDB();
+    }
+  }, [viewFilter]);
+
+  const fetchCandidatesFromDB = async () => {
+    if (!reportId) return;
+
+    setLoadingCandidates(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`/api/talent-mapping/candidates?status=${viewFilter}&report_id=${reportId}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+
+      const data = await response.json();
+      if (data.success && data.candidates) {
+        const mappedCandidates = data.candidates.map((dbCandidate: any) => ({
+          ...dbCandidate.candidate_data,
+          id: dbCandidate.id,
+          status: dbCandidate.status,
+          user_feedback: dbCandidate.user_feedback,
+        }));
+        setCandidatesFromDB(mappedCandidates);
+
+        // If we haven't determined yet whether this report has DB candidates, check now
+        if (hasDBCandidates === null && mappedCandidates.length > 0) {
+          setHasDBCandidates(true);
+        } else if (hasDBCandidates === null && viewFilter === 'shortlist') {
+          // If shortlist is empty, check if anything is archived
+          const archivedResponse = await fetch(`/api/talent-mapping/candidates?status=archived&report_id=${reportId}`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+          });
+          const archivedData = await archivedResponse.json();
+          setHasDBCandidates(archivedData.success && archivedData.candidates && archivedData.candidates.length > 0);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching candidates:', err);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  const handleFeedback = async (candidateId: string, feedback: 'good' | 'bad') => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/talent-mapping/candidates/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ candidateId, feedback }),
+      });
+
+      if (response.ok) {
+        setCandidatesFromDB(prev => prev.map(c =>
+          c.id === candidateId ? { ...c, user_feedback: feedback } : c
+        ));
+      }
+    } catch (err) {
+      console.error('Failed to save feedback:', err);
+    }
+  };
+
+  const handleArchive = async (candidateId: string) => {
+    setProcessingCandidateId(candidateId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/talent-mapping/candidates/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ candidateId, status: 'archived' }),
+      });
+
+      if (response.ok) {
+        fetchCandidatesFromDB();
+      }
+    } catch (err) {
+      console.error('Failed to archive:', err);
+    } finally {
+      setProcessingCandidateId(null);
+    }
+  };
+
+  const handleShortlist = async (candidateId: string) => {
+    setProcessingCandidateId(candidateId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/talent-mapping/candidates/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ candidateId, status: 'shortlist' }),
+      });
+
+      if (response.ok) {
+        fetchCandidatesFromDB();
+      }
+    } catch (err) {
+      console.error('Failed to shortlist:', err);
+    } finally {
+      setProcessingCandidateId(null);
+    }
+  };
 
   const getPropensityColor = (score: string) => {
     switch (score) {
@@ -173,7 +303,10 @@ export default function ReportView() {
     return null;
   }
 
-  const candidates = report.report_data?.candidates || [];
+  // For old reports (no DB candidates), show all from JSON without filtering
+  // For new reports (DB candidates), they're already filtered by API
+  const isLiveReport = hasDBCandidates === true;
+  const candidates = isLiveReport ? candidatesFromDB : (report.report_data?.candidates || []);
   const marketIntelligence = report.report_data?.marketIntelligence;
 
   return (
@@ -312,9 +445,46 @@ export default function ReportView() {
             overflow: 'hidden',
           }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
-                Candidates ({candidates.length})
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
+                  Candidates ({candidates.length})
+                </h2>
+                {/* View Toggle */}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setViewFilter('shortlist')}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: viewFilter === 'shortlist' ? '#4F46E5' : '#f1f5f9',
+                      color: viewFilter === 'shortlist' ? '#ffffff' : '#64748b',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    Shortlisted {viewFilter === 'shortlist' && candidatesFromDB.length > 0 && `(${candidatesFromDB.length})`}
+                  </button>
+                  <button
+                    onClick={() => setViewFilter('archived')}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: viewFilter === 'archived' ? '#4F46E5' : '#f1f5f9',
+                      color: viewFilter === 'archived' ? '#ffffff' : '#64748b',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    Archived {viewFilter === 'archived' && candidatesFromDB.length > 0 && `(${candidatesFromDB.length})`}
+                  </button>
+                </div>
+              </div>
             </div>
             <div>
               {candidates.map((candidate, index) => (
@@ -331,7 +501,50 @@ export default function ReportView() {
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                        {/* Feedback Buttons */}
+                        {candidate.id && (
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFeedback(candidate.id!, 'good');
+                              }}
+                              style={{
+                                padding: '4px 10px',
+                                backgroundColor: candidate.user_feedback === 'good' ? '#10B981' : '#f1f5f9',
+                                color: candidate.user_feedback === 'good' ? '#ffffff' : '#64748b',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              👍 Good
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFeedback(candidate.id!, 'bad');
+                              }}
+                              style={{
+                                padding: '4px 10px',
+                                backgroundColor: candidate.user_feedback === 'bad' ? '#EF4444' : '#f1f5f9',
+                                color: candidate.user_feedback === 'bad' ? '#ffffff' : '#64748b',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              👎 Bad
+                            </button>
+                          </div>
+                        )}
                         <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
                           {candidate.name}
                         </h3>
@@ -522,6 +735,53 @@ export default function ReportView() {
                   {selectedCandidate.uniqueValue}
                 </div>
               </div>
+
+              {/* Archive/Shortlist Button */}
+              {selectedCandidate.id && (
+                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                  {viewFilter === 'shortlist' ? (
+                    <button
+                      onClick={() => handleArchive(selectedCandidate.id!)}
+                      disabled={processingCandidateId === selectedCandidate.id}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: processingCandidateId === selectedCandidate.id ? '#f3f4f6' : '#ffffff',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: processingCandidateId === selectedCandidate.id ? '#9ca3af' : '#374151',
+                        cursor: processingCandidateId === selectedCandidate.id ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        opacity: processingCandidateId === selectedCandidate.id ? 0.6 : 1,
+                      }}
+                    >
+                      {processingCandidateId === selectedCandidate.id ? 'Archiving...' : 'Archive Candidate'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleShortlist(selectedCandidate.id!)}
+                      disabled={processingCandidateId === selectedCandidate.id}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: processingCandidateId === selectedCandidate.id ? '#86efac' : '#10B981',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#ffffff',
+                        cursor: processingCandidateId === selectedCandidate.id ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        opacity: processingCandidateId === selectedCandidate.id ? 0.6 : 1,
+                      }}
+                    >
+                      {processingCandidateId === selectedCandidate.id ? 'Shortlisting...' : 'Shortlist Candidate'}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const roleId = searchParams.get('role_id');
+    const status = searchParams.get('status');
 
     if (!roleId) {
       return NextResponse.json(
@@ -19,11 +20,21 @@ export async function GET(request: Request) {
       );
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('candidates')
       .select('*')
-      .eq('role_id', roleId)
-      .order('ai_score', { ascending: false });
+      .eq('role_id', roleId);
+
+    // Filter by status
+    if (status === 'shortlist') {
+      // For shortlist view, show all candidates EXCEPT archived ones
+      query = query.neq('status', 'archived');
+    } else if (status === 'archived') {
+      // For archived view, only show archived
+      query = query.eq('status', 'archived');
+    }
+
+    const { data, error } = await query.order('ai_score', { ascending: false });
 
     if (error) {
       console.error('[Candidates List] Error:', error);

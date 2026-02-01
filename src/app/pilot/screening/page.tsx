@@ -62,6 +62,8 @@ interface Candidate {
   strengths: string[];
   created_at: string;
   screening_result?: ScreeningResult;
+  status?: string;
+  user_feedback?: string;
 }
 
 const Logo = () => (
@@ -91,6 +93,7 @@ export default function PilotScreening() {
   const [loadingCandidates, setLoadingCandidates] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewFilter, setViewFilter] = useState<'shortlist' | 'archived'>('shortlist');
   const [newRole, setNewRole] = useState({
     title: '',
     location: 'Johannesburg',
@@ -109,6 +112,7 @@ export default function PilotScreening() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
+  const [processingCandidateId, setProcessingCandidateId] = useState<string | null>(null);
   const cvFileInputRef = useRef<HTMLInputElement>(null);
 
   const supabase = createBrowserClient(
@@ -170,7 +174,7 @@ export default function PilotScreening() {
 
     setLoadingCandidates(true);
     try {
-      const res = await fetch(`/api/candidates/list?role_id=${selectedRoleId}`);
+      const res = await fetch(`/api/candidates/list?role_id=${selectedRoleId}&status=${viewFilter}`);
       const data = await res.json();
 
       if (data.success && data.candidates) {
@@ -193,6 +197,8 @@ export default function PilotScreening() {
             strengths: (c.strengths as string[]) || [],
             created_at: c.created_at as string,
             screening_result: c.screening_result as ScreeningResult,
+            status: c.status as string,
+            user_feedback: c.user_feedback as string,
           };
         }));
       }
@@ -201,7 +207,7 @@ export default function PilotScreening() {
     } finally {
       setLoadingCandidates(false);
     }
-  }, [selectedRoleId]);
+  }, [selectedRoleId, viewFilter]);
 
   useEffect(() => {
     fetchRoles();
@@ -214,6 +220,65 @@ export default function PilotScreening() {
   }, [selectedRoleId, fetchCandidates]);
 
   const selectedRole = roles.find(r => r.id === selectedRoleId);
+
+  // Handler for feedback (good/bad)
+  const handleFeedback = async (candidateId: string, feedback: 'good' | 'bad') => {
+    try {
+      const response = await fetch('/api/candidates/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId, feedback }),
+      });
+
+      if (response.ok) {
+        setCandidates(prev => prev.map(c =>
+          c.id === candidateId ? { ...c, user_feedback: feedback } : c
+        ));
+      }
+    } catch (err) {
+      console.error('Failed to save feedback:', err);
+    }
+  };
+
+  // Handler for archiving a candidate
+  const handleArchive = async (candidateId: string) => {
+    setProcessingCandidateId(candidateId);
+    try {
+      const response = await fetch('/api/candidates/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId, status: 'archived' }),
+      });
+
+      if (response.ok) {
+        fetchCandidates();
+      }
+    } catch (err) {
+      console.error('Failed to archive:', err);
+    } finally {
+      setProcessingCandidateId(null);
+    }
+  };
+
+  // Handler for shortlisting a candidate
+  const handleShortlist = async (candidateId: string) => {
+    setProcessingCandidateId(candidateId);
+    try {
+      const response = await fetch('/api/candidates/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId, status: 'shortlist' }),
+      });
+
+      if (response.ok) {
+        fetchCandidates();
+      }
+    } catch (err) {
+      console.error('Failed to shortlist:', err);
+    } finally {
+      setProcessingCandidateId(null);
+    }
+  };
 
   const handleCreateRole = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -727,6 +792,42 @@ export default function PilotScreening() {
               )}
             </div>
 
+            {/* View Toggle - Always visible even when empty */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setViewFilter('shortlist')}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: viewFilter === 'shortlist' ? '#4F46E5' : '#f1f5f9',
+                  color: viewFilter === 'shortlist' ? '#ffffff' : '#64748b',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Shortlisted
+              </button>
+              <button
+                onClick={() => setViewFilter('archived')}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: viewFilter === 'archived' ? '#4F46E5' : '#f1f5f9',
+                  color: viewFilter === 'archived' ? '#ffffff' : '#64748b',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Archived
+              </button>
+            </div>
+
           </div>
         ) : (
           <>
@@ -775,6 +876,42 @@ export default function PilotScreening() {
                   </p>
                 </>
               )}
+            </div>
+
+            {/* View Toggle */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button
+                onClick={() => setViewFilter('shortlist')}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: viewFilter === 'shortlist' ? '#4F46E5' : '#f1f5f9',
+                  color: viewFilter === 'shortlist' ? '#ffffff' : '#64748b',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Shortlisted {viewFilter === 'shortlist' && `(${candidates.length})`}
+              </button>
+              <button
+                onClick={() => setViewFilter('archived')}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: viewFilter === 'archived' ? '#4F46E5' : '#f1f5f9',
+                  color: viewFilter === 'archived' ? '#ffffff' : '#64748b',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Archived {viewFilter === 'archived' && `(${candidates.length})`}
+              </button>
             </div>
 
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -826,9 +963,57 @@ export default function PilotScreening() {
                         {candidate.ai_recommendation.substring(0, 150)}...
                       </div>
                     )}
+
+                    {/* Feedback Buttons */}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '12px' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFeedback(candidate.id, 'good');
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: candidate.user_feedback === 'good' ? '#10B981' : '#f1f5f9',
+                          color: candidate.user_feedback === 'good' ? '#ffffff' : '#64748b',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        👍 Good
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFeedback(candidate.id, 'bad');
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: candidate.user_feedback === 'bad' ? '#EF4444' : '#f1f5f9',
+                          color: candidate.user_feedback === 'bad' ? '#ffffff' : '#64748b',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        👎 Bad
+                      </button>
+                    </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{
                         fontSize: '24px',
@@ -842,21 +1027,69 @@ export default function PilotScreening() {
                         AI Score
                       </div>
                     </div>
-                    <button
-                      onClick={() => setSelectedCandidate(candidate)}
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#4F46E5',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      View
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <button
+                        onClick={() => setSelectedCandidate(candidate)}
+                        style={{
+                          padding: '10px 20px',
+                          backgroundColor: '#4F46E5',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        View
+                      </button>
+                      {viewFilter === 'shortlist' ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleArchive(candidate.id);
+                          }}
+                          disabled={processingCandidateId === candidate.id}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: processingCandidateId === candidate.id ? '#f3f4f6' : '#ffffff',
+                            color: processingCandidateId === candidate.id ? '#9ca3af' : '#64748b',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            cursor: processingCandidateId === candidate.id ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s',
+                            opacity: processingCandidateId === candidate.id ? 0.6 : 1,
+                          }}
+                        >
+                          {processingCandidateId === candidate.id ? 'Archiving...' : 'Archive'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShortlist(candidate.id);
+                          }}
+                          disabled={processingCandidateId === candidate.id}
+                          style={{
+                            padding: '10px 20px',
+                            backgroundColor: processingCandidateId === candidate.id ? '#86efac' : '#10B981',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            cursor: processingCandidateId === candidate.id ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s',
+                            opacity: processingCandidateId === candidate.id ? 0.6 : 1,
+                          }}
+                        >
+                          {processingCandidateId === candidate.id ? 'Shortlisting...' : 'Shortlist'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
