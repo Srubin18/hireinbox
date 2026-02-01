@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { createClient } from '@supabase/supabase-js';
 import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
@@ -361,6 +362,11 @@ const POPIA_COMPLIANCE = {
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Claude Opus 4.5 for premium talent intelligence synthesis
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+}) : null;
 
 // Initialize Firecrawl lazily to avoid errors when API key is missing
 let firecrawl: FirecrawlApp | null = null;
@@ -1157,6 +1163,92 @@ function generateIntelligenceQueries(parsed: any): { query: string; sourceType: 
     howWeFoundYou: 'Your published work was found online'
   });
 
+  // ========== CONSULTING & PROFESSIONAL SERVICES QUERIES ==========
+  // These queries specifically target consultants, advisors, and professional services
+
+  // 52. DIRECT LINKEDIN PROFILE SEARCH (individuals, not company pages)
+  queries.push({
+    query: `"${role}" "${location}" site:linkedin.com/in`,
+    sourceType: 'linkedin',
+    purpose: 'Find individual consultant profiles on LinkedIn',
+    dataSource: 'LinkedIn public profiles (publicly accessible)',
+    howWeFoundYou: 'Your LinkedIn profile matched the search criteria'
+  });
+
+  // 53. BIG FOUR & MAJOR CONSULTING FIRM TEAM PAGES
+  const consultingFirms = [
+    'deloitte.com/za', 'pwc.co.za', 'ey.com/en_za', 'kpmg.com/za',
+    'bdo.co.za', 'grantthornton.co.za', 'mazars.co.za', 'rsm.co.za'
+  ];
+  queries.push({
+    query: `"${role}" ${consultingFirms.map(f => `site:${f}`).join(' OR ')}`,
+    sourceType: 'company',
+    purpose: 'Find consultants at major professional services firms',
+    dataSource: 'Professional services firm websites (publicly accessible)',
+    howWeFoundYou: 'Your profile appeared on your firm\'s public team page'
+  });
+
+  // 54. SPECIALIST BOUTIQUE CONSULTING FIRMS (SA-specific)
+  const boutiqueFirms = [
+    'catalystsolutions.co.za', 'catalystsolutions.global', 'dmkadvisory.co.za',
+    'ayandambanga.co.za', 'saica.co.za', 'sars.gov.za'
+  ];
+  queries.push({
+    query: `"${role}" ${boutiqueFirms.map(f => `site:${f}`).join(' OR ')}`,
+    sourceType: 'company',
+    purpose: 'Find consultants at boutique SA firms',
+    dataSource: 'Boutique firm websites (publicly accessible)',
+    howWeFoundYou: 'Your profile appeared on your firm\'s website'
+  });
+
+  // 55. R&D TAX INCENTIVE / INNOVATION GRANTS SPECIFIC (if role matches)
+  const rdKeywords = ['r&d', 'research', 'development', 'innovation', 'incentive', 'grant', 'tax', 'technical'];
+  const isRDRole = rdKeywords.some(kw => role.toLowerCase().includes(kw));
+  if (isRDRole) {
+    queries.push({
+      query: `"Section 11D" OR "R&D tax incentive" OR "DTIC grant" OR "DSI" consultant South Africa site:linkedin.com/in`,
+      sourceType: 'linkedin',
+      purpose: 'Find R&D tax incentive specialists',
+      dataSource: 'LinkedIn profiles of R&D specialists',
+      howWeFoundYou: 'Your LinkedIn profile mentions R&D tax incentive experience'
+    });
+
+    queries.push({
+      query: `"R&D tax" OR "innovation incentive" OR "government grant" consultant South Africa team OR about -site:linkedin.com`,
+      sourceType: 'company',
+      purpose: 'Find R&D consultants on company pages',
+      dataSource: 'Company team pages (publicly accessible)',
+      howWeFoundYou: 'Your name appeared on a consulting firm\'s R&D services page'
+    });
+
+    // Government/regulatory body connections
+    queries.push({
+      query: `"Department of Science" OR "DSI" OR "DTIC" OR "TIA" "former" OR "ex" OR "previously" consultant South Africa`,
+      sourceType: 'news',
+      purpose: 'Find ex-government officials now in private sector',
+      dataSource: 'News about career moves (publicly accessible)',
+      howWeFoundYou: 'Your move from government to private sector was reported'
+    });
+  }
+
+  // 56. PROFESSIONAL BODY MEMBER DIRECTORIES
+  queries.push({
+    query: `"${role}" South Africa site:saica.co.za OR site:saipa.co.za OR site:ecsa.co.za OR site:sacplan.org.za "member" OR "directory"`,
+    sourceType: 'professional_body',
+    purpose: 'Find professionals in regulatory body directories',
+    dataSource: 'Professional body member directories (publicly accessible)',
+    howWeFoundYou: 'You are listed in a professional body directory'
+  });
+
+  // 57. CONSULTING FIRM PRESS RELEASES (appointments)
+  queries.push({
+    query: `"${role}" "joins" OR "appointed" OR "partner" OR "director" consulting South Africa 2024 2025 2026`,
+    sourceType: 'press_release',
+    purpose: 'Find recent consultant appointments',
+    dataSource: 'Press releases (publicly accessible)',
+    howWeFoundYou: 'Your appointment to a consulting firm was announced'
+  });
+
   return queries;
 }
 
@@ -1913,12 +2005,17 @@ USE THIS DATA TO:
         ).join('\n')}`
       : `${superiorIntelligenceContext}\n\n(Limited web results - provide market intelligence based on SA industry knowledge and GDELT/Shofo data above)`;
 
-    const synthesisResponse = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06', // PINNED to avoid model drift
-      messages: [
-        {
-          role: 'system',
-          content: `You are a premium South African executive search intelligence analyst. Your job is to find HIDDEN candidates that recruiters cannot easily find themselves.
+    // ============================================
+    // HARDCODED: Claude Opus 4.5 - NO FALLBACK
+    // This is our premium intelligence stack
+    // ============================================
+    if (!anthropic) {
+      console.error('[TalentMapping] CRITICAL: ANTHROPIC_API_KEY not configured');
+      throw new Error('Talent mapping requires Claude Opus 4.5. Configure ANTHROPIC_API_KEY in .env.local');
+    }
+    console.log('[TalentMapping] Using Claude Opus 4.5 (HARDCODED - Premium Intelligence)');
+
+    const systemPrompt = `You are a premium South African executive search intelligence analyst. Your job is to find HIDDEN candidates that recruiters cannot easily find themselves.
 
 ${SA_CONTEXT_PROMPT}
 
@@ -1934,12 +2031,41 @@ DO NOT:
 - Create fictional candidates that sound plausible
 - Make up company names like "XYZ Consulting"
 
+##############################################################################
+# CRITICAL: EXCLUDE JOURNALISTS, COLUMNISTS, AND ARTICLE AUTHORS
+##############################################################################
+When processing news articles, you MUST distinguish between:
+- ARTICLE AUTHORS (journalists/columnists who WROTE the article) = EXCLUDE THESE
+- SUBJECTS (people MENTIONED IN the article as industry professionals) = INCLUDE THESE
+
+EXCLUDE anyone who is:
+- A journalist, columnist, reporter, editor, or correspondent
+- Listed as "By [Name]" or "[Name] writes for..." at the start of an article
+- Writing for: Business Day, Fin24, News24, Daily Maverick, Moneyweb, etc.
+- Has job titles like: Columnist, Editor, Reporter, Writer, Correspondent
+
+INCLUDE people who are:
+- MENTIONED in the article as subjects (e.g., "CEO John Smith said...")
+- Quoted as industry experts (e.g., "According to consultant Jane Doe...")
+- Named in appointment/promotion news (e.g., "XYZ Company appointed John Doe as...")
+- Listed on company team pages, LinkedIn profiles, or conference speaker lists
+
+Example of what to EXCLUDE:
+- "Johan Steyn is a columnist at Business Day" = JOURNALIST, EXCLUDE
+- "Stuart Theobald writes for Business Day" = JOURNALIST, EXCLUDE
+
+Example of what to INCLUDE:
+- "Dimakatso Mokone, Managing Director at DMK Advisory, said..." = INDUSTRY PROFESSIONAL, INCLUDE
+- "Deloitte announced Izak Swart as Director of Gi3..." = APPOINTMENT, INCLUDE
+##############################################################################
+
 DO:
 - Extract ONLY real people mentioned BY NAME in the source text
 - Use their EXACT name as it appears in the source
 - Use their EXACT company name as it appears in the source
 - If you cannot find enough real named people, return FEWER candidates
 - It's better to return 2 REAL candidates than 10 fake ones
+- VERIFY each candidate is NOT a journalist before including them
 
 If the sources don't contain enough named individuals, set candidateCount to
 the actual number found and explain in marketIntelligence.recommendations
@@ -2028,11 +2154,9 @@ LEGAL COMPLIANCE (POPIA):
 - For each candidate, track how we found them
 - Be transparent about data sources
 
-Return valid JSON only. No markdown.`
-        },
-        {
-          role: 'user',
-          content: `=== FULL SEARCH SPECIFICATION (Match candidates against ALL of this) ===
+Return valid JSON only. No markdown.`;
+
+    const userPrompt = `=== FULL SEARCH SPECIFICATION (Match candidates against ALL of this) ===
 ${prompt}
 === END FULL SPEC ===
 
@@ -2210,15 +2334,31 @@ IMPORTANT: For EACH candidate, you MUST include:
   ]
 }
 
-Generate 5-8 candidates. PRIORITIZE candidates found through non-LinkedIn sources. For each candidate, explain WHY they're valuable (hidden intel, not just a LinkedIn search).`
-        }
+CRITICAL: Generate MINIMUM 6 candidates (aim for 6-10). This is a PREMIUM report.
+PRIORITIZE candidates found through non-LinkedIn sources (company pages, news, conferences, awards).
+For each candidate, provide COMPREHENSIVE intelligence - explain WHY they're valuable and hard to find.
+Include detailed approach strategies, salary expectations, and likelihood to move analysis.`;
+
+    // ============================================
+    // CLAUDE OPUS 4.5 - PREMIUM SYNTHESIS
+    // No fallback - this is our gold standard
+    // ============================================
+    console.log('[TalentMapping] Calling Claude Opus 4.5 for premium synthesis...');
+
+    const claudeResponse = await anthropic.messages.create({
+      model: 'claude-opus-4-5-20251101', // HARDCODED - Latest Opus 4.5
+      max_tokens: 12000, // Increased for comprehensive reports
+      system: systemPrompt,
+      messages: [
+        { role: 'user', content: userPrompt }
       ],
-      temperature: 0.7,
-      max_tokens: 6000,
-      response_format: { type: 'json_object' }
     });
 
-    const reportText = synthesisResponse.choices[0]?.message?.content || '{}';
+    const reportText = claudeResponse.content[0].type === 'text'
+      ? claudeResponse.content[0].text
+      : '{}';
+
+    console.log('[TalentMapping] Claude Opus 4.5 premium report generated');
     let report: any;
     try {
       report = JSON.parse(reportText);
