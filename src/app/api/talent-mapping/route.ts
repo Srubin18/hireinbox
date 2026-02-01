@@ -2007,13 +2007,12 @@ USE THIS DATA TO:
 
     // ============================================
     // HARDCODED: Claude Opus 4.5 - NO FALLBACK
-    // This is our premium intelligence stack
     // ============================================
     if (!anthropic) {
-      console.error('[TalentMapping] CRITICAL: ANTHROPIC_API_KEY not configured');
-      throw new Error('Talent mapping requires Claude Opus 4.5. Configure ANTHROPIC_API_KEY in .env.local');
+      console.error('[TalentMapping] CRITICAL: ANTHROPIC_API_KEY not configured. Value:', process.env.ANTHROPIC_API_KEY ? 'SET' : 'MISSING');
+      throw new Error('Talent mapping requires Claude Opus 4.5. ANTHROPIC_API_KEY is missing in Vercel.');
     }
-    console.log('[TalentMapping] Using Claude Opus 4.5 (HARDCODED - Premium Intelligence)');
+    console.log('[TalentMapping] ANTHROPIC_API_KEY is set, using Claude Opus 4.5');
 
     const systemPrompt = `You are a premium South African executive search intelligence analyst. Your job is to find HIDDEN candidates that recruiters cannot easily find themselves.
 
@@ -2351,17 +2350,14 @@ If absolutely no LinkedIn exists, state "https://linkedin.com/search/results/peo
 
     // ============================================
     // CLAUDE OPUS 4.5 - PREMIUM SYNTHESIS
-    // No fallback - this is our gold standard
     // ============================================
     console.log('[TalentMapping] Calling Claude Opus 4.5 for premium synthesis...');
 
     const claudeResponse = await anthropic.messages.create({
-      model: 'claude-opus-4-5-20251101', // HARDCODED - Latest Opus 4.5
-      max_tokens: 12000, // Increased for comprehensive reports
+      model: 'claude-opus-4-5-20251101',
+      max_tokens: 12000,
       system: systemPrompt,
-      messages: [
-        { role: 'user', content: userPrompt }
-      ],
+      messages: [{ role: 'user', content: userPrompt }],
     });
 
     const reportText = claudeResponse.content[0].type === 'text'
