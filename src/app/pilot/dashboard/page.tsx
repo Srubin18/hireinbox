@@ -640,7 +640,14 @@ export default function PilotDashboard() {
                 No roles yet. Create your first screening role!
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                maxHeight: '440px',
+                overflowY: 'auto',
+                paddingRight: '4px',
+              }}>
                 {recentRoles.map((role) => (
                   <div
                     key={role.id}
