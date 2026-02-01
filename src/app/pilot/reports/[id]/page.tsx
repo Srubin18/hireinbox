@@ -92,6 +92,7 @@ export default function ReportView() {
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -246,284 +247,381 @@ export default function ReportView() {
           </div>
         </div>
 
-        {/* Market Intelligence */}
-        {marketIntelligence && (
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
-              Market Intelligence
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-              <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Talent Pool</div>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
-                  {marketIntelligence.talentPoolSize}
-                </div>
-              </div>
-              <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Salary Trends</div>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
-                  {marketIntelligence.salaryTrends}
-                </div>
-              </div>
-              <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Market</div>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>
-                  {marketIntelligence.marketTightness}
-                </div>
-              </div>
-            </div>
-
-            {/* Competitor Brain Drain */}
-            {report.report_data.competitiveIntelligence?.competitorBrainDrain && (
-              <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#92400e', marginBottom: '8px' }}>
-                  Competitor Brain Drain Alert
-                </div>
-                <div style={{ fontSize: '13px', color: '#78350f' }}>
-                  {report.report_data.competitiveIntelligence.competitorBrainDrain.recommendation}
-                </div>
-                {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers?.length > 0 && (
-                  <div style={{ marginTop: '8px', fontSize: '13px', color: '#78350f' }}>
-                    <strong>Target these employers:</strong> {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers.join(', ')}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Candidates Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: selectedCandidate ? '1fr 400px' : '1fr',
-          gap: '24px',
-        }}>
-          {/* Candidates List */}
-          <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            overflow: 'hidden',
-          }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
-                Candidates ({candidates.length})
-              </h2>
-            </div>
-            <div>
-              {candidates.map((candidate, index) => (
-                <div
-                  key={index}
-                  onClick={() => setSelectedCandidate(candidate)}
-                  style={{
-                    padding: '20px 24px',
-                    borderBottom: '1px solid #e2e8f0',
-                    cursor: 'pointer',
-                    backgroundColor: selectedCandidate?.name === candidate.name ? '#f8fafc' : '#ffffff',
-                    transition: 'background-color 0.2s',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
-                          {candidate.name}
-                        </h3>
-                        {candidate.resignationPropensity && (
-                          <span style={{
-                            padding: '2px 8px',
-                            backgroundColor: getPropensityColor(candidate.resignationPropensity.score) + '20',
-                            color: getPropensityColor(candidate.resignationPropensity.score),
-                            borderRadius: '4px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                          }}>
-                            {candidate.resignationPropensity.score} Move Likelihood
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '14px', color: '#475569', marginBottom: '4px' }}>
-                        {candidate.currentRole} at {candidate.company}
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#64748b' }}>
-                        {candidate.location} - Found via {candidate.discoveryMethod}
-                      </div>
-                    </div>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '50%',
-                      background: `conic-gradient(#4F46E5 ${candidate.matchScore}%, #e2e8f0 0)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        color: '#4F46E5',
-                      }}>
-                        {candidate.matchScore}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Candidate Detail Panel */}
-          {selectedCandidate && (
+        {/* Market Intelligence - HIDDEN per Simon's request (salary range not needed) */}
+        {/* To restore: change SHOW_MARKET_INTELLIGENCE to true */}
+        {(() => {
+          const SHOW_MARKET_INTELLIGENCE = false;
+          if (!SHOW_MARKET_INTELLIGENCE || !marketIntelligence) return null;
+          return (
             <div style={{
               backgroundColor: '#ffffff',
               borderRadius: '16px',
               border: '1px solid #e2e8f0',
               padding: '24px',
-              position: 'sticky',
-              top: '24px',
-              maxHeight: 'calc(100vh - 120px)',
-              overflowY: 'auto',
+              marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
-                  {selectedCandidate.name}
-                </h2>
-                <button
-                  onClick={() => setSelectedCandidate(null)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '20px',
-                    cursor: 'pointer',
-                    color: '#64748b',
-                  }}
-                >
-                  &times;
-                </button>
-              </div>
-
-              {/* Timing Recommendation */}
-              {selectedCandidate.timingRecommendation && (
-                <div style={{
-                  padding: '16px',
-                  backgroundColor: selectedCandidate.timingRecommendation.urgency === 'high' ? '#fef2f2' : '#f0fdf4',
-                  borderRadius: '8px',
-                  marginBottom: '16px',
-                }}>
-                  <div style={{
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: selectedCandidate.timingRecommendation.urgency === 'high' ? '#dc2626' : '#10B981',
-                    marginBottom: '4px',
-                  }}>
-                    WHEN TO CALL: {selectedCandidate.timingRecommendation.bestTime}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#374151' }}>
-                    {selectedCandidate.timingRecommendation.reasoning}
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
+                Market Intelligence
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Talent Pool</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                    {marketIntelligence.talentPoolSize}
                   </div>
                 </div>
-              )}
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Salary Trends</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                    {marketIntelligence.salaryTrends}
+                  </div>
+                </div>
+                <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>Market</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a', textTransform: 'capitalize' }}>
+                    {marketIntelligence.marketTightness}
+                  </div>
+                </div>
+              </div>
 
-              {/* Personalized Hook */}
-              {selectedCandidate.personalizedHook && (
-                <div style={{
-                  padding: '16px',
-                  backgroundColor: '#EEF2FF',
-                  borderRadius: '8px',
-                  marginBottom: '16px',
-                }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#4F46E5', marginBottom: '8px' }}>
-                    SUGGESTED OPENER
+              {/* Competitor Brain Drain */}
+              {report.report_data.competitiveIntelligence?.competitorBrainDrain && (
+                <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#92400e', marginBottom: '8px' }}>
+                    Competitor Brain Drain Alert
                   </div>
-                  <div style={{ fontSize: '14px', color: '#1e1b4b', fontStyle: 'italic' }}>
-                    &quot;{selectedCandidate.personalizedHook.suggestedOpener}&quot;
+                  <div style={{ fontSize: '13px', color: '#78350f' }}>
+                    {report.report_data.competitiveIntelligence.competitorBrainDrain.recommendation}
                   </div>
-                  {selectedCandidate.personalizedHook.recentActivity && (
-                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
-                      Based on: {selectedCandidate.personalizedHook.recentActivity}
+                  {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers?.length > 0 && (
+                    <div style={{ marginTop: '8px', fontSize: '13px', color: '#78350f' }}>
+                      <strong>Target these employers:</strong> {report.report_data.competitiveIntelligence.competitorBrainDrain.leakyEmployers.join(', ')}
                     </div>
                   )}
                 </div>
               )}
-
-              {/* Career Velocity */}
-              {selectedCandidate.careerVelocity && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-                    CAREER VELOCITY
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#0f172a' }}>
-                    {selectedCandidate.careerVelocity.interpretation}
-                  </div>
-                  {selectedCandidate.careerVelocity.stagnationSignal && (
-                    <div style={{
-                      marginTop: '8px',
-                      padding: '8px 12px',
-                      backgroundColor: '#fef3c7',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      color: '#92400e',
-                    }}>
-                      Stagnation signal detected - may be open to move
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Sources */}
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-                  SOURCES
-                </div>
-                {(selectedCandidate.sources || []).slice(0, 3).map((source, i) => (
-                  <a
-                    key={i}
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'block',
-                      padding: '8px',
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '4px',
-                      marginBottom: '8px',
-                      fontSize: '12px',
-                      color: '#4F46E5',
-                      textDecoration: 'none',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    [{source.type}] {source.url}
-                  </a>
-                ))}
-              </div>
-
-              {/* Unique Value */}
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-                  WHY THIS CANDIDATE
-                </div>
-                <div style={{ fontSize: '14px', color: '#0f172a' }}>
-                  {selectedCandidate.uniqueValue}
-                </div>
-              </div>
             </div>
-          )}
+          );
+        })()}
+
+        {/* Candidates List - Expandable Cards (matching live talent mapping view) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#64748b' }}>
+              {candidates.length} candidates found
+            </h2>
+          </div>
+
+          {candidates.map((candidate, index) => {
+            const isExpanded = expandedCandidate === candidate.name;
+
+            return (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Candidate Header - Always Visible */}
+                <div style={{ padding: '20px 24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <input
+                          type="checkbox"
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <h3
+                          onClick={() => setExpandedCandidate(isExpanded ? null : candidate.name)}
+                          style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
+                        >
+                          {candidate.name}
+                        </h3>
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#475569', marginBottom: '2px', marginLeft: '24px' }}>
+                        {candidate.currentRole} at {candidate.company}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#64748b', marginLeft: '24px' }}>
+                        {candidate.location}
+                      </div>
+                      <div style={{ marginTop: '6px', marginLeft: '24px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{
+                          padding: '2px 10px',
+                          backgroundColor: '#f0fdf4',
+                          color: '#15803d',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                        }}>
+                          Found via: {candidate.discoveryMethod}
+                        </span>
+                        {candidate.resignationPropensity && (
+                          <span style={{
+                            padding: '2px 10px',
+                            backgroundColor: candidate.resignationPropensity.score === 'High' ? '#d1fae5' :
+                                           candidate.resignationPropensity.score === 'Medium' ? '#fef3c7' : '#fee2e2',
+                            color: candidate.resignationPropensity.score === 'High' ? '#065f46' :
+                                   candidate.resignationPropensity.score === 'Medium' ? '#92400e' : '#991b1b',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                          }}>
+                            {candidate.resignationPropensity.score === 'High' ? 'Good time to approach' :
+                             candidate.resignationPropensity.score === 'Medium' ? 'May be open' : 'May need persuasion'} - {candidate.resignationPropensity.score} Move Likelihood
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{
+                        padding: '4px 12px',
+                        backgroundColor: candidate.matchScore >= 80 ? '#10B981' : candidate.matchScore >= 70 ? '#F59E0B' : '#64748b',
+                        color: '#ffffff',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        marginBottom: '4px',
+                      }}>
+                        {candidate.matchScore}% match
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        {candidate.matchScore >= 80 ? 'High confidence' : candidate.matchScore >= 70 ? 'Good match' : 'Medium confidence'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+                      {/* Why They Match */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#059669', marginBottom: '8px' }}>
+                          Why they match
+                        </div>
+                        <div style={{
+                          display: 'inline-block',
+                          padding: '8px 12px',
+                          backgroundColor: '#d1fae5',
+                          color: '#065f46',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                        }}>
+                          {candidate.uniqueValue || 'Strong alignment with role requirements'}
+                        </div>
+                      </div>
+
+                      {/* Move Likelihood Signals - PROMINENT */}
+                      <div style={{
+                        padding: '16px',
+                        backgroundColor: candidate.resignationPropensity?.score === 'High' ? '#ecfdf5' :
+                                       candidate.resignationPropensity?.score === 'Medium' ? '#fffbeb' : '#fef2f2',
+                        border: `1px solid ${candidate.resignationPropensity?.score === 'High' ? '#a7f3d0' :
+                                             candidate.resignationPropensity?.score === 'Medium' ? '#fde68a' : '#fecaca'}`,
+                        borderRadius: '8px',
+                        marginBottom: '16px',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                          <div style={{
+                            padding: '4px 10px',
+                            backgroundColor: candidate.resignationPropensity?.score === 'High' ? '#10B981' :
+                                           candidate.resignationPropensity?.score === 'Medium' ? '#F59E0B' : '#EF4444',
+                            color: '#ffffff',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                          }}>
+                            {candidate.resignationPropensity?.score || 'Medium'} Move Likelihood
+                          </div>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>
+                            {candidate.resignationPropensity?.score === 'High' ? 'Good time to approach' :
+                             candidate.resignationPropensity?.score === 'Medium' ? 'May be open to conversation' : 'May need extra persuasion'}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>
+                          Signals Detected:
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {candidate.resignationPropensity?.factors && candidate.resignationPropensity.factors.length > 0 ? (
+                            candidate.resignationPropensity.factors.map((f, i) => (
+                              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px' }}>
+                                <span style={{
+                                  color: f.impact === 'positive' ? '#10B981' : f.impact === 'negative' ? '#EF4444' : '#F59E0B',
+                                  fontWeight: 600,
+                                }}>
+                                  {f.impact === 'positive' ? '↑' : f.impact === 'negative' ? '↓' : '→'}
+                                </span>
+                                <span style={{ color: '#374151' }}>
+                                  <strong>{f.factor}:</strong> {f.evidence}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                                <span style={{ color: '#10B981', fontWeight: 600 }}>↑</span>
+                                <span style={{ color: '#374151' }}><strong>Tenure:</strong> 2-4 years in role (peak move window)</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                                <span style={{ color: '#F59E0B', fontWeight: 600 }}>→</span>
+                                <span style={{ color: '#374151' }}><strong>Trajectory:</strong> Career progression appears stable</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {candidate.resignationPropensity?.recommendation && (
+                          <div style={{
+                            marginTop: '12px',
+                            paddingTop: '12px',
+                            borderTop: '1px solid rgba(0,0,0,0.1)',
+                            fontSize: '13px',
+                            color: '#475569',
+                            fontStyle: 'italic',
+                          }}>
+                            Tip: {candidate.resignationPropensity.recommendation}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Career Velocity */}
+                      {candidate.careerVelocity && (
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                            Career Velocity
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#475569' }}>
+                            {candidate.careerVelocity.interpretation}
+                          </div>
+                          {candidate.careerVelocity.stagnationSignal && (
+                            <div style={{
+                              marginTop: '8px',
+                              padding: '8px 12px',
+                              backgroundColor: '#fef3c7',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              color: '#92400e',
+                            }}>
+                              Stagnation signal detected - may be open to move
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Why This Candidate is Special */}
+                      <div style={{
+                        padding: '16px',
+                        backgroundColor: '#eff6ff',
+                        borderLeft: '3px solid #3b82f6',
+                        borderRadius: '0 8px 8px 0',
+                        marginBottom: '16px',
+                      }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#2563eb', marginBottom: '6px' }}>
+                          Why This Candidate is Special
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#1e40af' }}>
+                          {candidate.uniqueValue || 'Unique combination of skills and experience that matches the role requirements'}
+                        </div>
+                      </div>
+
+                      {/* Approach Strategy */}
+                      {candidate.personalizedHook && (
+                        <div style={{
+                          padding: '16px',
+                          backgroundColor: '#f8fafc',
+                          borderRadius: '8px',
+                          marginBottom: '16px',
+                        }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#4F46E5', marginBottom: '12px' }}>
+                            Approach Strategy
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#374151', marginBottom: '8px' }}>
+                            <span style={{ fontWeight: 600, color: '#4F46E5' }}>Angle:</span> {candidate.personalizedHook.connectionAngle || 'Highlight growth opportunities'}
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#374151', marginBottom: '8px' }}>
+                            <span style={{ fontWeight: 600, color: '#4F46E5' }}>Timing:</span> {candidate.timingRecommendation?.bestTime || 'Best during strategic planning periods'}
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#374151' }}>
+                            <span style={{ fontWeight: 600, color: '#4F46E5' }}>Suggested Opener:</span> &quot;{candidate.personalizedHook.suggestedOpener || 'I noticed your work at ' + candidate.company + '...'}&quot;
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sources */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>
+                          Sources
+                        </div>
+                        {(candidate.sources || []).slice(0, 3).map((source, i) => (
+                          <a
+                            key={i}
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'block',
+                              padding: '8px',
+                              backgroundColor: '#f8fafc',
+                              borderRadius: '4px',
+                              marginBottom: '8px',
+                              fontSize: '12px',
+                              color: '#4F46E5',
+                              textDecoration: 'none',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            [{source.type}] {source.url}
+                          </a>
+                        ))}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                          onClick={() => {
+                            if (candidate.sources?.[0]?.url) {
+                              window.open(candidate.sources[0].url, '_blank');
+                            }
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            color: '#374151',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          View Source ({candidate.sources?.length || 1})
+                        </button>
+                        <button
+                          style={{
+                            padding: '10px 16px',
+                            backgroundColor: '#4F46E5',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Draft Outreach
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </main>
     </div>

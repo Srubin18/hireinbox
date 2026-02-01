@@ -114,9 +114,19 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const firecrawl = new FirecrawlApp({
-  apiKey: process.env.FIRECRAWL_API_KEY || '',
-});
+// Initialize Firecrawl lazily to avoid errors when API key is missing
+let firecrawl: FirecrawlApp | null = null;
+function getFirecrawl(): FirecrawlApp | null {
+  if (!process.env.FIRECRAWL_API_KEY) {
+    return null;
+  }
+  if (!firecrawl) {
+    firecrawl = new FirecrawlApp({
+      apiKey: process.env.FIRECRAWL_API_KEY,
+    });
+  }
+  return firecrawl;
+}
 
 // South African salary benchmarks (2026)
 const SA_SALARY_BENCHMARKS: Record<string, { min: number; max: number }> = {
@@ -824,6 +834,81 @@ function generateIntelligenceQueries(parsed: any): { query: string; sourceType: 
     howWeFoundYou: 'Internal promotion at your company was announced'
   });
 
+  // ========== PHASE 3: EXPLICITLY NON-LINKEDIN SEARCHES ==========
+  // These queries EXCLUDE LinkedIn to force diverse sources
+
+  // 44. COMPANY WEBSITES ONLY - Executive teams (NO LinkedIn)
+  queries.push({
+    query: `"${role}" "executive" OR "management team" OR "leadership" ${location} ${industry} -site:linkedin.com`,
+    sourceType: 'company',
+    purpose: 'Find executives on company websites (not LinkedIn)',
+    dataSource: 'Company websites only (no LinkedIn)',
+    howWeFoundYou: 'Your name appeared on a company website team page'
+  });
+
+  // 45. NEWS ONLY - Appointments (NO LinkedIn)
+  queries.push({
+    query: `"${role}" "appointed" OR "announcement" ${industry} South Africa -site:linkedin.com 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Appointment news from non-LinkedIn sources',
+    dataSource: 'News publications (no LinkedIn)',
+    howWeFoundYou: 'Your appointment was reported in news media'
+  });
+
+  // 46. PROFESSIONAL DIRECTORIES (NO LinkedIn)
+  queries.push({
+    query: `"${role}" ${industry} South Africa "directory" OR "members" OR "register" -site:linkedin.com`,
+    sourceType: 'professional_body',
+    purpose: 'Professional directories and member lists',
+    dataSource: 'Professional directories (no LinkedIn)',
+    howWeFoundYou: 'You appeared in a professional directory or member list'
+  });
+
+  // 47. CONFERENCE/EVENT SPEAKERS (NO LinkedIn)
+  queries.push({
+    query: `"${role}" ${industry} South Africa "speaker" OR "panelist" OR "presenter" 2025 2026 -site:linkedin.com`,
+    sourceType: 'conference',
+    purpose: 'Conference speakers from event websites',
+    dataSource: 'Event websites (no LinkedIn)',
+    howWeFoundYou: 'You were listed as a speaker at an industry event'
+  });
+
+  // 48. MEDIA APPEARANCES (NO LinkedIn)
+  queries.push({
+    query: `"${role}" ${industry} South Africa "interview" OR "spoke to" OR "comments" -site:linkedin.com`,
+    sourceType: 'news',
+    purpose: 'Media interviews and quotes',
+    dataSource: 'Media coverage (no LinkedIn)',
+    howWeFoundYou: 'You were quoted or interviewed in the media'
+  });
+
+  // 49. BOARD APPOINTMENTS (NO LinkedIn)
+  queries.push({
+    query: `"board" OR "director" OR "non-executive" ${industry} South Africa "appointed" -site:linkedin.com 2025 2026`,
+    sourceType: 'news',
+    purpose: 'Board and director appointments',
+    dataSource: 'Board appointment announcements (no LinkedIn)',
+    howWeFoundYou: 'Your board appointment was publicly announced'
+  });
+
+  // 50. INDUSTRY AWARDS (NO LinkedIn)
+  queries.push({
+    query: `"${role}" ${industry} South Africa "award" OR "winner" OR "finalist" OR "recognised" -site:linkedin.com`,
+    sourceType: 'award',
+    purpose: 'Industry award recognition',
+    dataSource: 'Award announcements (no LinkedIn)',
+    howWeFoundYou: 'You were recognised in an industry award'
+  });
+
+  // 51. THOUGHT LEADERSHIP (NO LinkedIn)
+  queries.push({
+    query: `"${role}" ${industry} South Africa "author" OR "wrote" OR "published" OR "opinion" -site:linkedin.com`,
+    sourceType: 'trade_publication',
+    purpose: 'Published thought leadership',
+    dataSource: 'Publications (no LinkedIn)',
+    howWeFoundYou: 'Your published work was found online'
+  });
+
   return queries;
 }
 
@@ -1398,8 +1483,8 @@ Return valid JSON only:
     console.log('[TalentMapping] Parsed:', parsed);
 
     // Check if Firecrawl is available - if not, use demo mode
-    const useDemo = !process.env.FIRECRAWL_API_KEY;
-    if (useDemo) {
+    const fc = getFirecrawl();
+    if (!fc) {
       console.log('[TalentMapping] No Firecrawl API key - using hardcoded demo data');
       const demoReport = generateHardcodedReport(parsed, prompt);
 
@@ -1431,7 +1516,7 @@ Return valid JSON only:
     for (const sq of searchQueries) {
       try {
         console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query}`);
-        const results = await firecrawl.search(sq.query, { limit: 5 }) as any;
+        const results = await fc!.search(sq.query, { limit: 5 }) as any;
         const data = results?.data || results?.web || [];
 
         searchMethodology.push({
@@ -1495,10 +1580,18 @@ Return valid JSON only:
       return NextResponse.json(demoReport);
     }
 
-    // Prioritize high-value sources
+    // Prioritize high-value sources AND penalize LinkedIn
+    // This ensures non-LinkedIn sources appear first in the analysis
     const sortedResults = uniqueResults.sort((a, b) => {
+      // First priority: source value (high > medium > low)
       const valueOrder = { high: 0, medium: 1, low: 2 };
-      return valueOrder[a.sourceValue] - valueOrder[b.sourceValue];
+      const valueDiff = valueOrder[a.sourceValue] - valueOrder[b.sourceValue];
+      if (valueDiff !== 0) return valueDiff;
+
+      // Second priority: non-LinkedIn sources come first
+      const aIsLinkedIn = a.sourceType === 'linkedin' ? 1 : 0;
+      const bIsLinkedIn = b.sourceType === 'linkedin' ? 1 : 0;
+      return aIsLinkedIn - bIsLinkedIn;
     });
 
     console.log('[TalentMapping] Found', sortedResults.length, 'unique results from sources:', sourceTypeCounts);
@@ -1530,6 +1623,34 @@ Return valid JSON only:
           content: `You are a premium South African executive search intelligence analyst. Your job is to find HIDDEN candidates that recruiters cannot easily find themselves.
 
 ${SA_CONTEXT_PROMPT}
+
+##############################################################################
+# CRITICAL: REAL NAMES ONLY - NO HALLUCINATION
+##############################################################################
+You MUST ONLY include candidates whose REAL FULL NAMES appear VERBATIM in the
+intelligence sources provided below.
+
+DO NOT:
+- Invent or generate any names
+- Use placeholder names like "John Smith" or "Thabo Mokoena"
+- Create fictional candidates that sound plausible
+- Make up company names like "XYZ Consulting"
+
+DO:
+- Extract ONLY real people mentioned BY NAME in the source text
+- Use their EXACT name as it appears in the source
+- Use their EXACT company name as it appears in the source
+- If you cannot find enough real named people, return FEWER candidates
+- It's better to return 2 REAL candidates than 10 fake ones
+
+If the sources don't contain enough named individuals, set candidateCount to
+the actual number found and explain in marketIntelligence.recommendations
+that "Limited named individuals found in public sources - consider LinkedIn
+Recruiter for direct sourcing."
+
+VERIFICATION: For each candidate, you MUST be able to point to the EXACT
+source text where their name appears. If you can't, don't include them.
+##############################################################################
 
 CRITICAL VALUE PROPOSITION:
 1. HIDDEN CANDIDATES - Prioritize people found on company pages, news, conferences - NOT just LinkedIn profiles
@@ -1637,7 +1758,13 @@ CRITICAL: Score each candidate against the FULL SPEC above, not just the summary
 Intelligence quality: ${highValueCount} high-value sources, ${linkedInCount} LinkedIn sources
 ${webContext}
 
-Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate, you MUST include:
+Generate a PREMIUM talent mapping report as JSON.
+
+REMINDER: Only include candidates whose REAL NAMES appear in the sources above.
+If a source says "John Doe, CEO of Acme Corp" - you can include John Doe.
+If NO specific person is named - do NOT invent one.
+
+IMPORTANT: For EACH candidate, you MUST include:
 - verifiedCredentials: array of credentials you can verify from public sources
 - publicFootprint: 'high'|'medium'|'low' based on how visible they are online
 - connectionPaths: array of ways the recruiter might reach them
@@ -1692,9 +1819,9 @@ Generate a PREMIUM talent mapping report as JSON. IMPORTANT: For EACH candidate,
   },
   "candidates": [
     {
-      "name": "Full Name",
-      "currentRole": "Job Title",
-      "company": "Company Name",
+      "name": "REAL full name from sources (e.g., 'Sarah Johnson' NOT invented)",
+      "currentRole": "REAL job title from sources",
+      "company": "REAL company name from sources (NOT 'XYZ Corp')",
       "industry": "Sector",
       "location": "City",
       "discoveryMethod": "How we found them (e.g., 'Company team page', 'News article about appointment', 'Conference speaker')",
@@ -2183,9 +2310,16 @@ Return JSON array only.`
 
   } catch (error) {
     console.error('[TalentMapping] Error:', error);
+
+    // Don't leak internal error details (like API key messages) to clients
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isApiKeyError = errorMessage.toLowerCase().includes('api') && errorMessage.toLowerCase().includes('key');
+
     return NextResponse.json({
-      error: 'Talent mapping failed',
-      details: error instanceof Error ? error.message : String(error)
+      error: isApiKeyError
+        ? 'Service temporarily unavailable. Please try again or contact support.'
+        : 'Talent mapping failed. Please try again.',
+      _debug: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     }, { status: 500 });
   }
 }
