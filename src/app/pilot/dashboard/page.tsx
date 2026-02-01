@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import PilotHeader from '@/components/PilotHeader';
 
 // ============================================
 // HIREINBOX PILOT PROGRAM - DASHBOARD
@@ -26,26 +27,6 @@ interface RecentRole {
   candidate_count: number;
   pending_review: number;
 }
-
-const Logo = () => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-      <rect width="48" height="48" rx="12" fill="#4F46E5"/>
-      <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
-      <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
-      <circle cx="36" cy="12" r="9" fill="#10B981"/>
-      <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-    <div>
-      <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#4F46E5' }}>Hyred</span>
-      </div>
-      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
-        Pilot Program
-      </div>
-    </div>
-  </div>
-);
 
 const Icons = {
   search: (
@@ -73,13 +54,6 @@ const Icons = {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <line x1="5" y1="12" x2="19" y2="12"/>
       <polyline points="12 5 19 12 12 19"/>
-    </svg>
-  ),
-  logout: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/>
-      <line x1="21" y1="12" x2="9" y2="12"/>
     </svg>
   ),
   sparkle: (
@@ -206,7 +180,6 @@ export default function PilotDashboard() {
     }}>
       {/* Mobile Responsive Styles */}
       <style>{`
-        .dash-header { padding: 16px 32px; }
         .dash-main { padding: 32px; }
         .dash-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
         .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
@@ -218,14 +191,12 @@ export default function PilotDashboard() {
         }
 
         @media (max-width: 768px) {
-          .dash-header { padding: 12px 16px !important; flex-wrap: wrap; gap: 12px !important; }
           .dash-main { padding: 16px !important; }
           .dash-cards { grid-template-columns: 1fr !important; }
           .dash-stats { grid-template-columns: repeat(2, 1fr) !important; }
           .dash-recent { grid-template-columns: 1fr !important; }
           .dash-support-btns { flex-direction: column !important; }
           .dash-support-btns a { text-align: center !important; }
-          .user-email { display: none !important; }
         }
 
         @media (max-width: 480px) {
@@ -234,36 +205,7 @@ export default function PilotDashboard() {
       `}</style>
 
       {/* Header */}
-      <header className="dash-header" style={{
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <Logo />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span className="user-email" style={{ fontSize: '14px', color: '#64748b' }}>{user?.email}</span>
-          <button
-            onClick={handleLogout}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              backgroundColor: '#f1f5f9',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              color: '#475569',
-              cursor: 'pointer',
-            }}
-          >
-            {Icons.logout}
-            Sign out
-          </button>
-        </div>
-      </header>
+      <PilotHeader user={user} onLogout={handleLogout} currentPage="dashboard" />
 
       {/* Main Content */}
       <main className="dash-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>

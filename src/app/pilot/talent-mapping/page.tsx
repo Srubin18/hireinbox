@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import PilotHeader from '@/components/PilotHeader';
 
 // ============================================
 // HIREINBOX PILOT - TALENT MAPPING
@@ -83,24 +84,6 @@ interface TalentReport {
   };
 }
 
-const Logo = () => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-      <rect width="48" height="48" rx="12" fill="#4F46E5"/>
-      <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
-      <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
-      <circle cx="36" cy="12" r="9" fill="#10B981"/>
-      <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-    <div>
-      <div style={{ fontSize: '16px', fontWeight: 700 }}>
-        <span style={{ color: '#4F46E5' }}>Hyred</span>
-      </div>
-      <div style={{ fontSize: '11px', color: '#64748b' }}>Talent Mapping</div>
-    </div>
-  </div>
-);
-
 export default function PilotTalentMapping() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,6 +108,11 @@ export default function PilotTalentMapping() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/pilot');
+  };
 
   // Fetch candidates when view filter changes or report gets an ID
   useEffect(() => {
@@ -485,32 +473,7 @@ export default function PilotTalentMapping() {
       <style>{`@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
 
       {/* Header */}
-      <header className="tm-header" style={{
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div onClick={() => router.push('/pilot/dashboard')}><Logo /></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button
-            onClick={() => router.push('/pilot/reports')}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#f1f5f9',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              color: '#475569',
-              cursor: 'pointer',
-            }}
-          >
-            My Reports
-          </button>
-          <span style={{ fontSize: '14px', color: '#64748b' }}>{user?.email}</span>
-        </div>
-      </header>
+      <PilotHeader user={user} onLogout={handleLogout} currentPage="talent-mapping" />
 
       <main className="tm-main" style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Search Section */}

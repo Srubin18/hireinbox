@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import PilotHeader from '@/components/PilotHeader';
 
 // ============================================
 // HIREINBOX PILOT - SAVED REPORTS
@@ -20,24 +21,6 @@ interface Report {
   candidate_count: number;
 }
 
-const Logo = () => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-      <rect width="48" height="48" rx="12" fill="#4F46E5"/>
-      <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
-      <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
-      <circle cx="36" cy="12" r="9" fill="#10B981"/>
-      <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-    <div>
-      <div style={{ fontSize: '16px', fontWeight: 700 }}>
-        <span style={{ color: '#4F46E5' }}>Hyred</span>
-      </div>
-      <div style={{ fontSize: '11px', color: '#64748b' }}>Saved Reports</div>
-    </div>
-  </div>
-);
-
 export default function PilotReports() {
   const router = useRouter();
   const [reports, setReports] = useState<Report[]>([]);
@@ -49,6 +32,11 @@ export default function PilotReports() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/pilot');
+  };
 
   const fetchReports = useCallback(async () => {
     try {
@@ -159,19 +147,22 @@ export default function PilotReports() {
       `}</style>
 
       {/* Header */}
-      <header className="reports-header" style={{
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div onClick={() => router.push('/pilot/dashboard')}><Logo /></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <PilotHeader user={user} onLogout={handleLogout} currentPage="reports" />
+
+      <main className="reports-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>
+              Your Talent Reports
+            </h1>
+            <p style={{ fontSize: '15px', color: '#64748b' }}>
+              {reports.length} saved {reports.length === 1 ? 'report' : 'reports'}
+            </p>
+          </div>
           <button
             onClick={() => router.push('/pilot/talent-mapping')}
             style={{
-              padding: '8px 16px',
+              padding: '10px 20px',
               backgroundColor: '#4F46E5',
               color: '#ffffff',
               border: 'none',
@@ -183,18 +174,6 @@ export default function PilotReports() {
           >
             + New Search
           </button>
-          <span style={{ fontSize: '14px', color: '#64748b' }}>{user?.email}</span>
-        </div>
-      </header>
-
-      <main className="reports-main" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
-            Your Talent Reports
-          </h1>
-          <p style={{ fontSize: '15px', color: '#64748b' }}>
-            {reports.length} saved {reports.length === 1 ? 'report' : 'reports'}
-          </p>
         </div>
 
         {/* Error State */}
