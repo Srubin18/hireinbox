@@ -166,7 +166,7 @@ export default function HirePage() {
         color: '#94a3b8',
         fontSize: '13px'
       }}>
-        HireInbox — Less noise. More hires.
+        Hyred — Less noise. More hires.
       </div>
     </div>
   );

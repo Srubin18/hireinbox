@@ -382,7 +382,7 @@ const ApplicationTracker = ({ applications }: { applications: Application[] }) =
         </div>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>No Applications Yet</h3>
         <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 16, maxWidth: 320, margin: '0 auto 16px' }}>
-          When you apply to jobs through HireInbox partner companies, you'll be able to track your application status here.
+          When you apply to jobs through Hyred partner companies, you'll be able to track your application status here.
         </p>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#f8fafc', borderRadius: 8, fontSize: '0.85rem', color: '#64748b' }}>
           <span>💡</span> Tip: Join the Talent Pool to get discovered by employers
@@ -1409,7 +1409,7 @@ export default function CandidateDashboard() {
             <a href="/terms" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem' }}>Terms</a>
             <a href="/" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.85rem' }}>For Employers</a>
           </div>
-          <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>© 2026 HireInbox</div>
+          <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>© 2026 Hyred</div>
         </div>
       </footer>
     </div>

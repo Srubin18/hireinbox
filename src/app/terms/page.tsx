@@ -91,7 +91,7 @@ export default function TermsPage() {
           {/* Introduction */}
           <section style={{ marginBottom: 32 }}>
             <p style={{ color: '#475569', fontSize: '1.05rem' }}>
-              Welcome to HireInbox. These Terms of Service (&quot;Terms&quot;) govern your access to and use of the HireInbox platform, website, and services (collectively, the &quot;Service&quot;) operated by HireInbox (Pty) Ltd (&quot;HireInbox&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;).
+              Welcome to Hyred. These Terms of Service (&quot;Terms&quot;) govern your access to and use of the Hyred platform, website, and services (collectively, the &quot;Service&quot;) operated by Hyred (Pty) Ltd (&quot;Hyred&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;).
             </p>
             <p style={{ color: '#475569', fontSize: '1.05rem', marginTop: 16 }}>
               By accessing or using our Service, you agree to be bound by these Terms. If you do not agree to these Terms, please do not use our Service.
@@ -104,7 +104,7 @@ export default function TermsPage() {
               1. Service Description
             </h2>
             <p style={{ color: '#475569', marginBottom: 16 }}>
-              HireInbox is an AI-powered recruitment platform that provides:
+              Hyred is an AI-powered recruitment platform that provides:
             </p>
             <ul style={{ color: '#475569', paddingLeft: 24 }}>
               <li style={{ marginBottom: 8 }}><strong>For Employers (B2B):</strong> Automated CV screening, candidate ranking, and recruitment workflow tools.</li>
@@ -192,7 +192,7 @@ export default function TermsPage() {
               5. Intellectual Property
             </h2>
             <ul style={{ color: '#475569', paddingLeft: 24 }}>
-              <li style={{ marginBottom: 8 }}><strong>Our IP:</strong> The Service, including all software, algorithms, designs, and content, is owned by HireInbox and protected by intellectual property laws.</li>
+              <li style={{ marginBottom: 8 }}><strong>Our IP:</strong> The Service, including all software, algorithms, designs, and content, is owned by Hyred and protected by intellectual property laws.</li>
               <li style={{ marginBottom: 8 }}><strong>Your Content:</strong> You retain ownership of the content you upload (e.g., CVs). By uploading, you grant us a license to use this content to provide and improve the Service.</li>
               <li style={{ marginBottom: 8 }}><strong>Feedback:</strong> Any feedback or suggestions you provide may be used by us without obligation to you.</li>
             </ul>
@@ -247,7 +247,7 @@ export default function TermsPage() {
               To the maximum extent permitted by South African law:
             </p>
             <ul style={{ color: '#475569', paddingLeft: 24 }}>
-              <li style={{ marginBottom: 8 }}>HireInbox shall not be liable for any indirect, incidental, special, consequential, or punitive damages.</li>
+              <li style={{ marginBottom: 8 }}>Hyred shall not be liable for any indirect, incidental, special, consequential, or punitive damages.</li>
               <li style={{ marginBottom: 8 }}>Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim.</li>
               <li style={{ marginBottom: 8 }}>We are not liable for any employment decisions made based on our AI recommendations.</li>
             </ul>
@@ -270,7 +270,7 @@ export default function TermsPage() {
               </p>
             </div>
             <p style={{ color: '#475569', marginBottom: 16 }}>
-              To the maximum extent permitted by South African law, you agree to indemnify, defend, and hold harmless HireInbox (Pty) Ltd, its parent companies, subsidiaries, affiliates, and their respective officers, directors, employees, agents, partners, and licensors (collectively, the &quot;Indemnified Parties&quot;) from and against any and all claims, demands, actions, losses, damages, costs, liabilities, and expenses (including but not limited to reasonable attorneys&apos; fees, court costs, and expert witness fees) arising out of or relating to:
+              To the maximum extent permitted by South African law, you agree to indemnify, defend, and hold harmless Hyred (Pty) Ltd, its parent companies, subsidiaries, affiliates, and their respective officers, directors, employees, agents, partners, and licensors (collectively, the &quot;Indemnified Parties&quot;) from and against any and all claims, demands, actions, losses, damages, costs, liabilities, and expenses (including but not limited to reasonable attorneys&apos; fees, court costs, and expert witness fees) arising out of or relating to:
             </p>
             <ul style={{ color: '#475569', paddingLeft: 24, marginBottom: 16 }}>
               <li style={{ marginBottom: 8 }}>Your use or misuse of the Service;</li>
@@ -284,7 +284,7 @@ export default function TermsPage() {
               <li style={{ marginBottom: 8 }}>Any claim relating to the accuracy, reliability, or completeness of AI-generated recommendations.</li>
             </ul>
             <p style={{ color: '#475569' }}>
-              This indemnification obligation shall survive the termination of your account or these Terms. HireInbox reserves the right, at its own expense, to assume the exclusive defense and control of any matter otherwise subject to indemnification by you, in which event you will cooperate with us in asserting any available defenses.
+              This indemnification obligation shall survive the termination of your account or these Terms. Hyred reserves the right, at its own expense, to assume the exclusive defense and control of any matter otherwise subject to indemnification by you, in which event you will cooperate with us in asserting any available defenses.
             </p>
           </section>
 
@@ -355,7 +355,7 @@ export default function TermsPage() {
               13. General Provisions
             </h2>
             <ul style={{ color: '#475569', paddingLeft: 24 }}>
-              <li style={{ marginBottom: 8 }}><strong>Entire Agreement:</strong> These Terms, together with our Privacy Policy, constitute the entire agreement between you and HireInbox.</li>
+              <li style={{ marginBottom: 8 }}><strong>Entire Agreement:</strong> These Terms, together with our Privacy Policy, constitute the entire agreement between you and Hyred.</li>
               <li style={{ marginBottom: 8 }}><strong>Severability:</strong> If any provision is found unenforceable, the remaining provisions continue in effect.</li>
               <li style={{ marginBottom: 8 }}><strong>Waiver:</strong> Our failure to enforce any right does not waive that right.</li>
               <li style={{ marginBottom: 8 }}><strong>Assignment:</strong> You may not assign your rights under these Terms without our consent.</li>
@@ -377,7 +377,7 @@ export default function TermsPage() {
               border: '1px solid #e2e8f0'
             }}>
               <p style={{ color: '#475569', margin: 0, marginBottom: 8 }}>
-                <strong>HireInbox (Pty) Ltd</strong>
+                <strong>Hyred (Pty) Ltd</strong>
               </p>
               <p style={{ color: '#475569', margin: 0, marginBottom: 8 }}>
                 Email: <a href="mailto:legal@hireinbox.co.za" style={{ color: '#4F46E5' }}>legal@hireinbox.co.za</a>
@@ -407,7 +407,7 @@ export default function TermsPage() {
           gap: 16
         }}>
           <p style={{ color: '#94a3b8', margin: 0, fontSize: 14 }}>
-            &copy; {new Date().getFullYear()} HireInbox (Pty) Ltd. All rights reserved.
+            &copy; {new Date().getFullYear()} Hyred (Pty) Ltd. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: 24 }}>
             <Link href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14 }}>Privacy Policy</Link>

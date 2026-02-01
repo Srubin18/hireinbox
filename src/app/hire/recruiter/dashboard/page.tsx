@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 // HIREINBOX - RECRUITER DASHBOARD
 // /hire/recruiter/dashboard
 //
-// Simple dashboard focused on HireInbox services:
+// Simple dashboard focused on Hyred services:
 // - CV Screening (for client roles)
 // - Talent Mapping
 // - AI Interviews
@@ -162,7 +162,7 @@ export default function RecruiterDashboard() {
             Recruiter Dashboard
           </h1>
           <p style={{ fontSize: '16px', color: '#64748b' }}>
-            Use HireInbox services to screen, interview, and verify candidates for your clients.
+            Use Hyred services to screen, interview, and verify candidates for your clients.
           </p>
         </div>
 
@@ -219,7 +219,7 @@ export default function RecruiterDashboard() {
 
         {/* Services Grid */}
         <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>
-          HireInbox Services
+          Hyred Services
         </h2>
         <div style={{
           display: 'grid',

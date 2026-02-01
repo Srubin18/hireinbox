@@ -38,7 +38,7 @@ const Logo = () => (
     </svg>
     <div>
       <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
       </div>
       <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
         Pilot Program
@@ -286,7 +286,7 @@ export default function PilotDashboard() {
             color: '#0f172a',
             marginBottom: '8px',
           }}>
-            Welcome to HireInbox
+            Welcome to Hyred
           </h1>
           <p style={{ fontSize: '16px', color: '#64748b' }}>
             Your AI-powered recruitment intelligence platform
@@ -575,7 +575,7 @@ export default function PilotDashboard() {
             </h3>
           </div>
           <p style={{ fontSize: '14px', color: '#0369a1', marginBottom: '16px' }}>
-            You&apos;re part of an exclusive pilot. We&apos;re here to help you get the most out of HireInbox.
+            You&apos;re part of an exclusive pilot. We&apos;re here to help you get the most out of Hyred.
           </p>
           <div className="dash-support-btns">
             <a

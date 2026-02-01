@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 /* ===========================================
    HIREINBOX MOTHER DASHBOARD - ADMIN PANEL
    Platform-wide metrics and management
-   For: Simon, Shay (HireInbox Team)
+   For: Simon, Shay (Hyred Team)
    =========================================== */
 
 // Types
@@ -1029,7 +1029,7 @@ export default function AdminDashboard() {
       {/* Footer */}
       <footer style={{ borderTop: '1px solid #e2e8f0', padding: '20px 32px', marginTop: 32, background: '#f8fafc' }}>
         <div style={{ maxWidth: 1600, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: '0.8rem', color: '#64748b' }}>HireInbox Admin Panel v1.1 | Built with love in Cape Town</div>
+          <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Hyred Admin Panel v1.1 | Built with love in Cape Town</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: '0.8rem', color: '#94a3b8' }}>
             <span>Environment: Production</span>
             <span>|</span>

@@ -24,7 +24,7 @@ const Logo = () => (
     </svg>
     <div>
       <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
       </div>
     </div>
   </div>
@@ -1261,7 +1261,7 @@ function VideoAnalysisContent() {
         color: '#94a3b8',
         fontSize: '13px'
       }}>
-        HireInbox - Less noise. More hires.
+        Hyred - Less noise. More hires.
       </div>
     </div>
   );

@@ -363,12 +363,12 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
     if (slot.address) {
       description += `Address: ${slot.address}\\n`;
     }
-    description += `\\nBooked via HireInbox`;
+    description += `\\nBooked via Hyred`;
 
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//HireInbox//Interview Booking//EN',
+      'PRODID:-//Hyred//Interview Booking//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:REQUEST',
       'BEGIN:VEVENT',
@@ -699,7 +699,7 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
             </div>
             <div style={styles.footer}>
               <p style={styles.footerText}>
-                Powered by HireInbox - POPIA Compliant
+                Powered by Hyred - POPIA Compliant
               </p>
             </div>
           </div>
@@ -715,7 +715,7 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
         <div style={styles.card}>
           {/* Header */}
           <div style={styles.header}>
-            <div style={styles.logo}>HireInbox</div>
+            <div style={styles.logo}>Hyred</div>
             <h1 style={styles.title}>Schedule Your Interview</h1>
             <p style={styles.subtitle}>
               Select a time that works best for you
@@ -794,7 +794,7 @@ export default function BookingPage({ params }: { params: Promise<{ token: strin
 
           <div style={styles.footer}>
             <p style={styles.footerText}>
-              Powered by HireInbox - POPIA Compliant
+              Powered by Hyred - POPIA Compliant
             </p>
           </div>
         </div>

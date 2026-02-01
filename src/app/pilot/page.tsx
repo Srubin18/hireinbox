@@ -21,7 +21,7 @@ const Logo = () => (
     </svg>
     <div>
       <div style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
       </div>
       <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
         Recruiter Intelligence Platform

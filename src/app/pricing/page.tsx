@@ -11,7 +11,7 @@ import Breadcrumbs from '@/components/Breadcrumbs';
    Per-Role Pricing Model (Jan 2026)
 
    PHILOSOPHY:
-   - HireInbox is an AI Hiring Utility, NOT a marketplace
+   - Hyred is an AI Hiring Utility, NOT a marketplace
    - We charge PER ROLE, not per CV
    - Employers don't control CV volume, so per-CV is unfair
    - Per-role pricing is predictable and feels fair
@@ -878,7 +878,7 @@ function PricingContent() {
             {[
               {
                 q: 'How does the free trial work?',
-                a: 'Job seekers get 1 free CV analysis, and employers get 10 free CV screenings. No credit card required. Just sign up and start using HireInbox immediately.'
+                a: 'Job seekers get 1 free CV analysis, and employers get 10 free CV screenings. No credit card required. Just sign up and start using Hyred immediately.'
               },
               {
                 q: 'What payment methods do you accept?',
