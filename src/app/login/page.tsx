@@ -327,10 +327,10 @@ function LoginPageContent() {
               <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
                 Access by invitation only. Contact{' '}
                 <a
-                  href="mailto:simon@hireinbox.co.za"
+                  href="mailto:simon@hyred.co.za"
                   style={{ color: '#4F46E5', textDecoration: 'underline' }}
                 >
-                  simon@hireinbox.co.za
+                  simon@hyred.co.za
                 </a>
                 {' '}for access.
               </span>

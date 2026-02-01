@@ -115,10 +115,10 @@ export default function SignupDisabledPage() {
             <br />
             Contact us at{' '}
             <a
-              href="mailto:simon@hireinbox.co.za"
+              href="mailto:simon@hyred.co.za"
               style={{ color: '#0284c7', textDecoration: 'underline' }}
             >
-              simon@hireinbox.co.za
+              simon@hyred.co.za
             </a>
           </p>
         </div>
