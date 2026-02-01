@@ -288,8 +288,8 @@ function LoginPageContent() {
             </button>
           </form>
 
-          {/* Sign Up Link */}
-          <p style={{
+          {/* SIGNUP DISABLED DURING PILOT - Uncomment to re-enable */}
+          {/* <p style={{
             textAlign: 'center',
             marginTop: 24,
             fontSize: '0.9375rem',
@@ -306,7 +306,36 @@ function LoginPageContent() {
             >
               Sign up
             </a>
-          </p>
+          </p> */}
+
+          {/* Pilot Access Notice - Remove this when re-enabling signup */}
+          <div style={{
+            marginTop: 24,
+            padding: '12px 16px',
+            backgroundColor: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            textAlign: 'center',
+          }}>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#475569',
+              margin: 0,
+            }}>
+              <strong style={{ color: '#0f172a' }}>Pilot Program</strong>
+              <br />
+              <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                Access by invitation only. Contact{' '}
+                <a
+                  href="mailto:simon@hyred.co.za"
+                  style={{ color: '#4F46E5', textDecoration: 'underline' }}
+                >
+                  simon@hyred.co.za
+                </a>
+                {' '}for access.
+              </span>
+            </p>
+          </div>
         </div>
       </main>
 
