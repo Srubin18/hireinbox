@@ -43,9 +43,14 @@ async function fetchGDELTIntelligence(query: string, timespan: string = '30d'): 
       sort: 'DateDesc'
     });
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const response = await fetch(`${GDELT_DOC_API}?${params.toString()}`, {
-      signal: AbortSignal.timeout(10000) // 10s timeout
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) return [];
 
@@ -159,10 +164,15 @@ async function getShofoSalaryBenchmark(role: string, location: string = 'Johanne
     url.searchParams.set('location', location);
     url.searchParams.set('country', 'South Africa');
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const response = await fetch(url.toString(), {
-      headers: { 'X-API-Key': SHOFO_API_KEY },
-      signal: AbortSignal.timeout(10000)
+      headers: { 'X-API-Key': SHOFO_API_KEY || '' },
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.log('[Shofo] API returned:', response.status);
