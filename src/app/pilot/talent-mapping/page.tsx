@@ -17,6 +17,8 @@ interface Candidate {
   company: string;
   location: string;
   matchScore: number;
+  status?: string;
+  user_feedback?: string;
   availabilitySignals?: {
     score: number;
     signals: string[];
@@ -54,6 +56,7 @@ interface Candidate {
 }
 
 interface TalentReport {
+  id?: string;
   candidates: Candidate[];
   marketIntelligence: {
     talentPoolSize: string;
@@ -112,11 +115,23 @@ export default function PilotTalentMapping() {
   const [industry, setIndustry] = useState('');
   const [salaryBand, setSalaryBand] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [viewFilter, setViewFilter] = useState<'shortlist' | 'archived'>('shortlist');
+  const [candidatesFromDB, setCandidatesFromDB] = useState<Candidate[]>([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [processingCandidateId, setProcessingCandidateId] = useState<string | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  // Fetch candidates when view filter changes or report gets an ID
+  useEffect(() => {
+    if (report && (report as any).id) {
+      fetchCandidatesFromDB((report as any).id);
+    }
+  }, [viewFilter, report]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -230,12 +245,144 @@ export default function PilotTalentMapping() {
 
       if (!response.ok) throw new Error('Failed to save');
 
+      const savedReport = await response.json();
+
+      // Update report with the saved ID
+      if (savedReport.report?.id && report) {
+        setReport({ ...report, id: savedReport.report.id } as any);
+        // Fetch candidates from database now that report is saved
+        fetchCandidatesFromDB(savedReport.report.id);
+      }
+
       setSuccessMessage('Report saved! View it in your Reports section.');
       setTimeout(() => setSuccessMessage(null), 5000); // Auto-hide after 5s
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save report');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Fetch candidates from database for current report
+  const fetchCandidatesFromDB = async (reportId?: string) => {
+    if (!reportId) return;
+
+    setLoadingCandidates(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`/api/talent-mapping/candidates?status=${viewFilter}&report_id=${reportId}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+
+      const data = await response.json();
+      if (data.success && data.candidates) {
+        // Map database candidates to match the Candidate interface
+        const mappedCandidates = data.candidates.map((dbCandidate: any) => ({
+          ...dbCandidate.candidate_data, // Spread the full candidate data from JSONB
+          id: dbCandidate.id, // Use the database ID
+          status: dbCandidate.status,
+          user_feedback: dbCandidate.user_feedback,
+        }));
+        setCandidatesFromDB(mappedCandidates);
+      }
+    } catch (err) {
+      console.error('Error fetching candidates:', err);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  // Handler for feedback (good/bad)
+  const handleFeedback = async (candidateId: string, feedback: 'good' | 'bad') => {
+    // Validate UUID format before attempting to save
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(candidateId)) {
+      console.error('Invalid candidate ID - report must be saved first');
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/talent-mapping/candidates/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ candidateId, feedback }),
+      });
+
+      if (response.ok) {
+        setCandidatesFromDB(prev => prev.map(c =>
+          c.id === candidateId ? { ...c, user_feedback: feedback } : c
+        ));
+      } else {
+        console.error('Failed to save feedback:', await response.text());
+      }
+    } catch (err) {
+      console.error('Failed to save feedback:', err);
+    }
+  };
+
+  // Handler for archiving a candidate
+  const handleArchive = async (candidateId: string) => {
+    setProcessingCandidateId(candidateId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/talent-mapping/candidates/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ candidateId, status: 'archived' }),
+      });
+
+      if (response.ok) {
+        setActionMessage('Candidate archived');
+        setTimeout(() => setActionMessage(null), 2000);
+        // Re-fetch to update the list
+        if (report) fetchCandidatesFromDB((report as any).id);
+      }
+    } catch (err) {
+      console.error('Failed to archive:', err);
+    } finally {
+      setProcessingCandidateId(null);
+    }
+  };
+
+  // Handler for shortlisting a candidate
+  const handleShortlist = async (candidateId: string) => {
+    setProcessingCandidateId(candidateId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch('/api/talent-mapping/candidates/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ candidateId, status: 'shortlist' }),
+      });
+
+      if (response.ok) {
+        setActionMessage('Candidate shortlisted');
+        setTimeout(() => setActionMessage(null), 2000);
+        // Re-fetch to update the list
+        if (report) fetchCandidatesFromDB((report as any).id);
+      }
+    } catch (err) {
+      console.error('Failed to shortlist:', err);
+    } finally {
+      setProcessingCandidateId(null);
     }
   };
 
@@ -316,6 +463,25 @@ export default function PilotTalentMapping() {
           </button>
         </div>
       )}
+
+      {/* Action Toast (Archive/Shortlist feedback) */}
+      {actionMessage && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          padding: '16px 24px',
+          backgroundColor: '#10B981',
+          color: '#ffffff',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          animation: 'slideIn 0.3s ease',
+        }}>
+          {actionMessage}
+        </div>
+      )}
+
       <style>{`@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
 
       {/* Header */}
@@ -733,15 +899,81 @@ export default function PilotTalentMapping() {
               </div>
             )}
 
+            {/* Helpful message if report not saved yet */}
+            {!report?.id && report && (
+              <div style={{
+                padding: '12px 16px',
+                backgroundColor: '#EFF6FF',
+                border: '1px solid #BFDBFE',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                fontSize: '14px',
+                color: '#1E40AF',
+              }}>
+                💡 <strong>Save this report</strong> to enable feedback buttons and candidate management features
+              </div>
+            )}
+
+            {/* View Toggle - Show after report is saved (has ID) */}
+            {report?.id && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+              <button
+                onClick={() => setViewFilter('shortlist')}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: viewFilter === 'shortlist' ? '#4F46E5' : '#f1f5f9',
+                  color: viewFilter === 'shortlist' ? '#ffffff' : '#64748b',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Shortlisted {viewFilter === 'shortlist' && candidatesFromDB.length > 0 && `(${candidatesFromDB.length})`}
+              </button>
+              <button
+                onClick={() => setViewFilter('archived')}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: viewFilter === 'archived' ? '#4F46E5' : '#f1f5f9',
+                  color: viewFilter === 'archived' ? '#ffffff' : '#64748b',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Archived {viewFilter === 'archived' && candidatesFromDB.length > 0 && `(${candidatesFromDB.length})`}
+              </button>
+            </div>
+            )}
+
             {/* Candidates List - Expandable Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#64748b' }}>
-                  {report.candidates?.length || 0} candidates found
+                  {report?.id ? candidatesFromDB.length : report.candidates?.length || 0} candidates found
                 </h2>
               </div>
 
-              {(report.candidates || []).map((candidate, index) => {
+              {/* If report is saved (has ID), only show DB candidates. Otherwise show JSON */}
+              {(report?.id ? candidatesFromDB : report.candidates || []).length === 0 ? (
+                <div style={{
+                  padding: '40px',
+                  textAlign: 'center',
+                  color: '#64748b',
+                  fontSize: '14px',
+                }}>
+                  {report?.id && viewFilter === 'archived'
+                    ? 'No archived candidates yet. Archive candidates from the Shortlisted view.'
+                    : 'No candidates found'}
+                </div>
+              ) : (
+                (report?.id ? candidatesFromDB : report.candidates || []).map((candidate, index) => {
                 const isExpanded = expandedCandidate === candidate.name;
 
                 return (
@@ -763,12 +995,56 @@ export default function PilotTalentMapping() {
                     >
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <input
-                              type="checkbox"
-                              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            {/* Feedback Buttons - Only show if candidate is from database (has UUID) */}
+                            {candidatesFromDB.length > 0 && candidate.id && (
+                              <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFeedback(candidate.id!, 'good');
+                              }}
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: candidate.user_feedback === 'good' ? '#10B981' : '#f1f5f9',
+                                color: candidate.user_feedback === 'good' ? '#ffffff' : '#64748b',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '13px',
+                                fontWeight: 500,
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              👍 Good
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFeedback(candidate.id!, 'bad');
+                              }}
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: candidate.user_feedback === 'bad' ? '#EF4444' : '#f1f5f9',
+                                color: candidate.user_feedback === 'bad' ? '#ffffff' : '#64748b',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '13px',
+                                fontWeight: 500,
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              👎 Bad
+                            </button>
+                              </>
+                            )}
                             <h3
                               onClick={() => setExpandedCandidate(isExpanded ? null : candidate.name)}
                               style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}
@@ -1022,27 +1298,62 @@ export default function PilotTalentMapping() {
                             >
                               View Source ({candidate.sources?.length || 1})
                             </button>
-                            <button
-                              style={{
-                                padding: '10px 16px',
-                                backgroundColor: '#4F46E5',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 500,
-                                color: '#ffffff',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              Draft Outreach
-                            </button>
+                            {/* Archive/Shortlist - Only show if candidate is from database */}
+                            {candidatesFromDB.length > 0 && candidate.id && (
+                              <>
+                                {viewFilter === 'shortlist' ? (
+                                  <button
+                                    onClick={() => {
+                                      handleArchive(candidate.id!);
+                                    }}
+                                    disabled={processingCandidateId === candidate.id}
+                                    style={{
+                                      padding: '10px 16px',
+                                      backgroundColor: processingCandidateId === candidate.id ? '#f3f4f6' : '#ffffff',
+                                      border: '1px solid #d1d5db',
+                                      borderRadius: '8px',
+                                      fontSize: '13px',
+                                      fontWeight: 500,
+                                      color: processingCandidateId === candidate.id ? '#9ca3af' : '#374151',
+                                      cursor: processingCandidateId === candidate.id ? 'not-allowed' : 'pointer',
+                                      transition: 'all 0.2s',
+                                      opacity: processingCandidateId === candidate.id ? 0.6 : 1,
+                                    }}
+                                  >
+                                    {processingCandidateId === candidate.id ? 'Archiving...' : 'Archive'}
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      handleShortlist(candidate.id!);
+                                    }}
+                                    disabled={processingCandidateId === candidate.id}
+                                    style={{
+                                      padding: '10px 16px',
+                                      backgroundColor: processingCandidateId === candidate.id ? '#86efac' : '#10B981',
+                                      border: 'none',
+                                      borderRadius: '8px',
+                                      fontSize: '13px',
+                                      fontWeight: 500,
+                                      color: '#ffffff',
+                                      cursor: processingCandidateId === candidate.id ? 'not-allowed' : 'pointer',
+                                      transition: 'all 0.2s',
+                                      opacity: processingCandidateId === candidate.id ? 0.6 : 1,
+                                    }}
+                                  >
+                                    {processingCandidateId === candidate.id ? 'Shortlisting...' : 'Shortlist'}
+                                  </button>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
                 );
-              })}
+              })
+              )}
             </div>
           </>
         )}

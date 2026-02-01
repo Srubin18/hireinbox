@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data: reportData, error: reportError } = await supabase
       .from('talent_mapping_reports')
       .insert({
         user_id: user.id,
@@ -111,12 +111,37 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (error) {
-      console.error('[Reports] Error saving:', error);
+    if (reportError) {
+      console.error('[Reports] Error saving:', reportError);
       return NextResponse.json({ error: 'Failed to save report' }, { status: 500 });
     }
 
-    return NextResponse.json({ report: data, message: 'Report saved successfully' });
+    // Insert individual candidates for tracking and feedback
+    if (report_data.candidates && Array.isArray(report_data.candidates)) {
+      const candidateInserts = report_data.candidates.map((candidate: any) => ({
+        report_id: reportData.id,
+        user_id: user.id,
+        name: candidate.name || 'Unknown',
+        current_role: candidate.currentRole,
+        company: candidate.company,
+        location: candidate.location,
+        match_score: candidate.matchScore,
+        discovery_method: candidate.discoveryMethod,
+        candidate_data: candidate,
+        status: 'shortlist',
+      }));
+
+      const { error: candidatesError } = await supabase
+        .from('talent_mapping_candidates')
+        .insert(candidateInserts);
+
+      if (candidatesError) {
+        console.error('[Reports] Error saving candidates:', candidatesError);
+        // Don't fail the request - report was saved successfully
+      }
+    }
+
+    return NextResponse.json({ report: reportData, message: 'Report saved successfully' });
 
   } catch (error) {
     console.error('[Reports] Error:', error);
