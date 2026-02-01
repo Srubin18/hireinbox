@@ -29,6 +29,7 @@ const EXCLUDED_PATTERNS = [
   '/icon.svg',
   '/api/health',
   '/api/whatsapp',  // WhatsApp webhook (360dialog) - needs to bypass security
+  '/api/pilot',     // Pilot routes - authenticated via Bearer token
 ];
 
 // Rate limit configurations

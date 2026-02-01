@@ -1662,14 +1662,16 @@ export async function POST(request: Request) {
       }, { status: 503 });
     }
 
-    // Try to get user email from auth header for usage tracking
+    // Try to get user from auth header for usage tracking and billing
     let userEmail: string | null = null;
+    let userId: string | null = null;
     const authHeader = request.headers.get('authorization');
     if (authHeader) {
       try {
         const token = authHeader.replace('Bearer ', '');
         const { data: { user } } = await supabase.auth.getUser(token);
         userEmail = user?.email || null;
+        userId = user?.id || null;
       } catch { /* ignore auth errors for public endpoint */ }
     }
 
@@ -2616,6 +2618,34 @@ Return JSON array only.`
       },
       estimatedCost
     );
+
+    // Log billing event (talent search run)
+    if (userId) {
+      try {
+        const eventDate = new Date();
+        const eventMonth = eventDate.toISOString().slice(0, 7); // YYYY-MM
+
+        await supabase
+          .from('pilot_billing_events')
+          .insert({
+            user_id: userId,
+            event_type: 'talent_search',
+            event_date: eventDate.toISOString().split('T')[0], // YYYY-MM-DD
+            event_month: eventMonth,
+            metadata: {
+              search_prompt: prompt.substring(0, 200), // First 200 chars
+              role: parsed.role,
+              location: parsed.location,
+              candidates_found: enrichedCandidates.length,
+            }
+          });
+
+        console.log('[TalentMapping] Logged billing event for user:', userId);
+      } catch (billingError) {
+        console.error('[TalentMapping] Failed to log billing event:', billingError);
+        // Don't fail the request if billing logging fails
+      }
+    }
 
     return NextResponse.json(result);
 

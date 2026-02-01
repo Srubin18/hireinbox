@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 interface PilotHeaderProps {
   user?: { email: string } | null;
   onLogout: () => void;
-  currentPage?: 'dashboard' | 'talent-mapping' | 'screening' | 'reports';
+  currentPage?: 'dashboard' | 'talent-mapping' | 'screening' | 'reports' | 'usage';
 }
 
 const Logo = () => (
@@ -127,6 +127,21 @@ export default function PilotHeader({ user, onLogout, currentPage }: PilotHeader
               }}
             >
               CV Screening
+            </button>
+
+            <button
+              onClick={() => router.push('/pilot/usage')}
+              style={{
+                padding: '0',
+                backgroundColor: 'transparent',
+                border: 'none',
+                fontSize: '14px',
+                color: currentPage === 'usage' ? '#4F46E5' : '#64748b',
+                fontWeight: currentPage === 'usage' ? 600 : 500,
+                cursor: 'pointer',
+              }}
+            >
+              Usage
             </button>
           </div>
         </div>
