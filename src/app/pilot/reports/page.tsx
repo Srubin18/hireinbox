@@ -26,7 +26,7 @@ export default function PilotReports() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; pilot_role?: string } | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +48,17 @@ export default function PilotReports() {
         return;
       }
 
-      setUser({ email: session.user.email || '' });
+      // Fetch user profile with pilot_role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pilot_role')
+        .eq('id', session.user.id)
+        .single();
+
+      setUser({
+        email: session.user.email || '',
+        pilot_role: profile?.pilot_role,
+      });
 
       const response = await fetch('/api/pilot/reports?limit=50', {
         headers: {

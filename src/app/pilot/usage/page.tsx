@@ -51,7 +51,7 @@ const Icons = {
 };
 
 interface PageState {
-  user: { email: string } | null;
+  user: { email: string; pilot_role?: string } | null;
   stats: UsageStats | null;
   selectedMonth: string;
   dataReady: boolean;
@@ -81,6 +81,13 @@ export default function UsagePage() {
           return;
         }
 
+        // Fetch user profile with pilot_role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('pilot_role')
+          .eq('id', session.user.id)
+          .single();
+
         const response = await fetch('/api/pilot/usage-stats', {
           headers: { 'Authorization': `Bearer ${session.access_token}` },
         });
@@ -93,7 +100,10 @@ export default function UsagePage() {
 
             // Set EVERYTHING in ONE state update
             setState({
-              user: { email: session.user.email || '' },
+              user: {
+                email: session.user.email || '',
+                pilot_role: profile?.pilot_role,
+              },
               stats: data,
               selectedMonth: mostRecentMonth,
               dataReady: true,
@@ -338,20 +348,65 @@ export default function UsagePage() {
         {totalCost > 0 && (
           <div style={{
             marginBottom: '32px',
-            padding: '20px 24px',
-            backgroundColor: '#ffffff',
-            border: '2px solid #e2e8f0',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
           }}>
-            <span style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
-              Current Usage and Bill for {monthData.monthLabel}
-            </span>
-            <span style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>
-              R{totalCost.toLocaleString()}
-            </span>
+            <div style={{
+              padding: '20px 24px',
+              backgroundColor: '#ffffff',
+              border: '2px solid #e2e8f0',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <span style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
+                Current Usage and Bill for {monthData.monthLabel}
+              </span>
+              <span style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>
+                R{totalCost.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Influencer Message */}
+            {state.user?.pilot_role === 'influencer' && (
+              <div style={{
+                marginTop: '16px',
+                padding: '16px 20px',
+                background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
+              }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: '20px',
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#ffffff',
+                    letterSpacing: '0.02em',
+                  }}>
+                    Influencer
+                  </span>
+                </div>
+                <span style={{
+                  fontSize: '14px',
+                  color: '#ffffff',
+                  fontWeight: 500,
+                }}>
+                  You will not be billed. Your account has complimentary access to all features.
+                </span>
+              </div>
+            )}
           </div>
         )}
 

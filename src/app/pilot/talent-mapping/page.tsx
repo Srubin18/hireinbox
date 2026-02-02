@@ -87,7 +87,7 @@ interface TalentReport {
 export default function PilotTalentMapping() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; pilot_role?: string } | null>(null);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -128,7 +128,17 @@ export default function PilotTalentMapping() {
         router.push('/pilot');
         return;
       }
-      setUser({ email: session.user.email || '' });
+      // Fetch user profile with pilot_role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pilot_role')
+        .eq('id', session.user.id)
+        .single();
+
+      setUser({
+        email: session.user.email || '',
+        pilot_role: profile?.pilot_role,
+      });
     };
     checkAuth();
   }, [supabase, router]);

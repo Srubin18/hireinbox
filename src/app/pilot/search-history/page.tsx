@@ -20,7 +20,7 @@ interface SearchHistoryItem {
 
 export default function SearchHistoryPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; pilot_role?: string } | null>(null);
   const [searches, setSearches] = useState<SearchHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSearch, setSelectedSearch] = useState<SearchHistoryItem | null>(null);
@@ -40,7 +40,17 @@ export default function SearchHistoryPage() {
           return;
         }
 
-        setUser({ email: session.user.email || '' });
+        // Fetch user profile with pilot_role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('pilot_role')
+          .eq('id', session.user.id)
+          .single();
+
+        setUser({
+          email: session.user.email || '',
+          pilot_role: profile?.pilot_role,
+        });
 
         // Check if there's an ID in the URL
         const urlParams = new URLSearchParams(window.location.search);
