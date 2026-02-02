@@ -7,6 +7,7 @@ import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
 import {
   extractRoleKeywords,
   generateSearchQueries as generateCoreQueries,
+  generateQueriesForRound,
   isValidCandidateName as coreValidateName,
   isSeniorityMismatch as coreSeniorityCheck,
   MODELS as CORE_MODELS,
@@ -1880,85 +1881,107 @@ Return valid JSON only:
       return NextResponse.json(demoReport);
     }
 
-    // Step 2: Generate intelligent, diverse search queries
-    // CRITICAL: First add FOCUSED LinkedIn profile queries from core library
-    // These use extracted keywords (e.g., "Compliance Officer") instead of full role title
-    const coreQueries = generateCoreQueries(
-      parsed.role || '',
-      parsed.location || 'South Africa',
-      parsed.industry || 'finance',
-      parsed.mustHaves || []
-    ).map(q => ({
-      query: q.query,
-      sourceType: q.sourceType as WebSearchResult['sourceType'],
-      purpose: q.purpose,
-      dataSource: 'Core library focused search',
-      howWeFoundYou: 'Your profile matched our focused search criteria'
-    }));
-
-    // Log what keywords were extracted
+    // Step 2: MULTI-ROUND SEARCH WITH RETRY LOGIC
+    // If we don't find enough candidates, we expand the search progressively
     const extractedKeywords = extractRoleKeywords(parsed.role || '');
     console.log('[TalentMapping] Extracted role keywords:', extractedKeywords);
+    console.log(`[TalentMapping] Min candidates required: ${CORE_CONFIG.MIN_CANDIDATES}`);
+    console.log(`[TalentMapping] Max retry rounds: ${CORE_CONFIG.MAX_RETRY_ROUNDS}`);
 
-    // Then add comprehensive queries from existing generator
-    const comprehensiveQueries = generateIntelligenceQueries(parsed);
-
-    // Combine: focused LinkedIn first, then comprehensive
-    const searchQueries = [...coreQueries, ...comprehensiveQueries];
-    console.log(`[TalentMapping] Generated ${searchQueries.length} queries (${coreQueries.length} focused + ${comprehensiveQueries.length} comprehensive)`);
-
-    // Step 3: Execute searches with Firecrawl
-    const webResults: WebSearchResult[] = [];
+    // Initialize for multi-round search
+    let currentRound = 1;
+    let allWebResults: WebSearchResult[] = [];
+    let totalQueriesRun = 0;
     const sourceTypeCounts: Record<string, number> = {};
     const searchMethodology: { query: string; sourceType: string; resultsFound: number }[] = [];
 
-    for (const sq of searchQueries) {
-      try {
-        console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query}`);
-        const results = await fc!.search(sq.query, { limit: 5 }) as any;
-        // Firecrawl SDK returns results in 'data' or 'web' depending on version
-        // Empty array is truthy, so check length explicitly
-        const data = (results?.data?.length > 0) ? results.data : (results?.web || []);
+    // RETRY LOOP: Keep searching until we have enough results or exhaust rounds
+    while (currentRound <= CORE_CONFIG.MAX_RETRY_ROUNDS) {
+      console.log(`\n[TalentMapping] ========== ROUND ${currentRound} ==========`);
 
-        searchMethodology.push({
-          query: sq.query,
-          sourceType: sq.sourceType,
-          resultsFound: data.length
-        });
+      // Generate queries for this round using the core library
+      const roundQueries = generateQueriesForRound(
+        currentRound,
+        parsed.role || '',
+        parsed.location || 'South Africa',
+        parsed.industry || 'finance',
+        parsed.mustHaves || []
+      ).map(q => ({
+        query: q.query,
+        sourceType: q.sourceType as WebSearchResult['sourceType'],
+        purpose: q.purpose,
+        dataSource: `Round ${currentRound} search`,
+        howWeFoundYou: 'Your profile matched our search criteria'
+      }));
 
-        for (const r of data) {
-          if (r?.url && (r?.markdown || r?.content || r?.description)) {
-            const { type, value, dataSource, howWeFoundYou } = categorizeSource(r.url, r.title || '');
-
-            // Track source diversity
-            sourceTypeCounts[type] = (sourceTypeCounts[type] || 0) + 1;
-
-            webResults.push({
-              url: r.url,
-              title: r.title || '',
-              content: (r.markdown || r.content || r.description).substring(0, 3000),
-              sourceType: type,
-              sourceValue: value,
-              publiclyAvailable: true, // POPIA compliance
-              dataSource,
-              howWeFoundYou
-            });
-          }
-        }
-      } catch (err) {
-        console.log(`[TalentMapping] Search error for [${sq.sourceType}] (continuing):`, err);
-        searchMethodology.push({
-          query: sq.query,
-          sourceType: sq.sourceType,
-          resultsFound: 0
-        });
+      // On round 1, also add comprehensive queries
+      let searchQueries = roundQueries;
+      if (currentRound === 1) {
+        const comprehensiveQueries = generateIntelligenceQueries(parsed);
+        searchQueries = [...roundQueries, ...comprehensiveQueries];
       }
+
+      console.log(`[TalentMapping] Round ${currentRound}: Generated ${searchQueries.length} queries`);
+
+      // Execute searches for this round
+      for (const sq of searchQueries) {
+        try {
+          console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query.substring(0, 70)}...`);
+          const results = await fc!.search(sq.query, { limit: 10 }) as any;
+          const data = (results?.data?.length > 0) ? results.data : (results?.web || []);
+
+          searchMethodology.push({
+            query: sq.query,
+            sourceType: sq.sourceType,
+            resultsFound: data.length
+          });
+          totalQueriesRun++;
+
+          for (const r of data) {
+            if (r?.url && (r?.markdown || r?.content || r?.description)) {
+              const { type, value, dataSource, howWeFoundYou } = categorizeSource(r.url, r.title || '');
+              sourceTypeCounts[type] = (sourceTypeCounts[type] || 0) + 1;
+
+              // Only add if not duplicate
+              if (!allWebResults.some(existing => existing.url === r.url)) {
+                allWebResults.push({
+                  url: r.url,
+                  title: r.title || '',
+                  content: (r.markdown || r.content || r.description).substring(0, 3000),
+                  sourceType: type,
+                  sourceValue: value,
+                  publiclyAvailable: true,
+                  dataSource,
+                  howWeFoundYou
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.log(`[TalentMapping] Search error (continuing):`, err);
+          searchMethodology.push({ query: sq.query, sourceType: sq.sourceType, resultsFound: 0 });
+        }
+      }
+
+      console.log(`[TalentMapping] Round ${currentRound} complete: ${allWebResults.length} total unique results`);
+
+      // Check if we have enough LinkedIn results (our best source for candidate names)
+      const linkedInResults = allWebResults.filter(r => r.url.includes('linkedin.com/in'));
+      console.log(`[TalentMapping] LinkedIn profile results: ${linkedInResults.length}`);
+
+      // If we have good results, we can stop early
+      if (linkedInResults.length >= CORE_CONFIG.MIN_CANDIDATES * 2) {
+        console.log(`[TalentMapping] Sufficient LinkedIn results found, stopping search`);
+        break;
+      }
+
+      currentRound++;
     }
 
-    // De-duplicate by URL
-    const uniqueResults = webResults.filter((r, i, arr) =>
-      arr.findIndex(x => x.url === r.url) === i
-    );
+    console.log(`[TalentMapping] Search complete after ${currentRound} rounds, ${totalQueriesRun} queries, ${allWebResults.length} unique results`);
+
+    // Use the accumulated results from multi-round search
+    const uniqueResults = allWebResults;
 
     // If we got no results from Firecrawl, fallback to demo mode
     if (uniqueResults.length === 0) {
@@ -3025,7 +3048,7 @@ Return JSON array only.`
       sourcesDiversity: sourcesDiversity,
       uniqueInsights: report.uniqueInsights || [
         `Found ${highValueCount} candidates through non-traditional sources (not LinkedIn)`,
-        `Searched ${searchQueries.length} specialized South African data sources`,
+        `Searched ${totalQueriesRun} specialized South African data sources across ${currentRound} rounds`,
         `Intelligence diversity score: ${diversityScore}/10 source types used`
       ],
 

@@ -9,14 +9,16 @@
  * 1. Claude Opus 4.5 (claude-opus-4-5-20251101) - Premium synthesis - NO FALLBACK
  * 2. GPT-4o (gpt-4o-2024-08-06) - JD parsing
  * 3. GPT-4o-mini - Verification pass
- * 4. Firecrawl - Web search
+ * 4. Firecrawl - Web search (primary)
  * 5. GDELT API - Real-time news intelligence
  * 6. Shofo API - SA salary benchmarks
  * 7. SA_CONTEXT_PROMPT - South African market knowledge
  * 8. Internal SA benchmarks - Salary/company data
  *
+ * RETRY LOGIC: If under MIN_CANDIDATES, automatically expands search
+ *
  * @author HireInbox
- * @version 2.0.0 - Da Vinci Edition
+ * @version 3.0.0 - Retry Edition
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -34,10 +36,10 @@ export const MODELS = {
 } as const;
 
 export const CONFIG = {
-  MIN_CANDIDATES: 6,
+  MIN_CANDIDATES: 6,                          // MINIMUM candidates to return
   MAX_TOKENS: 12000,
   SEARCH_LIMIT_PER_QUERY: 10,
-  MAX_QUERIES: 20,
+  MAX_RETRY_ROUNDS: 4,                        // Maximum retry rounds
 } as const;
 
 // ============================================
@@ -64,7 +66,6 @@ export function extractRoleKeywords(roleTitle: string): string[] {
       'Chief Compliance Officer',
       'Regulatory Compliance'
     );
-    // Add FSCA-specific for SA financial compliance
     if (roleLower.includes('fsp') || roleLower.includes('financial') || roleLower.includes('fsca')) {
       keywords.push('FSCA Compliance', 'FAIS Compliance Officer');
     }
@@ -137,7 +138,6 @@ export function extractRoleKeywords(roleTitle: string): string[] {
 
   // If no specific match, extract core terms
   if (keywords.length === 0) {
-    // Remove filler words and extract core role
     const fillerWords = ['outsourced', 'management', 'role', 'position', 'opportunity', 'senior', 'junior', 'experienced'];
     const words = roleTitle.split(/[\s\-–]+/).filter(w =>
       w.length > 2 && !fillerWords.includes(w.toLowerCase())
@@ -145,10 +145,10 @@ export function extractRoleKeywords(roleTitle: string): string[] {
     if (words.length >= 2) {
       keywords.push(words.slice(0, 3).join(' '));
     }
-    keywords.push(roleTitle.split(/[\-–]/)[0].trim()); // First part before dash
+    keywords.push(roleTitle.split(/[\-–]/)[0].trim());
   }
 
-  return [...new Set(keywords)]; // Deduplicate
+  return [...new Set(keywords)];
 }
 
 /**
@@ -158,7 +158,6 @@ export function extractQualifications(roleTitle: string, mustHaves: string[]): s
   const quals: string[] = [];
   const combined = (roleTitle + ' ' + mustHaves.join(' ')).toLowerCase();
 
-  // Financial services qualifications
   if (combined.includes('fsca') || combined.includes('fais')) {
     quals.push('FSCA', 'FAIS', 'RE1', 'RE3', 'RE5', 'Category I', 'Category II');
   }
@@ -196,11 +195,11 @@ export function getTargetCompanies(industry: string): string[] {
       return value;
     }
   }
-  return companies['finance']; // Default to finance as most common
+  return companies['finance'];
 }
 
 // ============================================
-// SEARCH QUERY GENERATION - THE CORE LOGIC
+// MULTI-ROUND QUERY GENERATION WITH EXPANSION
 // ============================================
 
 export interface SearchQuery {
@@ -210,122 +209,164 @@ export interface SearchQuery {
 }
 
 /**
- * Generate optimized search queries for talent mapping.
- * THIS IS THE SINGLE SOURCE OF TRUTH.
+ * Generate queries for a specific round of searching.
+ * Each round progressively broadens the search.
+ *
+ * Round 1: Focused LinkedIn profile searches with qualifications
+ * Round 2: Add synonyms and OR operators
+ * Round 3: Remove location constraints
+ * Round 4: Broaden to general industry search
  */
-export function generateSearchQueries(
+export function generateQueriesForRound(
+  round: number,
   roleTitle: string,
   location: string,
   industry: string,
   mustHaves: string[] = []
 ): SearchQuery[] {
   const queries: SearchQuery[] = [];
-
-  // Extract core keywords from verbose role title
   const roleKeywords = extractRoleKeywords(roleTitle);
   const qualifications = extractQualifications(roleTitle, mustHaves);
   const targetCompanies = getTargetCompanies(industry);
 
-  // Normalize location
-  const locationShort = location.split(',')[0].trim(); // "Melrose Arch, Johannesburg" -> "Melrose Arch"
   const locationCity = location.includes('Johannesburg') ? 'Johannesburg' :
                        location.includes('Cape Town') ? 'Cape Town' :
                        location.includes('Durban') ? 'Durban' : 'South Africa';
 
-  // ========== LINKEDIN DIRECT PROFILE SEARCHES (HIGHEST VALUE) ==========
-  // These find actual people with their names
+  console.log(`[QueryGen] Round ${round}: roleKeywords=${roleKeywords.slice(0,3).join(', ')}, location=${locationCity}`);
 
-  for (const keyword of roleKeywords.slice(0, 3)) { // Top 3 keywords
-    // Basic LinkedIn search
-    queries.push({
-      query: `"${keyword}" ${locationCity} site:linkedin.com/in`,
-      sourceType: 'linkedin',
-      purpose: `Find ${keyword} profiles on LinkedIn`
-    });
+  switch (round) {
+    case 1:
+      // ROUND 1: Focused LinkedIn searches with location
+      for (const keyword of roleKeywords.slice(0, 3)) {
+        queries.push({
+          query: `"${keyword}" ${locationCity} site:linkedin.com/in`,
+          sourceType: 'linkedin',
+          purpose: `Round 1: Find ${keyword} in ${locationCity}`
+        });
 
-    // With qualifications
-    if (qualifications.length > 0) {
+        if (qualifications.length > 0) {
+          queries.push({
+            query: `"${keyword}" ${qualifications.slice(0, 2).join(' ')} South Africa site:linkedin.com/in`,
+            sourceType: 'linkedin',
+            purpose: `Round 1: Qualified ${keyword}`
+          });
+        }
+      }
+
+      // Target company search
+      if (targetCompanies.length > 0) {
+        queries.push({
+          query: `"${roleKeywords[0]}" ${targetCompanies.slice(0, 4).join(' OR ')} site:linkedin.com/in`,
+          sourceType: 'linkedin',
+          purpose: 'Round 1: Target companies'
+        });
+      }
+      break;
+
+    case 2:
+      // ROUND 2: Expand with synonyms and OR operators
+      const synonymGroups = roleKeywords.slice(0, 4).join('" OR "');
       queries.push({
-        query: `"${keyword}" ${qualifications.slice(0, 2).join(' ')} South Africa site:linkedin.com/in`,
+        query: `("${synonymGroups}") South Africa site:linkedin.com/in`,
         sourceType: 'linkedin',
-        purpose: `Find qualified ${keyword} profiles`
+        purpose: 'Round 2: All role synonyms'
       });
-    }
-  }
 
-  // ========== TARGET COMPANY SEARCHES ==========
+      // Add news and appointments
+      queries.push({
+        query: `"${roleKeywords[0]}" (appointed OR joins OR promoted) South Africa ${industry} 2024 2025`,
+        sourceType: 'news',
+        purpose: 'Round 2: Recent appointments'
+      });
 
-  if (targetCompanies.length > 0) {
-    const companyGroup = targetCompanies.slice(0, 4).join(' OR ');
-    queries.push({
-      query: `"${roleKeywords[0]}" ${companyGroup} site:linkedin.com/in`,
-      sourceType: 'linkedin',
-      purpose: 'Find candidates at target companies'
-    });
-  }
+      // Company team pages
+      queries.push({
+        query: `"${roleKeywords[0]}" "team" OR "leadership" OR "about us" site:.co.za`,
+        sourceType: 'company',
+        purpose: 'Round 2: Company team pages'
+      });
 
-  // ========== NEWS & APPOINTMENTS ==========
+      // More target companies
+      if (targetCompanies.length > 4) {
+        queries.push({
+          query: `"${roleKeywords[0]}" ${targetCompanies.slice(4, 8).join(' OR ')} site:linkedin.com/in`,
+          sourceType: 'linkedin',
+          purpose: 'Round 2: More target companies'
+        });
+      }
 
-  queries.push({
-    query: `"${roleKeywords[0]}" (appointed OR joins OR promoted) ${locationCity} ${industry} 2024 2025 2026`,
-    sourceType: 'news',
-    purpose: 'Recent appointments and moves'
-  });
+      // Professional bodies
+      if (qualifications.includes('FSCA') || qualifications.includes('FAIS')) {
+        queries.push({
+          query: `FSCA "approved" "compliance officer" "Category I" OR "Category II" site:linkedin.com/in`,
+          sourceType: 'linkedin',
+          purpose: 'Round 2: FSCA registered officers'
+        });
+      }
+      break;
 
-  // ========== COMPANY TEAM PAGES ==========
+    case 3:
+      // ROUND 3: Remove location constraints - search all of South Africa
+      for (const keyword of roleKeywords.slice(0, 3)) {
+        queries.push({
+          query: `"${keyword}" South Africa site:linkedin.com/in`,
+          sourceType: 'linkedin',
+          purpose: `Round 3: ${keyword} anywhere in SA`
+        });
+      }
 
-  queries.push({
-    query: `"${roleKeywords[0]}" "team" OR "leadership" OR "about us" site:.co.za ${locationCity}`,
-    sourceType: 'company',
-    purpose: 'Company team pages (hidden candidates)'
-  });
+      // Broader industry search
+      queries.push({
+        query: `"${roleKeywords[0]}" ${industry} site:linkedin.com/in South Africa`,
+        sourceType: 'linkedin',
+        purpose: 'Round 3: Industry-wide search'
+      });
 
-  // ========== PROFESSIONAL BODIES ==========
+      // Conference speakers
+      queries.push({
+        query: `"${roleKeywords[0]}" speaker OR panelist ${industry} South Africa 2024 2025`,
+        sourceType: 'conference',
+        purpose: 'Round 3: Conference speakers'
+      });
 
-  if (qualifications.includes('FSCA') || qualifications.includes('FAIS')) {
-    queries.push({
-      query: `"${roleKeywords[0]}" FSCA FAIS site:linkedin.com/in South Africa`,
-      sourceType: 'linkedin',
-      purpose: 'FSCA registered compliance professionals'
-    });
-  }
+      // Awards
+      queries.push({
+        query: `"${roleKeywords[0]}" award OR winner OR finalist ${industry} South Africa`,
+        sourceType: 'other',
+        purpose: 'Round 3: Award winners'
+      });
+      break;
 
-  // ========== CONFERENCE SPEAKERS ==========
+    case 4:
+      // ROUND 4: Maximum broadening - any related professional
+      const broadKeyword = roleKeywords[0].split(' ')[0]; // Just first word, e.g., "Compliance"
 
-  queries.push({
-    query: `"${roleKeywords[0]}" speaker OR panelist ${industry} South Africa 2025 2026`,
-    sourceType: 'conference',
-    purpose: 'Industry thought leaders'
-  });
+      queries.push({
+        query: `"${broadKeyword}" professional South Africa site:linkedin.com/in`,
+        sourceType: 'linkedin',
+        purpose: 'Round 4: Broad professional search'
+      });
 
-  // ========== INDUSTRY-SPECIFIC QUERIES ==========
+      queries.push({
+        query: `"${broadKeyword}" manager OR director OR head South Africa site:linkedin.com/in`,
+        sourceType: 'linkedin',
+        purpose: 'Round 4: Senior professionals'
+      });
 
-  // Compliance specific
-  if (industry.toLowerCase().includes('compliance') || roleKeywords.some(k => k.toLowerCase().includes('compliance'))) {
-    queries.push({
-      query: `"Compliance Officer" FSCA "Category I" OR "Category II" site:linkedin.com/in`,
-      sourceType: 'linkedin',
-      purpose: 'FSCA Category I & II registered officers'
-    });
-    queries.push({
-      query: `"outsourced compliance" FSP South Africa`,
-      sourceType: 'other',
-      purpose: 'Outsourced compliance specialists'
-    });
-  }
+      queries.push({
+        query: `"${broadKeyword}" ${industry} expert OR specialist South Africa`,
+        sourceType: 'other',
+        purpose: 'Round 4: Industry experts'
+      });
 
-  // R&D / Tax incentive specific
-  if (roleKeywords.some(k => k.toLowerCase().includes('r&d') || k.toLowerCase().includes('incentive'))) {
-    queries.push({
-      query: `"Section 11D" OR "R&D tax incentive" consultant South Africa site:linkedin.com/in`,
-      sourceType: 'linkedin',
-      purpose: 'R&D tax incentive specialists'
-    });
-    queries.push({
-      query: `"R&D tax" Deloitte OR BDO OR KPMG OR PwC OR EY South Africa`,
-      sourceType: 'company',
-      purpose: 'Big 4/5 R&D consultants'
-    });
+      // Try without site restriction
+      queries.push({
+        query: `"${roleKeywords[0]}" ${industry} South Africa linkedin profile`,
+        sourceType: 'linkedin',
+        purpose: 'Round 4: Open web LinkedIn search'
+      });
+      break;
   }
 
   return queries;
@@ -335,10 +376,6 @@ export function generateSearchQueries(
 // CANDIDATE NAME VALIDATION - GUARDRAILS
 // ============================================
 
-/**
- * Validate that a candidate name is actually a person's name.
- * Rejects job titles, company names, locations.
- */
 export function isValidCandidateName(name: string): { valid: boolean; reason?: string } {
   if (!name || typeof name !== 'string') {
     return { valid: false, reason: 'Empty or invalid name' };
@@ -347,7 +384,6 @@ export function isValidCandidateName(name: string): { valid: boolean; reason?: s
   const nameLower = name.toLowerCase();
   const words = name.trim().split(/\s+/);
 
-  // Must have 2-4 words (First Last or First Middle Last)
   if (words.length < 2) {
     return { valid: false, reason: 'Too few words for a name' };
   }
@@ -355,7 +391,6 @@ export function isValidCandidateName(name: string): { valid: boolean; reason?: s
     return { valid: false, reason: 'Too many words - likely a title or description' };
   }
 
-  // Reject if contains job title keywords
   const jobTitles = ['manager', 'director', 'officer', 'head', 'chief', 'senior', 'junior',
                      'lead', 'specialist', 'consultant', 'analyst', 'executive', 'ceo', 'cfo',
                      'coo', 'cto', 'vp', 'president', 'associate', 'intern', 'trainee'];
@@ -365,7 +400,6 @@ export function isValidCandidateName(name: string): { valid: boolean; reason?: s
     }
   }
 
-  // Reject if contains company/location keywords
   const companyLocation = ['trafalgar', 'broll', 'sanlam', 'discovery', 'standard bank',
                            'johannesburg', 'cape town', 'durban', 'pretoria', 'sandton',
                            'estate', 'manor', 'property', 'holdings', 'group', 'ltd', 'pty',
@@ -376,13 +410,11 @@ export function isValidCandidateName(name: string): { valid: boolean; reason?: s
     }
   }
 
-  // Reject if starts with article or preposition
   const invalidStarts = ['the', 'a', 'an', 'at', 'in', 'for', 'with', 'from'];
   if (invalidStarts.includes(words[0].toLowerCase())) {
     return { valid: false, reason: 'Starts with article/preposition' };
   }
 
-  // Reject if contains "inferred" or "candidate"
   if (nameLower.includes('inferred') || nameLower.includes('candidate') || nameLower.includes('database')) {
     return { valid: false, reason: 'Contains placeholder text' };
   }
@@ -390,23 +422,18 @@ export function isValidCandidateName(name: string): { valid: boolean; reason?: s
   return { valid: true };
 }
 
-/**
- * Check for seniority mismatch between candidate and target role.
- */
 export function isSeniorityMismatch(candidateRole: string, targetSeniority: string): boolean {
   const roleLower = (candidateRole || '').toLowerCase();
   const seniorityLower = (targetSeniority || '').toLowerCase();
 
-  // C-level titles
   const cSuite = ['ceo', 'cfo', 'coo', 'cto', 'chief executive', 'chief financial',
                   'chief operating', 'chief technology', 'managing director', 'md'];
 
   const isCandidateCLevel = cSuite.some(t => roleLower.includes(t));
 
-  // Don't return C-level candidates for junior/mid roles
   if (['junior', 'mid', 'entry', 'associate'].some(s => seniorityLower.includes(s))) {
     if (isCandidateCLevel) {
-      return true; // Mismatch
+      return true;
     }
   }
 
@@ -414,7 +441,7 @@ export function isSeniorityMismatch(candidateRole: string, targetSeniority: stri
 }
 
 // ============================================
-// SYNTHESIS PROMPT - SINGLE SOURCE OF TRUTH
+// SYNTHESIS PROMPT
 // ============================================
 
 export function buildSynthesisPrompt(
@@ -423,9 +450,12 @@ export function buildSynthesisPrompt(
   industry: string,
   seniority: string,
   mustHaves: string[],
-  searchResults: string
+  searchResults: string,
+  currentCandidateCount: number = 0
 ): string {
-  return `You are an elite South African headhunter. Analyze these search results and identify the TOP ${CONFIG.MIN_CANDIDATES} candidates for:
+  const needed = Math.max(CONFIG.MIN_CANDIDATES - currentCandidateCount, CONFIG.MIN_CANDIDATES);
+
+  return `You are an elite South African headhunter. Analyze these search results and identify AT LEAST ${needed} candidates for:
 
 ROLE: ${roleTitle}
 LOCATION: ${location}
@@ -439,27 +469,24 @@ SEARCH RESULTS:
 ${searchResults}
 
 ##############################################################################
-CRITICAL RULES FOR CANDIDATE NAMES:
+CRITICAL RULES:
 ##############################################################################
-1. A candidate name MUST be a real person's name (e.g., "John Smith", "Thandi Nkosi")
-2. DO NOT use job titles as names (e.g., "Compliance Manager" is NOT a name)
-3. DO NOT use company names as candidate names
-4. DO NOT use locations as candidate names
-5. Each candidate must have FIRST NAME + LAST NAME minimum
-6. If you cannot find a real name in the search results, DO NOT include that candidate
+1. You MUST find AT LEAST ${needed} candidates. This is a HARD REQUIREMENT.
+2. A candidate name MUST be a real person's name (e.g., "John Smith", "Thandi Nkosi")
+3. DO NOT use job titles, company names, or locations as candidate names
+4. Each candidate must have FIRST NAME + LAST NAME minimum
+5. If a LinkedIn URL is in the search results, USE IT
+6. DO NOT include journalists, columnists, or academics
+7. Look carefully - names often appear in LinkedIn URLs like linkedin.com/in/john-smith
 
-EXCLUSION RULES:
-- DO NOT include journalists, columnists, or reporters
-- DO NOT include academics/professors unless specifically requested
-- DO NOT include anyone clearly mismatched for seniority level
-
-For EACH valid candidate you find in the search results:
-1. Full Name (MUST be a real person's name from the search results)
+For EACH candidate:
+1. Full Name (MUST be a real person's name)
 2. Current Role & Company
-3. LinkedIn URL (from search results - must be real)
-4. Why they're qualified (specific evidence from search results)
-5. Approach Strategy
-6. Salary Expectation (ZAR)
+3. LinkedIn URL (from search results)
+4. Qualifications (specific evidence)
+5. Fit Reason (why they match)
+6. Approach Strategy
+7. Salary Expectation (ZAR)
 
 Return as JSON:
 {
@@ -481,30 +508,33 @@ Return as JSON:
 }
 
 // ============================================
-// MAIN SEARCH FUNCTION
+// MAIN SEARCH FUNCTION WITH RETRY LOGIC
 // ============================================
 
+export interface Candidate {
+  name: string;
+  currentRole: string;
+  company: string;
+  linkedinUrl: string;
+  qualifications: string;
+  fitReason: string;
+  approachStrategy: string;
+  salaryExpectation: string;
+}
+
 export interface TalentMappingResult {
-  candidates: Array<{
-    name: string;
-    currentRole: string;
-    company: string;
-    linkedinUrl: string;
-    qualifications: string;
-    fitReason: string;
-    approachStrategy: string;
-    salaryExpectation: string;
-  }>;
+  candidates: Candidate[];
   searchQuality: string;
   marketInsights: string;
   searchMetrics: {
     queriesRun: number;
     totalResults: number;
     uniqueResults: number;
+    roundsExecuted: number;
   };
 }
 
-export async function runTalentMapping(
+export async function runTalentMappingWithRetry(
   jobDescription: string,
   options: {
     anthropicApiKey: string;
@@ -513,13 +543,14 @@ export async function runTalentMapping(
   }
 ): Promise<TalentMappingResult> {
 
-  // Initialize clients
   const anthropic = new Anthropic({ apiKey: options.anthropicApiKey });
   const openai = new OpenAI({ apiKey: options.openaiApiKey });
   const firecrawl = new FirecrawlApp({ apiKey: options.firecrawlApiKey });
 
-  console.log('[TalentMapping] Starting PREMIUM search');
+  console.log('[TalentMapping] Starting PREMIUM search with RETRY LOGIC');
   console.log(`[TalentMapping] Model: ${MODELS.SYNTHESIS} (HARDCODED)`);
+  console.log(`[TalentMapping] Min candidates: ${CONFIG.MIN_CANDIDATES}`);
+  console.log(`[TalentMapping] Max retry rounds: ${CONFIG.MAX_RETRY_ROUNDS}`);
 
   // Step 1: Parse JD with GPT-4o
   console.log(`[TalentMapping] Parsing JD with ${MODELS.PARSING}...`);
@@ -538,102 +569,174 @@ Return JSON with: role, location, industry, seniority, mustHaves (array), niceTo
   const parsed = JSON.parse(parseResponse.choices[0].message.content || '{}');
   console.log('[TalentMapping] Parsed:', JSON.stringify(parsed, null, 2));
 
-  // Step 2: Generate optimized search queries
-  const queries = generateSearchQueries(
-    parsed.role || 'Professional',
-    parsed.location || 'South Africa',
-    parsed.industry || 'General',
-    parsed.mustHaves || []
-  );
-  console.log(`[TalentMapping] Generated ${queries.length} optimized queries`);
-
-  // Step 3: Search with Firecrawl
+  // Initialize tracking
+  let allCandidates: Candidate[] = [];
   let allResults: any[] = [];
-  for (const q of queries) {
-    console.log(`[TalentMapping] Searching: ${q.query.substring(0, 70)}...`);
-    try {
-      const results = await firecrawl.search(q.query, { limit: CONFIG.SEARCH_LIMIT_PER_QUERY }) as any;
-      // CRITICAL FIX: Check length explicitly, empty array is truthy
-      const data = (results?.data?.length > 0) ? results.data : (results?.web || []);
-      console.log(`[TalentMapping]   Found: ${data.length} results`);
-      allResults.push(...data);
-    } catch (e: any) {
-      console.log(`[TalentMapping]   Error: ${e.message}`);
+  let totalQueriesRun = 0;
+  let round = 1;
+
+  // RETRY LOOP - Keep searching until we have enough candidates or exhaust rounds
+  while (allCandidates.length < CONFIG.MIN_CANDIDATES && round <= CONFIG.MAX_RETRY_ROUNDS) {
+    console.log(`\n[TalentMapping] ========== ROUND ${round} ==========`);
+    console.log(`[TalentMapping] Current candidates: ${allCandidates.length}, Need: ${CONFIG.MIN_CANDIDATES}`);
+
+    // Generate queries for this round
+    const queries = generateQueriesForRound(
+      round,
+      parsed.role || 'Professional',
+      parsed.location || 'South Africa',
+      parsed.industry || 'General',
+      parsed.mustHaves || []
+    );
+
+    console.log(`[TalentMapping] Round ${round}: Generated ${queries.length} queries`);
+
+    // Execute searches
+    let roundResults: any[] = [];
+    for (const q of queries) {
+      console.log(`[TalentMapping] Searching: ${q.query.substring(0, 70)}...`);
+      try {
+        const results = await firecrawl.search(q.query, { limit: CONFIG.SEARCH_LIMIT_PER_QUERY }) as any;
+        const data = (results?.data?.length > 0) ? results.data : (results?.web || []);
+        console.log(`[TalentMapping]   Found: ${data.length} results`);
+        roundResults.push(...data);
+        totalQueriesRun++;
+      } catch (e: any) {
+        console.log(`[TalentMapping]   Error: ${e.message}`);
+      }
     }
+
+    // Add to cumulative results (deduplicate by URL)
+    const existingUrls = new Set(allResults.map(r => r.url));
+    const newResults = roundResults.filter(r => !existingUrls.has(r.url));
+    allResults.push(...newResults);
+
+    console.log(`[TalentMapping] Round ${round}: ${newResults.length} new results, ${allResults.length} total`);
+
+    // Synthesize with Claude
+    if (allResults.length > 0) {
+      console.log(`[TalentMapping] Synthesizing with ${MODELS.SYNTHESIS}...`);
+
+      const resultsForClaude = allResults.slice(0, 60).map(r =>
+        `SOURCE: ${r.url}\nTITLE: ${r.title}\nCONTENT: ${r.description || r.content || r.markdown || ''}\n`
+      ).join('\n---\n');
+
+      const prompt = buildSynthesisPrompt(
+        parsed.role || 'Professional',
+        parsed.location || 'South Africa',
+        parsed.industry || 'General',
+        parsed.seniority || 'Senior',
+        parsed.mustHaves || [],
+        resultsForClaude,
+        allCandidates.length
+      );
+
+      try {
+        const stream = await anthropic.messages.stream({
+          model: MODELS.SYNTHESIS,
+          max_tokens: CONFIG.MAX_TOKENS,
+          messages: [{ role: 'user', content: prompt }]
+        });
+
+        const response = await stream.finalMessage();
+        const reportText = response.content[0].type === 'text' ? response.content[0].text : '';
+
+        console.log(`[TalentMapping] Response length: ${reportText.length} chars`);
+        console.log(`[TalentMapping] Stop reason: ${response.stop_reason}`);
+
+        // Parse JSON response
+        let jsonStr = reportText;
+        if (reportText.includes('```')) {
+          const match = reportText.match(/```(?:json)?\s*([\s\S]*?)```/);
+          if (match) jsonStr = match[1];
+        }
+        const jsonStart = jsonStr.indexOf('{');
+        const jsonEnd = jsonStr.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
+        }
+
+        const result = JSON.parse(jsonStr);
+
+        // Apply guardrails and add new valid candidates
+        const newCandidates = (result.candidates || []).filter((c: any) => {
+          const nameCheck = isValidCandidateName(c.name);
+          if (!nameCheck.valid) {
+            console.log(`[Guardrail] Rejected "${c.name}": ${nameCheck.reason}`);
+            return false;
+          }
+          if (isSeniorityMismatch(c.currentRole, parsed.seniority || 'senior')) {
+            console.log(`[Guardrail] Rejected "${c.name}": Seniority mismatch`);
+            return false;
+          }
+          // Check if we already have this candidate
+          if (allCandidates.some(existing => existing.name.toLowerCase() === c.name.toLowerCase())) {
+            console.log(`[Guardrail] Skipping duplicate: "${c.name}"`);
+            return false;
+          }
+          return true;
+        });
+
+        allCandidates.push(...newCandidates);
+        console.log(`[TalentMapping] Round ${round}: Added ${newCandidates.length} new candidates, total: ${allCandidates.length}`);
+
+      } catch (e: any) {
+        console.log(`[TalentMapping] Synthesis error: ${e.message}`);
+      }
+    }
+
+    round++;
   }
 
-  // Deduplicate by URL
-  const uniqueResults = allResults.filter((r, i, arr) =>
-    arr.findIndex(x => x.url === r.url) === i
-  );
-  console.log(`[TalentMapping] Total unique results: ${uniqueResults.length}`);
+  // Final result
+  console.log(`\n[TalentMapping] ========== FINAL RESULT ==========`);
+  console.log(`[TalentMapping] Candidates found: ${allCandidates.length}`);
+  console.log(`[TalentMapping] Rounds executed: ${round - 1}`);
+  console.log(`[TalentMapping] Total queries: ${totalQueriesRun}`);
+  console.log(`[TalentMapping] Total results: ${allResults.length}`);
 
-  // Step 4: Synthesize with Claude Opus 4.5
-  console.log(`[TalentMapping] Synthesizing with ${MODELS.SYNTHESIS}...`);
-
-  const resultsForClaude = uniqueResults.slice(0, 50).map(r =>
-    `SOURCE: ${r.url}\nTITLE: ${r.title}\nCONTENT: ${r.description || r.content || r.markdown || ''}\n`
-  ).join('\n---\n');
-
-  const prompt = buildSynthesisPrompt(
-    parsed.role || 'Professional',
-    parsed.location || 'South Africa',
-    parsed.industry || 'General',
-    parsed.seniority || 'Senior',
-    parsed.mustHaves || [],
-    resultsForClaude
-  );
-
-  const stream = await anthropic.messages.stream({
-    model: MODELS.SYNTHESIS,
-    max_tokens: CONFIG.MAX_TOKENS,
-    messages: [{ role: 'user', content: prompt }]
-  });
-
-  const response = await stream.finalMessage();
-  const reportText = response.content[0].type === 'text' ? response.content[0].text : '';
-
-  console.log(`[TalentMapping] Response length: ${reportText.length} chars`);
-  console.log(`[TalentMapping] Stop reason: ${response.stop_reason}`);
-
-  // Parse JSON response
-  let jsonStr = reportText;
-  if (reportText.includes('```')) {
-    const match = reportText.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (match) jsonStr = match[1];
+  if (allCandidates.length < CONFIG.MIN_CANDIDATES) {
+    console.log(`[TalentMapping] WARNING: Only found ${allCandidates.length} candidates after ${round - 1} rounds (minimum is ${CONFIG.MIN_CANDIDATES})`);
   }
-  const jsonStart = jsonStr.indexOf('{');
-  const jsonEnd = jsonStr.lastIndexOf('}');
-  if (jsonStart !== -1 && jsonEnd !== -1) {
-    jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
-  }
-
-  const result = JSON.parse(jsonStr);
-
-  // Apply guardrails
-  const validCandidates = (result.candidates || []).filter((c: any) => {
-    const nameCheck = isValidCandidateName(c.name);
-    if (!nameCheck.valid) {
-      console.log(`[Guardrail] Rejected "${c.name}": ${nameCheck.reason}`);
-      return false;
-    }
-    if (isSeniorityMismatch(c.currentRole, parsed.seniority || 'senior')) {
-      console.log(`[Guardrail] Rejected "${c.name}": Seniority mismatch`);
-      return false;
-    }
-    return true;
-  });
-
-  console.log(`[TalentMapping] Final candidates: ${validCandidates.length} (after guardrails)`);
 
   return {
-    candidates: validCandidates,
-    searchQuality: result.searchQuality || 'Unknown',
-    marketInsights: result.marketInsights || 'No insights available',
+    candidates: allCandidates.slice(0, 10), // Cap at 10
+    searchQuality: allCandidates.length >= CONFIG.MIN_CANDIDATES
+      ? 'Good - met minimum candidate threshold'
+      : `Limited - only found ${allCandidates.length} of ${CONFIG.MIN_CANDIDATES} required candidates after ${round - 1} search rounds`,
+    marketInsights: 'South African market search completed with multi-round retry logic',
     searchMetrics: {
-      queriesRun: queries.length,
+      queriesRun: totalQueriesRun,
       totalResults: allResults.length,
-      uniqueResults: uniqueResults.length
+      uniqueResults: allResults.length,
+      roundsExecuted: round - 1
     }
   };
+}
+
+// ============================================
+// LEGACY FUNCTION (for backwards compatibility)
+// ============================================
+
+export async function runTalentMapping(
+  jobDescription: string,
+  options: {
+    anthropicApiKey: string;
+    openaiApiKey: string;
+    firecrawlApiKey: string;
+  }
+): Promise<TalentMappingResult> {
+  // Delegate to the new retry function
+  return runTalentMappingWithRetry(jobDescription, options);
+}
+
+// Also export the old generateSearchQueries for backwards compatibility
+export function generateSearchQueries(
+  roleTitle: string,
+  location: string,
+  industry: string,
+  mustHaves: string[] = []
+): SearchQuery[] {
+  // Return round 1 queries for backwards compatibility
+  return generateQueriesForRound(1, roleTitle, location, industry, mustHaves);
 }
