@@ -4,6 +4,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { createClient } from '@supabase/supabase-js';
 import { SA_CONTEXT_PROMPT } from '@/lib/sa-context';
+import {
+  extractRoleKeywords,
+  generateSearchQueries as generateCoreQueries,
+  isValidCandidateName as coreValidateName,
+  isSeniorityMismatch as coreSeniorityCheck,
+  MODELS as CORE_MODELS,
+  CONFIG as CORE_CONFIG
+} from '@/lib/talent-mapping-core';
 
 // ============================================
 // SUPERIOR INTELLIGENCE STACK INTEGRATIONS
@@ -1873,8 +1881,31 @@ Return valid JSON only:
     }
 
     // Step 2: Generate intelligent, diverse search queries
-    const searchQueries = generateIntelligenceQueries(parsed);
-    console.log('[TalentMapping] Generated', searchQueries.length, 'diverse queries');
+    // CRITICAL: First add FOCUSED LinkedIn profile queries from core library
+    // These use extracted keywords (e.g., "Compliance Officer") instead of full role title
+    const coreQueries = generateCoreQueries(
+      parsed.role || '',
+      parsed.location || 'South Africa',
+      parsed.industry || 'finance',
+      parsed.mustHaves || []
+    ).map(q => ({
+      query: q.query,
+      sourceType: q.sourceType as WebSearchResult['sourceType'],
+      purpose: q.purpose,
+      dataSource: 'Core library focused search',
+      howWeFoundYou: 'Your profile matched our focused search criteria'
+    }));
+
+    // Log what keywords were extracted
+    const extractedKeywords = extractRoleKeywords(parsed.role || '');
+    console.log('[TalentMapping] Extracted role keywords:', extractedKeywords);
+
+    // Then add comprehensive queries from existing generator
+    const comprehensiveQueries = generateIntelligenceQueries(parsed);
+
+    // Combine: focused LinkedIn first, then comprehensive
+    const searchQueries = [...coreQueries, ...comprehensiveQueries];
+    console.log(`[TalentMapping] Generated ${searchQueries.length} queries (${coreQueries.length} focused + ${comprehensiveQueries.length} comprehensive)`);
 
     // Step 3: Execute searches with Firecrawl
     const webResults: WebSearchResult[] = [];
