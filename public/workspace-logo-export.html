@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hyred Logo - Workspace Standards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 48px;
+        }
+        h1 {
+            color: #4F46E5;
+            font-size: 36px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+
+        /* Specs Grid */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .spec-card {
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #BAE6FD;
+        }
+        .spec-card.highlight {
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+            border: 2px solid #86EFAC;
+        }
+        .spec-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0369a1;
+            margin-bottom: 4px;
+        }
+        .spec-card.highlight .spec-label {
+            color: #047857;
+        }
+        .spec-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0c4a6e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .spec-card.highlight .spec-value {
+            color: #065f46;
+        }
+        .checkmark {
+            color: #10B981;
+            font-size: 20px;
+        }
+
+        /* Preview */
+        .preview-section {
+            margin: 32px 0;
+        }
+        .preview-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .preview-container {
+            background:
+                repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)
+                50% / 20px 20px;
+            padding: 48px;
+            border-radius: 16px;
+            border: 3px solid #e2e8f0;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Guidelines overlay */
+        .guidelines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .guideline {
+            position: absolute;
+            border: 2px dashed rgba(239, 68, 68, 0.3);
+        }
+        .guideline-label {
+            position: absolute;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        #canvas {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Download Button */
+        .download-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+            margin-top: 32px;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 36px rgba(16, 185, 129, 0.5);
+        }
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        @media (max-width: 640px) {
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Workspace Logo</h1>
+        <p class="subtitle">Compliant with workspace logo standards</p>
+
+        <div class="specs-grid">
+            <div class="spec-card highlight">
+                <div class="spec-label">Canvas Size</div>
+                <div class="spec-value">
+                    <span class="checkmark">✓</span>
+                    1024 × 1024
+                </div>
+            </div>
+
+            <div class="spec-card highlight">
+                <div class="spec-label">Background</div>
+                <div class="spec-value">
+                    <span class="checkmark">✓</span>
+                    Transparent
+                </div>
+            </div>
+
+            <div class="spec-card highlight">
+                <div class="spec-label">Icon Size</div>
+                <div class="spec-value">
+                    <span class="checkmark">✓</span>
+                    67.5% (691px)
+                </div>
+            </div>
+
+            <div class="spec-card highlight">
+                <div class="spec-label">Padding</div>
+                <div class="spec-value">
+                    <span class="checkmark">✓</span>
+                    16.25% (166px)
+                </div>
+            </div>
+
+            <div class="spec-card">
+                <div class="spec-label">Corners</div>
+                <div class="spec-value">
+                    <span class="checkmark">✓</span>
+                    Square (not rounded)
+                </div>
+            </div>
+
+            <div class="spec-card">
+                <div class="spec-label">Quality</div>
+                <div class="spec-value">
+                    <span class="checkmark">✓</span>
+                    Production Ready
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <div class="preview-title">Preview with Safe Area Guide</div>
+            <div class="preview-container">
+                <canvas id="canvas" width="1024" height="1024"></canvas>
+            </div>
+        </div>
+
+        <button class="download-btn" onclick="downloadPNG()">
+            ⬇️ Download PNG (1024×1024)
+        </button>
+
+        <p class="footer">
+            Perfect for app stores, Google Workspace, Slack, and all platforms
+        </p>
+    </div>
+
+    <script>
+        const svgString = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#5B54E8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <rect x="166" y="166" width="691" height="691" fill="url(#bgGradient)"/>
+            <path d="M296 395L512 523L728 395V696C728 715 713 730 694 730H330C311 730 296 715 296 696V395Z" fill="white" fill-opacity="0.95"/>
+            <path d="M694 319H330C311 319 296 334 296 353V395L512 523L728 395V353C728 334 713 319 694 319Z" fill="white"/>
+            <circle cx="728" cy="296" r="173" fill="#10B981"/>
+            <path d="M662 296L707 341L794 254" stroke="white" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+
+        function renderCanvas() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Clear with transparent background
+            ctx.clearRect(0, 0, 1024, 1024);
+
+            const img = new Image();
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, 1024, 1024);
+                URL.revokeObjectURL(url);
+
+                // Draw safe area guide
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([10, 5]);
+                ctx.strokeRect(166, 166, 691, 691);
+
+                // Draw padding indicators
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+                ctx.fillRect(0, 0, 166, 1024); // left
+                ctx.fillRect(857, 0, 167, 1024); // right
+                ctx.fillRect(166, 0, 691, 166); // top
+                ctx.fillRect(166, 857, 691, 167); // bottom
+            };
+            img.src = url;
+        }
+
+        function downloadPNG() {
+            const canvas = document.getElementById('canvas');
+
+            // Create clean version without guidelines
+            const cleanCanvas = document.createElement('canvas');
+            cleanCanvas.width = 1024;
+            cleanCanvas.height = 1024;
+            const cleanCtx = cleanCanvas.getContext('2d');
+
+            const img = new Image();
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            img.onload = function() {
+                cleanCtx.drawImage(img, 0, 0, 1024, 1024);
+
+                // Export as PNG with transparency
+                cleanCanvas.toBlob(function(blob) {
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = 'hyred-workspace-logo-1024x1024.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(downloadUrl);
+                    URL.revokeObjectURL(url);
+
+                    // Success feedback
+                    const btn = document.querySelector('.download-btn');
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '✅ Downloaded Successfully!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                    }, 2500);
+                }, 'image/png', 1.0);
+            };
+            img.src = url;
+        }
+
+        // Initial render
+        renderCanvas();
+    </script>
+</body>
+</html>

@@ -131,7 +131,7 @@ export default function AdminUsersPage() {
       backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
-      <PilotHeader user={user} onLogout={handleLogout} />
+      <PilotHeader user={user} onLogout={handleLogout} currentPage="admin" />
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>

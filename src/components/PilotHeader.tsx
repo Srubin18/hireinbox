@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 interface PilotHeaderProps {
   user?: { email: string; pilot_role?: string } | null;
   onLogout: () => void;
-  currentPage?: 'dashboard' | 'talent-mapping' | 'screening' | 'reports' | 'usage' | 'search-history';
+  currentPage?: 'dashboard' | 'talent-mapping' | 'screening' | 'reports' | 'usage' | 'search-history' | 'admin';
 }
 
 const Logo = () => (
@@ -143,6 +143,24 @@ export default function PilotHeader({ user, onLogout, currentPage }: PilotHeader
             >
               Usage
             </button>
+
+            {/* Admin link - only show for admins */}
+            {user?.pilot_role === 'admin' && (
+              <button
+                onClick={() => router.push('/pilot/admin/users')}
+                style={{
+                  padding: '0',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  fontSize: '14px',
+                  color: currentPage === 'admin' ? '#4F46E5' : '#64748b',
+                  fontWeight: currentPage === 'admin' ? 600 : 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Admin
+              </button>
+            )}
           </div>
         </div>
 
