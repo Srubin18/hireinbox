@@ -1,852 +1,826 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
 
 // ============================================
-// B2Recruiter - Client Management
-// Multi-client management for professional recruiters
-// Client onboarding, role management, candidate pipelines
+// HIREINBOX B2Recruiter - CLIENTS PAGE
+// /recruiter/clients
+// Manage client companies
 // ============================================
-
-// Types
-interface ClientRole {
-  id: string;
-  title: string;
-  status: 'active' | 'paused' | 'filled' | 'cancelled';
-  candidatesSubmitted: number;
-  candidatesInterviewing: number;
-  daysOpen: number;
-  salary: string;
-  location: string;
-}
 
 interface Client {
   id: string;
-  name: string;
-  industry: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  commissionRate: number;
-  status: 'active' | 'prospect' | 'inactive';
-  activeRoles: number;
-  totalPlacements: number;
-  lifetimeValue: number;
-  lastActivity: string;
-  roles: ClientRole[];
+  company_name: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  industry: string | null;
+  notes: string | null;
+  contract_type: 'retained' | 'contingency' | 'exclusive' | 'contract' | null;
+  fee_percentage: number;
+  status: 'active' | 'paused' | 'inactive';
+  created_at: string;
+  roles?: Array<{ id: string; title: string; status: string; candidates_submitted: number }>;
 }
 
-interface PipelineCandidate {
-  id: string;
-  name: string;
-  role: string;
-  stage: 'submitted' | 'screening' | 'interview' | 'offer' | 'placed';
-  score: number;
-  submittedDate: string;
-  lastUpdate: string;
-}
-
-// Mock data for MVP
-const MOCK_CLIENTS: Client[] = [
-  {
-    id: '1',
-    name: 'Mafadi Property Group',
-    industry: 'Real Estate',
-    contactName: 'Themba Mokoena',
-    contactEmail: 'themba@mafadi.co.za',
-    contactPhone: '+27 11 234 5678',
-    commissionRate: 15,
-    status: 'active',
-    activeRoles: 3,
-    totalPlacements: 8,
-    lifetimeValue: 320000,
-    lastActivity: '2 hours ago',
-    roles: [
-      { id: '1', title: 'Senior Property Manager', status: 'active', candidatesSubmitted: 5, candidatesInterviewing: 2, daysOpen: 14, salary: 'R450k - R550k', location: 'Johannesburg' },
-      { id: '2', title: 'Financial Controller', status: 'active', candidatesSubmitted: 3, candidatesInterviewing: 1, daysOpen: 7, salary: 'R600k - R750k', location: 'Johannesburg' },
-      { id: '3', title: 'Leasing Agent', status: 'active', candidatesSubmitted: 4, candidatesInterviewing: 0, daysOpen: 21, salary: 'R280k - R350k', location: 'Cape Town' },
-    ]
-  },
-  {
-    id: '2',
-    name: 'Standard Bank',
-    industry: 'Banking',
-    contactName: 'Sarah van Wyk',
-    contactEmail: 'sarah.vanwyk@standardbank.co.za',
-    contactPhone: '+27 11 636 9111',
-    commissionRate: 12,
-    status: 'active',
-    activeRoles: 5,
-    totalPlacements: 15,
-    lifetimeValue: 890000,
-    lastActivity: '1 day ago',
-    roles: [
-      { id: '4', title: 'Senior Analyst - Risk', status: 'active', candidatesSubmitted: 8, candidatesInterviewing: 3, daysOpen: 28, salary: 'R700k - R900k', location: 'Johannesburg' },
-      { id: '5', title: 'Head of Credit', status: 'active', candidatesSubmitted: 4, candidatesInterviewing: 2, daysOpen: 45, salary: 'R1.2M - R1.5M', location: 'Johannesburg' },
-      { id: '6', title: 'Data Engineer', status: 'active', candidatesSubmitted: 6, candidatesInterviewing: 1, daysOpen: 10, salary: 'R800k - R950k', location: 'Remote' },
-      { id: '7', title: 'Compliance Officer', status: 'filled', candidatesSubmitted: 10, candidatesInterviewing: 0, daysOpen: 35, salary: 'R550k - R650k', location: 'Cape Town' },
-      { id: '8', title: 'UX Designer', status: 'active', candidatesSubmitted: 5, candidatesInterviewing: 2, daysOpen: 18, salary: 'R500k - R600k', location: 'Johannesburg' },
-    ]
-  },
-  {
-    id: '3',
-    name: 'Discovery Health',
-    industry: 'Insurance',
-    contactName: 'Priya Govender',
-    contactEmail: 'priya.govender@discovery.co.za',
-    contactPhone: '+27 11 529 2888',
-    commissionRate: 14,
-    status: 'active',
-    activeRoles: 2,
-    totalPlacements: 6,
-    lifetimeValue: 420000,
-    lastActivity: '3 days ago',
-    roles: [
-      { id: '9', title: 'Actuary', status: 'active', candidatesSubmitted: 3, candidatesInterviewing: 1, daysOpen: 60, salary: 'R1M - R1.3M', location: 'Johannesburg' },
-      { id: '10', title: 'Product Manager', status: 'active', candidatesSubmitted: 5, candidatesInterviewing: 2, daysOpen: 25, salary: 'R700k - R850k', location: 'Johannesburg' },
-    ]
-  },
-  {
-    id: '4',
-    name: 'Woolworths Holdings',
-    industry: 'Retail',
-    contactName: 'John Daniels',
-    contactEmail: 'john.daniels@woolworths.co.za',
-    contactPhone: '+27 21 407 9111',
-    commissionRate: 13,
-    status: 'active',
-    activeRoles: 4,
-    totalPlacements: 12,
-    lifetimeValue: 650000,
-    lastActivity: '5 hours ago',
-    roles: [
-      { id: '11', title: 'Buyer - Clothing', status: 'active', candidatesSubmitted: 7, candidatesInterviewing: 2, daysOpen: 15, salary: 'R450k - R550k', location: 'Cape Town' },
-      { id: '12', title: 'Supply Chain Manager', status: 'active', candidatesSubmitted: 4, candidatesInterviewing: 1, daysOpen: 22, salary: 'R600k - R750k', location: 'Cape Town' },
-      { id: '13', title: 'Store Manager', status: 'paused', candidatesSubmitted: 2, candidatesInterviewing: 0, daysOpen: 40, salary: 'R380k - R450k', location: 'Durban' },
-      { id: '14', title: 'E-commerce Specialist', status: 'active', candidatesSubmitted: 5, candidatesInterviewing: 2, daysOpen: 8, salary: 'R400k - R500k', location: 'Cape Town' },
-    ]
-  },
-  {
-    id: '5',
-    name: 'TechStart SA',
-    industry: 'Technology',
-    contactName: 'Mike Chen',
-    contactEmail: 'mike@techstart.co.za',
-    contactPhone: '+27 21 555 0123',
-    commissionRate: 18,
-    status: 'prospect',
-    activeRoles: 0,
-    totalPlacements: 0,
-    lifetimeValue: 0,
-    lastActivity: 'Never',
-    roles: []
-  },
-];
-
-const MOCK_PIPELINE: PipelineCandidate[] = [
-  { id: '1', name: 'Thabo Molefe', role: 'Senior Analyst - Risk', stage: 'interview', score: 87, submittedDate: '2024-12-10', lastUpdate: '2 hours ago' },
-  { id: '2', name: 'Sarah van der Berg', role: 'Senior Property Manager', stage: 'offer', score: 92, submittedDate: '2024-12-15', lastUpdate: '1 day ago' },
-  { id: '3', name: 'Priya Naidoo', role: 'Product Manager', stage: 'submitted', score: 78, submittedDate: '2024-12-24', lastUpdate: '5 hours ago' },
-  { id: '4', name: 'John Dlamini', role: 'Financial Controller', stage: 'placed', score: 85, submittedDate: '2024-12-01', lastUpdate: '3 days ago' },
-  { id: '5', name: 'Lisa Chen', role: 'Data Engineer', stage: 'screening', score: 81, submittedDate: '2024-12-22', lastUpdate: '1 day ago' },
-];
-
-// Logo Component
-const Logo = ({ size = 36 }: { size?: number }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+const Logo = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
       <rect width="48" height="48" rx="12" fill="#4F46E5"/>
       <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
       <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
       <circle cx="36" cy="12" r="9" fill="#10B981"/>
       <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-        <span style={{ color: '#0f172a' }}>Hire</span>
-        <span style={{ color: '#4F46E5' }}>Inbox</span>
-      </span>
-      <span style={{ fontSize: '0.65rem', color: '#F59E0B', fontWeight: 600, letterSpacing: '0.05em' }}>
-        RECRUITER PRO
-      </span>
+    <div>
+      <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
+        <span style={{ color: '#64748b', fontWeight: 500, fontSize: '14px', marginLeft: '8px' }}>Recruiter</span>
+      </div>
     </div>
   </div>
 );
 
-// Status Badge Component
-const StatusBadge = ({ status, size = 'normal' }: { status: string; size?: 'small' | 'normal' }) => {
-  const styles: Record<string, { bg: string; text: string }> = {
-    active: { bg: '#D1FAE5', text: '#065F46' },
-    paused: { bg: '#FEF3C7', text: '#92400E' },
-    filled: { bg: '#DBEAFE', text: '#1E40AF' },
-    cancelled: { bg: '#FEE2E2', text: '#991B1B' },
-    prospect: { bg: '#E0E7FF', text: '#4338CA' },
-    inactive: { bg: '#F1F5F9', text: '#64748B' },
-    // Pipeline stages
-    submitted: { bg: '#F1F5F9', text: '#64748B' },
-    screening: { bg: '#FEF3C7', text: '#92400E' },
-    interview: { bg: '#DBEAFE', text: '#1E40AF' },
-    offer: { bg: '#D1FAE5', text: '#065F46' },
-    placed: { bg: '#10B981', text: '#FFFFFF' },
-  };
-  const style = styles[status] || styles.inactive;
-  return (
-    <span style={{
-      padding: size === 'small' ? '2px 8px' : '4px 12px',
-      borderRadius: '12px',
-      fontSize: size === 'small' ? '0.6875rem' : '0.75rem',
-      fontWeight: 600,
-      backgroundColor: style.bg,
-      color: style.text,
-      textTransform: 'capitalize',
-    }}>
-      {status}
-    </span>
-  );
+const Icons = {
+  plus: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  ),
+  edit: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  ),
+  trash: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>
+  ),
+  close: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
+  building: (
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 21h18"/>
+      <path d="M5 21V7l8-4v18"/>
+      <path d="M19 21V11l-6-4"/>
+      <path d="M9 9v.01"/>
+      <path d="M9 12v.01"/>
+      <path d="M9 15v.01"/>
+      <path d="M9 18v.01"/>
+    </svg>
+  ),
 };
 
-export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAddClient, setShowAddClient] = useState(false);
-  const [pipelineView, setPipelineView] = useState(false);
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  active: { bg: '#DCFCE7', text: '#16A34A' },
+  paused: { bg: '#FEF3C7', text: '#D97706' },
+  inactive: { bg: '#FEE2E2', text: '#DC2626' },
+};
 
-  // Format currency in ZAR
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(amount);
+const CONTRACT_LABELS: Record<string, string> = {
+  retained: 'Retained',
+  contingency: 'Contingency',
+  exclusive: 'Exclusive',
+  contract: 'Contract',
+};
+
+export default function RecruiterClients() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [formData, setFormData] = useState({
+    company_name: '',
+    contact_name: '',
+    contact_email: '',
+    contact_phone: '',
+    industry: '',
+    notes: '',
+    contract_type: 'contingency',
+    fee_percentage: 15,
+    status: 'active',
+  });
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const fetchClients = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push('/auth/login?redirect=/recruiter/clients');
+        return;
+      }
+
+      const response = await fetch('/api/recruiter/clients', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch clients');
+      }
+
+      const data = await response.json();
+      setClients(data.clients);
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load clients');
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase, router]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setShowModal(true);
+    }
+  }, [searchParams]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const method = editingClient ? 'PUT' : 'POST';
+      const body = editingClient ? { ...formData, id: editingClient.id } : formData;
+
+      const response = await fetch('/api/recruiter/clients', {
+        method,
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save client');
+      }
+
+      setShowModal(false);
+      setEditingClient(null);
+      resetForm();
+      fetchClients();
+    } catch (err) {
+      console.error('Error saving client:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save client');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Filter clients
-  const filteredClients = clients.filter(client => {
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-    const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          client.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          client.contactName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const handleDelete = async (clientId: string) => {
+    if (!confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch(`/api/recruiter/clients?id=${clientId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete client');
+      }
+
+      fetchClients();
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete client');
+    }
+  };
+
+  const openEditModal = (client: Client) => {
+    setEditingClient(client);
+    setFormData({
+      company_name: client.company_name,
+      contact_name: client.contact_name || '',
+      contact_email: client.contact_email || '',
+      contact_phone: client.contact_phone || '',
+      industry: client.industry || '',
+      notes: client.notes || '',
+      contract_type: client.contract_type || 'contingency',
+      fee_percentage: client.fee_percentage,
+      status: client.status,
+    });
+    setShowModal(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      company_name: '',
+      contact_name: '',
+      contact_email: '',
+      contact_phone: '',
+      industry: '',
+      notes: '',
+      contract_type: 'contingency',
+      fee_percentage: 15,
+      status: 'active',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#f8fafc',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '3px solid #e2e8f0',
+            borderTopColor: '#4F46E5',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px',
+          }} />
+          <p style={{ color: '#64748b' }}>Loading clients...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#F8FAFC',
+      backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
       {/* Header */}
       <header style={{
-        backgroundColor: 'white',
-        borderBottom: '1px solid #E2E8F0',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
         padding: '16px 32px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}>
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <Logo size={40} />
-          <nav style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-            <Link href="/recruiter" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.9375rem' }}>Dashboard</Link>
-            <Link href="/recruiter/clients" style={{ color: '#4F46E5', fontWeight: 600, textDecoration: 'none', fontSize: '0.9375rem' }}>Clients</Link>
-            <Link href="/recruiter/talent" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.9375rem' }}>Talent Pool</Link>
-            <Link href="/recruiter/commissions" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.9375rem' }}>Commissions</Link>
-          </nav>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#4F46E5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '1rem',
-            }}>
-              JR
-            </div>
-          </div>
-        </div>
+        <Logo />
       </header>
 
+      {/* Navigation */}
+      <nav style={{
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '0 32px',
+      }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {[
+            { label: 'Dashboard', href: '/recruiter', active: false },
+            { label: 'Clients', href: '/recruiter/clients', active: true },
+            { label: 'Talent Pool', href: '/recruiter/talent', active: false },
+            { label: 'Commissions', href: '/recruiter/commissions', active: false },
+          ].map((item) => (
+            <button
+              key={item.href}
+              onClick={() => router.push(item.href)}
+              style={{
+                padding: '16px 20px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderBottom: item.active ? '2px solid #4F46E5' : '2px solid transparent',
+                fontSize: '14px',
+                fontWeight: item.active ? 600 : 500,
+                color: item.active ? '#4F46E5' : '#64748b',
+                cursor: 'pointer',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
       {/* Main Content */}
-      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px' }}>
+      <main style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
+        {error ? (
+          <div style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            color: '#dc2626',
+            marginBottom: '24px',
+          }}>
+            {error}
+          </div>
+        ) : null}
+
         {/* Page Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-              Client Management
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+              Clients
             </h1>
-            <p style={{ color: '#64748B', fontSize: '1rem' }}>
-              {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} | {filteredClients.reduce((sum, c) => sum + c.activeRoles, 0)} active roles
+            <p style={{ fontSize: '16px', color: '#64748b' }}>
+              Manage your client companies and their open roles
             </p>
           </div>
-          <button onClick={() => setShowAddClient(true)} style={{
-            backgroundColor: '#4F46E5',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '0.9375rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            <span style={{ fontSize: '1.25rem' }}>+</span>
+          <button
+            onClick={() => {
+              setEditingClient(null);
+              resetForm();
+              setShowModal(true);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              backgroundColor: '#4F46E5',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {Icons.plus}
             Add Client
           </button>
         </div>
 
-        {/* Filters */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '16px 24px',
-          marginBottom: '24px',
-          border: '1px solid #E2E8F0',
-          display: 'flex',
-          gap: '16px',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}>
-          <input
-            type="text"
-            placeholder="Search clients..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              flex: 1,
-              minWidth: '200px',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid #E2E8F0',
-              fontSize: '0.9375rem',
-              outline: 'none',
-            }}
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid #E2E8F0',
-              fontSize: '0.9375rem',
-              backgroundColor: 'white',
-              cursor: 'pointer',
-            }}
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="prospect">Prospect</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <div style={{ display: 'flex', gap: '4px', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '2px' }}>
+        {/* Clients List */}
+        {clients.length === 0 ? (
+          <div style={{
+            backgroundColor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '16px',
+            padding: '64px',
+            textAlign: 'center',
+          }}>
+            <div style={{ color: '#94a3b8', marginBottom: '24px' }}>
+              {Icons.building}
+            </div>
+            <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>
+              No clients yet
+            </h3>
+            <p style={{ fontSize: '15px', color: '#64748b', maxWidth: '400px', margin: '0 auto 24px' }}>
+              Add your first client company to start tracking their open roles and placements.
+            </p>
             <button
-              onClick={() => setViewMode('grid')}
+              onClick={() => setShowModal(true)}
               style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
+                padding: '14px 28px',
+                backgroundColor: '#4F46E5',
+                color: '#ffffff',
                 border: 'none',
-                backgroundColor: viewMode === 'grid' ? '#EEF2FF' : 'transparent',
-                color: viewMode === 'grid' ? '#4F46E5' : '#64748B',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: 600,
                 cursor: 'pointer',
               }}
             >
-              Grid
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: viewMode === 'list' ? '#EEF2FF' : 'transparent',
-                color: viewMode === 'list' ? '#4F46E5' : '#64748B',
-                cursor: 'pointer',
-              }}
-            >
-              List
+              Add Your First Client
             </button>
           </div>
-        </div>
-
-        {/* Client Grid/List */}
-        {viewMode === 'grid' ? (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '20px',
-          }}>
-            {filteredClients.map((client) => (
+        ) : (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {clients.map((client) => (
               <div
                 key={client.id}
-                onClick={() => setSelectedClient(client)}
                 style={{
-                  backgroundColor: 'white',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
                   borderRadius: '12px',
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  boxShadow: selectedClient?.id === client.id ? '0 0 0 2px #4F46E5' : 'none',
+                  padding: '24px',
                 }}
               >
-                <div style={{ padding: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>{client.name}</h3>
-                      <p style={{ fontSize: '0.8125rem', color: '#64748B' }}>{client.industry}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
+                        {client.company_name}
+                      </h3>
+                      <span style={{
+                        padding: '4px 12px',
+                        backgroundColor: STATUS_COLORS[client.status]?.bg || '#f1f5f9',
+                        color: STATUS_COLORS[client.status]?.text || '#64748b',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                      }}>
+                        {client.status}
+                      </span>
                     </div>
-                    <StatusBadge status={client.status} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                    <div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A' }}>{client.activeRoles}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Active Roles</div>
+                    <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', fontSize: '14px', color: '#64748b' }}>
+                      {client.contact_name && (
+                        <span>Contact: {client.contact_name}</span>
+                      )}
+                      {client.industry && (
+                        <span>Industry: {client.industry}</span>
+                      )}
+                      <span>Contract: {CONTRACT_LABELS[client.contract_type || 'contingency']}</span>
+                      <span>Fee: {client.fee_percentage}%</span>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10B981' }}>{client.totalPlacements}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Placements</div>
-                    </div>
-                  </div>
-                  <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: '0.8125rem', color: '#64748B' }}>
-                        {client.commissionRate}% commission
+                    {client.roles && client.roles.length > 0 && (
+                      <div style={{ marginTop: '16px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>
+                          Open Roles ({client.roles.filter(r => r.status === 'active').length})
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {client.roles.slice(0, 5).map((role) => (
+                            <span
+                              key={role.id}
+                              style={{
+                                padding: '4px 12px',
+                                backgroundColor: '#f1f5f9',
+                                borderRadius: '6px',
+                                fontSize: '13px',
+                                color: '#475569',
+                              }}
+                            >
+                              {role.title}
+                            </span>
+                          ))}
+                          {client.roles.length > 5 && (
+                            <span style={{ fontSize: '13px', color: '#64748b' }}>
+                              +{client.roles.length - 5} more
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>
-                        {client.lastActivity}
-                      </div>
-                    </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => openEditModal(client)}
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: '#f1f5f9',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: '#475569',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {Icons.edit}
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(client.id)}
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: '#fef2f2',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {Icons.trash}
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        ) : (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            border: '1px solid #E2E8F0',
-            overflow: 'hidden',
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#F8FAFC' }}>
-                  <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '0.8125rem', fontWeight: 600, color: '#64748B' }}>Client</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: '0.8125rem', fontWeight: 600, color: '#64748B' }}>Status</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'center', fontSize: '0.8125rem', fontWeight: 600, color: '#64748B' }}>Active Roles</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'center', fontSize: '0.8125rem', fontWeight: 600, color: '#64748B' }}>Placements</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'right', fontSize: '0.8125rem', fontWeight: 600, color: '#64748B' }}>Lifetime Value</th>
-                  <th style={{ padding: '12px 20px', textAlign: 'right', fontSize: '0.8125rem', fontWeight: 600, color: '#64748B' }}>Commission</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredClients.map((client) => (
-                  <tr
-                    key={client.id}
-                    onClick={() => setSelectedClient(client)}
-                    style={{
-                      borderTop: '1px solid #F1F5F9',
-                      cursor: 'pointer',
-                      backgroundColor: selectedClient?.id === client.id ? '#F5F3FF' : 'transparent',
-                    }}
-                  >
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: '2px' }}>{client.name}</div>
-                      <div style={{ fontSize: '0.8125rem', color: '#64748B' }}>{client.industry}</div>
-                    </td>
-                    <td style={{ padding: '16px 20px' }}><StatusBadge status={client.status} size="small" /></td>
-                    <td style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600 }}>{client.activeRoles}</td>
-                    <td style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600, color: '#10B981' }}>{client.totalPlacements}</td>
-                    <td style={{ padding: '16px 20px', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(client.lifetimeValue)}</td>
-                    <td style={{ padding: '16px 20px', textAlign: 'right', color: '#64748B' }}>{client.commissionRate}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Client Detail Panel */}
-        {selectedClient && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            border: '1px solid #E2E8F0',
-            marginTop: '24px',
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              padding: '24px',
-              borderBottom: '1px solid #E2E8F0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-            }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>{selectedClient.name}</h2>
-                  <StatusBadge status={selectedClient.status} />
-                </div>
-                <p style={{ color: '#64748B', marginBottom: '16px' }}>{selectedClient.industry}</p>
-                <div style={{ display: 'flex', gap: '24px', fontSize: '0.875rem' }}>
-                  <div>
-                    <span style={{ color: '#94A3B8' }}>Contact: </span>
-                    <span style={{ color: '#0F172A', fontWeight: 500 }}>{selectedClient.contactName}</span>
-                  </div>
-                  <div>
-                    <span style={{ color: '#94A3B8' }}>Email: </span>
-                    <span style={{ color: '#4F46E5' }}>{selectedClient.contactEmail}</span>
-                  </div>
-                  <div>
-                    <span style={{ color: '#94A3B8' }}>Phone: </span>
-                    <span style={{ color: '#0F172A' }}>{selectedClient.contactPhone}</span>
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => setPipelineView(!pipelineView)}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                    backgroundColor: pipelineView ? '#EEF2FF' : 'white',
-                    color: pipelineView ? '#4F46E5' : '#64748B',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {pipelineView ? 'Show Roles' : 'View Pipeline'}
-                </button>
-                <button style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: '#4F46E5',
-                  color: 'white',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}>
-                  Submit Candidate
-                </button>
-              </div>
-            </div>
-
-            {!pipelineView ? (
-              // Roles View
-              <div style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: '16px' }}>
-                  Active Roles ({selectedClient.roles.filter(r => r.status === 'active').length})
-                </h3>
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  {selectedClient.roles.map((role) => (
-                    <div key={role.id} style={{
-                      padding: '16px 20px',
-                      backgroundColor: '#F8FAFC',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                          <span style={{ fontWeight: 600, color: '#0F172A' }}>{role.title}</span>
-                          <StatusBadge status={role.status} size="small" />
-                        </div>
-                        <div style={{ fontSize: '0.8125rem', color: '#64748B' }}>
-                          {role.salary} | {role.location} | {role.daysOpen} days open
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.125rem', fontWeight: 600, color: '#0F172A' }}>{role.candidatesSubmitted}</div>
-                          <div style={{ fontSize: '0.6875rem', color: '#94A3B8' }}>Submitted</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.125rem', fontWeight: 600, color: '#F59E0B' }}>{role.candidatesInterviewing}</div>
-                          <div style={{ fontSize: '0.6875rem', color: '#94A3B8' }}>Interviewing</div>
-                        </div>
-                        <button style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          border: '1px solid #E2E8F0',
-                          backgroundColor: 'white',
-                          fontSize: '0.8125rem',
-                          fontWeight: 500,
-                          cursor: 'pointer',
-                          color: '#4F46E5',
-                        }}>
-                          Submit
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              // Pipeline View
-              <div style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: '16px' }}>
-                  Candidate Pipeline
-                </h3>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(5, 1fr)',
-                  gap: '16px',
-                }}>
-                  {['submitted', 'screening', 'interview', 'offer', 'placed'].map((stage) => (
-                    <div key={stage} style={{
-                      backgroundColor: '#F8FAFC',
-                      borderRadius: '8px',
-                      padding: '12px',
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '12px',
-                        paddingBottom: '12px',
-                        borderBottom: '1px solid #E2E8F0',
-                      }}>
-                        <StatusBadge status={stage} size="small" />
-                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>
-                          {MOCK_PIPELINE.filter(c => c.stage === stage).length}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {MOCK_PIPELINE.filter(c => c.stage === stage).map((candidate) => (
-                          <div key={candidate.id} style={{
-                            backgroundColor: 'white',
-                            borderRadius: '6px',
-                            padding: '12px',
-                            border: '1px solid #E2E8F0',
-                          }}>
-                            <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0F172A', marginBottom: '4px' }}>
-                              {candidate.name}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '8px' }}>
-                              {candidate.role}
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{
-                                backgroundColor: '#EEF2FF',
-                                color: '#4F46E5',
-                                padding: '2px 8px',
-                                borderRadius: '4px',
-                                fontSize: '0.6875rem',
-                                fontWeight: 600,
-                              }}>
-                                Score: {candidate.score}
-                              </span>
-                              <span style={{ fontSize: '0.6875rem', color: '#94A3B8' }}>
-                                {candidate.lastUpdate}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         )}
       </main>
 
-      {/* Add Client Modal */}
-      {showAddClient && (
+      {/* Add/Edit Modal */}
+      {showModal && (
         <div style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          inset: 0,
           backgroundColor: 'rgba(0,0,0,0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          padding: '20px',
           zIndex: 1000,
-        }} onClick={() => setShowAddClient(false)}>
+        }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: '#ffffff',
             borderRadius: '16px',
-            padding: '32px',
             width: '100%',
             maxWidth: '560px',
             maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
-          }} onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', marginBottom: '24px' }}>
-              Add New Client
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+            overflow: 'auto',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '20px 24px',
+              borderBottom: '1px solid #e2e8f0',
+            }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
+                {editingClient ? 'Edit Client' : 'Add New Client'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingClient(null);
+                  resetForm();
+                }}
+                style={{
+                  padding: '8px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                }}
+              >
+                {Icons.close}
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
                     Company Name *
                   </label>
-                  <input type="text" placeholder="e.g., Standard Bank" style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                    fontSize: '0.9375rem',
-                    boxSizing: 'border-box',
-                  }}/>
+                  <input
+                    type="text"
+                    value={formData.company_name}
+                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder="e.g., Acme Corporation"
+                  />
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                    Industry
-                  </label>
-                  <select style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                    fontSize: '0.9375rem',
-                    boxSizing: 'border-box',
-                    backgroundColor: 'white',
-                  }}>
-                    <option>Banking</option>
-                    <option>Insurance</option>
-                    <option>Real Estate</option>
-                    <option>Retail</option>
-                    <option>Technology</option>
-                    <option>Healthcare</option>
-                    <option>Manufacturing</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                    Commission Rate (%)
-                  </label>
-                  <input type="number" placeholder="e.g., 15" defaultValue={15} style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                    fontSize: '0.9375rem',
-                    boxSizing: 'border-box',
-                  }}/>
-                </div>
-              </div>
-              <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '20px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: '12px' }}>Primary Contact</h3>
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                      Contact Name *
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Contact Name
                     </label>
-                    <input type="text" placeholder="e.g., Sarah Johnson" style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid #E2E8F0',
-                      fontSize: '0.9375rem',
-                      boxSizing: 'border-box',
-                    }}/>
+                    <input
+                      type="text"
+                      value={formData.contact_name}
+                      onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., John Smith"
+                    />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                      Job Title
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Contact Email
                     </label>
-                    <input type="text" placeholder="e.g., HR Director" style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid #E2E8F0',
-                      fontSize: '0.9375rem',
-                      boxSizing: 'border-box',
-                    }}/>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                      Email *
-                    </label>
-                    <input type="email" placeholder="e.g., sarah@company.com" style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid #E2E8F0',
-                      fontSize: '0.9375rem',
-                      boxSizing: 'border-box',
-                    }}/>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                      Phone
-                    </label>
-                    <input type="tel" placeholder="e.g., +27 11 234 5678" style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid #E2E8F0',
-                      fontSize: '0.9375rem',
-                      boxSizing: 'border-box',
-                    }}/>
+                    <input
+                      type="email"
+                      value={formData.contact_email}
+                      onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., john@acme.com"
+                    />
                   </div>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.contact_phone}
+                      onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., 021 123 4567"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Industry
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.industry}
+                      onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., Technology"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Contract Type
+                    </label>
+                    <select
+                      value={formData.contract_type}
+                      onChange={(e) => setFormData({ ...formData, contract_type: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <option value="contingency">Contingency</option>
+                      <option value="retained">Retained</option>
+                      <option value="exclusive">Exclusive</option>
+                      <option value="contract">Contract</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Fee Percentage
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.fee_percentage}
+                      onChange={(e) => setFormData({ ...formData, fee_percentage: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                      max="100"
+                      step="0.5"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <option value="active">Active</option>
+                      <option value="paused">Paused</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                    Notes
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                      boxSizing: 'border-box',
+                      resize: 'vertical',
+                    }}
+                    placeholder="Any additional notes about this client..."
+                  />
+                </div>
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                  Notes
-                </label>
-                <textarea placeholder="Any additional notes about this client..." rows={3} style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  fontSize: '0.9375rem',
-                  boxSizing: 'border-box',
-                  resize: 'vertical',
-                }}/>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingClient(null);
+                    resetForm();
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: '#f1f5f9',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    color: '#475569',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: '#4F46E5',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: '#ffffff',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    opacity: saving ? 0.7 : 1,
+                  }}
+                >
+                  {saving ? 'Saving...' : editingClient ? 'Update Client' : 'Add Client'}
+                </button>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button onClick={() => setShowAddClient(false)} style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #E2E8F0',
-                backgroundColor: 'white',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}>
-                Cancel
-              </button>
-              <button style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#4F46E5',
-                color: 'white',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}>
-                Add Client
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

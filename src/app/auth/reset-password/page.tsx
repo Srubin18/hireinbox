@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 
 // ============================================
@@ -106,7 +107,7 @@ function ResetPasswordContent() {
         flexDirection: 'column'
       }}>
         <header style={{ padding: '20px 32px', borderBottom: '1px solid #f1f5f9' }}>
-          <a href="/" style={{ textDecoration: 'none' }}><Logo /></a>
+          <Link href="/" style={{ textDecoration: 'none' }}><Logo /></Link>
         </header>
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 420, textAlign: 'center' }}>
@@ -142,7 +143,7 @@ function ResetPasswordContent() {
         flexDirection: 'column'
       }}>
         <header style={{ padding: '20px 32px', borderBottom: '1px solid #f1f5f9' }}>
-          <a href="/" style={{ textDecoration: 'none' }}><Logo /></a>
+          <Link href="/" style={{ textDecoration: 'none' }}><Logo /></Link>
         </header>
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
           <div style={{ width: '100%', maxWidth: 420, textAlign: 'center' }}>
@@ -163,7 +164,7 @@ function ResetPasswordContent() {
                 We sent a password reset link to <strong>{email}</strong>.
                 Click the link in the email to reset your password.
               </p>
-              <a
+              <Link
                 href="/login"
                 style={{
                   display: 'inline-block',
@@ -177,7 +178,7 @@ function ResetPasswordContent() {
                 }}
               >
                 Back to Login
-              </a>
+              </Link>
             </div>
           </div>
         </main>
@@ -200,7 +201,7 @@ function ResetPasswordContent() {
 
       {/* Header */}
       <header style={{ padding: '20px 32px', borderBottom: '1px solid #f1f5f9' }}>
-        <a href="/" style={{ textDecoration: 'none' }}><Logo /></a>
+        <Link href="/" style={{ textDecoration: 'none' }}><Logo /></Link>
       </header>
 
       {/* Main Content */}
@@ -406,7 +407,7 @@ function ResetPasswordContent() {
                 )}
               </button>
 
-              <a
+              <Link
                 href="/login"
                 style={{
                   display: 'block',
@@ -417,7 +418,7 @@ function ResetPasswordContent() {
                 }}
               >
                 Back to login
-              </a>
+              </Link>
             </form>
           )}
 

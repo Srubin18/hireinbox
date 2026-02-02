@@ -1,0 +1,36 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hyred Logo - Workspace Standards Compliant -->
+  <!-- Canvas: 1024×1024 -->
+  <!-- Background: Transparent -->
+  <!-- Icon size: 67.5% of canvas (691px) -->
+  <!-- Padding: 16.25% on all sides (166px) -->
+  <!-- Corners: Square, not rounded -->
+
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5B54E8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main icon centered with 166px padding (691×691 content area = 67.5% of 1024) -->
+
+  <!-- Square background box (NO rounded corners) -->
+  <rect x="166" y="166" width="691" height="691" fill="url(#bgGradient)"/>
+
+  <!-- Inbox bottom part -->
+  <path d="M296 395L512 523L728 395V696C728 715 713 730 694 730H330C311 730 296 715 296 696V395Z"
+        fill="white" fill-opacity="0.95"/>
+
+  <!-- Inbox top/flap -->
+  <path d="M694 319H330C311 319 296 334 296 353V395L512 523L728 395V353C728 334 713 319 694 319Z"
+        fill="white"/>
+
+  <!-- Green checkmark badge (scaled proportionally) -->
+  <circle cx="728" cy="296" r="173" fill="#10B981"/>
+  <path d="M662 296L707 341L794 254"
+        stroke="white"
+        stroke-width="48"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

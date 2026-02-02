@@ -10,15 +10,16 @@ import { createServerClient, CookieOptions } from '@supabase/ssr';
 // ===== CONFIGURATION =====
 
 // Public routes that don't require authentication
+// IMPORTANT: Only homepage and auth pages are public. All other pages require sign-in.
 const PUBLIC_ROUTES = [
-  '/upload',           // B2C CV upload (public)
+  '/',                 // Homepage ONLY (public landing with Sign In button)
   '/login',            // Auth pages
   '/signup',
   '/auth/callback',
   '/auth/reset-password',
-  '/api/analyze-cv',   // B2C API (public)
-  '/api/analyze-video', // B2C API (public)
-  '/api/rewrite-cv',   // B2C API (public)
+  '/about',            // Legal/info pages (accessible from homepage footer)
+  '/terms',            // Legal
+  '/privacy',          // Legal
 ];
 
 // Static files and API routes that should always pass through
@@ -27,6 +28,8 @@ const EXCLUDED_PATTERNS = [
   '/favicon.ico',
   '/icon.svg',
   '/api/health',
+  '/api/whatsapp',  // WhatsApp webhook (360dialog) - needs to bypass security
+  '/api/pilot',     // Pilot routes - authenticated via Bearer token
 ];
 
 // Rate limit configurations
@@ -47,8 +50,8 @@ const BOT_USER_AGENTS = [
   'node-fetch', 'request/', 'superagent', 'aiohttp', 'httpx',
 ];
 
-// Legitimate bots to allow (search engines, Vercel)
-const ALLOWED_BOTS = ['googlebot', 'bingbot', 'vercel', 'uptimerobot', 'pingdom'];
+// Legitimate bots to allow (search engines, Vercel, WhatsApp)
+const ALLOWED_BOTS = ['googlebot', 'bingbot', 'vercel', 'uptimerobot', 'pingdom', '360dialog', 'facebookexternalua', 'meta', 'whatsapp'];
 
 // Suspicious patterns in requests (potential attacks)
 const SUSPICIOUS_PATTERNS = [
@@ -70,7 +73,49 @@ const SECURITY_HEADERS: Record<string, string> = {
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(self), microphone=(self), geolocation=(), payment=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://api.anthropic.com;",
 };
+
+// CORS Configuration
+const CORS_CONFIG = {
+  allowedOrigins: [
+    'https://hireinbox.co.za',
+    'https://www.hireinbox.co.za',
+    'https://hireinbox.vercel.app',
+    // Development origins
+    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://127.0.0.1:3000'] : []),
+  ],
+  allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Feedback-Token'],
+  exposedHeaders: ['X-RateLimit-Remaining', 'X-RateLimit-Reset', 'Retry-After'],
+  maxAge: 86400, // 24 hours
+  credentials: true,
+};
+
+/**
+ * Get CORS headers for a request
+ */
+function getCorsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin') || '';
+  const isAllowedOrigin = CORS_CONFIG.allowedOrigins.includes(origin) ||
+    CORS_CONFIG.allowedOrigins.some(allowed => origin.endsWith(allowed.replace('https://', '')));
+
+  // For same-origin requests or allowed origins
+  if (!origin || isAllowedOrigin) {
+    return {
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : CORS_CONFIG.allowedOrigins[0],
+      'Access-Control-Allow-Methods': CORS_CONFIG.allowedMethods.join(', '),
+      'Access-Control-Allow-Headers': CORS_CONFIG.allowedHeaders.join(', '),
+      'Access-Control-Expose-Headers': CORS_CONFIG.exposedHeaders.join(', '),
+      'Access-Control-Max-Age': CORS_CONFIG.maxAge.toString(),
+      'Access-Control-Allow-Credentials': 'true',
+    };
+  }
+
+  // For disallowed origins, don't include Access-Control-Allow-Origin
+  return {};
+}
 
 // ===== IN-MEMORY STORES =====
 // Note: For multi-instance deployments, use Redis instead
@@ -333,6 +378,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Get CORS headers for this request
+  const corsHeaders = getCorsHeaders(request);
+
+  // Handle CORS preflight requests (OPTIONS)
+  if (method === 'OPTIONS' && pathname.startsWith('/api/')) {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        ...corsHeaders,
+        ...SECURITY_HEADERS,
+      },
+    });
+  }
+
   // ===== SECURITY CHECKS (run on all requests) =====
 
   // 1. Check for suspicious patterns (potential attacks)
@@ -353,6 +412,7 @@ export async function middleware(request: NextRequest) {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
+          ...corsHeaders,
           ...SECURITY_HEADERS,
         },
       }
@@ -375,6 +435,7 @@ export async function middleware(request: NextRequest) {
         status: 403,
         headers: {
           'Content-Type': 'application/json',
+          ...corsHeaders,
           ...SECURITY_HEADERS,
         },
       }
@@ -427,6 +488,7 @@ export async function middleware(request: NextRequest) {
             'Retry-After': retryAfter.toString(),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': Math.ceil(Date.now() / 1000 + retryAfter).toString(),
+            ...corsHeaders,
             ...SECURITY_HEADERS,
           },
         }
@@ -452,6 +514,7 @@ export async function middleware(request: NextRequest) {
             status: 429,
             headers: {
               'Content-Type': 'application/json',
+              ...corsHeaders,
               ...SECURITY_HEADERS,
             },
           }
@@ -463,10 +526,21 @@ export async function middleware(request: NextRequest) {
   // ===== AUTH CHECK FOR PROTECTED ROUTES =====
 
   // Skip auth for public routes
-  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+  // Handle exact match for '/' and startsWith for other routes
+  const isPublicRoute = PUBLIC_ROUTES.some(route => {
+    if (route === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(route);
+  });
+
+  if (isPublicRoute) {
     const response = NextResponse.next();
-    // Add security headers
+    // Add security and CORS headers
     for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
+      response.headers.set(header, value);
+    }
+    for (const [header, value] of Object.entries(corsHeaders)) {
       response.headers.set(header, value);
     }
     return response;
@@ -477,8 +551,11 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  // Add security headers
+  // Add security and CORS headers
   for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(header, value);
+  }
+  for (const [header, value] of Object.entries(corsHeaders)) {
     response.headers.set(header, value);
   }
 
@@ -498,8 +575,11 @@ export async function middleware(request: NextRequest) {
           response = NextResponse.next({
             request: { headers: request.headers },
           });
-          // Re-add security headers after creating new response
+          // Re-add security and CORS headers after creating new response
           for (const [header, value] of Object.entries(SECURITY_HEADERS)) {
+            response.headers.set(header, value);
+          }
+          for (const [header, value] of Object.entries(corsHeaders)) {
             response.headers.set(header, value);
           }
           cookiesToSet.forEach(({ name, value, options }) => {
@@ -513,16 +593,32 @@ export async function middleware(request: NextRequest) {
   // Refresh session if it exists
   const { data: { session } } = await supabase.auth.getSession();
 
-  // If no session and trying to access protected route (B2B dashboard = /)
-  if (!session && pathname === '/') {
+  // If session exists and trying to access auth pages, redirect to dashboard
+  if (session && (pathname === '/login' || pathname === '/signup')) {
+    return NextResponse.redirect(new URL('/hire/dashboard', request.url));
+  }
+
+  // CRITICAL: Redirect to login if no session on protected routes
+  if (!session) {
+    // For API routes, return 401 Unauthorized
+    if (pathname.startsWith('/api/')) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Authentication required' }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+            ...SECURITY_HEADERS,
+          },
+        }
+      );
+    }
+
+    // For page routes, redirect to login with return URL
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // If session exists and trying to access auth pages, redirect to dashboard
-  if (session && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return response;

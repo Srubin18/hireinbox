@@ -1,5 +1,8 @@
 {
   "functions": {
+    "src/app/api/talent-mapping/route.ts": {
+      "maxDuration": 300
+    },
     "src/app/api/analyze-video/route.ts": {
       "maxDuration": 120
     },
@@ -8,6 +11,18 @@
     },
     "src/app/api/fetch-emails/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/automation/run/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/whatsapp/webhook/route.ts": {
+      "maxDuration": 90
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/automation/run",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }

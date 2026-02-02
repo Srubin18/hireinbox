@@ -119,7 +119,7 @@ export default function DashboardPage() {
             color: '#0f172a',
             marginBottom: 8
           }}>
-            Welcome to HireInbox
+            Welcome to Hyred
           </h1>
           <p style={{
             fontSize: '1rem',
@@ -160,7 +160,10 @@ export default function DashboardPage() {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>📧</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginBottom: 8 }}>
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
               <div style={{ fontWeight: 600 }}>Connect Email</div>
               <div style={{ fontSize: '0.8rem', opacity: 0.9, marginTop: 4 }}>Link your inbox to auto-screen CVs</div>
             </button>
@@ -188,7 +191,10 @@ export default function DashboardPage() {
                 e.currentTarget.style.backgroundColor = 'white';
               }}
             >
-              <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>💼</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginBottom: 8 }}>
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
               <div style={{ fontWeight: 600 }}>Create Role</div>
               <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: 4, color: '#64748b' }}>Define requirements for positions</div>
             </button>
@@ -236,7 +242,10 @@ export default function DashboardPage() {
               padding: '40px 24px',
               color: '#94a3b8'
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: 12 }}>📭</div>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" style={{ marginBottom: 12 }}>
+                <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+              </svg>
               <p style={{ fontSize: '0.875rem', marginBottom: 16 }}>No candidates yet</p>
               <p style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
                 Connect your email or manually upload CVs to get started
@@ -266,7 +275,7 @@ export default function DashboardPage() {
             color: '#64748b',
             marginBottom: 16
           }}>
-            Generate a link to share with job seekers so they can get instant CV feedback from HireInbox's AI
+            Generate a link to share with job seekers so they can get instant CV feedback from Hyred's AI
           </p>
           <button
             onClick={() => router.push('/upload')}

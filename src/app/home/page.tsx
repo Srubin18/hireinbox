@@ -20,7 +20,7 @@ const Logo = () => (
     </svg>
     <div>
       <div style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-        <span style={{ color: '#0f172a' }}>Hire</span><span style={{ color: '#4F46E5' }}>Inbox</span>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
       </div>
       <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Less noise. Better hires.</div>
     </div>
@@ -38,23 +38,57 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', overflowX: 'hidden' }}>
+      {/* Mobile-First Responsive Styles */}
+      <style>{`
+        html, body { overflow-x: hidden; }
+        .hero-title { font-size: 56px; }
+        .hero-section { padding: 80px 32px; }
+        .section-title { font-size: 36px; margin-bottom: 64px; }
+        .section-padding { padding: 80px 32px; }
+        .header-padding { padding: 20px 32px; }
+        .feature-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        .pricing-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        .footer-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+        @media (max-width: 768px) {
+          .hero-title { font-size: 32px !important; }
+          .hero-section { padding: 40px 20px !important; }
+          .section-title { font-size: 24px !important; margin-bottom: 32px !important; }
+          .section-padding { padding: 40px 16px !important; }
+          .header-padding { padding: 16px !important; }
+          .feature-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .footer-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
+          .hero-buttons { flex-direction: column !important; width: 100%; }
+          .hero-buttons button { width: 100% !important; }
+          .feature-card { padding: 20px !important; }
+          .pricing-card { padding: 24px !important; }
+        }
+
+        @media (max-width: 480px) {
+          .hero-title { font-size: 28px !important; line-height: 1.3 !important; }
+          .hero-subtitle { font-size: 16px !important; }
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
       {/* Header */}
-      <header style={{ padding: '20px 32px', borderBottom: '1px solid #f1f5f9' }}>
+      <header className="header-padding" style={{ borderBottom: '1px solid #f1f5f9' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <Logo />
         </div>
       </header>
 
       {/* Hero */}
-      <section style={{ maxWidth: '1000px', margin: '0 auto', padding: '80px 32px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '56px', fontWeight: 700, margin: '0 0 24px', lineHeight: 1.2, color: '#0f172a' }}>
+      <section className="hero-section" style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
+        <h1 className="hero-title" style={{ fontWeight: 700, margin: '0 0 24px', lineHeight: 1.2, color: '#0f172a' }}>
           Screen CVs in seconds.<br/>Hire the right people.
         </h1>
-        <p style={{ fontSize: '18px', color: '#475569', margin: '0 0 48px', lineHeight: 1.6 }}>
-          HireInbox uses explainable AI to screen candidates with evidence. No more guessing. No more bias. Just better hires.
+        <p className="hero-subtitle" style={{ fontSize: '18px', color: '#475569', margin: '0 0 48px', lineHeight: 1.6 }}>
+          Hyred uses explainable AI to screen candidates with evidence. No more guessing. No more bias. Just better hires.
         </p>
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="hero-buttons" style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => router.push('/signup?type=employer')}
             style={{
@@ -95,13 +129,13 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section style={{ backgroundColor: '#f9fafb', padding: '80px 32px' }}>
+      <section className="section-padding" style={{ backgroundColor: '#f9fafb' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '36px', fontWeight: 700, textAlign: 'center', marginBottom: '64px', color: '#0f172a' }}>
-            Why HireInbox?
+          <h2 className="section-title" style={{ fontWeight: 700, textAlign: 'center', color: '#0f172a' }}>
+            Why Hyred?
           </h2>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+
+          <div className="feature-grid" style={{ display: 'grid', gap: '32px' }}>
             {[
               {
                 title: 'Evidence-Based',
@@ -128,7 +162,7 @@ export default function HomePage() {
                 description: 'No bloat. Works in your email. No new system to learn. Just better hiring.'
               }
             ].map((feature, i) => (
-              <div key={i} style={{ padding: '32px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+              <div key={i} className="feature-card" style={{ padding: '32px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '12px', color: '#0f172a' }}>{feature.title}</h3>
                 <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.6, margin: 0 }}>{feature.description}</p>
               </div>
@@ -138,20 +172,22 @@ export default function HomePage() {
       </section>
 
       {/* Pricing */}
-      <section style={{ padding: '80px 32px' }}>
+      <section className="section-padding">
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '36px', fontWeight: 700, textAlign: 'center', marginBottom: '64px', color: '#0f172a' }}>
+          <h2 className="section-title" style={{ fontWeight: 700, textAlign: 'center', color: '#0f172a' }}>
             Simple pricing
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          <div className="pricing-grid" style={{ display: 'grid', gap: '24px' }}>
+            {/* Per-Role Pricing Model (Jan 2026) */}
             {[
-              { name: 'Starter', price: 'R399', period: '/month', cvs: 'Up to 50 CVs', emoji: '👤' },
-              { name: 'Growth', price: 'R1,999', period: '/month', cvs: 'Up to 250 CVs', emoji: '👥', popular: true },
-              { name: 'Business', price: 'R4,999', period: '/month', cvs: 'Unlimited', emoji: '🚀' }
+              { name: 'AI CV Screening', price: 'R1,750', period: '/role', cvs: 'Unlimited CVs', emoji: '📋', popular: true },
+              { name: '+ AI Interview', price: 'R1,250', period: '/role', cvs: 'Avatar interviews', emoji: '🎥' },
+              { name: '+ Verification', price: 'R800', period: '/role', cvs: 'ID, credit, refs', emoji: '✓' }
             ].map((plan, i) => (
               <div
                 key={i}
+                className="pricing-card"
                 style={{
                   padding: '32px',
                   backgroundColor: plan.popular ? '#4F46E5' : '#ffffff',
@@ -192,13 +228,46 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid #f1f5f9', padding: '40px 32px', backgroundColor: '#f9fafb' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-          <p style={{ margin: '0 0 16px' }}>HireInbox • 2025 • Built for South African SMEs</p>
-          <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', fontSize: '13px' }}>
-            <a href="/terms" style={{ color: '#4F46E5', textDecoration: 'none' }}>Terms</a>
-            <a href="/privacy" style={{ color: '#4F46E5', textDecoration: 'none' }}>Privacy</a>
-            <a href="mailto:hello@hireinbox.co.za" style={{ color: '#4F46E5', textDecoration: 'none' }}>Contact</a>
+      <footer className="section-padding" style={{ borderTop: '1px solid #f1f5f9', backgroundColor: '#f9fafb' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div className="footer-grid" style={{ display: 'grid', gap: '32px', marginBottom: '32px' }}>
+            {/* Company */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Company</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/about" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>About Us</a>
+                <a href="/faq" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>FAQ</a>
+                <a href="mailto:hello@hireinbox.co.za" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Contact</a>
+              </div>
+            </div>
+            {/* Product */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Product</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/hire" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>For Employers</a>
+                <a href="/candidates" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>For Job Seekers</a>
+                <a href="/pricing" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Pricing</a>
+              </div>
+            </div>
+            {/* Legal */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Legal</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/terms" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Terms of Service</a>
+                <a href="/privacy" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Privacy Policy</a>
+              </div>
+            </div>
+            {/* Account */}
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginBottom: '16px' }}>Account</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <a href="/login" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Log In</a>
+                <a href="/signup" style={{ color: '#64748b', textDecoration: 'none', fontSize: '14px' }}>Create Account</a>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+            Hyred · 2026 · Built for South African SMEs
           </div>
         </div>
       </footer>

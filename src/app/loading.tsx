@@ -55,7 +55,7 @@ export default function Loading() {
               margin: 0,
             }}
           >
-            HireInbox is preparing your experience
+            Hyred is preparing your experience
           </p>
         </div>
 

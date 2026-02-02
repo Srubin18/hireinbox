@@ -1,0 +1,33 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Enhanced larger version with better quality -->
+
+  <!-- Main inbox icon background with subtle gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5B54E8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="1024" height="1024" rx="256" fill="url(#bgGradient)" filter="url(#shadow)"/>
+
+  <!-- Inbox bottom part (larger scale) -->
+  <path d="M256 384L512 555.2L768 384V682.7C768 707.1 748.1 726.9 723.7 726.9H300.3C275.9 726.9 256 707.1 256 682.7V384Z"
+        fill="white" fill-opacity="0.95"/>
+
+  <!-- Inbox top/flap (larger scale) -->
+  <path d="M723.7 298.7H300.3C275.9 298.7 256 318.5 256 342.9V384L512 555.2L768 384V342.9C768 318.5 748.1 298.7 723.7 298.7Z"
+        fill="white"/>
+
+  <!-- Green checkmark badge (larger and enhanced) -->
+  <circle cx="768" cy="256" r="192" fill="#10B981" filter="url(#shadow)"/>
+  <path d="M693.3 256L746.7 309.3L842.7 213.3"
+        stroke="white"
+        stroke-width="53"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

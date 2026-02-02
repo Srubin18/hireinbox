@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Download Hyred Logo - PNG 1024x1024</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            text-align: center;
+            padding: 48px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+        }
+        h1 {
+            color: #4F46E5;
+            margin-bottom: 12px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+        .specs {
+            background: #F8FAFC;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 24px 0;
+            text-align: left;
+        }
+        .specs h3 {
+            color: #1e293b;
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .specs ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .specs li {
+            padding: 8px 0;
+            color: #475569;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .specs li strong {
+            color: #1e293b;
+            min-width: 140px;
+        }
+        .checkmark {
+            color: #10B981;
+            font-weight: bold;
+        }
+        .preview-container {
+            background:
+                repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)
+                50% / 20px 20px;
+            padding: 40px;
+            border-radius: 12px;
+            margin: 24px 0;
+            border: 2px solid #e2e8f0;
+        }
+        #canvas {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            max-width: 100%;
+            height: auto;
+        }
+        .download-btn {
+            padding: 16px 48px;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            margin-top: 20px;
+        }
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+        }
+        .download-btn:active {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Hyred Logo Export</h1>
+        <p class="subtitle">Production-ready logo with recommended settings</p>
+
+        <div class="specs">
+            <h3>Export Specifications</h3>
+            <ul>
+                <li><strong>Format:</strong> <span class="checkmark">✓</span> PNG</li>
+                <li><strong>Size:</strong> <span class="checkmark">✓</span> 1024 × 1024</li>
+                <li><strong>Background:</strong> <span class="checkmark">✓</span> Transparent</li>
+                <li><strong>Padding:</strong> <span class="checkmark">✓</span> Yes (128px all sides)</li>
+                <li><strong>Rounded corners:</strong> <span class="checkmark">✓</span> No</li>
+            </ul>
+        </div>
+
+        <div class="preview-container">
+            <canvas id="canvas" width="1024" height="1024"></canvas>
+        </div>
+
+        <button class="download-btn" onclick="downloadPNG()">
+            ⬇️ Download PNG (1024×1024)
+        </button>
+
+        <p style="margin-top: 24px; color: #94a3b8; font-size: 13px;">
+            Transparent background • Perfect for app stores, websites & social media
+        </p>
+    </div>
+
+    <script>
+        const svgString = `<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#5B54E8;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <!-- Square background with NO rounded corners, centered with 128px padding -->
+            <rect x="128" y="128" width="768" height="768" fill="url(#bgGradient)"/>
+            <!-- Inbox bottom -->
+            <path d="M256 384L512 555.2L768 384V682.7C768 707.1 748.1 726.9 723.7 726.9H300.3C275.9 726.9 256 707.1 256 682.7V384Z" fill="white" fill-opacity="0.95"/>
+            <!-- Inbox top/flap -->
+            <path d="M723.7 298.7H300.3C275.9 298.7 256 318.5 256 342.9V384L512 555.2L768 384V342.9C768 318.5 748.1 298.7 723.7 298.7Z" fill="white"/>
+            <!-- Green checkmark badge -->
+            <circle cx="768" cy="256" r="192" fill="#10B981"/>
+            <path d="M693.3 256L746.7 309.3L842.7 213.3" stroke="white" stroke-width="53" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+
+        function renderCanvas() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Clear with transparent background
+            ctx.clearRect(0, 0, 1024, 1024);
+
+            const img = new Image();
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, 1024, 1024);
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        }
+
+        function downloadPNG() {
+            const canvas = document.getElementById('canvas');
+
+            // Export as PNG with transparency
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'hyred-logo-1024x1024.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // Visual feedback
+                const btn = document.querySelector('.download-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Downloaded!';
+                btn.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }, 'image/png', 1.0); // Maximum quality
+        }
+
+        // Render on load
+        renderCanvas();
+    </script>
+</body>
+</html>

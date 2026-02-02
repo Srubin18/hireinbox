@@ -3,10 +3,18 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useUsage, TIER_LIMITS } from '@/lib/usage-context';
+import { B2B_PRICING, B2C_PRICING, formatPrice } from '@/lib/pricing';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 /* ===========================================
    HIREINBOX PRICING PAGE
-   Clean, SA-focused pricing with PayFast
+   Per-Role Pricing Model (Jan 2026)
+
+   PHILOSOPHY:
+   - Hyred is an AI Hiring Utility, NOT a marketplace
+   - We charge PER ROLE, not per CV
+   - Employers don't control CV volume, so per-CV is unfair
+   - Per-role pricing is predictable and feels fair
    =========================================== */
 
 // Logo Component
@@ -24,7 +32,7 @@ const Logo = ({ size = 32 }: { size?: number }) => (
         <span style={{ color: '#0f172a' }}>Hire</span>
         <span style={{ color: '#4F46E5' }}>Inbox</span>
       </span>
-      <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500 }}>Less noise. Better hires.</span>
+      <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500 }}>AI that shows its working</span>
     </div>
   </a>
 );
@@ -108,9 +116,14 @@ function PricingContent() {
         </div>
       </header>
 
+      {/* Breadcrumbs */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+        <Breadcrumbs items={[{ label: 'Pricing' }]} />
+      </div>
+
       {/* Hero Section */}
       <section style={{
-        padding: '60px 24px 40px',
+        padding: '40px 24px 40px',
         textAlign: 'center',
         background: 'linear-gradient(180deg, #F8FAFC 0%, #ffffff 100%)'
       }}>
@@ -390,7 +403,7 @@ function PricingContent() {
           </div>
         </div>
 
-        {/* Section: Employers */}
+        {/* Section: Employers - Per Role Pricing */}
         <div>
           <h2 style={{
             fontSize: '1.5rem',
@@ -405,19 +418,27 @@ function PricingContent() {
             fontSize: '0.9375rem',
             color: '#64748B',
             textAlign: 'center',
+            marginBottom: '8px'
+          }}>
+            Pay per role, not per CV. Unlimited screening for each role.
+          </p>
+          <p style={{
+            fontSize: '0.8125rem',
+            color: '#94A3B8',
+            textAlign: 'center',
             marginBottom: '32px'
           }}>
-            Screen CVs in seconds with explainable AI
+            You cannot control how many CVs you receive - so we do not charge per CV.
           </p>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
-            maxWidth: '1000px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '20px',
+            maxWidth: '1200px',
             margin: '0 auto'
           }}>
-            {/* B2B Free */}
+            {/* Talent Pool Job Posting */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: '16px',
@@ -427,12 +448,22 @@ function PricingContent() {
               <div style={{
                 fontSize: '0.75rem',
                 fontWeight: 600,
+                color: '#10B981',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '8px'
+              }}>
+                Quick Hire
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
                 color: '#64748B',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 marginBottom: '8px'
               }}>
-                Free Trial
+                Post to Talent Pool
               </div>
               <div style={{
                 fontSize: '2.5rem',
@@ -440,65 +471,50 @@ function PricingContent() {
                 color: '#0F172A',
                 marginBottom: '4px'
               }}>
-                R0
+                R2,500
               </div>
               <div style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '24px' }}>
-                10 CV screenings
+                per job listing (30 days)
               </div>
 
-              {b2bInfo.remaining > 0 ? (
-                <a
-                  href="/"
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '14px',
-                    backgroundColor: '#F1F5F9',
-                    color: '#475569',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontSize: '0.9375rem',
-                    fontWeight: 600,
-                    textAlign: 'center',
-                    textDecoration: 'none',
-                    cursor: 'pointer',
-                    marginBottom: '24px'
-                  }}
-                >
-                  {b2bInfo.used === 0 ? 'Start Free' : `${b2bInfo.remaining} left`}
-                </a>
-              ) : (
-                <div style={{
+              <a
+                href="/talent-pool/post-job"
+                style={{
+                  display: 'block',
+                  width: '100%',
                   padding: '14px',
-                  backgroundColor: '#FEF2F2',
-                  color: '#991B1B',
+                  backgroundColor: '#F1F5F9',
+                  color: '#475569',
+                  border: 'none',
                   borderRadius: '10px',
-                  fontSize: '0.875rem',
+                  fontSize: '0.9375rem',
                   fontWeight: 600,
                   textAlign: 'center',
-                  marginBottom: '24px'
-                }}>
-                  Free tier used
-                </div>
-              )}
+                  textDecoration: 'none',
+                  marginBottom: '24px',
+                  cursor: 'pointer'
+                }}
+              >
+                Post a Job
+              </a>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> 10 AI CV screenings
+                  <CheckIcon /> AI matches candidates instantly
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Evidence-based scoring
+                  <CheckIcon /> Access pre-screened talent pool
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Inbox integration
+                  <CheckIcon /> SA qualification aware
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Role creation
+                  <CheckIcon /> Direct candidate contact
                 </li>
               </ul>
             </div>
 
-            {/* B2B Starter */}
+            {/* AI CV Screening - Base Product */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: '16px',
@@ -519,7 +535,7 @@ function PricingContent() {
                 fontSize: '0.75rem',
                 fontWeight: 600
               }}>
-                Most Popular
+                Base Product
               </div>
               <div style={{
                 fontSize: '0.75rem',
@@ -529,7 +545,7 @@ function PricingContent() {
                 letterSpacing: '0.05em',
                 marginBottom: '8px'
               }}>
-                Starter
+                AI CV Screening
               </div>
               <div style={{
                 fontSize: '2.5rem',
@@ -537,15 +553,15 @@ function PricingContent() {
                 color: '#0F172A',
                 marginBottom: '4px'
               }}>
-                R{billingCycle === 'annual' ? '239' : '299'}
+                {B2B_PRICING.CV_SCREENING.priceDisplay}
               </div>
               <div style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '24px' }}>
-                per month {billingCycle === 'annual' && <span style={{ color: '#10B981' }}>(billed annually)</span>}
+                per role (unlimited CVs)
               </div>
 
               <button
-                onClick={() => handleUpgrade('b2b-starter')}
-                disabled={isLoading === 'b2b-starter'}
+                onClick={() => handleUpgrade('b2b-cv-screening')}
+                disabled={isLoading === 'b2b-cv-screening'}
                 style={{
                   width: '100%',
                   padding: '14px',
@@ -555,35 +571,25 @@ function PricingContent() {
                   borderRadius: '10px',
                   fontSize: '0.9375rem',
                   fontWeight: 600,
-                  cursor: isLoading === 'b2b-starter' ? 'wait' : 'pointer',
+                  cursor: isLoading === 'b2b-cv-screening' ? 'wait' : 'pointer',
                   marginBottom: '24px',
-                  opacity: isLoading === 'b2b-starter' ? 0.7 : 1,
+                  opacity: isLoading === 'b2b-cv-screening' ? 0.7 : 1,
                   transition: 'all 0.2s'
                 }}
               >
-                {isLoading === 'b2b-starter' ? 'Processing...' : 'Get Started'}
+                {isLoading === 'b2b-cv-screening' ? 'Processing...' : 'Get Started'}
               </button>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> 100 CV screenings/month
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Unlimited roles
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Candidate notes & tags
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Bulk email scanning
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Priority support
-                </li>
+                {B2B_PRICING.CV_SCREENING.includes.map((item, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
+                    <CheckIcon /> {item}
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* B2B Pro */}
+            {/* AI Interview Add-On */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: '16px',
@@ -593,12 +599,22 @@ function PricingContent() {
               <div style={{
                 fontSize: '0.75rem',
                 fontWeight: 600,
+                color: '#10B981',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '8px'
+              }}>
+                Add-On
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
                 color: '#64748B',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 marginBottom: '8px'
               }}>
-                Pro
+                AI Interview
               </div>
               <div style={{
                 fontSize: '2.5rem',
@@ -606,15 +622,15 @@ function PricingContent() {
                 color: '#0F172A',
                 marginBottom: '4px'
               }}>
-                R{billingCycle === 'annual' ? '799' : '999'}
+                {B2B_PRICING.AI_INTERVIEW.priceDisplay}
               </div>
               <div style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '24px' }}>
-                per month {billingCycle === 'annual' && <span style={{ color: '#10B981' }}>(billed annually)</span>}
+                per role
               </div>
 
               <button
-                onClick={() => handleUpgrade('b2b-pro')}
-                disabled={isLoading === 'b2b-pro'}
+                onClick={() => handleUpgrade('b2b-ai-interview')}
+                disabled={isLoading === 'b2b-ai-interview'}
                 style={{
                   width: '100%',
                   padding: '14px',
@@ -624,36 +640,220 @@ function PricingContent() {
                   borderRadius: '10px',
                   fontSize: '0.9375rem',
                   fontWeight: 600,
-                  cursor: isLoading === 'b2b-pro' ? 'wait' : 'pointer',
+                  cursor: isLoading === 'b2b-ai-interview' ? 'wait' : 'pointer',
                   marginBottom: '24px',
-                  opacity: isLoading === 'b2b-pro' ? 0.7 : 1,
+                  opacity: isLoading === 'b2b-ai-interview' ? 0.7 : 1,
                   transition: 'all 0.2s'
                 }}
               >
-                {isLoading === 'b2b-pro' ? 'Processing...' : 'Get Started'}
+                {isLoading === 'b2b-ai-interview' ? 'Processing...' : 'Add to Role'}
               </button>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Unlimited CV screenings
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Everything in Starter
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Multiple team members
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Custom scoring criteria
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> API access
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
-                  <CheckIcon /> Dedicated support
-                </li>
+                {B2B_PRICING.AI_INTERVIEW.includes.map((item, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
+                    <CheckIcon /> {item}
+                  </li>
+                ))}
               </ul>
             </div>
+
+            {/* Verification Bundle Add-On */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              border: '1px solid #E5E7EB',
+              padding: '32px'
+            }}>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#10B981',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '8px'
+              }}>
+                Add-On
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#64748B',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '8px'
+              }}>
+                Verification Bundle
+              </div>
+              <div style={{
+                fontSize: '2.5rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                marginBottom: '4px'
+              }}>
+                {B2B_PRICING.VERIFICATION_BUNDLE.priceDisplay}
+              </div>
+              <div style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '24px' }}>
+                per role
+              </div>
+
+              <button
+                onClick={() => handleUpgrade('b2b-verification')}
+                disabled={isLoading === 'b2b-verification'}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  backgroundColor: '#F1F5F9',
+                  color: '#475569',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  cursor: isLoading === 'b2b-verification' ? 'wait' : 'pointer',
+                  marginBottom: '24px',
+                  opacity: isLoading === 'b2b-verification' ? 0.7 : 1,
+                  transition: 'all 0.2s'
+                }}
+              >
+                {isLoading === 'b2b-verification' ? 'Processing...' : 'Add to Role'}
+              </button>
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {B2B_PRICING.VERIFICATION_BUNDLE.includes.map((item, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem', color: '#334155' }}>
+                    <CheckIcon /> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Full Package Callout */}
+          <div style={{
+            maxWidth: '600px',
+            margin: '32px auto 0',
+            padding: '24px',
+            backgroundColor: '#F0FDF4',
+            borderRadius: '12px',
+            border: '1px solid #BBF7D0',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '0.875rem', color: '#166534', marginBottom: '8px' }}>
+              Best Value: Full Package
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>
+              {formatPrice(B2B_PRICING.CV_SCREENING.price + B2B_PRICING.AI_INTERVIEW.price + B2B_PRICING.VERIFICATION_BUNDLE.price)}/role
+            </div>
+            <div style={{ fontSize: '0.875rem', color: '#64748B' }}>
+              Screening + AI Interview + Verification Bundle
+            </div>
+            <button
+              onClick={() => handleUpgrade('b2b-full-package')}
+              disabled={isLoading === 'b2b-full-package'}
+              style={{
+                marginTop: '16px',
+                padding: '12px 32px',
+                backgroundColor: '#166534',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                cursor: isLoading === 'b2b-full-package' ? 'wait' : 'pointer',
+                opacity: isLoading === 'b2b-full-package' ? 0.7 : 1,
+                transition: 'all 0.2s'
+              }}
+            >
+              {isLoading === 'b2b-full-package' ? 'Processing...' : 'Get Full Package'}
+            </button>
+          </div>
+
+          {/* Bulk Discount Info */}
+          <div style={{
+            maxWidth: '600px',
+            margin: '24px auto 0',
+            padding: '16px 24px',
+            backgroundColor: '#F8FAFC',
+            borderRadius: '10px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '0.875rem', color: '#64748B' }}>
+              Hiring multiple roles? Get up to 20% off.
+              <a href="mailto:hello@hireinbox.co.za" style={{ color: '#4F46E5', marginLeft: '8px', textDecoration: 'none' }}>
+                Contact us for bulk pricing
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Comparison Table */}
+      <section style={{
+        padding: '60px 24px',
+        backgroundColor: '#ffffff'
+      }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <h2 style={{
+            fontSize: '1.75rem',
+            fontWeight: 700,
+            color: '#0F172A',
+            marginBottom: '12px',
+            textAlign: 'center'
+          }}>
+            Feature Comparison
+          </h2>
+          <p style={{
+            fontSize: '1rem',
+            color: '#64748B',
+            textAlign: 'center',
+            marginBottom: '32px'
+          }}>
+            See what's included in each plan
+          </p>
+
+          <div style={{
+            overflowX: 'auto',
+            borderRadius: '12px',
+            border: '1px solid #E5E7EB'
+          }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px'
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', fontWeight: 600, borderBottom: '1px solid #E5E7EB' }}>Feature</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600, borderBottom: '1px solid #E5E7EB' }}>Free</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600, borderBottom: '1px solid #E5E7EB', backgroundColor: '#EEF2FF' }}>Per-Role</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'center', fontWeight: 600, borderBottom: '1px solid #E5E7EB' }}>Enterprise</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { feature: 'AI CV Screening', free: '10 CVs', perRole: 'Unlimited', enterprise: 'Unlimited' },
+                  { feature: 'Candidate Ranking', free: '✓', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Evidence-based Scoring', free: '✓', perRole: '✓', enterprise: '✓' },
+                  { feature: 'ATS Compatibility Check', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Acknowledgement Emails', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Outcome Emails', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'AI Interview Add-on', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Verification Add-on', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Talent Pool Access', free: '—', perRole: '✓', enterprise: '✓' },
+                  { feature: 'Team Members', free: '1', perRole: '3', enterprise: 'Unlimited' },
+                  { feature: 'API Access', free: '—', perRole: '—', enterprise: '✓' },
+                  { feature: 'Priority Support', free: '—', perRole: '—', enterprise: '✓' },
+                  { feature: 'Custom Integrations', free: '—', perRole: '—', enterprise: '✓' },
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                    <td style={{ padding: '14px 20px', color: '#374151' }}>{row.feature}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', color: row.free === '—' ? '#9CA3AF' : '#374151' }}>{row.free}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', backgroundColor: '#FAFAFE', color: row.perRole === '—' ? '#9CA3AF' : '#374151', fontWeight: row.perRole !== '—' ? 500 : 400 }}>{row.perRole}</td>
+                    <td style={{ padding: '14px 20px', textAlign: 'center', color: row.enterprise === '—' ? '#9CA3AF' : '#374151' }}>{row.enterprise}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -678,7 +878,7 @@ function PricingContent() {
             {[
               {
                 q: 'How does the free trial work?',
-                a: 'Job seekers get 1 free CV analysis, and employers get 10 free CV screenings. No credit card required. Just sign up and start using HireInbox immediately.'
+                a: 'Job seekers get 1 free CV analysis, and employers get 10 free CV screenings. No credit card required. Just sign up and start using Hyred immediately.'
               },
               {
                 q: 'What payment methods do you accept?',
@@ -749,7 +949,7 @@ function PricingContent() {
             <a href="/privacy" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.875rem' }}>Privacy</a>
             <a href="/terms" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.875rem' }}>Terms</a>
             <span style={{ color: '#94A3B8', fontSize: '0.875rem' }}>
-              Made in Cape Town
+              Built in Cape Town, South Africa
             </span>
           </div>
         </div>

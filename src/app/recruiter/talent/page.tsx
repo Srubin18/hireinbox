@@ -1,438 +1,487 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
 
 // ============================================
-// B2Recruiter - Talent Pool
-// Cross-company candidate management
-// Talent Passports - shareable candidate profiles
-// Bulk operations and shortlisting
+// HIREINBOX B2Recruiter - TALENT PAGE
+// /recruiter/talent
+// Manage personal talent pool
 // ============================================
 
-// Types
-interface TalentCandidate {
+interface Talent {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  location: string;
-  currentTitle: string;
-  currentCompany: string;
-  yearsExperience: number;
-  salary: string;
-  noticePeriod: string;
-  availability: 'immediate' | '2_weeks' | '1_month' | '2_months' | '3_months';
+  phone: string | null;
+  current_title: string | null;
+  current_company: string | null;
   skills: string[];
-  qualifications: string[];
-  score: number;
-  source: string;
-  addedDate: string;
-  lastContact: string;
-  status: 'available' | 'interviewing' | 'placed' | 'unavailable';
-  notes: string;
-  submittedTo: { client: string; role: string; status: string }[];
+  experience_years: number | null;
+  location: string | null;
+  salary_expectation: number | null;
+  cv_url: string | null;
+  linkedin_url: string | null;
+  notes: string | null;
+  source: string | null;
+  status: 'available' | 'interviewing' | 'placed' | 'unavailable' | 'do_not_contact';
+  last_contacted_at: string | null;
+  created_at: string;
 }
 
-interface ShortlistItem {
-  candidateId: string;
-  clientId: string;
-  roleId: string;
-  addedAt: string;
-}
-
-// Mock data
-const MOCK_TALENT: TalentCandidate[] = [
-  {
-    id: '1',
-    name: 'Thabo Molefe',
-    email: 'thabo.molefe@gmail.com',
-    phone: '+27 82 123 4567',
-    location: 'Johannesburg',
-    currentTitle: 'Senior Financial Analyst',
-    currentCompany: 'Investec',
-    yearsExperience: 8,
-    salary: 'R750,000',
-    noticePeriod: '1 month',
-    availability: '1_month',
-    skills: ['Financial Modeling', 'Risk Analysis', 'SQL', 'Power BI', 'Python'],
-    qualifications: ['CA(SA)', 'CFA Level II', 'BCom Honours - Finance'],
-    score: 87,
-    source: 'LinkedIn',
-    addedDate: '2024-11-15',
-    lastContact: '2024-12-20',
-    status: 'available',
-    notes: 'Strong candidate, looking for senior role. Prefers hybrid work.',
-    submittedTo: [
-      { client: 'Standard Bank', role: 'Senior Analyst - Risk', status: 'interviewing' },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Sarah van der Berg',
-    email: 'sarah.vdb@outlook.com',
-    phone: '+27 83 987 6543',
-    location: 'Cape Town',
-    currentTitle: 'Property Manager',
-    currentCompany: 'Pam Golding',
-    yearsExperience: 12,
-    salary: 'R550,000',
-    noticePeriod: '2 weeks',
-    availability: '2_weeks',
-    skills: ['Property Management', 'Lease Negotiations', 'Tenant Relations', 'Budgeting', 'Maintenance Coordination'],
-    qualifications: ['NQF5 Real Estate', 'FETC Management'],
-    score: 92,
-    source: 'Referral',
-    addedDate: '2024-10-20',
-    lastContact: '2024-12-23',
-    status: 'interviewing',
-    notes: 'Excellent track record. Multiple offers expected.',
-    submittedTo: [
-      { client: 'Mafadi Property Group', role: 'Senior Property Manager', status: 'offer' },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Priya Naidoo',
-    email: 'priya.naidoo@gmail.com',
-    phone: '+27 84 555 1234',
-    location: 'Durban',
-    currentTitle: 'Data Analyst',
-    currentCompany: 'Vodacom',
-    yearsExperience: 4,
-    salary: 'R480,000',
-    noticePeriod: '1 month',
-    availability: '1_month',
-    skills: ['Data Analysis', 'Python', 'SQL', 'Tableau', 'Machine Learning', 'Statistics'],
-    qualifications: ['BSc Computer Science', 'Google Data Analytics Certificate'],
-    score: 78,
-    source: 'Job Board',
-    addedDate: '2024-12-10',
-    lastContact: '2024-12-24',
-    status: 'available',
-    notes: 'Relocating to JHB. Strong technical skills.',
-    submittedTo: [
-      { client: 'Discovery Health', role: 'Product Manager', status: 'submitted' },
-    ],
-  },
-  {
-    id: '4',
-    name: 'John Dlamini',
-    email: 'john.dlamini@yahoo.com',
-    phone: '+27 76 222 3333',
-    location: 'Pretoria',
-    currentTitle: 'Financial Controller',
-    currentCompany: 'TFG',
-    yearsExperience: 15,
-    salary: 'R950,000',
-    noticePeriod: '2 months',
-    availability: '2_months',
-    skills: ['Financial Reporting', 'IFRS', 'Management Accounting', 'Team Leadership', 'SAP'],
-    qualifications: ['CA(SA)', 'MBA', 'BCom Accounting'],
-    score: 85,
-    source: 'Database',
-    addedDate: '2024-09-01',
-    lastContact: '2024-12-15',
-    status: 'placed',
-    notes: 'Placed at Woolworths. Start date Jan 2025.',
-    submittedTo: [
-      { client: 'Woolworths Holdings', role: 'Financial Controller', status: 'placed' },
-    ],
-  },
-  {
-    id: '5',
-    name: 'Lisa Chen',
-    email: 'lisa.chen@proton.me',
-    phone: '+27 71 444 5555',
-    location: 'Johannesburg',
-    currentTitle: 'HR Business Partner',
-    currentCompany: 'Accenture',
-    yearsExperience: 6,
-    salary: 'R620,000',
-    noticePeriod: '1 month',
-    availability: '1_month',
-    skills: ['HRBP', 'Talent Management', 'Employee Relations', 'Change Management', 'HRIS'],
-    qualifications: ['BCom HR Management', 'SABPP Registered'],
-    score: 81,
-    source: 'LinkedIn',
-    addedDate: '2024-11-28',
-    lastContact: '2024-12-22',
-    status: 'available',
-    notes: 'Seeking leadership role. Open to relocation.',
-    submittedTo: [
-      { client: 'Standard Bank', role: 'HR Manager', status: 'rejected' },
-    ],
-  },
-  {
-    id: '6',
-    name: 'Michael Botha',
-    email: 'mbotha@gmail.com',
-    phone: '+27 82 777 8888',
-    location: 'Cape Town',
-    currentTitle: 'Software Engineer',
-    currentCompany: 'Takealot',
-    yearsExperience: 5,
-    salary: 'R720,000',
-    noticePeriod: '1 month',
-    availability: '1_month',
-    skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'AWS', 'PostgreSQL'],
-    qualifications: ['BSc Computer Science', 'AWS Certified Developer'],
-    score: 89,
-    source: 'GitHub',
-    addedDate: '2024-12-01',
-    lastContact: '2024-12-24',
-    status: 'available',
-    notes: 'Strong full-stack developer. Multiple companies interested.',
-    submittedTo: [],
-  },
-];
-
-// Logo Component
-const Logo = ({ size = 36 }: { size?: number }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+const Logo = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
       <rect width="48" height="48" rx="12" fill="#4F46E5"/>
       <path d="M12 18L24 26L36 18V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V18Z" fill="white" fillOpacity="0.9"/>
       <path d="M34 14H14C12.9 14 12 14.9 12 16V18L24 26L36 18V16C36 14.9 35.1 14 34 14Z" fill="white"/>
       <circle cx="36" cy="12" r="9" fill="#10B981"/>
       <path d="M32.5 12L35 14.5L39.5 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-        <span style={{ color: '#0f172a' }}>Hire</span>
-        <span style={{ color: '#4F46E5' }}>Inbox</span>
-      </span>
-      <span style={{ fontSize: '0.65rem', color: '#F59E0B', fontWeight: 600, letterSpacing: '0.05em' }}>
-        RECRUITER PRO
-      </span>
+    <div>
+      <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+        <span style={{ color: '#4F46E5' }}>Hyred</span>
+        <span style={{ color: '#64748b', fontWeight: 500, fontSize: '14px', marginLeft: '8px' }}>Recruiter</span>
+      </div>
     </div>
   </div>
 );
 
-// Status Badge Component
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, { bg: string; text: string }> = {
-    available: { bg: '#D1FAE5', text: '#065F46' },
-    interviewing: { bg: '#FEF3C7', text: '#92400E' },
-    placed: { bg: '#DBEAFE', text: '#1E40AF' },
-    unavailable: { bg: '#F1F5F9', text: '#64748B' },
-  };
-  const style = styles[status] || styles.unavailable;
-  return (
-    <span style={{
-      padding: '4px 12px',
-      borderRadius: '12px',
-      fontSize: '0.75rem',
-      fontWeight: 600,
-      backgroundColor: style.bg,
-      color: style.text,
-      textTransform: 'capitalize',
-    }}>
-      {status.replace('_', ' ')}
-    </span>
-  );
+const Icons = {
+  plus: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  ),
+  edit: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  ),
+  trash: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>
+  ),
+  close: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
+  search: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="M21 21l-4.35-4.35"/>
+    </svg>
+  ),
+  user: (
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  ),
 };
 
-// Availability Badge
-const AvailabilityBadge = ({ availability }: { availability: string }) => {
-  const labels: Record<string, string> = {
-    immediate: 'Immediate',
-    '2_weeks': '2 Weeks',
-    '1_month': '1 Month',
-    '2_months': '2 Months',
-    '3_months': '3+ Months',
-  };
-  return (
-    <span style={{
-      padding: '2px 8px',
-      borderRadius: '4px',
-      fontSize: '0.6875rem',
-      fontWeight: 500,
-      backgroundColor: availability === 'immediate' ? '#ECFDF5' : '#F1F5F9',
-      color: availability === 'immediate' ? '#059669' : '#64748B',
-    }}>
-      {labels[availability] || availability}
-    </span>
-  );
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  available: { bg: '#DCFCE7', text: '#16A34A' },
+  interviewing: { bg: '#DBEAFE', text: '#2563EB' },
+  placed: { bg: '#E9D5FF', text: '#7C3AED' },
+  unavailable: { bg: '#FEF3C7', text: '#D97706' },
+  do_not_contact: { bg: '#FEE2E2', text: '#DC2626' },
 };
 
-export default function TalentPoolPage() {
-  const [talent, setTalent] = useState<TalentCandidate[]>(MOCK_TALENT);
-  const [selectedTalent, setSelectedTalent] = useState<TalentCandidate | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [locationFilter, setLocationFilter] = useState<string>('all');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [showPassport, setShowPassport] = useState(false);
-  const [showShortlistModal, setShowShortlistModal] = useState(false);
+const STATUS_LABELS: Record<string, string> = {
+  available: 'Available',
+  interviewing: 'Interviewing',
+  placed: 'Placed',
+  unavailable: 'Unavailable',
+  do_not_contact: 'Do Not Contact',
+};
 
-  // Filter talent
-  const filteredTalent = talent.filter(t => {
-    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
-    const matchesLocation = locationFilter === 'all' || t.location === locationFilter;
-    const matchesSearch =
-      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.currentTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      t.qualifications.some(q => q.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesStatus && matchesLocation && matchesSearch;
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-ZA', {
+    style: 'currency',
+    currency: 'ZAR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+export default function RecruiterTalent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [talent, setTalent] = useState<Talent[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editingTalent, setEditingTalent] = useState<Talent | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    current_title: '',
+    current_company: '',
+    skills: '',
+    experience_years: '',
+    location: '',
+    salary_expectation: '',
+    linkedin_url: '',
+    notes: '',
+    source: '',
+    status: 'available',
   });
 
-  // Get unique locations
-  const locations = [...new Set(talent.map(t => t.location))];
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
-  // Toggle selection
-  const toggleSelection = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
+  const fetchTalent = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  // Select all
-  const selectAll = () => {
-    if (selectedIds.length === filteredTalent.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredTalent.map(t => t.id));
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push('/auth/login?redirect=/recruiter/talent');
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (searchTerm) params.append('search', searchTerm);
+
+      const response = await fetch(`/api/recruiter/talent?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch talent');
+      }
+
+      const data = await response.json();
+      setTalent(data.talent);
+    } catch (err) {
+      console.error('Error fetching talent:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load talent');
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase, router, statusFilter, searchTerm]);
+
+  useEffect(() => {
+    fetchTalent();
+  }, [fetchTalent]);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setShowModal(true);
+    }
+  }, [searchParams]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const method = editingTalent ? 'PUT' : 'POST';
+      const body = {
+        ...(editingTalent ? { id: editingTalent.id } : {}),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        current_title: formData.current_title || null,
+        current_company: formData.current_company || null,
+        skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+        experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
+        location: formData.location || null,
+        salary_expectation: formData.salary_expectation ? parseInt(formData.salary_expectation) : null,
+        linkedin_url: formData.linkedin_url || null,
+        notes: formData.notes || null,
+        source: formData.source || null,
+        status: formData.status,
+      };
+
+      const response = await fetch('/api/recruiter/talent', {
+        method,
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save talent');
+      }
+
+      setShowModal(false);
+      setEditingTalent(null);
+      resetForm();
+      fetchTalent();
+    } catch (err) {
+      console.error('Error saving talent:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save talent');
+    } finally {
+      setSaving(false);
     }
   };
+
+  const handleDelete = async (talentId: string) => {
+    if (!confirm('Are you sure you want to delete this candidate? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch(`/api/recruiter/talent?id=${talentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete talent');
+      }
+
+      fetchTalent();
+    } catch (err) {
+      console.error('Error deleting talent:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete talent');
+    }
+  };
+
+  const openEditModal = (t: Talent) => {
+    setEditingTalent(t);
+    setFormData({
+      name: t.name,
+      email: t.email,
+      phone: t.phone || '',
+      current_title: t.current_title || '',
+      current_company: t.current_company || '',
+      skills: t.skills ? t.skills.join(', ') : '',
+      experience_years: t.experience_years?.toString() || '',
+      location: t.location || '',
+      salary_expectation: t.salary_expectation?.toString() || '',
+      linkedin_url: t.linkedin_url || '',
+      notes: t.notes || '',
+      source: t.source || '',
+      status: t.status,
+    });
+    setShowModal(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      current_title: '',
+      current_company: '',
+      skills: '',
+      experience_years: '',
+      location: '',
+      salary_expectation: '',
+      linkedin_url: '',
+      notes: '',
+      source: '',
+      status: 'available',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#f8fafc',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '3px solid #e2e8f0',
+            borderTopColor: '#4F46E5',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px',
+          }} />
+          <p style={{ color: '#64748b' }}>Loading talent pool...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#F8FAFC',
+      backgroundColor: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
       {/* Header */}
       <header style={{
-        backgroundColor: 'white',
-        borderBottom: '1px solid #E2E8F0',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
         padding: '16px 32px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}>
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <Logo size={40} />
-          <nav style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-            <Link href="/recruiter" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.9375rem' }}>Dashboard</Link>
-            <Link href="/recruiter/clients" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.9375rem' }}>Clients</Link>
-            <Link href="/recruiter/talent" style={{ color: '#4F46E5', fontWeight: 600, textDecoration: 'none', fontSize: '0.9375rem' }}>Talent Pool</Link>
-            <Link href="/recruiter/commissions" style={{ color: '#64748B', textDecoration: 'none', fontSize: '0.9375rem' }}>Commissions</Link>
-          </nav>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#4F46E5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '1rem',
-            }}>
-              JR
-            </div>
-          </div>
-        </div>
+        <Logo />
       </header>
 
+      {/* Navigation */}
+      <nav style={{
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '0 32px',
+      }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {[
+            { label: 'Dashboard', href: '/recruiter', active: false },
+            { label: 'Clients', href: '/recruiter/clients', active: false },
+            { label: 'Talent Pool', href: '/recruiter/talent', active: true },
+            { label: 'Commissions', href: '/recruiter/commissions', active: false },
+          ].map((item) => (
+            <button
+              key={item.href}
+              onClick={() => router.push(item.href)}
+              style={{
+                padding: '16px 20px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderBottom: item.active ? '2px solid #4F46E5' : '2px solid transparent',
+                fontSize: '14px',
+                fontWeight: item.active ? 600 : 500,
+                color: item.active ? '#4F46E5' : '#64748b',
+                cursor: 'pointer',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
       {/* Main Content */}
-      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px' }}>
+      <main style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
+        {error ? (
+          <div style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            color: '#dc2626',
+            marginBottom: '24px',
+          }}>
+            {error}
+          </div>
+        ) : null}
+
         {/* Page Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
               Talent Pool
             </h1>
-            <p style={{ color: '#64748B', fontSize: '1rem' }}>
-              {filteredTalent.length} candidate{filteredTalent.length !== 1 ? 's' : ''} | {filteredTalent.filter(t => t.status === 'available').length} available
+            <p style={{ fontSize: '16px', color: '#64748b' }}>
+              Manage candidates you&apos;ve sourced for future opportunities
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button style={{
+          <button
+            onClick={() => {
+              setEditingTalent(null);
+              resetForm();
+              setShowModal(true);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
               padding: '12px 20px',
-              borderRadius: '8px',
-              border: '1px solid #E2E8F0',
-              backgroundColor: 'white',
-              fontSize: '0.9375rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Export
-            </button>
-            <button style={{
               backgroundColor: '#4F46E5',
-              color: 'white',
+              color: '#ffffff',
               border: 'none',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '0.9375rem',
-              fontWeight: 500,
+              borderRadius: '10px',
+              fontSize: '14px',
+              fontWeight: 600,
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
-              <span style={{ fontSize: '1.25rem' }}>+</span>
-              Add Candidate
-            </button>
-          </div>
+            }}
+          >
+            {Icons.plus}
+            Add Candidate
+          </button>
         </div>
 
-        {/* Filters & Search */}
+        {/* Filters */}
         <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '16px 24px',
-          marginBottom: '24px',
-          border: '1px solid #E2E8F0',
           display: 'flex',
           gap: '16px',
-          alignItems: 'center',
+          marginBottom: '24px',
           flexWrap: 'wrap',
         }}>
-          <input
-            type="text"
-            placeholder="Search by name, title, skills, or qualifications..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              flex: 1,
-              minWidth: '300px',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid #E2E8F0',
-              fontSize: '0.9375rem',
-              outline: 'none',
-            }}
-          />
+          <div style={{ position: 'relative', flex: '1', maxWidth: '400px' }}>
+            <span style={{
+              position: 'absolute',
+              left: '14px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#94a3b8',
+            }}>
+              {Icons.search}
+            </span>
+            <input
+              type="text"
+              placeholder="Search by name, email, title, or company..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 16px 12px 44px',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '14px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid #E2E8F0',
-              fontSize: '0.9375rem',
-              backgroundColor: 'white',
-              cursor: 'pointer',
+              padding: '12px 16px',
+              border: '1px solid #e2e8f0',
+              borderRadius: '10px',
+              fontSize: '14px',
+              backgroundColor: '#ffffff',
+              minWidth: '160px',
             }}
           >
             <option value="all">All Status</option>
@@ -440,691 +489,533 @@ export default function TalentPoolPage() {
             <option value="interviewing">Interviewing</option>
             <option value="placed">Placed</option>
             <option value="unavailable">Unavailable</option>
-          </select>
-          <select
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid #E2E8F0',
-              fontSize: '0.9375rem',
-              backgroundColor: 'white',
-              cursor: 'pointer',
-            }}
-          >
-            <option value="all">All Locations</option>
-            {locations.map(loc => (
-              <option key={loc} value={loc}>{loc}</option>
-            ))}
+            <option value="do_not_contact">Do Not Contact</option>
           </select>
         </div>
 
-        {/* Bulk Actions */}
-        {selectedIds.length > 0 && (
+        {/* Talent List */}
+        {talent.length === 0 ? (
           <div style={{
-            backgroundColor: '#EEF2FF',
-            borderRadius: '12px',
-            padding: '16px 24px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            backgroundColor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '16px',
+            padding: '64px',
+            textAlign: 'center',
           }}>
-            <span style={{ color: '#4338CA', fontWeight: 500 }}>
-              {selectedIds.length} candidate{selectedIds.length !== 1 ? 's' : ''} selected
-            </span>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowShortlistModal(true)} style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: '#4F46E5',
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}>
-                Shortlist for Client
-              </button>
-              <button style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid #C7D2FE',
-                backgroundColor: 'white',
-                color: '#4F46E5',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}>
-                Create Talent Passports
-              </button>
-              <button style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid #C7D2FE',
-                backgroundColor: 'white',
-                color: '#4F46E5',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}>
-                Export Selected
-              </button>
-              <button onClick={() => setSelectedIds([])} style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: 'transparent',
-                color: '#64748B',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-              }}>
-                Clear
-              </button>
+            <div style={{ color: '#94a3b8', marginBottom: '24px' }}>
+              {Icons.user}
             </div>
+            <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>
+              {searchTerm || statusFilter !== 'all' ? 'No matching candidates' : 'No candidates yet'}
+            </h3>
+            <p style={{ fontSize: '15px', color: '#64748b', maxWidth: '400px', margin: '0 auto 24px' }}>
+              {searchTerm || statusFilter !== 'all'
+                ? 'Try adjusting your search or filters.'
+                : 'Add candidates to your talent pool to track them for future opportunities.'}
+            </p>
+            {!searchTerm && statusFilter === 'all' && (
+              <button
+                onClick={() => setShowModal(true)}
+                style={{
+                  padding: '14px 28px',
+                  backgroundColor: '#4F46E5',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Add Your First Candidate
+              </button>
+            )}
           </div>
-        )}
-
-        {/* Two Column Layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: selectedTalent ? '1fr 400px' : '1fr', gap: '24px' }}>
-          {/* Talent List */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            border: '1px solid #E2E8F0',
-            overflow: 'hidden',
-          }}>
-            {/* List Header */}
-            <div style={{
-              padding: '16px 20px',
-              borderBottom: '1px solid #E2E8F0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              backgroundColor: '#F8FAFC',
-            }}>
-              <input
-                type="checkbox"
-                checked={selectedIds.length === filteredTalent.length && filteredTalent.length > 0}
-                onChange={selectAll}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '0.8125rem', color: '#64748B', fontWeight: 500 }}>Select All</span>
-            </div>
-
-            {/* Talent Cards */}
-            <div>
-              {filteredTalent.map((candidate) => (
-                <div
-                  key={candidate.id}
-                  onClick={() => setSelectedTalent(candidate)}
-                  style={{
-                    padding: '20px',
-                    borderBottom: '1px solid #F1F5F9',
-                    cursor: 'pointer',
-                    backgroundColor: selectedTalent?.id === candidate.id ? '#F5F3FF' : 'transparent',
-                    transition: 'background-color 0.15s',
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(candidate.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelection(candidate.id);
-                      }}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer', flexShrink: 0, marginTop: '4px' }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                            <span style={{ fontWeight: 600, color: '#0F172A', fontSize: '1rem' }}>{candidate.name}</span>
-                            <span style={{
+        ) : (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {talent.map((t) => (
+              <div
+                key={t.id}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '24px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
+                        {t.name}
+                      </h3>
+                      <span style={{
+                        padding: '4px 12px',
+                        backgroundColor: STATUS_COLORS[t.status]?.bg || '#f1f5f9',
+                        color: STATUS_COLORS[t.status]?.text || '#64748b',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}>
+                        {STATUS_LABELS[t.status]}
+                      </span>
+                    </div>
+                    {(t.current_title || t.current_company) && (
+                      <div style={{ fontSize: '15px', color: '#475569', marginBottom: '8px' }}>
+                        {t.current_title}{t.current_title && t.current_company ? ' at ' : ''}{t.current_company}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', fontSize: '14px', color: '#64748b' }}>
+                      <span>{t.email}</span>
+                      {t.phone && <span>{t.phone}</span>}
+                      {t.location && <span>{t.location}</span>}
+                      {t.experience_years && <span>{t.experience_years} years exp</span>}
+                      {t.salary_expectation && <span>Expects {formatCurrency(t.salary_expectation)}</span>}
+                    </div>
+                    {t.skills && t.skills.length > 0 && (
+                      <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {t.skills.slice(0, 6).map((skill, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              padding: '4px 10px',
                               backgroundColor: '#EEF2FF',
+                              borderRadius: '6px',
+                              fontSize: '12px',
                               color: '#4F46E5',
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                            }}>
-                              {candidate.score}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.875rem', color: '#64748B' }}>
-                            {candidate.currentTitle} at {candidate.currentCompany}
-                          </div>
-                        </div>
-                        <StatusBadge status={candidate.status} />
-                      </div>
-                      <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', fontSize: '0.8125rem', color: '#64748B' }}>
-                        <span>{candidate.location}</span>
-                        <span>{candidate.yearsExperience} years exp</span>
-                        <span>{candidate.salary}</span>
-                        <AvailabilityBadge availability={candidate.availability} />
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {candidate.skills.slice(0, 5).map((skill, idx) => (
-                          <span key={idx} style={{
-                            padding: '4px 10px',
-                            backgroundColor: '#F1F5F9',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            color: '#475569',
-                          }}>
+                              fontWeight: 500,
+                            }}
+                          >
                             {skill}
                           </span>
                         ))}
-                        {candidate.skills.length > 5 && (
-                          <span style={{
-                            padding: '4px 10px',
-                            backgroundColor: '#F1F5F9',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            color: '#94A3B8',
-                          }}>
-                            +{candidate.skills.length - 5} more
+                        {t.skills.length > 6 && (
+                          <span style={{ fontSize: '12px', color: '#64748b', padding: '4px 0' }}>
+                            +{t.skills.length - 6} more
                           </span>
                         )}
                       </div>
-                      {candidate.submittedTo.length > 0 && (
-                        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #F1F5F9' }}>
-                          <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: '6px' }}>Submitted to:</div>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {candidate.submittedTo.map((sub, idx) => (
-                              <span key={idx} style={{
-                                padding: '4px 10px',
-                                backgroundColor: sub.status === 'placed' ? '#D1FAE5' : sub.status === 'offer' ? '#FEF3C7' : '#EEF2FF',
-                                borderRadius: '6px',
-                                fontSize: '0.6875rem',
-                                color: sub.status === 'placed' ? '#065F46' : sub.status === 'offer' ? '#92400E' : '#4338CA',
-                              }}>
-                                {sub.client} - {sub.role} ({sub.status})
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    {t.source && (
+                      <div style={{ marginTop: '8px', fontSize: '13px', color: '#94a3b8' }}>
+                        Source: {t.source}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Candidate Detail Panel */}
-          {selectedTalent && (
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              border: '1px solid #E2E8F0',
-              position: 'sticky',
-              top: '100px',
-              height: 'fit-content',
-              maxHeight: 'calc(100vh - 132px)',
-              overflowY: 'auto',
-            }}>
-              <div style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                  <div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', marginBottom: '4px' }}>
-                      {selectedTalent.name}
-                    </h2>
-                    <p style={{ color: '#64748B', fontSize: '0.9375rem' }}>
-                      {selectedTalent.currentTitle}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedTalent(null)}
-                    style={{
-                      padding: '8px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      cursor: 'pointer',
-                      color: '#94A3B8',
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Quick Info */}
-                <div style={{
-                  backgroundColor: '#F8FAFC',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  marginBottom: '20px',
-                }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.875rem' }}>
-                    <div>
-                      <span style={{ color: '#94A3B8' }}>Location: </span>
-                      <span style={{ color: '#0F172A', fontWeight: 500 }}>{selectedTalent.location}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#94A3B8' }}>Experience: </span>
-                      <span style={{ color: '#0F172A', fontWeight: 500 }}>{selectedTalent.yearsExperience} years</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#94A3B8' }}>Salary: </span>
-                      <span style={{ color: '#0F172A', fontWeight: 500 }}>{selectedTalent.salary}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#94A3B8' }}>Notice: </span>
-                      <span style={{ color: '#0F172A', fontWeight: 500 }}>{selectedTalent.noticePeriod}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contact */}
-                <div style={{ marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748B', marginBottom: '8px' }}>Contact</h3>
-                  <div style={{ fontSize: '0.875rem', color: '#0F172A' }}>
-                    <div style={{ marginBottom: '4px' }}>{selectedTalent.email}</div>
-                    <div>{selectedTalent.phone}</div>
-                  </div>
-                </div>
-
-                {/* Qualifications */}
-                <div style={{ marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748B', marginBottom: '8px' }}>Qualifications</h3>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {selectedTalent.qualifications.map((qual, idx) => (
-                      <span key={idx} style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#ECFDF5',
-                        borderRadius: '6px',
-                        fontSize: '0.8125rem',
-                        color: '#065F46',
-                        fontWeight: 500,
-                      }}>
-                        {qual}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Skills */}
-                <div style={{ marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748B', marginBottom: '8px' }}>Skills</h3>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {selectedTalent.skills.map((skill, idx) => (
-                      <span key={idx} style={{
-                        padding: '4px 10px',
-                        backgroundColor: '#F1F5F9',
-                        borderRadius: '6px',
-                        fontSize: '0.75rem',
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => openEditModal(t)}
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: '#f1f5f9',
+                        border: 'none',
+                        borderRadius: '8px',
                         color: '#475569',
-                      }}>
-                        {skill}
-                      </span>
-                    ))}
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {Icons.edit}
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(t.id)}
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: '#fef2f2',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {Icons.trash}
+                      Delete
+                    </button>
                   </div>
-                </div>
-
-                {/* Notes */}
-                <div style={{ marginBottom: '24px' }}>
-                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#64748B', marginBottom: '8px' }}>Notes</h3>
-                  <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.5 }}>
-                    {selectedTalent.notes}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button onClick={() => setShowPassport(true)} style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: '#4F46E5',
-                    color: 'white',
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}>
-                    Create Talent Passport
-                  </button>
-                  <button style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                    backgroundColor: 'white',
-                    color: '#0F172A',
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}>
-                    Shortlist for Client
-                  </button>
-                  <button style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid #E2E8F0',
-                    backgroundColor: 'white',
-                    color: '#0F172A',
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}>
-                    Schedule Call
-                  </button>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
 
-      {/* Talent Passport Modal */}
-      {showPassport && selectedTalent && (
+      {/* Add/Edit Modal */}
+      {showModal && (
         <div style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          inset: 0,
           backgroundColor: 'rgba(0,0,0,0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          padding: '20px',
           zIndex: 1000,
-          padding: '32px',
-        }} onClick={() => setShowPassport(false)}>
+        }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: '#ffffff',
             borderRadius: '16px',
             width: '100%',
-            maxWidth: '700px',
+            maxWidth: '600px',
             maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
-          }} onClick={(e) => e.stopPropagation()}>
-            {/* Passport Header */}
+            overflow: 'auto',
+          }}>
             <div style={{
-              padding: '32px',
-              background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-              color: 'white',
-              borderRadius: '16px 16px 0 0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '20px 24px',
+              borderBottom: '1px solid #e2e8f0',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, marginBottom: '8px', letterSpacing: '0.1em' }}>
-                    TALENT PASSPORT
-                  </div>
-                  <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '4px' }}>
-                    {selectedTalent.name}
-                  </h2>
-                  <p style={{ opacity: 0.9, fontSize: '1.125rem' }}>
-                    {selectedTalent.currentTitle}
-                  </p>
-                </div>
-                <div style={{
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  borderRadius: '12px',
-                  padding: '12px 24px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '2rem', fontWeight: 700 }}>{selectedTalent.score}</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>AI Score</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Passport Body */}
-            <div style={{ padding: '32px' }}>
-              {/* Overview */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '16px',
-                marginBottom: '32px',
-              }}>
-                <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A' }}>{selectedTalent.yearsExperience}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Years Experience</div>
-                </div>
-                <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A' }}>{selectedTalent.location}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Location</div>
-                </div>
-                <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A' }}>{selectedTalent.salary}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Current Package</div>
-                </div>
-                <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#ECFDF5', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>{selectedTalent.noticePeriod}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#065F46' }}>Notice Period</div>
-                </div>
-              </div>
-
-              {/* Qualifications */}
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: '12px' }}>Qualifications</h3>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {selectedTalent.qualifications.map((qual, idx) => (
-                    <span key={idx} style={{
-                      padding: '8px 16px',
-                      backgroundColor: '#ECFDF5',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      color: '#065F46',
-                      fontWeight: 500,
-                    }}>
-                      {qual}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Key Skills */}
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: '12px' }}>Key Skills</h3>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {selectedTalent.skills.map((skill, idx) => (
-                    <span key={idx} style={{
-                      padding: '6px 14px',
-                      backgroundColor: '#EEF2FF',
-                      borderRadius: '6px',
-                      fontSize: '0.875rem',
-                      color: '#4338CA',
-                    }}>
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Current Role */}
-              <div style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: '12px' }}>Current Position</h3>
-                <div style={{
-                  padding: '16px',
-                  backgroundColor: '#F8FAFC',
-                  borderRadius: '8px',
-                }}>
-                  <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: '4px' }}>{selectedTalent.currentTitle}</div>
-                  <div style={{ color: '#64748B' }}>{selectedTalent.currentCompany}</div>
-                </div>
-              </div>
-
-              {/* Recruiter Notes */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0F172A', marginBottom: '12px' }}>Recruiter Assessment</h3>
-                <div style={{
-                  padding: '16px',
-                  backgroundColor: '#FFFBEB',
-                  borderRadius: '8px',
-                  borderLeft: '4px solid #F59E0B',
-                }}>
-                  <p style={{ fontSize: '0.9375rem', color: '#92400E', lineHeight: 1.6 }}>
-                    {selectedTalent.notes}
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  backgroundColor: 'white',
-                  fontSize: '0.9375rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}>
-                  Copy Link
-                </button>
-                <button style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  backgroundColor: 'white',
-                  fontSize: '0.9375rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}>
-                  Download PDF
-                </button>
-                <button style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '8px',
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>
+                {editingTalent ? 'Edit Candidate' : 'Add New Candidate'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingTalent(null);
+                  resetForm();
+                }}
+                style={{
+                  padding: '8px',
+                  backgroundColor: 'transparent',
                   border: 'none',
-                  backgroundColor: '#4F46E5',
-                  color: 'white',
-                  fontSize: '0.9375rem',
-                  fontWeight: 500,
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                }}>
-                  Send to Client
+                  color: '#64748b',
+                }}
+              >
+                {Icons.close}
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+              <div style={{ display: 'grid', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., Jane Doe"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., jane@email.com"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., 082 123 4567"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., Cape Town"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Current Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.current_title}
+                      onChange={(e) => setFormData({ ...formData, current_title: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., Senior Software Engineer"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Current Company
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.current_company}
+                      onChange={(e) => setFormData({ ...formData, current_company: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., Tech Corp"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                    Skills (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.skills}
+                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                      boxSizing: 'border-box',
+                    }}
+                    placeholder="e.g., Python, React, AWS, Machine Learning"
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Experience (years)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.experience_years}
+                      onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
+                      min="0"
+                      max="50"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., 5"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Salary Expectation (ZAR)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.salary_expectation}
+                      onChange={(e) => setFormData({ ...formData, salary_expectation: e.target.value })}
+                      min="0"
+                      step="10000"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., 850000"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <option value="available">Available</option>
+                      <option value="interviewing">Interviewing</option>
+                      <option value="placed">Placed</option>
+                      <option value="unavailable">Unavailable</option>
+                      <option value="do_not_contact">Do Not Contact</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      LinkedIn URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.linkedin_url}
+                      onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., linkedin.com/in/janedoe"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                      Source
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.source}
+                      onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g., LinkedIn, Referral, Job Board"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                    Notes
+                  </label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                      boxSizing: 'border-box',
+                      resize: 'vertical',
+                    }}
+                    placeholder="Any additional notes about this candidate..."
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingTalent(null);
+                    resetForm();
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: '#f1f5f9',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    color: '#475569',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: '#4F46E5',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: '#ffffff',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    opacity: saving ? 0.7 : 1,
+                  }}
+                >
+                  {saving ? 'Saving...' : editingTalent ? 'Update Candidate' : 'Add Candidate'}
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Shortlist Modal */}
-      {showShortlistModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-        }} onClick={() => setShowShortlistModal(false)}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '32px',
-            width: '100%',
-            maxWidth: '480px',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
-          }} onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-              Shortlist for Client
-            </h2>
-            <p style={{ color: '#64748B', marginBottom: '24px' }}>
-              Select a client and role to shortlist {selectedIds.length} candidate{selectedIds.length !== 1 ? 's' : ''}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                  Client
-                </label>
-                <select style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  fontSize: '0.9375rem',
-                  boxSizing: 'border-box',
-                  backgroundColor: 'white',
-                }}>
-                  <option>Select a client...</option>
-                  <option>Mafadi Property Group</option>
-                  <option>Standard Bank</option>
-                  <option>Discovery Health</option>
-                  <option>Woolworths Holdings</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                  Role
-                </label>
-                <select style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  fontSize: '0.9375rem',
-                  boxSizing: 'border-box',
-                  backgroundColor: 'white',
-                }}>
-                  <option>Select a role...</option>
-                  <option>Senior Property Manager</option>
-                  <option>Financial Controller</option>
-                  <option>Senior Analyst - Risk</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
-                  Notes for Client
-                </label>
-                <textarea rows={3} placeholder="Why these candidates are a good fit..." style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  fontSize: '0.9375rem',
-                  boxSizing: 'border-box',
-                  resize: 'vertical',
-                }}/>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button onClick={() => setShowShortlistModal(false)} style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid #E2E8F0',
-                backgroundColor: 'white',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}>
-                Cancel
-              </button>
-              <button style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#4F46E5',
-                color: 'white',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}>
-                Submit Shortlist
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
