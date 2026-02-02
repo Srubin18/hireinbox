@@ -13,10 +13,8 @@ import PilotHeader from '@/components/PilotHeader';
 interface User {
   id: string;
   email: string;
-  full_name: string | null;
   pilot_role: string | null;
   created_at: string;
-  last_login: string | null;
 }
 
 export default function AdminUsersPage() {
@@ -41,28 +39,35 @@ export default function AdminUsersPage() {
       }
 
       // Fetch current user profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('pilot_role')
         .eq('id', session.user.id)
         .single();
 
+      console.log('[Admin Users] Profile fetch:', { profile, profileError, userId: session.user.id });
+
       // Only allow admins to access this page
       if (profile?.pilot_role !== 'admin') {
+        console.log('[Admin Users] Not admin, redirecting. Role:', profile?.pilot_role);
         router.push('/pilot/dashboard');
         return;
       }
+
+      console.log('[Admin Users] Setting user:', { email: session.user.email, pilot_role: profile?.pilot_role });
 
       setUser({
         email: session.user.email || '',
         pilot_role: profile?.pilot_role,
       });
 
-      // Fetch all users
-      const { data: usersData } = await supabase
+      // Fetch all users (note: full_name doesn't exist, removed last_login)
+      const { data: usersData, error: usersError } = await supabase
         .from('profiles')
-        .select('id, email, full_name, pilot_role, created_at, last_login')
+        .select('id, email, pilot_role, created_at')
         .order('created_at', { ascending: false });
+
+      console.log('[Admin Users] Users fetch:', { usersData, usersError, count: usersData?.length });
 
       setUsers(usersData || []);
       setLoading(false);
@@ -171,9 +176,6 @@ export default function AdminUsersPage() {
                   <tr key={u.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                     <td style={{ padding: '16px', fontSize: '14px', color: '#0f172a' }}>
                       {u.email}
-                      {u.full_name && (
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>{u.full_name}</div>
-                      )}
                     </td>
                     <td style={{ padding: '16px' }}>
                       <span style={{
