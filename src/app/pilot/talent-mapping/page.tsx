@@ -577,8 +577,11 @@ export default function PilotTalentMapping() {
               <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
                 AI Talent Mapping
               </h1>
-              <p style={{ fontSize: '15px', color: '#64748b', marginBottom: '24px' }}>
-                Describe who you&apos;re looking for or upload a job specification
+              <p style={{ fontSize: '15px', color: '#64748b', marginBottom: '8px' }}>
+                Find hidden candidates with AI-powered intelligence. Upload a job spec or describe who you&apos;re looking for.
+              </p>
+              <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '24px' }}>
+                We search 40+ sources to find passive candidates that match your exact requirements.
               </p>
 
             {/* File Upload */}

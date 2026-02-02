@@ -631,6 +631,18 @@ export default function PilotScreening() {
 
         {/* RIGHT MAIN AREA */}
         <main className="screening-main">
+          {/* Page Description */}
+          <div style={{ marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
+              AI CV Screening
+            </h1>
+            <p style={{ fontSize: '15px', color: '#64748b', marginBottom: '4px' }}>
+              Screen CVs in seconds with explainable AI. Create a role, send CVs to inbox, get AI-ranked shortlists.
+            </p>
+            <p style={{ fontSize: '13px', color: '#94a3b8' }}>
+              Our AI analyzes CVs against your role requirements and provides detailed screening reports.
+            </p>
+          </div>
 
         {/* Candidates List */}
         {roles.length === 0 ? (
