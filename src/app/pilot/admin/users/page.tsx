@@ -234,9 +234,9 @@ export default function AdminUsersPage() {
         }}>
           <strong>Role Descriptions:</strong>
           <ul style={{ margin: '8px 0 0 20px', padding: 0 }}>
-            <li><strong>Admin:</strong> Full access, billable, can manage users</li>
+            <li><strong>Admin:</strong> Full access, non-billable, can manage users, shows orange badge</li>
             <li><strong>Pilot User:</strong> Standard access, billable</li>
-            <li><strong>Influencer:</strong> Full access, non-billable, shows influencer badge</li>
+            <li><strong>Influencer:</strong> Full access, non-billable, shows purple badge</li>
           </ul>
         </div>
       </main>

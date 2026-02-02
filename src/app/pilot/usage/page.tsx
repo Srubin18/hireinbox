@@ -366,17 +366,21 @@ export default function UsagePage() {
               </span>
             </div>
 
-            {/* Influencer Message */}
-            {state.user?.pilot_role === 'influencer' && (
+            {/* Influencer/Admin Message */}
+            {(state.user?.pilot_role === 'influencer' || state.user?.pilot_role === 'admin') && (
               <div style={{
                 marginTop: '16px',
                 padding: '16px 20px',
-                background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+                background: state.user?.pilot_role === 'admin'
+                  ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                  : 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
                 borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
+                boxShadow: state.user?.pilot_role === 'admin'
+                  ? '0 4px 12px rgba(245, 158, 11, 0.25)'
+                  : '0 4px 12px rgba(79, 70, 229, 0.25)',
               }}>
                 <div style={{
                   display: 'inline-flex',
@@ -387,7 +391,11 @@ export default function UsagePage() {
                   borderRadius: '20px',
                 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    {state.user?.pilot_role === 'admin' ? (
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    ) : (
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    )}
                   </svg>
                   <span style={{
                     fontSize: '12px',
@@ -395,7 +403,7 @@ export default function UsagePage() {
                     color: '#ffffff',
                     letterSpacing: '0.02em',
                   }}>
-                    Influencer
+                    {state.user?.pilot_role === 'admin' ? 'Admin' : 'Influencer'}
                   </span>
                 </div>
                 <span style={{
@@ -403,7 +411,9 @@ export default function UsagePage() {
                   color: '#ffffff',
                   fontWeight: 500,
                 }}>
-                  You will not be billed. Your account has complimentary access to all features.
+                  {state.user?.pilot_role === 'admin'
+                    ? 'Admin account with complimentary access to all features.'
+                    : 'You will not be billed. Your account has complimentary access to all features.'}
                 </span>
               </div>
             )}

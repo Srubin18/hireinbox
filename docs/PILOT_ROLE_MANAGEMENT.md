@@ -68,7 +68,7 @@ const { error } = await supabase.auth.signUp({
 
 | Role | Billable | Features | Badge |
 |------|----------|----------|-------|
-| **Admin** | ✅ Yes | Full access + user management | None |
+| **Admin** | ❌ No | Full access + user management | Orange "Admin" badge |
 | **Pilot User** | ✅ Yes | Full access | None |
 | **Influencer** | ❌ No | Full access | Purple "Influencer" badge |
 
