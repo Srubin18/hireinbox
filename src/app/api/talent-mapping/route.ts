@@ -2026,11 +2026,49 @@ ${SA_CONTEXT_PROMPT}
 You MUST ONLY include candidates whose REAL FULL NAMES appear VERBATIM in the
 intelligence sources provided below.
 
+##############################################################################
+# CRITICAL: NAME VALIDATION - MUST BE A PERSON'S NAME
+##############################################################################
+A valid candidate name MUST be a PERSON'S NAME in "Firstname Lastname" format.
+
+REJECT these as candidate names (they are NOT people):
+- Job titles: "Executive Estate Manager", "Head of Sales", "Managing Director"
+- Company names: "Trafalgar", "Broll Property Group"
+- Location/property names: "Wakensure Manor", "Dainfern Estate", "Sandton Office"
+- Team descriptions: "Trafalgar Team", "JHI Properties Team"
+- Combined title+location: "Trafalgar Wakensure Manor Executive Estate Manager" = INVALID
+
+ACCEPT only actual human names like:
+- "John Smith", "Thandi Nkosi", "David van der Merwe", "Priya Naicker"
+
+If you see "Estate Manager at Dainfern" - look for the PERSON'S NAME, not the job title!
+
+##############################################################################
+# CRITICAL: SENIORITY MATCHING
+##############################################################################
+Match candidates to the CORRECT seniority level:
+
+- If searching for "Estate Manager" (mid-level): Do NOT return CEOs, MDs, or Founders
+- If searching for "Junior Accountant": Do NOT return CFOs or Partners
+- If searching for "CEO": Do NOT return junior staff
+
+The parsed seniority level is: ${parsed.seniority || 'mid'}
+Candidates should be at THIS level, or ONE level above/below at most.
+
+##############################################################################
+# CRITICAL: EXCLUDE ACADEMICS FOR OPERATIONAL ROLES
+##############################################################################
+Unless the job specifically requires research/academic background:
+- EXCLUDE university researchers, lecturers, professors
+- EXCLUDE people whose only experience is academic papers
+- INCLUDE only practitioners with operational/commercial experience
+
 DO NOT:
 - Invent or generate any names
 - Use placeholder names like "John Smith" or "Thabo Mokoena"
 - Create fictional candidates that sound plausible
 - Make up company names like "XYZ Consulting"
+- Use job titles, locations, or company names as candidate names
 
 ##############################################################################
 # CRITICAL: EXCLUDE JOURNALISTS, COLUMNISTS, AND ARTICLE AUTHORS
@@ -2493,6 +2531,127 @@ KEEP OUTPUT CONCISE:
       console.error('[TalentMapping] No JSON object found in response');
       console.error('[TalentMapping] Raw response:', reportText.substring(0, 1000));
       throw new Error('Failed to generate report - no JSON in response');
+    }
+
+    // ============================================
+    // GUARDRAIL PASS 0: Filter invalid candidate names
+    // ============================================
+    const isValidCandidateName = (name: string): boolean => {
+      if (!name || typeof name !== 'string') return false;
+
+      const nameLower = name.toLowerCase();
+
+      // Reject if contains job titles
+      const jobTitlePatterns = [
+        'manager', 'director', 'executive', 'head of', 'ceo', 'cfo', 'coo',
+        'partner', 'associate', 'consultant', 'analyst', 'officer', 'president'
+      ];
+      if (jobTitlePatterns.some(p => nameLower.includes(p) && name.split(' ').length > 3)) {
+        console.log(`[NameFilter] Rejected "${name}" - looks like job title`);
+        return false;
+      }
+
+      // Reject if contains company/location keywords
+      const companyLocationPatterns = [
+        'trafalgar', 'broll', 'jhi', 'property group', 'estate', 'manor',
+        'office', 'team', 'properties', 'holdings', 'investments', 'services',
+        'johannesburg', 'cape town', 'durban', 'pretoria', 'sandton', 'ballito'
+      ];
+      if (companyLocationPatterns.some(p => nameLower.includes(p))) {
+        console.log(`[NameFilter] Rejected "${name}" - looks like company/location`);
+        return false;
+      }
+
+      // Reject if too many words (likely a description, not a name)
+      const words = name.trim().split(/\s+/);
+      if (words.length > 4) {
+        console.log(`[NameFilter] Rejected "${name}" - too many words (${words.length})`);
+        return false;
+      }
+
+      // Reject if too few words (needs first + last name minimum)
+      if (words.length < 2) {
+        console.log(`[NameFilter] Rejected "${name}" - too few words`);
+        return false;
+      }
+
+      // Reject if contains parentheses (likely "Name (Description)")
+      if (name.includes('(') || name.includes(')')) {
+        // Extract just the name part before parentheses
+        const nameOnly = name.split('(')[0].trim();
+        if (nameOnly.split(/\s+/).length >= 2) {
+          // This will be handled by returning the cleaned name elsewhere
+          console.log(`[NameFilter] Warning "${name}" - has parentheses`);
+        }
+      }
+
+      return true;
+    };
+
+    // Clean candidate name (remove titles, parenthetical info)
+    const cleanCandidateName = (name: string): string => {
+      // Remove parenthetical suffixes
+      let cleaned = name.split('(')[0].trim();
+      // Remove common title prefixes
+      cleaned = cleaned.replace(/^(Mr\.?|Mrs\.?|Ms\.?|Dr\.?|Prof\.?)\s+/i, '');
+      return cleaned;
+    };
+
+    // Seniority mismatch detection
+    const isSeniorityMismatch = (candidateRole: string, targetSeniority: string): boolean => {
+      const roleLower = (candidateRole || '').toLowerCase();
+      const seniorityLower = (targetSeniority || 'mid').toLowerCase();
+
+      // C-suite titles
+      const cSuiteTitles = ['ceo', 'cfo', 'coo', 'cto', 'cio', 'chief executive', 'chief financial', 'chief operating'];
+      const isCandidateCLevel = cSuiteTitles.some(t => roleLower.includes(t));
+
+      // Founder/Owner titles
+      const founderTitles = ['founder', 'co-founder', 'owner', 'partner', 'entrepreneur'];
+      const isCandidateFounder = founderTitles.some(t => roleLower.includes(t));
+
+      // Academic titles
+      const academicTitles = ['researcher', 'professor', 'lecturer', 'academic', 'phd', 'university'];
+      const isCandidateAcademic = academicTitles.some(t => roleLower.includes(t));
+
+      // If target is mid/junior level, reject C-level and founders
+      if (['mid', 'junior', 'entry'].includes(seniorityLower)) {
+        if (isCandidateCLevel) {
+          console.log(`[SeniorityFilter] Rejected C-level "${candidateRole}" for ${seniorityLower} role`);
+          return true;
+        }
+        if (isCandidateFounder) {
+          console.log(`[SeniorityFilter] Rejected Founder "${candidateRole}" for ${seniorityLower} role`);
+          return true;
+        }
+      }
+
+      // Reject academics for operational roles (unless specifically requested)
+      if (!['research', 'academic', 'professor', 'lecturer'].some(k => parsed.role?.toLowerCase().includes(k))) {
+        if (isCandidateAcademic) {
+          console.log(`[SeniorityFilter] Rejected Academic "${candidateRole}" for operational role`);
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    // Filter and clean candidates
+    if (report.candidates && Array.isArray(report.candidates)) {
+      const originalCount = report.candidates.length;
+      report.candidates = report.candidates
+        .map((c: any) => ({
+          ...c,
+          name: cleanCandidateName(c.name || '')
+        }))
+        .filter((c: any) => isValidCandidateName(c.name))
+        .filter((c: any) => !isSeniorityMismatch(c.currentRole, parsed.seniority));
+
+      const filteredCount = originalCount - report.candidates.length;
+      if (filteredCount > 0) {
+        console.log(`[Guardrail] Removed ${filteredCount} invalid candidates (bad names/seniority mismatch/academics)`);
+      }
     }
 
     // ============================================
