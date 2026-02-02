@@ -5,6 +5,7 @@
 -- Drop existing policies
 DROP POLICY IF EXISTS profiles_select ON profiles;
 DROP POLICY IF EXISTS profiles_update ON profiles;
+DROP POLICY IF EXISTS profiles_admin_update ON profiles;
 
 -- Allow users to view their own profile + admins to view all (no EXISTS subquery)
 CREATE POLICY profiles_select ON profiles FOR SELECT TO authenticated USING (true);
