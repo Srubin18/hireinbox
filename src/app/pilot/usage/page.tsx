@@ -284,10 +284,10 @@ export default function UsagePage() {
           {/* Roles Created Card */}
           <div style={{
             backgroundColor: '#ffffff',
-            border: '3px solid #F59E0B',
+            border: '3px solid #10B981',
             borderRadius: '16px',
             padding: '32px',
-            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.1)',
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
           }}>
             <div style={{
               display: 'flex',
@@ -298,7 +298,7 @@ export default function UsagePage() {
               <div style={{
                 width: '56px',
                 height: '56px',
-                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                 borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
@@ -311,22 +311,22 @@ export default function UsagePage() {
                 <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>
                   Roles Created
                 </h2>
-                <div style={{ fontSize: '40px', fontWeight: 700, color: '#F59E0B', lineHeight: 1 }}>
+                <div style={{ fontSize: '40px', fontWeight: 700, color: '#10B981', lineHeight: 1 }}>
                   {monthData.rolesCreated}
                 </div>
               </div>
             </div>
             <div style={{
               padding: '16px',
-              backgroundColor: '#fffbeb',
+              backgroundColor: '#f0fdf4',
               borderRadius: '8px',
               fontSize: '13px',
-              color: '#78350f',
+              color: '#065f46',
               lineHeight: 1.6,
             }}>
               <strong>R1,750</strong> per role created for AI CV screening with unlimited CV processing.
               {monthData.rolesCreated > 0 && (
-                <div style={{ marginTop: '8px', color: '#F59E0B', fontWeight: 600 }}>
+                <div style={{ marginTop: '8px', color: '#10B981', fontWeight: 600 }}>
                   Current: R{rolesCost.toLocaleString()}
                 </div>
               )}
@@ -438,7 +438,7 @@ export default function UsagePage() {
                     <td style={{
                       padding: '16px',
                       fontSize: '14px',
-                      color: '#F59E0B',
+                      color: '#10B981',
                       fontWeight: 600,
                       textAlign: 'center',
                     }}>
