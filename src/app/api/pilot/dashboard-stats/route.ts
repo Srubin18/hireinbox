@@ -17,7 +17,11 @@ export async function GET(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('[Dashboard Stats] Auth error:', authError?.message, 'User:', user?.id);
+      return NextResponse.json({
+        error: 'Unauthorized',
+        details: authError?.message
+      }, { status: 401 });
     }
 
     // Get roles for this user

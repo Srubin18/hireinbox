@@ -128,8 +128,9 @@ export default function AdminUsersPage() {
 
       // Add new user to the list
       if (data.user) {
+        const newUser = data.user;
         setUsers(prev => [{
-          id: data.user.id,
+          id: newUser.id,
           email: createForm.email,
           pilot_role: createForm.role,
           created_at: new Date().toISOString(),
