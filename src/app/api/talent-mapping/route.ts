@@ -1885,7 +1885,9 @@ Return valid JSON only:
       try {
         console.log(`[TalentMapping] Searching [${sq.sourceType}]: ${sq.query}`);
         const results = await fc!.search(sq.query, { limit: 5 }) as any;
-        const data = results?.data || results?.web || [];
+        // Firecrawl SDK returns results in 'data' or 'web' depending on version
+        // Empty array is truthy, so check length explicitly
+        const data = (results?.data?.length > 0) ? results.data : (results?.web || []);
 
         searchMethodology.push({
           query: sq.query,
