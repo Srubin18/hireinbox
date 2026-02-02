@@ -73,7 +73,7 @@ export default function PilotScreening() {
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; pilot_role?: string } | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [viewFilter, setViewFilter] = useState<'shortlist' | 'archived'>('shortlist');
   const [newRole, setNewRole] = useState({
@@ -117,7 +117,17 @@ export default function PilotScreening() {
         return;
       }
 
-      setUser({ email: session.user.email || '' });
+      // Fetch user profile with pilot_role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pilot_role')
+        .eq('id', session.user.id)
+        .single();
+
+      setUser({
+        email: session.user.email || '',
+        pilot_role: profile?.pilot_role,
+      });
 
       const { data: rolesData } = await supabase
         .from('roles')

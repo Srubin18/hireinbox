@@ -66,7 +66,7 @@ const Icons = {
 export default function PilotDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; pilot_role?: string } | null>(null);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [allSearches, setAllSearches] = useState<any[]>([]);
   const [searchView, setSearchView] = useState<'saved' | 'all'>('saved');
@@ -95,7 +95,17 @@ export default function PilotDashboard() {
         return;
       }
 
-      setUser({ email: session.user.email || '' });
+      // Fetch user profile with pilot_role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pilot_role')
+        .eq('id', session.user.id)
+        .single();
+
+      setUser({
+        email: session.user.email || '',
+        pilot_role: profile?.pilot_role,
+      });
 
       // Fetch recent talent mapping searches (saved reports)
       const { data: searches } = await supabase
