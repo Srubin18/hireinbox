@@ -1,5 +1,8 @@
 {
   "functions": {
+    "src/app/api/talent-mapping/route.ts": {
+      "maxDuration": 300
+    },
     "src/app/api/analyze-video/route.ts": {
       "maxDuration": 120
     },
