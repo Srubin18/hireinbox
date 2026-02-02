@@ -2353,23 +2353,41 @@ If absolutely no LinkedIn exists, state "https://linkedin.com/search/results/peo
 ##############################################################################
 Return ONLY the JSON object. Do NOT wrap it in markdown code blocks (no \`\`\`json).
 Do NOT include any text before or after the JSON.
-Start your response with { and end with }.`;
+Start your response with { and end with }.
+
+KEEP OUTPUT CONCISE:
+- Limit each text field to 2-3 sentences maximum
+- Focus on actionable insights, not lengthy descriptions
+- uniqueInsights should have 3-5 items max (1-2 sentences each)
+- Each candidate's approach should be under 100 words`;
 
     // ============================================
-    // CLAUDE OPUS 4.5 - PREMIUM SYNTHESIS
+    // CLAUDE OPUS 4.5 - PREMIUM SYNTHESIS (STREAMING)
     // ============================================
-    console.log('[TalentMapping] Calling Claude Opus 4.5 for premium synthesis...');
+    console.log('[TalentMapping] Calling Claude Opus 4.5 for premium synthesis (streaming)...');
 
-    const claudeResponse = await anthropic.messages.create({
+    // Use streaming for large token requests (required by Anthropic API for >10min operations)
+    const stream = await anthropic.messages.stream({
       model: 'claude-opus-4-5-20251101',
-      max_tokens: 12000,
+      max_tokens: 16000, // Back to 16K - should be enough with concise instructions
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     });
 
+    // Collect streamed response
+    const claudeResponse = await stream.finalMessage();
+
     let reportText = claudeResponse.content[0].type === 'text'
       ? claudeResponse.content[0].text
       : '{}';
+
+    // Log stop reason - if 'max_tokens' instead of 'end_turn', response was truncated
+    console.log('[TalentMapping] Claude Opus 4.5 stop_reason:', claudeResponse.stop_reason);
+    console.log('[TalentMapping] Claude response length:', reportText.length, 'chars');
+
+    if (claudeResponse.stop_reason === 'max_tokens') {
+      console.error('[TalentMapping] WARNING: Response was truncated due to max_tokens limit!');
+    }
 
     console.log('[TalentMapping] Claude Opus 4.5 premium report generated');
 
@@ -2388,6 +2406,51 @@ Start your response with { and end with }.`;
     const jsonStart = reportText.indexOf('{');
     const jsonEnd = reportText.lastIndexOf('}');
 
+    // Helper function to attempt JSON repair for truncated responses
+    const attemptJsonRepair = (jsonStr: string): any => {
+      // Count unclosed brackets
+      let braces = 0;
+      let brackets = 0;
+      let inString = false;
+      let escaped = false;
+
+      for (const char of jsonStr) {
+        if (escaped) {
+          escaped = false;
+          continue;
+        }
+        if (char === '\\') {
+          escaped = true;
+          continue;
+        }
+        if (char === '"' && !escaped) {
+          inString = !inString;
+          continue;
+        }
+        if (!inString) {
+          if (char === '{') braces++;
+          else if (char === '}') braces--;
+          else if (char === '[') brackets++;
+          else if (char === ']') brackets--;
+        }
+      }
+
+      // Try to close unclosed structures
+      let repaired = jsonStr;
+
+      // Remove trailing incomplete values (after last comma or colon)
+      repaired = repaired.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"{}[\]]*$/, '');
+      repaired = repaired.replace(/,\s*$/, '');
+      repaired = repaired.replace(/:\s*"[^"]*$/, ': ""');
+      repaired = repaired.replace(/:\s*$/, ': null');
+
+      // Close brackets and braces
+      repaired += ']'.repeat(Math.max(0, brackets));
+      repaired += '}'.repeat(Math.max(0, braces));
+
+      return JSON.parse(repaired);
+    };
+
     if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
       const jsonStr = reportText.substring(jsonStart, jsonEnd + 1);
       try {
@@ -2397,7 +2460,32 @@ Start your response with { and end with }.`;
         console.error('[TalentMapping] JSON parse error:', parseError);
         console.error('[TalentMapping] Raw response (first 1000 chars):', reportText.substring(0, 1000));
         console.error('[TalentMapping] Raw response (last 500 chars):', reportText.substring(reportText.length - 500));
-        throw new Error('Failed to generate report - malformed JSON from Claude');
+
+        // Attempt to repair truncated JSON
+        if (claudeResponse.stop_reason === 'max_tokens') {
+          console.log('[TalentMapping] Attempting to repair truncated JSON...');
+          try {
+            const fullJsonStr = reportText.substring(jsonStart);
+            report = attemptJsonRepair(fullJsonStr);
+            console.log('[TalentMapping] JSON repair successful');
+          } catch (repairError) {
+            console.error('[TalentMapping] JSON repair failed:', repairError);
+            throw new Error('Failed to generate report - malformed JSON from Claude (truncated)');
+          }
+        } else {
+          throw new Error('Failed to generate report - malformed JSON from Claude');
+        }
+      }
+    } else if (jsonStart !== -1 && claudeResponse.stop_reason === 'max_tokens') {
+      // No closing brace found but response was truncated - try to repair
+      console.log('[TalentMapping] Response truncated before completion, attempting repair...');
+      try {
+        const fullJsonStr = reportText.substring(jsonStart);
+        report = attemptJsonRepair(fullJsonStr);
+        console.log('[TalentMapping] JSON repair successful');
+      } catch (repairError) {
+        console.error('[TalentMapping] JSON repair failed:', repairError);
+        throw new Error('Failed to generate report - truncated response could not be repaired');
       }
     } else {
       console.error('[TalentMapping] No JSON object found in response');

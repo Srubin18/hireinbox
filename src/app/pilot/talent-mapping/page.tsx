@@ -187,6 +187,10 @@ export default function PilotTalentMapping() {
     setError(null);
     setReport(null);
 
+    // 5 minute timeout for talent mapping (it can take 2-3 minutes)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+
     try {
       // Get auth token to track usage
       const { data: { session } } = await supabase.auth.getSession();
@@ -202,16 +206,27 @@ export default function PilotTalentMapping() {
           industry: industry || undefined,
           salaryBand: salaryBand || undefined,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Search failed. Please try again.');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Search failed. Please try again.');
       }
 
       const data = await response.json();
+      console.log('[TalentMapping] Response received:', data?.candidates?.length, 'candidates');
       setReport(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
+      clearTimeout(timeoutId);
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Search timed out. Please try again.');
+      } else {
+        console.error('[TalentMapping] Frontend error:', err);
+        setError(err instanceof Error ? err.message : 'Search failed');
+      }
     } finally {
       setLoading(false);
     }
