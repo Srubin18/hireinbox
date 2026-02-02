@@ -410,7 +410,7 @@ export default function PilotDashboard() {
             { label: 'Talent Searches', value: stats.totalSearches, color: '#4F46E5' },
             { label: 'Candidates Found', value: stats.candidatesFound, color: '#7C3AED' },
             { label: 'Active Roles', value: stats.rolesActive, color: '#10B981' },
-            { label: 'CVs Screened', value: stats.cvsScreened, color: '#F59E0B' },
+            { label: 'CVs Screened', value: stats.cvsScreened, color: '#22C55E' },
           ].map((stat, i) => (
             <div key={i} style={{
               backgroundColor: '#ffffff',
