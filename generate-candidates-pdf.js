@@ -70,9 +70,9 @@ drawLine(78);
 
 doc.fontSize(11).fillColor(DARK).font('Helvetica').lineGap(4)
   .text('', 50, 95)
-  .text('Using the HireInbox Superior Intelligence Stack (GDELT news analysis, Shofo salary benchmarking, and LinkedIn enrichment), we identified 5 high-calibre AI/automation engineers based in Cape Town who could strengthen Jobix AI\'s engineering team.', { width: 495 })
+  .text('Jobix AI (like ElevenLabs) needs automation specialists who can help clients set up voice agents, wire API integrations, and deploy automation workflows. Using our intelligence stack, we identified 5 hands-on automation builders in Cape Town who match this profile.', { width: 495 })
   .moveDown(0.5)
-  .text('Each candidate has been assessed for technical fit, readiness to move, and optimal approach strategy.', { width: 495 });
+  .text('Each candidate has been assessed for technical fit, readiness to move, and optimal approach strategy. Focus: API integration, voice/AI agents, workflow automation, CI/CD, and client deployment.', { width: 495 });
 
 doc.moveDown(1.5);
 
@@ -86,11 +86,11 @@ doc.fontSize(10).fillColor('#ffffff').font('Helvetica-Bold')
   .text('Priority', 470, tableTop + 8);
 
 const candidates = [
-  { name: 'Nick Pentreath', company: 'Rumi.ai', signal: 'WARM', priority: 'Long-term' },
-  { name: 'Josh Chettiar', company: 'InstaDeep', signal: 'HOT', priority: 'Immediate' },
-  { name: 'Shane Weisz', company: 'Aerobotics', signal: 'WARM-HOT', priority: 'High' },
-  { name: 'Ruan de Kock', company: 'InstaDeep', signal: 'WARM', priority: 'Medium' },
-  { name: 'Olivier Adjagba', company: 'AIMS Graduate', signal: 'HOT', priority: 'Immediate' },
+  { name: 'Craig Van', company: 'Adyen', signal: 'HOT', priority: 'Immediate' },
+  { name: 'Shaun Egan', company: 'iiDENTIFii', signal: 'WARM-HOT', priority: 'High' },
+  { name: 'Lindsay Bell-Cedras', company: 'IQbusiness', signal: 'HOT', priority: 'Immediate' },
+  { name: 'Sapokazi Maqoga', company: 'Zensar/Sanlam', signal: 'WARM-HOT', priority: 'High' },
+  { name: 'Leroy Sharp', company: 'RealFi', signal: 'WARM', priority: 'Medium' },
 ];
 
 let rowY = tableTop + 28;
@@ -118,10 +118,10 @@ doc.fontSize(13).fillColor(DARK).font('Helvetica-Bold')
 doc.fontSize(10).fillColor(DARK).font('Helvetica').lineGap(3);
 
 const intel = [
-  ['BioNTech/InstaDeep', '950-1,350 global cuts by 2027. CT engineers may feel the squeeze.'],
-  ['Aerobotics', 'Small team (~50), narrow agri-tech focus. ML engineers underutilised.'],
-  ['SA AI Salaries', 'R400K-R1M engineers, R900K-R2.5M directors. Cape Town pays highest.'],
-  ['Market Trend', 'AI jobs in CT growing but sparse (0.09/100K). Demand outstrips supply.'],
+  ['Voice AI Market', '100+ AI automation jobs in Cape Town on Indeed. Voice agent demand surging.'],
+  ['Adyen CT Office', '3,000+ staff in Western Cape. Tech support roles -- engineers want to build, not support.'],
+  ['SA AI Salaries', 'R350K-R900K for automation engineers. Cape Town pays highest in SA.'],
+  ['Market Trend', 'AI agent/integration specialists are scarce in CT. First-mover advantage for Jobix.'],
 ];
 
 let intelY = boxY + 32;
@@ -135,117 +135,118 @@ intel.forEach(([label, detail]) => {
 
 const candidateDetails = [
   {
-    name: 'Nick Pentreath',
-    role: 'Principal Engineer',
-    company: 'Rumi.ai',
-    linkedin: 'https://www.linkedin.com/in/mlnick/',
-    signal: 'WARM',
-    signalColor: GREEN,
-    stack: 'AI/ML, Apache Spark (PMC member), NLP, Recommendations, Personalisation, Python, Scala, Java',
-    background: [
-      '15 years in AI/ML engineering and tech leadership',
-      'Ex-Goldman Sachs, Investec, IBM, Tumblr/Automattic ML Tech Lead',
-      'MSc Machine Learning from UCL (Distinction), UCT BSc graduate',
-      'Co-founded ML startup Graphflow',
-      'Apache Spark Project PMC Member',
-    ],
-    readiness: [
-      'Recently joined Rumi.ai (small meetings startup) -- early-stage company risk',
-      'Has startup DNA (co-founded before) -- understands the Jobix AI vision',
-      'Rumi.ai is niche; a purpose-driven AI company could be more compelling',
-      'Senior and just posted about joining Rumi -- timing may be 6-12 months out',
-    ],
-    approach: 'Long game. Coffee chat, keep warm. He is the "in 6 months" hire. Appeal to his desire to build something bigger than a meetings tool.',
-  },
-  {
-    name: 'Josh Chettiar',
-    role: 'Applied AI Engineer -- Team Lead',
-    company: 'InstaDeep (BioNTech)',
-    linkedin: 'https://www.linkedin.com/in/josh-chettiar-9650b796/',
+    name: 'Craig Van',
+    role: 'Technical Support Engineer (Payments)',
+    company: 'Adyen',
+    linkedin: 'https://www.linkedin.com/in/craigvandotcom/',
     signal: 'HOT',
     signalColor: ACCENT,
-    stack: 'Azure OpenAI, Azure AI Studio, Databricks, Open-source ML/AI, PoC-to-Production delivery',
+    stack: 'Voiceflow, OpenAI API, RAG, Python Flask, Chatbots, API Integration, Full-Stack Development',
     background: [
-      'University of the Witwatersrand graduate',
-      'At InstaDeep since mid-2023, promoted to Team Lead Jan 2025',
-      'Runs AI solution delivery from Proof of Concept to Production',
-      'Experience accelerating customer AI/ML opportunities',
+      'Built AI chatbot using Voiceflow + OpenAI API + RAG with Python Flask backend',
+      'Technical co-founder -- developed chatbots and inventory management systems',
+      'Full-stack developer with AI, data pipelines, and process automation focus',
+      'Strong API expertise honed through payments integration work at Adyen',
+      'Side projects in ML and data engineering -- constantly building',
     ],
     readiness: [
-      'BioNTech (parent company) cutting 950-1,350 jobs globally by 2027',
-      'InstaDeep CT is a satellite of a pharma-focused parent -- potential misalignment',
-      '~2 years tenure = classic "ready to explore" window',
-      'Applied AI focus maps perfectly to Jobix AI\'s automation needs',
+      'Currently in a SUPPORT role at Adyen -- a builder stuck in support. Wants to create.',
+      'Already building AI chatbots and voice solutions on the side -- this is his passion',
+      'Technical co-founder experience -- understands startup pace and client delivery',
+      'Voiceflow + OpenAI + RAG stack maps DIRECTLY to Jobix voice agent work',
     ],
-    approach: 'Lead with the BioNTech uncertainty angle. "Build AI that matters, not pharma pipelines." His PoC-to-Production skills are exactly what Jobix needs.',
+    approach: 'This is your #1 target. He is literally building voice agents in his spare time while stuck in a support role. Pitch: "Stop supporting payments. Build voice AI full-time." He will bite.',
   },
   {
-    name: 'Shane Weisz',
-    role: 'Software Engineer (Machine Learning)',
-    company: 'Aerobotics',
-    linkedin: 'https://www.linkedin.com/in/shaneweisz/',
+    name: 'Shaun Egan',
+    role: 'Principal Engineer / Software Architect',
+    company: 'iiDENTIFii',
+    linkedin: 'https://za.linkedin.com/in/shauneganza',
     signal: 'WARM-HOT',
     signalColor: WARM,
-    stack: 'Computer Vision, ML, Deep Learning, NLP, LLM Fine-tuning, Python',
+    stack: 'Cloud-native Architecture, Microservices, AWS, Event-driven Systems, AI Tools, Python, CI/CD',
     background: [
-      'Cambridge MPhil in Machine Learning & Machine Intelligence',
-      'UCT graduate, currently pursuing PhD at Cambridge',
-      'Built ML models for agriculture (340M+ trees analysed at Aerobotics)',
-      'GitHub: LLM fine-tuning for counterspeech, deep learning for network classification',
-      'Previous experience at Nomanini',
+      '15 years experience. MSc from Rhodes University',
+      'Principal Engineer at iiDENTIFii (identity verification AI startup)',
+      'Ex-Director of Software Engineering at Deimos -- led large engineering teams',
+      'Built event-driven microservices and payments systems at Iflix (serverless AWS)',
+      'Drives adoption of AI-based tools and process automation',
     ],
     readiness: [
-      'Splitting time between PhD and Aerobotics -- may want a singular focus',
-      'Aerobotics is small (~50 people) and narrowly focused on agriculture',
-      'Skills (LLMs, NLP, CV) are overqualified for tree-counting',
-      'Cambridge pedigree would bring credibility to Jobix AI',
+      'iiDENTIFii is a niche identity verification company -- may want broader AI scope',
+      'Has held Director-level roles -- senior enough to want meaningful product ownership',
+      'Microservices + API architecture expertise = perfect for voice agent infrastructure',
+      'Actively discusses AI-driven development on LinkedIn -- engaged with the space',
     ],
-    approach: 'Appeal to his breadth. "Stop counting trees. Automate hiring for Africa." His LLM fine-tuning skills are gold for AI-driven recruitment.',
+    approach: 'Position as a technical leadership opportunity. "Architect the voice AI platform for Africa." His cloud-native and API architecture skills are exactly what Jobix needs at scale.',
   },
   {
-    name: 'Ruan de Kock',
-    role: 'Senior Research Engineer',
-    company: 'InstaDeep (BioNTech)',
-    linkedin: 'https://www.linkedin.com/in/ruan-de-kock/',
-    signal: 'WARM',
-    signalColor: GREEN,
-    stack: 'Multi-Agent Reinforcement Learning (MARL), JAX, Transformers, Generative Models',
-    background: [
-      'UCT BSc Honours, currently MSc student at UCT',
-      'Previously Data Scientist at Praelexis (Cape Town AI company)',
-      'Paper accepted at ICLR 2026 (top ML conference)',
-      'Leads AI career workshops at UCT -- strong community presence',
-    ],
-    readiness: [
-      'Same BioNTech restructuring risk as Josh Chettiar',
-      'Currently doing MSc alongside work -- may want a role that supports research',
-      'Strong community involvement -- values purpose-driven work',
-      'Published researcher (ICLR 2026) -- wants to build things that matter',
-    ],
-    approach: 'Position Jobix AI as applied research that ships. His MARL expertise could power multi-agent hiring automation workflows.',
-  },
-  {
-    name: 'Olivier Adjagba',
-    role: 'AI/ML Engineer',
-    company: 'AIMS / Google DeepMind Alumnus',
-    linkedin: 'https://www.linkedin.com/in/olivieradjagba/',
+    name: 'Lindsay Bell-Cedras',
+    role: 'Automation Lead / Senior Developer',
+    company: 'IQbusiness South Africa',
+    linkedin: 'https://www.linkedin.com/in/lindsay-bell-cedras/',
     signal: 'HOT',
     signalColor: ACCENT,
-    stack: 'AI for Science, Epidemiological Modelling, Deep Learning, Pathogen Tracking',
+    stack: 'RPA (Blue Prism, Automation Anywhere), Process Automation, Project Management, IT Programming',
     background: [
-      'AIMS South Africa graduate (Google DeepMind full scholarship)',
-      'Originally from Benin, based in Cape Town',
-      'Worked with CERI/KRISP on AI for dengue fever prediction',
-      'Featured in Google DeepMind blog post',
-      'Part of first AIMS-DeepMind cohort of AI leaders in Africa',
+      'Automation Lead and Senior Developer at IQbusiness',
+      'Certified in Blue Prism and Automation Anywhere (dual RPA platforms)',
+      'Previously Automation Delivery Manager and Senior Dev at DigiBlu',
+      'Graduated with distinction in IT Programming from Varsity College',
+      'Also runs CreativeIdeas Cape Town (graphic design, photography)',
     ],
     readiness: [
-      'Recently graduated from AIMS programme -- actively entering the job market',
-      'No permanent employer anchor -- perfect timing for a founding-stage opportunity',
-      'Google DeepMind training + AIMS pedigree = exceptional talent at early-career cost',
-      'Already in Cape Town; mission-driven (applied AI to real African problems)',
+      'IQbusiness is a consulting firm -- project-based work, no product ownership',
+      'Consulting fatigue is real -- building a product is more compelling than client rotations',
+      'RPA + automation delivery experience maps perfectly to client voice agent deployment',
+      'Creative side (runs own design business) signals entrepreneurial drive',
     ],
-    approach: 'Timing is everything. He is job-hunting NOW. Move immediately. Frame Jobix as "AI solving real African problems" -- mirrors his values perfectly.',
+    approach: 'Lead with product ownership. "Stop consulting. Build the automation product." Their delivery management skills are gold for client onboarding and voice agent setup.',
+  },
+  {
+    name: 'Sapokazi Maqoga',
+    role: 'RPA Developer',
+    company: 'Zensar Technologies / Sanlam',
+    linkedin: 'https://www.linkedin.com/in/sapokazi-maqoga-8360ab104/',
+    signal: 'WARM-HOT',
+    signalColor: WARM,
+    stack: 'Power Automate, Power Apps, RPA, Workflow Automation, Process Integration',
+    background: [
+      'RPA Developer at Zensar Technologies with Sanlam as client',
+      'Builds automated workflows and custom applications using Power Platform',
+      'Walter Sisulu University graduate, based in City of Cape Town',
+      'Streamlines business processes through intelligent automation',
+    ],
+    readiness: [
+      'Working as a contractor (Zensar) servicing Sanlam -- no deep loyalty to either',
+      'Power Automate / workflow automation skills translate directly to voice agent setup',
+      'Contract/outsourced roles have natural churn -- timing could be right',
+      'Enterprise automation experience at Sanlam = understands client deployment at scale',
+    ],
+    approach: 'Pitch the product side. "Build automation that ships to thousands of clients, not just one bank." Enterprise RPA experience + startup energy = strong fit.',
+  },
+  {
+    name: 'Leroy Sharp',
+    role: 'QA Engineer / Automation Specialist',
+    company: 'RealFi',
+    linkedin: 'https://www.linkedin.com/in/leroy-sharp-027496b5/',
+    signal: 'WARM',
+    signalColor: GREEN,
+    stack: 'Test Automation, CI/CD, Python, Full-Stack Development, Software Testing',
+    background: [
+      '6+ years of QA automation experience, specialising in framework design',
+      'Currently at RealFi -- DeFi/blockchain startup in Cape Town',
+      'Mancosa graduate, completed Elements of AI (University of Helsinki)',
+      'Full-stack development experience alongside QA automation',
+      'Self-motivated, creative problem solver with rapid environment adaptation',
+    ],
+    readiness: [
+      'RealFi is a small blockchain startup -- crypto market volatility creates uncertainty',
+      'QA automation + full-stack = can build AND test client integration pipelines',
+      'AI training (Elements of AI) shows intent to move into AI space',
+      'Building personal portfolio site -- actively investing in career growth',
+    ],
+    approach: 'Position as a career upgrade into AI. "Your automation skills + AI = the future. Come build voice agents." His QA rigour ensures client integrations actually work.',
   },
 ];
 
@@ -340,11 +341,11 @@ drawLine(235, ACCENT);
 doc.fontSize(12).fillColor('#cccccc').font('Helvetica').lineGap(6);
 
 const steps = [
-  ['1.', 'Olivier Adjagba', 'Move immediately. He is actively job-hunting. First-mover advantage.'],
-  ['2.', 'Josh Chettiar', 'Reach out this week. BioNTech uncertainty creates a window.'],
-  ['3.', 'Shane Weisz', 'Approach within 2 weeks. His LLM skills are rare in Cape Town.'],
-  ['4.', 'Ruan de Kock', 'Soft approach. Invite to an AI meetup or coffee. Build rapport.'],
-  ['5.', 'Nick Pentreath', 'Plant the seed. LinkedIn connect, share Jobix AI vision. Revisit in 6 months.'],
+  ['1.', 'Craig Van', 'Move NOW. He is building voice agents on the side while stuck in support. Perfect fit.'],
+  ['2.', 'Lindsay Bell-Cedras', 'Reach out this week. Consulting fatigue + product ownership pitch = compelling.'],
+  ['3.', 'Sapokazi Maqoga', 'Approach within 2 weeks. Contractor status = lower switching cost.'],
+  ['4.', 'Shaun Egan', 'Coffee chat. Senior hire -- position as CTO-track or Head of Engineering.'],
+  ['5.', 'Leroy Sharp', 'Soft approach. Career upgrade pitch from QA automation into AI voice agents.'],
 ];
 
 let stepY = 260;
